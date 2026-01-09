@@ -1,3 +1,6 @@
+^renv$
+^renv\.lock$
 ^govhrapp\.Rproj$
 ^\.Rproj\.user$
 ^\.github$
+^LICENSE\.md$
