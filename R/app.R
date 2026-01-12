@@ -88,7 +88,7 @@ run_govhr_app <- function(...) {
     # panel 2: wage bill
     bslib::nav_panel(
       "Wage Bill",
-      icon = shiny::icon("money"),
+      icon = shiny::icon("money-bill"),
 
       # content
       div(
