@@ -58,33 +58,58 @@
   margin: 0.5px;
 }
 
+/* round card corners and add shadows for depth*/
+.card {
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1)
+}
+
 /* Card header background */
 .card-success:not(.card-outline)>.card-header {
-  background-color: #051f3f !important;
+  background-color: #002244 !important;
   color: white !important;
+}
+
+.card-header {
+  background-color: #002244 !important
 }
 
 /* Button card expand background */
 .card-success:not(.card-outline)>.card-header .btn-success {
-  border-color: #051f3f !important;
+  border-color: #002244 !important;
 }
 
 .card-success:not(.card-outline)>.card-header .btn-success.focus, 
 .card-success:not(.card-outline)>.card-header .btn-tool, 
 .card-success:not(.card-outline)>.card-header .btn-success:focus, 
 .card-success:not(.card-outline)>.card-header .btn-success:hover {
-  background-color: #051f3f !important;
+  background-color: #002244 !important;
 }
 
 .card-success.card-outline {
-  border-top: 3px solid #051f3f !important;
+  border-top: 3px solid #002244 !important;
 }
 
 /* Side bar tab active background */
 .sidebar-dark-info .nav-sidebar>.nav-item>.nav-link.active, .sidebar-light-info .nav-sidebar>.nav-item>.nav-link.active {
-  background-color: #051f3f !important;
+  background-color: #002244 !important;
 }
 
 .shinyhelper-container i {
   padding-left: 15px; 
+}
+
+/* add margins to nav panes */
+.tab-content > .tab-pane {
+  margin: 40px 20px;
+}
+
+
+/* ensure correct font */
+.card-body,
+.card-body p,
+.card-body ol,
+.card-body ul,
+.card-body li {
+  font-family: "Source Sans Pro", sans-serif !important;
 }
