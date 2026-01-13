@@ -19,23 +19,21 @@ run_govhrapp <- function(...) {
 
   ui <- bslib::page_navbar(
     title = "govhr dashboard",
-    
+    fillable = FALSE,
 
     # set theme
     theme = bslib::bs_theme(
-      bootswatch = "litera",
+      bootswatch = "shiny",
       base_font = font_google("Source Sans Pro"),
       code_font = font_google("Source Sans Pro"),
       heading_font = font_google("Fira Sans"),
       navbar_bg = "#FFFFFF"
-    ) |> 
+    ) |>
       bslib::bs_add_rules(
         readLines("inst/www/styles.css")
       ),
 
     navbar_options = navbar_options(
-      position = "fixed-top",
-      collapse_below = "xl",
       underline = TRUE
     ),
 
@@ -50,44 +48,46 @@ run_govhrapp <- function(...) {
       icon = shiny::icon("home"),
 
       # content
-      shiny::div(
-        style = "padding: 40px 20px;",
-        bslib::card(
-          bslib::card_header(
-            shiny::tags$img(src = "assets/govhr_logo.png", width = "80%")
-          ),
-          bslib::card_body(
-            shiny::tags$br(),
-            shiny::tags$h3("Welcome to govhr."),
-            shiny::markdown(
-              readLines("inst/markdown/home.md")
-              )
-            )
+      bslib::card(
+        bslib::card_header(
+          shiny::tags$img(src = "assets/govhr_logo.png", width = "80%")
+        ),
+        bslib::card_body(
+          shiny::tags$br(),
+          shiny::tags$h3("Welcome to govhr."),
+          shiny::markdown(
+            readLines("inst/markdown/home.md")
           )
         )
-      ),
+      )
+    ),
 
     # panel 2: wage bill
     bslib::nav_panel(
       "Wage Bill",
       icon = shiny::icon("money-bill"),
 
-      # content
-      div(
-        style = "padding: 40px 20px;",
-        bslib::card(
-          bslib::card_header(
-            "Wage Bill"
-          ),
-          bslib::card_body(
-            shiny::markdown(
-              readLines("inst/markdown/wagebill.md")
-            )
+      # overview
+      bslib::card(
+        bslib::card_header(
+          "Wage Bill: Overview"
+        ),
+        bslib::card_body(
+          shiny::markdown(
+            readLines("inst/markdown/wagebill.md")
           )
         )
-      )
+      ),
+
+      # viz 1: time trends
+      bslib::card(
+        bslib::card_header(
+          "Wage Bill: Time Trends"
+        ),
+        "Insert plot here."
       )
     )
+  )
 
   server <- function(input, output, session) {}
 
