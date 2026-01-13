@@ -11,9 +11,8 @@
 #' run_govhr_app()
 #' }
 #'
-#' @importFrom shiny addResourcePath shinyApp icon tags includeCSS
+#' @import shiny
 #' @import bslib
-#' @importFrom icon icon
 run_govhr_app <- function(...) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", "www")
@@ -51,7 +50,7 @@ run_govhr_app <- function(...) {
       icon = shiny::icon("home"),
 
       # content
-      div(
+      shiny::div(
         style = "padding: 40px 20px;",
         bslib::card(
           bslib::card_header(
