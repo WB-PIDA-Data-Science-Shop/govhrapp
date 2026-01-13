@@ -15,7 +15,7 @@
 #' @import bslib
 run_govhr_app <- function(...) {
   # add path to visual assets (image and css)
-  shiny::addResourcePath("assets", "www")
+  shiny::addResourcePath("assets", "inst/www")
 
   ui <- bslib::page_navbar(
     title = "govhr dashboard",
@@ -30,7 +30,7 @@ run_govhr_app <- function(...) {
       navbar_bg = "#FFFFFF"
     ) |> 
       bslib::bs_add_rules(
-        readLines("www/styles.css")
+        readLines("inst/www/styles.css")
       ),
 
     navbar_options = navbar_options(
