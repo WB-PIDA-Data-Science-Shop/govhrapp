@@ -96,6 +96,11 @@
   background-color: #002244 !important;
 }
 
+/* Round sidebar edges to match cards */
+.aside.sidebar {
+  border-radius: 15px !important;
+}
+
 .shinyhelper-container i {
   padding-left: 15px; 
 }

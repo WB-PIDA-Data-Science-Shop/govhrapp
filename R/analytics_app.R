@@ -16,6 +16,7 @@
 run_govhrapp <- function(...) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", "inst/www")
+  thematic::thematic_shiny(font = "auto")
 
   ui <- bslib::page_navbar(
     title = "govhr dashboard",
@@ -23,7 +24,7 @@ run_govhrapp <- function(...) {
 
     # set theme
     theme = bslib::bs_theme(
-      bootswatch = "shiny",
+      bootswatch = "litera",
       base_font = font_google("Source Sans Pro"),
       code_font = font_google("Source Sans Pro"),
       heading_font = font_google("Fira Sans"),
@@ -66,30 +67,13 @@ run_govhrapp <- function(...) {
     bslib::nav_panel(
       "Wage Bill",
       icon = shiny::icon("money-bill"),
-
-      # overview
-      bslib::card(
-        bslib::card_header(
-          "Wage Bill: Overview"
-        ),
-        bslib::card_body(
-          shiny::markdown(
-            readLines("inst/markdown/wagebill.md")
-          )
-        )
-      ),
-
-      # viz 1: time trends
-      bslib::card(
-        bslib::card_header(
-          "Wage Bill: Time Trends"
-        ),
-        "Insert plot here."
-      )
+      wagebill_ui("wagebill")
     )
   )
 
-  server <- function(input, output, session) {}
+  server <- function(input, output, session) {
+    wagebill_server("wagebill")
+  }
 
   shiny::shinyApp(ui, server, ...)
 }
