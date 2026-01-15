@@ -14,10 +14,17 @@
 #' @import shiny
 #' @import bslib
 #' @import ggplot2
+#' @importFrom thematic thematic_shiny
 run_govhrapp <- function(...) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", "inst/www")
-  thematic::thematic_shiny(font = "auto")
+
+  # ensure ggplot2 inherits bslib themes
+  ggplot2::theme_set(
+    ggplot2::theme_minimal()
+  )
+  
+  thematic::thematic_shiny()
 
   ui <- bslib::page_navbar(
     title = "govhr dashboard",
@@ -41,9 +48,6 @@ run_govhrapp <- function(...) {
 
     padding = "20px",
 
-    # custom CSS
-    # shiny::tags$head(shiny::includeCSS("www/styles.css")),
-
     # panel 1: home
     bslib::nav_panel(
       "Home",
@@ -56,7 +60,7 @@ run_govhrapp <- function(...) {
         ),
         bslib::card_body(
           shiny::tags$br(),
-          shiny::tags$h3("Welcome to govhr."),
+          shiny::tags$h3("Welcome to govhr: Analytics Suite."),
           shiny::markdown(
             readLines("inst/markdown/home.md")
           )
@@ -68,12 +72,12 @@ run_govhrapp <- function(...) {
     bslib::nav_panel(
       "Wage Bill",
       icon = shiny::icon("money-bill"),
-      wagebill_ui("wagebill")
+      wagebill_ui("wagebill", wagebill_data = govhr::bra_hrmis_contract)
     )
   )
 
   server <- function(input, output, session) {
-    wagebill_server("wagebill")
+    wagebill_server("wagebill", wagebill_data = govhr::bra_hrmis_contract)
   }
 
   shiny::shinyApp(ui, server, ...)

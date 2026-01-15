@@ -2,7 +2,7 @@ library(shiny)
 library(bslib)
 library(ggplot2)
 
-wagebill_ui <- function(id) {
+wagebill_ui <- function(id, wagebill_data) {
     bslib::layout_columns(
       bslib::card(
         bslib::card_header(
@@ -18,6 +18,23 @@ wagebill_ui <- function(id) {
         title = "Wagebill: Time Trend",
         sidebar = sidebar(
           title = "Wagebill Grouping",
+          shiny::dateRangeInput(
+            shiny::NS(id, "date_range"),
+            "Date Range:",
+            start = min(wagebill_data$ref_date, na.rm = TRUE),
+            end = max(wagebill_data$ref_date, na.rm = TRUE),
+            min = min(wagebill_data$ref_date, na.rm = TRUE),
+            max = max(wagebill_data$ref_date, na.rm = TRUE)
+          ),
+          shiny::selectInput(
+            shiny::NS(id, "wagebill_measure"),
+            "Type of Wage:",
+            choices = list(
+              "Base Salary" = "base_salary_lcu",
+              "Gross Salary" = "gross_salary_lcu",
+              "Net Salary" = "net_salary_lcu"
+            )
+          ),
           shiny::selectInput(
             shiny::NS(id, "wagebill_group"),
             "Group:",
@@ -37,20 +54,20 @@ wagebill_ui <- function(id) {
     )
   }
 
-wagebill_server <- function(id) {
+wagebill_server <- function(id, wagebill_data) {
     shiny::moduleServer(id, function(input, output, session) {
-      wagebill_data <- reactive({
+      wagebill_summary <- reactive({
         if(input$wagebill_group == "year"){
-          govhr::bra_hrmis_contract |> 
+          wagebill_data |> 
             govhr::compute_fastsummary(
-              cols = "gross_salary_lcu",
+              cols = input$wagebill_measure,
               fns = "sum",
               groups = c("ref_date")
             )
         }else{
-          govhr::bra_hrmis_contract |> 
+          wagebill_data |> 
             govhr::compute_fastsummary(
-              cols = "gross_salary_lcu",
+              cols = input$wagebill_measure,
               fns = "sum",
               groups = c("ref_date", input$wagebill_group)
             )
@@ -58,7 +75,7 @@ wagebill_server <- function(id) {
       })
 
       output$wagebill_plot <- renderPlot({
-        plot <- wagebill_data() |>
+        plot <- wagebill_summary() |>
           ggplot(
             aes(
               x = .data[["ref_date"]],

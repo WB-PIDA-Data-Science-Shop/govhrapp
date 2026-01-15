@@ -3,3 +3,4 @@
 import(bslib)
 import(ggplot2)
 import(shiny)
+importFrom(thematic,thematic_shiny)
