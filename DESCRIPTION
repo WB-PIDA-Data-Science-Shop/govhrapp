@@ -13,4 +13,7 @@ Suggests:
 Config/testthat/edition: 3
 Imports: 
     bslib,
-    shiny
+    ggplot2,
+    govhr,
+    shiny,
+    thematic

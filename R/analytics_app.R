@@ -13,6 +13,7 @@
 #'
 #' @import shiny
 #' @import bslib
+#' @import ggplot2
 run_govhrapp <- function(...) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", "inst/www")
