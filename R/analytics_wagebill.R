@@ -60,8 +60,8 @@ wagebill_server <- function(id, wagebill_data) {
         if(input$wagebill_group == "year"){
           wagebill_data |> 
             dplyr::filter(
-              ref_date >= input$date_range[1],
-              ref_date <= input$date_range[2]
+              .data[["ref_date"]] >= input$date_range[1],
+              .data[["ref_date"]] <= input$date_range[2]
             ) |> 
             govhr::compute_fastsummary(
               cols = input$wagebill_measure,
@@ -71,8 +71,8 @@ wagebill_server <- function(id, wagebill_data) {
         }else{
           wagebill_data |> 
             dplyr::filter(
-              ref_date >= input$date_range[1],
-              ref_date <= input$date_range[2]
+              .data[["ref_date"]] >= input$date_range[1],
+              .data[["ref_date"]] <= input$date_range[2]
             ) |> 
             govhr::compute_fastsummary(
               cols = input$wagebill_measure,

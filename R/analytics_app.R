@@ -16,6 +16,7 @@
 #' @import ggplot2
 #' @import dplyr
 #' @importFrom thematic thematic_shiny
+#' @importFrom lubridate year
 run_govhrapp <- function(...) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", "inst/www")
@@ -73,12 +74,12 @@ run_govhrapp <- function(...) {
     bslib::nav_panel(
       "Wage Bill",
       icon = shiny::icon("money-bill"),
-      wagebill_ui("wagebill", wagebill_data = govhr::bra_hrmis_contract |> dplyr::filter(lubridate::year(ref_date) <= 2017))
+      wagebill_ui("wagebill", wagebill_data = govhr::bra_hrmis_contract |> dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017))
     )
   )
 
   server <- function(input, output, session) {
-    wagebill_server("wagebill", wagebill_data = govhr::bra_hrmis_contract |> dplyr::filter(lubridate::year(ref_date) <= 2017))
+    wagebill_server("wagebill", wagebill_data = govhr::bra_hrmis_contract |> dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017))
   }
 
   shiny::shinyApp(ui, server, ...)
