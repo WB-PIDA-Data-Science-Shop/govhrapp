@@ -1,6 +1,8 @@
 library(shiny)
 library(bslib)
 library(ggplot2)
+library(plotly)
+library(dplyr)
 
 wagebill_ui <- function(id, wagebill_data) {
     bslib::layout_columns(
@@ -45,9 +47,15 @@ wagebill_ui <- function(id, wagebill_data) {
             )
           )
         ),
-        bslib::card(
-          bslib::card_header("Wagebill Analytics"),
-          plotOutput(NS(id, "wagebill_plot"))
+        layout_columns(
+          bslib::card(
+            bslib::card_header("Wagebill Time Trend"),
+            plotOutput(NS(id, "wagebill_panel"))
+          ),
+          bslib::card(
+            bslib::card_header("Wagebill Breakdown"),
+            plotOutput(NS(id, "wagebill_cross_section"))
+          )
         )
       ),
       col_widths = c(12, 12)
@@ -82,7 +90,8 @@ wagebill_server <- function(id, wagebill_data) {
         }
       })
 
-      output$wagebill_plot <- renderPlot({
+      # plot 1. panel
+      output$wagebill_panel <- renderPlot({
         plot <- wagebill_summary() |>
           ggplot(
             aes(
@@ -93,14 +102,34 @@ wagebill_server <- function(id, wagebill_data) {
           geom_point() +
           geom_line()
 
-        if(input$wagebill_group != "year"){
-          plot +
-            facet_wrap(
-              vars(.data[[input$wagebill_group]])
+        plotly::ggplotly(plot)
+      })
+
+      # plot 2. cross-section
+      output$wagebill_panel <- renderPlot({
+        cross_section_data <- reactive({
+          wagebill_data |> 
+            govhr::compute_fastsummary(
+              cols = input$wagebill_measure,
+              fns = "sum",
+              groups = c(input$wagebill_group)
+            ) |> 
+            # only present latest year
+            filter(
+              lubridate::year(ref_date) == max(lubridate::year(ref_date))
             )
-        }else{
-          plot
-        }
+          
+          plot <- cross_section_data() |> 
+            ggplot(
+              aes(
+                x = .data[["value"]],
+                y = aes(reorder(.data[[input$group]], .data[["value"]]))
+              )
+            ) +
+            geom_col()
+
+          plotly::ggplotly(plot)
+        })
       })
     })
   }
