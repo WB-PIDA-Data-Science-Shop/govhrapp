@@ -17,5 +17,6 @@ Imports:
     ggplot2,
     govhr,
     lubridate,
+    plotly,
     shiny,
     thematic
