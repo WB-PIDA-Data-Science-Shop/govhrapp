@@ -43,7 +43,9 @@ wagebill_ui <- function(id, wagebill_data) {
           choices = list(
             "All" = "all",
             "Establishment" = "est_id",
-            "Contract type (native)" = "contract_type_native"
+            "Contract type (native)" = "contract_type_native",
+            "Paygrade" = "paygrade",
+            "Occupation" = "occupation_native"
           )
         )
       ),
@@ -51,6 +53,11 @@ wagebill_ui <- function(id, wagebill_data) {
         column_widths = c(12, 12),
         bslib::card(
           bslib::card_header("Wagebill Time Trend"),
+          shinyWidgets::materialSwitch(
+            shiny::NS(id, "toggle_growth"),
+            label = "Switch to Growth Rate",
+            value = FALSE
+          ),
           plotly::plotlyOutput(NS(id, "wagebill_panel"))
         ),
         bslib::card(
@@ -67,7 +74,7 @@ wagebill_server <- function(id, wagebill_data) {
   shiny::moduleServer(id, function(input, output, session) {
     wagebill_summary <- reactive({
       if (input$wagebill_group == "all") {
-        wagebill_data |>
+        wagebill_out <- wagebill_data |>
           dplyr::filter(
             .data[["ref_date"]] >= input$date_range[1],
             .data[["ref_date"]] <= input$date_range[2]
@@ -78,7 +85,7 @@ wagebill_server <- function(id, wagebill_data) {
             groups = c("ref_date")
           )
       } else {
-        wagebill_data |>
+        wagebill_out <- wagebill_data |>
           dplyr::filter(
             .data[["ref_date"]] >= input$date_range[1],
             .data[["ref_date"]] <= input$date_range[2]
@@ -89,6 +96,22 @@ wagebill_server <- function(id, wagebill_data) {
             groups = c("ref_date", input$wagebill_group)
           )
       }
+
+      if(input$toggle_growth) {
+        validate(
+          need(input$wagebill_group != "all", "Please select a group breakdown.")
+        )
+
+        wagebill_out <- wagebill_out |>
+          dplyr::group_by(across(all_of(input$wagebill_group))) |>
+          dplyr::arrange(.data[["ref_date"]]) |>
+          dplyr::mutate(
+            value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100
+          ) |>
+          dplyr::ungroup()
+      }
+
+      wagebill_out
     })
 
     # plot 1. panel
@@ -101,13 +124,26 @@ wagebill_server <- function(id, wagebill_data) {
           )
         ) +
         geom_point() +
-        geom_line()
+        geom_line() +
+        xlab("Time")
 
-    if (input$wagebill_group != "all") {
-      plot <- plot + 
-        aes(group = .data[[input$wagebill_group]], 
-            color = .data[[input$wagebill_group]])
-    }
+      if (input$wagebill_group != "all") {
+        plot <- plot + 
+          aes(group = .data[[input$wagebill_group]])
+      }
+
+      if(input$toggle_growth) {
+        plot <- plot +
+          ylab("Growth Rate (Base = 100%)") +
+          geom_hline(
+            yintercept = 100,
+            linetype = "dashed",
+            color = "red3"
+          )
+      } else {
+        plot <- plot +
+          ylab("Wage Bill (LCU)")
+      }
 
       plotly::ggplotly(plot)
     })
