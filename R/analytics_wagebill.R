@@ -51,11 +51,11 @@ wagebill_ui <- function(id, wagebill_data) {
         column_widths = c(12, 12),
         bslib::card(
           bslib::card_header("Wagebill Time Trend"),
-          plotlyOutput(NS(id, "wagebill_panel"))
+          plotly::plotlyOutput(NS(id, "wagebill_panel"))
         ),
         bslib::card(
           bslib::card_header("Wagebill Breakdown"),
-          plotlyOutput(NS(id, "wagebill_cross_section"))
+          plotly::plotlyOutput(NS(id, "wagebill_cross_section"))
         )
       )
     ),
@@ -92,7 +92,7 @@ wagebill_server <- function(id, wagebill_data) {
     })
 
     # plot 1. panel
-    output$wagebill_panel <- renderPlotly({
+    output$wagebill_panel <- plotly::renderPlotly({
       plot <- wagebill_summary() |>
         ggplot(
           aes(
@@ -113,7 +113,7 @@ wagebill_server <- function(id, wagebill_data) {
     })
 
     # plot 2. cross-section
-    output$wagebill_cross_section <- renderPlotly({
+    output$wagebill_cross_section <- plotly::renderPlotly({
       validate(
         need(input$wagebill_group != "all", "Please select a group breakdown.") 
       )
@@ -138,7 +138,7 @@ wagebill_server <- function(id, wagebill_data) {
         ggplot(
           aes(
             x = .data[["value"]],
-            y = reorder(
+            y = stats::reorder(
               .data[[input$wagebill_group]],
               .data[["value"]]
             )
