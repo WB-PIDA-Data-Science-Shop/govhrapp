@@ -19,4 +19,5 @@ Imports:
     lubridate,
     plotly,
     shiny,
+    shinyWidgets,
     thematic
