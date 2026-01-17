@@ -1,7 +1,16 @@
-library(shiny)
-library(bslib)
-library(ggplot2)
-
+#' Wage Bill UI Module
+#'
+#' Creates the UI for the Wage Bill analytics section of the dashboard,
+#' displaying overview information and time trend visualizations.
+#'
+#' @param id Character string. The module namespace ID.
+#'
+#' @return A Shiny UI element containing wage bill analytics cards.
+#'
+#' @importFrom shiny NS selectInput markdown plotOutput
+#' @importFrom bslib layout_columns card card_header card_body page_sidebar sidebar
+#'
+#' @keywords internal
 wagebill_ui <- function(id) {
     bslib::layout_columns(
       bslib::card(
@@ -37,6 +46,20 @@ wagebill_ui <- function(id) {
     )
   }
 
+#' Wage Bill Server Module
+#'
+#' Server logic for the Wage Bill section, processing and visualizing
+#' wage bill time trends grouped by various dimensions.
+#'
+#' @param id Character string. The module namespace ID.
+#'
+#' @return None. Called for side effects (renders Shiny outputs).
+#'
+#' @importFrom shiny moduleServer reactive renderPlot
+#' @importFrom ggplot2 ggplot aes geom_point geom_line facet_wrap vars
+#' @importFrom rlang .data
+#'
+#' @keywords internal
 wagebill_server <- function(id) {
     shiny::moduleServer(id, function(input, output, session) {
       wagebill_data <- reactive({
@@ -80,6 +103,19 @@ wagebill_server <- function(id) {
     })
   }
 
+#' Standalone Wage Bill Application
+#'
+#' Launches a standalone Shiny app for testing the wage bill module.
+#'
+#' @return A Shiny app object.
+#'
+#' @importFrom shiny shinyApp
+#'
+#' @keywords internal
+#' @examples
+#' \dontrun{
+#' wagebill_app()
+#' }
 wagebill_app <- function(){
   ui <- wagebill_ui("test")
   
