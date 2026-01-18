@@ -22,3 +22,5 @@ Imports:
     scales,
     shiny,
     thematic
+Remotes: 
+    WB-PIDA-Data-Science-Shop/govhr
