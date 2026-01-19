@@ -4,8 +4,14 @@ library(ggplot2)
 library(plotly)
 library(dplyr)
 
+wagebill_data <- govhr::bra_hrmis_contract |>
+  dplyr::filter(
+    lubridate::year(.data[["ref_date"]]) <= 2017
+  )
+
 wagebill_ui <- function(id, wagebill_data) {
   bslib::layout_columns(
+    fillable = FALSE,
     bslib::card(
       bslib::card_header(
         "Wage Bill: Overview"
@@ -13,20 +19,24 @@ wagebill_ui <- function(id, wagebill_data) {
       bslib::card_body(
         shiny::markdown(
           readLines("inst/markdown/wagebill.md")
-        )
+        ),
+        height = "350px"
       )
     ),
-    bslib::page_sidebar(
+    bslib::layout_sidebar(
+      fillable = FALSE,
       title = "Wagebill: Time Trend",
       sidebar = sidebar(
-        title = "Wagebill Grouping",
-        shiny::dateRangeInput(
+        title = "Controls",
+        shinyWidgets::numericRangeInput(
           shiny::NS(id, "date_range"),
-          "Date Range:",
-          start = min(wagebill_data$ref_date, na.rm = TRUE),
-          end = max(wagebill_data$ref_date, na.rm = TRUE),
-          min = min(wagebill_data$ref_date, na.rm = TRUE),
-          max = max(wagebill_data$ref_date, na.rm = TRUE)
+          "Time frame:",
+          value = c(
+            min(lubridate::year(wagebill_data$ref_date), na.rm = TRUE),
+            max(lubridate::year(wagebill_data$ref_date), na.rm = TRUE)
+          ),
+          min = min(lubridate::year(wagebill_data$ref_date), na.rm = TRUE),
+          max = max(lubridate::year(wagebill_data$ref_date), na.rm = TRUE)
         ),
         shiny::selectInput(
           shiny::NS(id, "wagebill_measure"),
@@ -49,20 +59,26 @@ wagebill_ui <- function(id, wagebill_data) {
           )
         )
       ),
-      layout_columns(
-        column_widths = c(12, 12),
-        bslib::card(
-          bslib::card_header("Wagebill Time Trend"),
+      bslib::card(
+          bslib::card_header("Time trends"),
           shinyWidgets::materialSwitch(
             shiny::NS(id, "toggle_growth"),
-            label = "Switch to Growth Rate",
+            label = "Switch to baseline index",
             value = FALSE
           ),
-          plotly::plotlyOutput(NS(id, "wagebill_panel"))
+          plotly::plotlyOutput(NS(id, "wagebill_panel")),
+          height = "350px"
+      ),
+      layout_columns(
+        bslib::card(
+          bslib::card_header("Total by group"),
+          plotly::plotlyOutput(NS(id, "wagebill_cross_section")),
+          height = "500px"
         ),
         bslib::card(
-          bslib::card_header("Wagebill Breakdown"),
-          plotly::plotlyOutput(NS(id, "wagebill_cross_section"))
+          bslib::card_header("Growth rate by group"),
+          plotly::plotlyOutput(NS(id, "wagebill_change")),
+          height = "500px"
         )
       )
     ),
@@ -75,9 +91,12 @@ wagebill_server <- function(id, wagebill_data) {
     wagebill_summary <- reactive({
       if (input$wagebill_group == "all") {
         wagebill_out <- wagebill_data |>
+          mutate(
+            year = lubridate::year(.data[["ref_date"]])
+          ) |>
           dplyr::filter(
-            .data[["ref_date"]] >= input$date_range[1],
-            .data[["ref_date"]] <= input$date_range[2]
+            .data[["year"]] >= input$date_range[1],
+            .data[["year"]] <= input$date_range[2]
           ) |>
           govhr::compute_fastsummary(
             cols = input$wagebill_measure,
@@ -86,9 +105,12 @@ wagebill_server <- function(id, wagebill_data) {
           )
       } else {
         wagebill_out <- wagebill_data |>
+          mutate(
+            year = lubridate::year(.data[["ref_date"]])
+          ) |>
           dplyr::filter(
-            .data[["ref_date"]] >= input$date_range[1],
-            .data[["ref_date"]] <= input$date_range[2]
+            .data[["year"]] >= input$date_range[1],
+            .data[["year"]] <= input$date_range[2]
           ) |>
           govhr::compute_fastsummary(
             cols = input$wagebill_measure,
@@ -97,9 +119,12 @@ wagebill_server <- function(id, wagebill_data) {
           )
       }
 
-      if(input$toggle_growth) {
+      if (input$toggle_growth) {
         validate(
-          need(input$wagebill_group != "all", "Please select a group breakdown.")
+          need(
+            input$wagebill_group != "all",
+            "Please select a group."
+          )
         )
 
         wagebill_out <- wagebill_out |>
@@ -128,11 +153,11 @@ wagebill_server <- function(id, wagebill_data) {
         xlab("Time")
 
       if (input$wagebill_group != "all") {
-        plot <- plot + 
+        plot <- plot +
           aes(group = .data[[input$wagebill_group]])
       }
 
-      if(input$toggle_growth) {
+      if (input$toggle_growth) {
         plot <- plot +
           ylab("Growth Rate (Base = 100%)") +
           geom_hline(
@@ -151,15 +176,19 @@ wagebill_server <- function(id, wagebill_data) {
     # plot 2. cross-section
     output$wagebill_cross_section <- plotly::renderPlotly({
       validate(
-        need(input$wagebill_group != "all", "Please select a group breakdown.") 
+        need(input$wagebill_group != "all", "Please select a group.")
       )
 
       cross_section_data <- reactive({
         wagebill_data |>
-          # only present latest year
           mutate(
             year = lubridate::year(.data[["ref_date"]])
           ) |>
+          dplyr::filter(
+            .data[["year"]] >= input$date_range[1],
+            .data[["year"]] <= input$date_range[2]
+          ) |>
+          # only present latest year
           filter(
             year == max(year)
           ) |>
@@ -167,6 +196,11 @@ wagebill_server <- function(id, wagebill_data) {
             cols = input$wagebill_measure,
             fns = "sum",
             groups = input$wagebill_group
+          ) |> 
+          # drop missing values and groups
+          filter(
+            !is.na(.data[["value"]]) &
+              !is.na(.data[[input$wagebill_group]])
           )
       })
 
@@ -180,19 +214,96 @@ wagebill_server <- function(id, wagebill_data) {
             )
           )
         ) +
-        geom_col()
+        geom_col() +
+        labs(
+          x = "Wage bill",
+          y = ""
+        )
 
       plotly::ggplotly(plot)
-    }) |> 
+    }) |>
+      bindEvent(input$wagebill_group)
+
+    # plot 3. comparative change
+    output$wagebill_change <- plotly::renderPlotly({
+      validate(
+        need(input$wagebill_group != "all", "Please select a group.")
+      )
+
+      change_data <- reactive({
+        wagebill_data |>
+          # only present latest year
+          dplyr::mutate(
+            year = lubridate::year(.data[["ref_date"]])
+          ) |>
+          dplyr::filter(
+            .data[["year"]] >= input$date_range[1],
+            .data[["year"]] <= input$date_range[2]
+          ) |>
+          dplyr::filter(
+            year %in% c(max(year), max(year) - 1)
+          ) |>
+          govhr::compute_fastsummary(
+            cols = input$wagebill_measure,
+            fns = "sum",
+            groups = c("ref_date", input$wagebill_group)
+          ) |>
+          dplyr::group_by(
+            across(all_of(input$wagebill_group))
+          ) |>
+          complete_dates(
+            id_col = input$wagebill_group,
+            start_date = max(wagebill_data$ref_date) - lubridate::years(1),
+            end_date = max(wagebill_data$ref_date)
+          ) |>
+          dplyr::mutate(
+            growth_rate = round(value / dplyr::lag(value) - 1, 3) * 100
+          ) |>
+          filter(
+            # filter only latest value
+            ref_date == max(wagebill_data$ref_date) &
+              # drop missing values and groups
+              !is.na(.data[["growth_rate"]]) &
+              !is.na(.data[[input$wagebill_group]])
+          )
+      })
+
+      plot <- change_data() |>
+        ggplot(
+          aes(
+            x = .data[["growth_rate"]],
+            y = stats::reorder(
+              .data[[input$wagebill_group]],
+              .data[["growth_rate"]]
+            )
+          )
+        ) +
+        geom_col() +
+        geom_vline(
+          xintercept = 0,
+          linetype = "dashed",
+          color = "orangered2"
+        ) +
+        labs(
+          x = "Growth rate",
+          y = ""
+        )
+
+      plotly::ggplotly(plot)
+    }) |>
       bindEvent(input$wagebill_group)
   })
 }
 
-wagebill_app <- function() {
-  ui <- wagebill_ui("test")
+run_wagebillapp <- function(
+  wagebill_data = govhr::bra_hrmis_contract |>
+    dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017),
+  ...
+) {
+  ui <- wagebill_ui("test", wagebill_data)
 
   server <- function(input, output, session) {
-    wagebill_server("test")
+    wagebill_server("test", wagebill_data)
   }
 
   shiny::shinyApp(ui, server)
