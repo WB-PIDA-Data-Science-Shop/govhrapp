@@ -119,21 +119,23 @@ wagebill_server <- function(id, wagebill_data) {
           )
       }
 
+      # if growth rate toggle is on
       if (input$toggle_growth) {
-        validate(
-          need(
-            input$wagebill_group != "all",
-            "Please select a group."
-          )
-        )
-
-        wagebill_out <- wagebill_out |>
-          dplyr::group_by(across(all_of(input$wagebill_group))) |>
-          dplyr::arrange(.data[["ref_date"]]) |>
-          dplyr::mutate(
-            value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100
-          ) |>
-          dplyr::ungroup()
+        if (input$wagebill_group == "all") {
+          wagebill_out <- wagebill_out |>
+            dplyr::arrange(.data[["ref_date"]]) |>
+            dplyr::mutate(
+              value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100
+            )
+        } else {
+          wagebill_out <- wagebill_out |>
+            dplyr::group_by(across(all_of(input$wagebill_group))) |>
+            dplyr::arrange(.data[["ref_date"]]) |>
+            dplyr::mutate(
+              value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100
+            ) |>
+            dplyr::ungroup()
+        }
       }
 
       wagebill_out
@@ -150,6 +152,9 @@ wagebill_server <- function(id, wagebill_data) {
         ) +
         geom_point() +
         geom_line() +
+        scale_y_continuous(
+          labels = scales::label_number(scale_cut = scales::cut_short_scale())
+        ) +
         xlab("Time")
 
       if (input$wagebill_group != "all") {
@@ -215,6 +220,9 @@ wagebill_server <- function(id, wagebill_data) {
           )
         ) +
         geom_col() +
+        scale_x_continuous(
+          labels = scales::label_number(scale_cut = scales::cut_short_scale())
+        ) +
         labs(
           x = "Wage bill",
           y = ""
@@ -251,17 +259,17 @@ wagebill_server <- function(id, wagebill_data) {
           dplyr::group_by(
             across(all_of(input$wagebill_group))
           ) |>
-          complete_dates(
+          govhr::complete_dates(
             id_col = input$wagebill_group,
             start_date = max(wagebill_data$ref_date) - lubridate::years(1),
             end_date = max(wagebill_data$ref_date)
           ) |>
           dplyr::mutate(
-            growth_rate = round(value / dplyr::lag(value) - 1, 3) * 100
+            growth_rate = round(.data[["value"]] / dplyr::lag(.data[["value"]]) - 1, 3) * 100
           ) |>
           filter(
             # filter only latest value
-            ref_date == max(wagebill_data$ref_date) &
+            .data[["ref_date"]] == max(wagebill_data$ref_date) &
               # drop missing values and groups
               !is.na(.data[["growth_rate"]]) &
               !is.na(.data[[input$wagebill_group]])
@@ -283,6 +291,9 @@ wagebill_server <- function(id, wagebill_data) {
           xintercept = 0,
           linetype = "dashed",
           color = "orangered2"
+        ) +
+        scale_x_continuous(
+          labels = scales::label_number(scale_cut = scales::cut_short_scale())
         ) +
         labs(
           x = "Growth rate",
