@@ -5,8 +5,12 @@ library(plotly)
 library(dplyr)
 
 wagebill_data <- govhr::bra_hrmis_contract |>
-  dplyr::filter(
-    lubridate::year(.data[["ref_date"]]) <= 2017
+  dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |> 
+  dplyr::left_join(
+    govhr::bra_hrmis_personnel |>
+      distinct(ref_date, personnel_id, .keep_all = TRUE) |> 
+      select(ref_date, personnel_id, gender, educat7, status),
+    by = c("ref_date", "personnel_id")
   )
 
 wagebill_ui <- function(id, wagebill_data) {
@@ -51,11 +55,18 @@ wagebill_ui <- function(id, wagebill_data) {
           shiny::NS(id, "wagebill_group"),
           "Group:",
           choices = list(
-            "Time" = "ref_date",
+            "All" = "ref_date",
             "Establishment" = "est_id",
-            "Contract type (native)" = "contract_type_native",
-            "Paygrade" = "paygrade",
-            "Occupation" = "occupation_native"
+            "Contract" = c(
+              "Contract type (native)" = "contract_type_native",
+              "Paygrade" = "paygrade",
+              "Occupation" = "occupation_native"
+            ),
+            "Personnel" = c(
+              "Gender" = "gender",
+              "Education" = "educat7",
+              "Employment Status" = "status"
+            )
           )
         )
       ),
@@ -148,7 +159,7 @@ wagebill_server <- function(id, wagebill_data) {
       plot <- wagebill_summary() |>
         ggplot(
           aes(
-            x = .data[[input$wagebill_group]],
+            x = .data[["ref_date"]],
             y = .data[["value"]]
           )
         ) +
@@ -180,11 +191,11 @@ wagebill_server <- function(id, wagebill_data) {
       plotly::ggplotly(plot)
     })
 
-    # plot 2. cross-section
+    # plot 2. total by group
     output$wagebill_cross_section <- plotly::renderPlotly({
-      # validate(
-      #   need(input$wagebill_group != "all", "Please select a group.")
-      # )
+      validate(
+        need(input$wagebill_group != "ref_date", "Please select a group.")
+      )
 
       cross_section_data <- reactive({
         wagebill_filtered_date() |>
@@ -202,73 +213,49 @@ wagebill_server <- function(id, wagebill_data) {
             !is.na(.data[["value"]]) &
               !is.na(.data[[input$wagebill_group]])
           )
-      })
-      
-      if(input$wagebill_group == "ref_date"){
-        plot <- cross_section_data() |>
-          ggplot(
-            aes(
-              x = .data[["value"]],
-              y = input$wagebill_group
+      })      
+
+      plot <- cross_section_data() |>
+        ggplot(
+          aes(
+            x = .data[["value"]],
+            y = stats::reorder(
+              .data[[input$wagebill_group]],
+              .data[["value"]]
             )
-          ) +
-          geom_col() +
-          scale_x_continuous(
-            labels = scales::label_number(scale_cut = scales::cut_short_scale())
-          ) +
-          labs(
-            x = "Wage bill",
-            y = ""
           )
-      }else{
-        plot <- cross_section_data() |>
-          ggplot(
-            aes(
-              x = .data[["value"]],
-              y = stats::reorder(
-                .data[[input$wagebill_group]],
-                .data[["value"]]
-              )
-            )
-          ) +
-          geom_col() +
-          scale_x_continuous(
-            labels = scales::label_number(scale_cut = scales::cut_short_scale())
-          ) +
-          labs(
-            x = "Wage bill",
-            y = ""
-          )
-      }
-    
+        ) +
+        geom_col() +
+        scale_x_continuous(
+          labels = scales::label_number(scale_cut = scales::cut_short_scale())
+        ) +
+        labs(
+          x = "Wage bill",
+          y = ""
+        )
+
       plotly::ggplotly(plot)
     }) |>
       bindEvent(input$wagebill_group)
 
-    # plot 3. comparative change
+    # plot 3. growth rate by group
     output$wagebill_change <- plotly::renderPlotly({
       validate(
-        need(input$wagebill_group != "all", "Please select a group.")
+        need(input$wagebill_group != "ref_date", "Please select a group.")
       )
 
       change_data <- reactive({
-        grouping <- if_else(
-          input$wagebill_measure == "ref_date",
-          input$wagebill_group,
-          c("ref_date", input$wagebill_group)
-        )
-
         wagebill_annual <- wagebill_filtered_date() |>
-          # only present latest date
+          # only present latest year and previous one
           dplyr::filter(
             year %in% c(max(year), max(year) - 1)
           ) |>
           govhr::compute_fastsummary(
             cols = input$wagebill_measure,
             fns = "sum",
-            groups = grouping
-          ) 
-          
+            groups = c("ref_date", input$wagebill_group)
+          )
+
         wagebill_annual |>
           dplyr::group_by(
             across(all_of(input$wagebill_group))
@@ -322,17 +309,21 @@ wagebill_server <- function(id, wagebill_data) {
     }) |>
       bindEvent(input$wagebill_group)
 
-    # plot 4. pay dispersion across groups
+    # plot 4. equity
     output$wagebill_dispersion <- plotly::renderPlotly({
-      # validate(
-      #   need(input$wagebill_group != "all", "Please select a group.")
-      # )
+      validate(
+        need(input$wagebill_group != "ref_date", "Please select a group.")
+      )
 
       dispersion_data <- reactive({
         wagebill_deflated <- wagebill_filtered_date() |>
           govhr::convert_constant_ppp(
             cols = input$wagebill_measure,
             macro_indicators = govhr::macro_indicators
+          ) |>
+          # only present latest year
+          filter(
+            year == max(year)
           )
       })
 
@@ -394,8 +385,7 @@ wagebill_server <- function(id, wagebill_data) {
 #' @importFrom plotly plotlyOutput renderPlotly ggplotly
 #' @export
 run_wagebillapp <- function(
-  wagebill_data = govhr::bra_hrmis_contract |>
-    dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017),
+  wagebill_data,
   ...
 ) {
   ui <- wagebill_ui("test", wagebill_data)

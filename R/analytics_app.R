@@ -28,6 +28,17 @@ run_govhrapp <- function(...) {
   
   thematic::thematic_shiny()
 
+  # globals
+  wagebill_data <- govhr::bra_hrmis_contract |> 
+    dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |> 
+    # there are duplicate records for personnel
+    dplyr::left_join(
+      govhr::bra_hrmis_personnel |> 
+        distinct(ref_date, personnel_id, .keep_all = TRUE) |> 
+        select(ref_date, personnel_id, gender, educat7, status),
+      by = c("ref_date", "personnel_id")
+    )
+
   ui <- bslib::page_navbar(
     title = "govhr dashboard",
     fillable = FALSE,
@@ -74,12 +85,12 @@ run_govhrapp <- function(...) {
     bslib::nav_panel(
       "Wage Bill",
       icon = shiny::icon("money-bill"),
-      wagebill_ui("wagebill", wagebill_data = govhr::bra_hrmis_contract |> dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017))
+      wagebill_ui("wagebill", wagebill_data)
     )
   )
 
   server <- function(input, output, session) {
-    wagebill_server("wagebill", wagebill_data = govhr::bra_hrmis_contract |> dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017))
+    wagebill_server("wagebill", wagebill_data)
   }
 
   shiny::shinyApp(ui, server, ...)

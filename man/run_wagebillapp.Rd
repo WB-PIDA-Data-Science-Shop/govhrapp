@@ -4,11 +4,7 @@
 \alias{run_wagebillapp}
 \title{Run the Wage Bill Shiny Application}
 \usage{
-run_wagebillapp(
-  wagebill_data = dplyr::filter(govhr::bra_hrmis_contract,
-    lubridate::year(.data[["ref_date"]]) <= 2017),
-  ...
-)
+run_wagebillapp(wagebill_data, ...)
 }
 \arguments{
 \item{wagebill_data}{A data frame containing wage bill information with the
