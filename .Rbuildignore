@@ -1,5 +1,6 @@
 ^renv$
 ^renv\.lock$
+^www
 ^govhrapp\.Rproj$
 ^\.Rproj\.user$
 ^\.github$

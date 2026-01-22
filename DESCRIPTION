@@ -11,3 +11,16 @@ RoxygenNote: 7.3.3
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Imports: 
+    bslib,
+    data.table,
+    ggplot2,
+    govhr,
+    gt,
+    highcharter,
+    rlang,
+    scales,
+    shiny,
+    thematic
+Remotes: 
+    WB-PIDA-Data-Science-Shop/govhr
