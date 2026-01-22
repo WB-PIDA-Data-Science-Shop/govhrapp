@@ -18,6 +18,7 @@ Imports:
     govhr,
     lubridate,
     plotly,
+    rlang,
     scales,
     shiny,
     shinyWidgets,
