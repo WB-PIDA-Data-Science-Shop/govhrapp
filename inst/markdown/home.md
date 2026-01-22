@@ -4,13 +4,13 @@
 
 The assessment framework consists of two parts:
 
-**💵 Wage Bill Analysis**
+**💵 Wage Bill Analytics**
 - Time trends in total compensation expenditures
 - Cross-sectional comparison across establishments, occupations, and demographics
 - Year-over-year growth rate analysis
 - Equity and wage dispersion assessment
 
-**🚶 Workforce Analysis**
+**🚶 Workforce Analytics**
 - Time trends in public sector headcount
 - Cross-sectional comparison of workforce size across groups
 - Year-over-year growth rate and hiring/attrition patterns

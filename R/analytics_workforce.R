@@ -32,10 +32,7 @@ workforce_ui <- function(id, workforce_data) {
         title = "Guidance Questions",
         icon = shiny::icon("question-circle"),
         shiny::markdown(
-          "- How has the total public sector workforce evolved over time?
-- Which establishments or sectors have experienced the most significant growth or decline?
-- Are there differences in workforce composition across contract types, occupations, or demographic groups?
-- What are the recent hiring or attrition trends across different segments of the public sector?"
+          readLines("inst/markdown/workforce_questions.md")
         )
       ),
       open = FALSE
@@ -92,7 +89,7 @@ workforce_ui <- function(id, workforce_data) {
           height = "450px"
         ),
         bslib::card(
-          bslib::card_header("Growth rate by group"),
+          bslib::card_header("Growth dynamics by group"),
           plotly::plotlyOutput(NS(id, "workforce_change")),
           height = "450px"
         )

@@ -18,7 +18,7 @@ wagebill_ui <- function(id, wagebill_data) {
     fillable = FALSE,
     bslib::card(
       bslib::card_header(
-        "Wage Bill: Overview"
+        "Wage Bill Analytics"
       ),
       bslib::card_body(
         shiny::markdown(
@@ -32,18 +32,14 @@ wagebill_ui <- function(id, wagebill_data) {
         title = "Guidance Questions",
         icon = shiny::icon("question-circle"),
         shiny::markdown(
-          "- How has the total public sector wage bill evolved over time?
-- Which establishments or sectors account for the largest share of wage bill spending?
-- Are there significant differences in compensation levels across contract types, occupations, or demographic groups?
-- What are the recent wage bill growth trends across different segments of the public sector?
-- How equitably are wages distributed within and across different groups?"
+          readLines("inst/markdown/wagebill_questions.md")
         )
       ),
       open = FALSE
     ),
     bslib::layout_sidebar(
       fillable = FALSE,
-      title = "Wagebill: Time Trend",
+      title = "Wagebill: Overview",
       sidebar = bslib::sidebar(
         title = "Controls",
         width = "300px",
@@ -102,7 +98,7 @@ wagebill_ui <- function(id, wagebill_data) {
           height = "450px"
         ),
         bslib::card(
-          bslib::card_header("Growth rate by group"),
+          bslib::card_header("Growth dynamics by group"),
           plotly::plotlyOutput(NS(id, "wagebill_change")),
           height = "450px"
         )
