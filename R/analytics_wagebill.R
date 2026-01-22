@@ -237,7 +237,7 @@ wagebill_server <- function(id, wagebill_data) {
 
       plotly::ggplotly(plot)
     }) |>
-      bindEvent(input$wagebill_group)
+      bindEvent(input$wagebill_group, input$wagebill_date)
 
     # plot 3. growth rate by group
     output$wagebill_change <- plotly::renderPlotly({
@@ -257,14 +257,16 @@ wagebill_server <- function(id, wagebill_data) {
             groups = c("ref_date", input$wagebill_group)
           )
 
+        max_filtered_date <- max(wagebill_filtered_date()$ref_date, na.rm = TRUE)
+
         wagebill_annual |>
           dplyr::group_by(
             across(all_of(input$wagebill_group))
           ) |>
           govhr::complete_dates(
             id_col = input$wagebill_group,
-            start_date = max(wagebill_data$ref_date) - lubridate::years(1),
-            end_date = max(wagebill_data$ref_date)
+            start_date = max_filtered_date - lubridate::years(1),
+            end_date = max_filtered_date
           ) |>
           dplyr::mutate(
             growth_rate = round(
@@ -275,7 +277,7 @@ wagebill_server <- function(id, wagebill_data) {
           ) |>
           filter(
             # filter only latest value
-            .data[["ref_date"]] == max(wagebill_data$ref_date) &
+            .data[["ref_date"]] == max_filtered_date &
               # drop missing values and groups
               !is.na(.data[["growth_rate"]]) &
               !is.na(.data[[input$wagebill_group]])
@@ -308,7 +310,7 @@ wagebill_server <- function(id, wagebill_data) {
 
       plotly::ggplotly(plot)
     }) |>
-      bindEvent(input$wagebill_group)
+      bindEvent(input$wagebill_group, input$date_range)
 
     # plot 4. equity
     output$wagebill_dispersion <- plotly::renderPlotly({
@@ -328,7 +330,7 @@ wagebill_server <- function(id, wagebill_data) {
           )
       })
 
-      dispersion_data() |>
+      plot <- dispersion_data() |>
         plot_segment(
           col = input$wagebill_measure,
           group = input$wagebill_group
@@ -336,10 +338,12 @@ wagebill_server <- function(id, wagebill_data) {
         labs(
           x = "Wage bill",
           y = ""
-        )|>
-        plotly::ggplotly()
+        )
+      
+      plotly::ggplotly(plot)
     })
-  })
+  }) |> 
+          bindEvent(input$wagebill_group, input$date_range)
 }
 
 #' Run the Wage Bill Shiny Application

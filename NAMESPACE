@@ -2,6 +2,7 @@
 
 export(plot_segment)
 export(run_wagebillapp)
+export(run_workforceapp)
 import(bslib)
 import(dplyr)
 import(ggplot2)

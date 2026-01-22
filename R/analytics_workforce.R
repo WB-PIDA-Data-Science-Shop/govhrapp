@@ -211,7 +211,7 @@ workforce_server <- function(id, workforce_data) {
 
       plotly::ggplotly(plot)
     }) |>
-      bindEvent(input$workforce_group)
+      bindEvent(input$workforce_group, input$date_range)
 
     # plot 3. growth rate by group
     output$workforce_change <- plotly::renderPlotly({
@@ -227,14 +227,16 @@ workforce_server <- function(id, workforce_data) {
           ) |>
           govhr::fastcount(.data[["ref_date"]], .data[[input$workforce_group]], name = "value")
 
+        max_filtered_date <- max(workforce_filtered_date()$ref_date, na.rm = TRUE)
+
         workforce_annual |>
           dplyr::group_by(
             across(all_of(input$workforce_group))
           ) |>
           govhr::complete_dates(
             id_col = input$workforce_group,
-            start_date = max(workforce_data$ref_date) - lubridate::years(1),
-            end_date = max(workforce_data$ref_date)
+            start_date = max_filtered_date - lubridate::years(1),
+            end_date = max_filtered_date
           ) |>
           dplyr::mutate(
             growth_rate = round(
@@ -245,7 +247,7 @@ workforce_server <- function(id, workforce_data) {
           ) |>
           filter(
             # filter only latest value
-            .data[["ref_date"]] == max(workforce_data$ref_date) &
+            .data[["ref_date"]] == max_filtered_date &
               # drop missing values and groups
               !is.na(.data[["growth_rate"]]) &
               !is.na(.data[[input$workforce_group]])
@@ -278,7 +280,7 @@ workforce_server <- function(id, workforce_data) {
 
       plotly::ggplotly(plot)
     }) |>
-      bindEvent(input$workforce_group)
+      bindEvent(input$workforce_group, input$date_range)
   })
 }
 

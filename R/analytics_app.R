@@ -25,17 +25,46 @@ run_govhrapp <- function(...) {
   ggplot2::theme_set(
     ggplot2::theme_minimal()
   )
-  
+
   thematic::thematic_shiny(font = "auto")
 
   # globals
-  wagebill_data <- govhr::bra_hrmis_contract |> 
+  wagebill_data <- govhr::bra_hrmis_contract |>
     # there are duplicate records for personnel
-    dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |> 
+    dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |>
     dplyr::left_join(
       govhr::bra_hrmis_personnel |>
-        distinct(.data[["ref_date"]], .data[["personnel_id"]], .keep_all = TRUE) |> 
-        select(.data[["ref_date"]], .data[["personnel_id"]], .data[["gender"]], .data[["educat7"]], .data[["status"]]),
+        distinct(
+          .data[["ref_date"]],
+          .data[["personnel_id"]],
+          .keep_all = TRUE
+        ) |>
+        select(
+          .data[["ref_date"]],
+          .data[["personnel_id"]],
+          .data[["gender"]],
+          .data[["educat7"]],
+          .data[["status"]]
+        ),
+      by = c("ref_date", "personnel_id")
+    )
+
+  workforce_data <- govhr::bra_hrmis_contract |>
+    dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |>
+    dplyr::left_join(
+      govhr::bra_hrmis_personnel |>
+        distinct(
+          .data[["ref_date"]],
+          .data[["personnel_id"]],
+          .keep_all = TRUE
+        ) |>
+        select(
+          .data[["ref_date"]],
+          .data[["personnel_id"]],
+          .data[["gender"]],
+          .data[["educat7"]],
+          .data[["status"]]
+        ),
       by = c("ref_date", "personnel_id")
     )
 
@@ -86,11 +115,19 @@ run_govhrapp <- function(...) {
       "Wage Bill",
       icon = shiny::icon("money-bill"),
       wagebill_ui("wagebill", wagebill_data)
+    ),
+
+    # panel 3: workforce planning
+    bslib::nav_panel(
+      "Workforce Planning",
+      icon = shiny::icon("person-walking"),
+      workforce_ui("workforce", workforce_data)
     )
   )
 
   server <- function(input, output, session) {
     wagebill_server("wagebill", wagebill_data)
+    workforce_server("workforce", workforce_data)
   }
 
   shiny::shinyApp(ui, server, ...)
