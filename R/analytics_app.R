@@ -21,21 +21,21 @@ run_govhrapp <- function(...) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", "inst/www")
 
-  # ensure ggplot2 inherits bslib themes
+  # ensure ggplot2 and plotly inherit bslib themes
   ggplot2::theme_set(
     ggplot2::theme_minimal()
   )
   
-  thematic::thematic_shiny()
+  thematic::thematic_shiny(font = "auto")
 
   # globals
   wagebill_data <- govhr::bra_hrmis_contract |> 
-    dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |> 
     # there are duplicate records for personnel
+    dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |> 
     dplyr::left_join(
-      govhr::bra_hrmis_personnel |> 
-        distinct(ref_date, personnel_id, .keep_all = TRUE) |> 
-        select(ref_date, personnel_id, gender, educat7, status),
+      govhr::bra_hrmis_personnel |>
+        distinct(.data[["ref_date"]], .data[["personnel_id"]], .keep_all = TRUE) |> 
+        select(.data[["ref_date"]], .data[["personnel_id"]], .data[["gender"]], .data[["educat7"]], .data[["status"]]),
       by = c("ref_date", "personnel_id")
     )
 
