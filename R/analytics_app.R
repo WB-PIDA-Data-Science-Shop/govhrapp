@@ -119,7 +119,7 @@ run_govhrapp <- function(...) {
 
     # panel 3: workforce planning
     bslib::nav_panel(
-      "Workforce Planning",
+      "Workforce",
       icon = shiny::icon("person-walking"),
       workforce_ui("workforce", workforce_data)
     )
