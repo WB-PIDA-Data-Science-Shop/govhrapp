@@ -300,13 +300,13 @@ wagebill_server <- function(id, wagebill_data) {
     output$wagebill_dispersion <- plotly::renderPlotly({
       dispersion_data <- reactive({
         wagebill_deflated <- wagebill_filtered_date() |>
-          convert_constant_ppp(
+          govhr::convert_constant_ppp(
             cols = input$wagebill_measure,
             macro_indicators = govhr::macro_indicators
           )
       })
 
-      salary_dispersion_occupation |>
+      dispersion_data() |>
         plot_segment(
           col = input$wagebill_measure,
           group = input$wagebill_group

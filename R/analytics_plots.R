@@ -30,22 +30,22 @@
 #' @examples
 #' plot_segment(mtcars, col = "mpg", group = "cyl")
 #'
-#' @importFrom rlang .data
 #' @importFrom dplyr group_by summarise mutate arrange pull
-#' @importFrom dtplyr lazy_dt
 #' @importFrom ggplot2 ggplot aes geom_segment geom_jitter scale_y_discrete labs theme_minimal
+#' @importFrom tibble tibble
+#' @importFrom rlang :=
+#' 
 #' @export
 plot_segment <- function(.data, col, group) {
   df <- .data
   
   # Calculate summary statistics using .data[[]]
   summary_df <- df |>
-    dtplyr::lazy_dt() |>
     dplyr::group_by(.data[[group]]) |>
     dplyr::summarise(
       xmin = min(.data[[col]], na.rm = TRUE),
       xmax = max(.data[[col]], na.rm = TRUE),
-      mean = stats::mean(.data[[col]], na.rm = TRUE),
+      mean = mean(.data[[col]], na.rm = TRUE),
       .groups = "drop"
     ) |>
     dplyr::mutate(
