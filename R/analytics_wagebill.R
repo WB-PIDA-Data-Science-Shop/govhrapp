@@ -24,13 +24,27 @@ wagebill_ui <- function(id, wagebill_data) {
         shiny::markdown(
           readLines("inst/markdown/wagebill.md")
         ),
-        height = "350px"
+        height = "300px"
       )
+    ),
+    bslib::accordion(
+      bslib::accordion_panel(
+        title = "Guidance Questions",
+        icon = shiny::icon("question-circle"),
+        shiny::markdown(
+          "- How has the total public sector wage bill evolved over time?
+- Which establishments or sectors account for the largest share of wage bill spending?
+- Are there significant differences in compensation levels across contract types, occupations, or demographic groups?
+- What are the recent wage bill growth trends across different segments of the public sector?
+- How equitably are wages distributed within and across different groups?"
+        )
+      ),
+      open = FALSE
     ),
     bslib::layout_sidebar(
       fillable = FALSE,
       title = "Wagebill: Time Trend",
-      sidebar = sidebar(
+      sidebar = bslib::sidebar(
         title = "Controls",
         width = "300px",
         shinyWidgets::numericRangeInput(
@@ -237,7 +251,7 @@ wagebill_server <- function(id, wagebill_data) {
 
       plotly::ggplotly(plot)
     }) |>
-      bindEvent(input$wagebill_group, input$wagebill_date)
+      bindEvent(input$wagebill_group, input$date_range)
 
     # plot 3. growth rate by group
     output$wagebill_change <- plotly::renderPlotly({
@@ -341,9 +355,9 @@ wagebill_server <- function(id, wagebill_data) {
         )
       
       plotly::ggplotly(plot)
-    })
-  }) |> 
-          bindEvent(input$wagebill_group, input$date_range)
+    }) |>
+      bindEvent(input$wagebill_group, input$date_range)
+  })
 }
 
 #' Run the Wage Bill Shiny Application

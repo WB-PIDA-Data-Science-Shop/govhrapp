@@ -1,16 +1,17 @@
- This dashboard provides a standard set of indicators and visualizations on HRMIS analytics, building on the World Bank's [Public Sector and Employment Assessment Framework](https://documents1.worldbank.org/curated/en/324801640074379484/pdf/Public-Sector-Employment-and-Compensation-An-Assessment-Framework.pdf). The objective of this assessment is to conduct public sector employment and compensation assessments that can help develop evidence-based reforms.
+**This is the Analytics Suite.**
 
-The assessment framework consists of two parts. The first part assesses both the institutional and behavioral aspects of employment and compensation practices. It comprises six dimensions:
+ The dashboard provides a standard set of indicators and visualizations on personnel analytics, building on the World Bank's [Public Sector and Employment Assessment Framework](https://documents1.worldbank.org/curated/en/324801640074379484/pdf/Public-Sector-Employment-and-Compensation-An-Assessment-Framework.pdf). The objective of this assessment is to produce analytical insights on the wagebill and workforce to inform policy decisions on personnel management.
 
-1. Wage bill planning.
-2. Wage bill controls.
-3. Employment levels and distribution of the public sector workforce.
-4. Wage competitiveness of the public sector.
-5. Wage equity.
-6. Wage incentives.
+The assessment framework consists of two parts:
 
-The second part assesses the impact of these employment and compensation practices on:
+**💵 Wage Bill Analysis**
+- Time trends in total compensation expenditures
+- Cross-sectional comparison across establishments, occupations, and demographics
+- Year-over-year growth rate analysis
+- Equity and wage dispersion assessment
 
-1. Fiscal sustainability.
-2. Public sector productivity.
-3. Labor allocation between the public and private sectors.
+**🚶 Workforce Analysis**
+- Time trends in public sector headcount
+- Cross-sectional comparison of workforce size across groups
+- Year-over-year growth rate and hiring/attrition patterns
+- Workforce composition by contract type, occupation, and demographics

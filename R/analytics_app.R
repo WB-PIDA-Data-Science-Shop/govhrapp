@@ -102,7 +102,7 @@ run_govhrapp <- function(...) {
         ),
         bslib::card_body(
           shiny::tags$br(),
-          shiny::tags$h3("Welcome to govhr: Analytics Suite."),
+          shiny::tags$h3("Welcome to govhr."),
           shiny::markdown(
             readLines("inst/markdown/home.md")
           )

@@ -24,13 +24,26 @@ workforce_ui <- function(id, workforce_data) {
         shiny::markdown(
           readLines("inst/markdown/workforce.md")
         ),
-        height = "350px"
+        height = "300px"
       )
+    ),
+    bslib::accordion(
+      bslib::accordion_panel(
+        title = "Guidance Questions",
+        icon = shiny::icon("question-circle"),
+        shiny::markdown(
+          "- How has the total public sector workforce evolved over time?
+- Which establishments or sectors have experienced the most significant growth or decline?
+- Are there differences in workforce composition across contract types, occupations, or demographic groups?
+- What are the recent hiring or attrition trends across different segments of the public sector?"
+        )
+      ),
+      open = FALSE
     ),
     bslib::layout_sidebar(
       fillable = FALSE,
       title = "Workforce: Time Trend",
-      sidebar = sidebar(
+      sidebar = bslib::sidebar(
         title = "Controls",
         width = "300px",
         shinyWidgets::numericRangeInput(
@@ -227,16 +240,14 @@ workforce_server <- function(id, workforce_data) {
           ) |>
           govhr::fastcount(.data[["ref_date"]], .data[[input$workforce_group]], name = "value")
 
-        max_filtered_date <- max(workforce_filtered_date()$ref_date, na.rm = TRUE)
-
         workforce_annual |>
           dplyr::group_by(
             across(all_of(input$workforce_group))
           ) |>
           govhr::complete_dates(
             id_col = input$workforce_group,
-            start_date = max_filtered_date - lubridate::years(1),
-            end_date = max_filtered_date
+            start_date = max(workforce_data$ref_date) - lubridate::years(1),
+            end_date = max(workforce_data$ref_date)
           ) |>
           dplyr::mutate(
             growth_rate = round(
@@ -247,7 +258,7 @@ workforce_server <- function(id, workforce_data) {
           ) |>
           filter(
             # filter only latest value
-            .data[["ref_date"]] == max_filtered_date &
+            .data[["ref_date"]] == max(.data[["ref_date"]]) &
               # drop missing values and groups
               !is.na(.data[["growth_rate"]]) &
               !is.na(.data[[input$workforce_group]])

@@ -1,13 +1,14 @@
-This section assesses whether a public sector is over- or under-staffed by comparing public employment to total, paid, and formal-sector employment.  Globally, the public sector accounts on average for about 16% of total employment, 30% of wage employment and 37% of formal-sector wage employment — though there is wide cross-country variation, with public-sector shares ranging from under 2% to over 40%. The analysis of employment distribution examines examine whether the right number of staff are employed in the right functions, locations, and sectors — to ensure efficiency and avoid distortions.
+This section analyzes public sector workforce headcount trends over time, examining the size and composition of government employment across different dimensions such as establishments, contract types, and personnel demographics.
 
-Guidance questions for the assessment:
+The analysis provides insights into:
 
-1. Is the public sector over- or understaffed in aggregate and what have been the employment trends over time?
-2. Is the public sector over- or understaffed for particular skills and occupations, both in aggregate and in specific
-organizational and territorial jurisdictions?
-3. Are there a large proportion of public sector workers with low educational qualifications or in low-skilled jobs?
-4. Is the public sector a gender-equal employer?
-a. What are the proportion of women in aggregate?
-b. Is there horizontal and vertical segregation in employment?
-5. Is there a dual labor regime with a large segment of contract workers, and what are its implications for public
-sector employment?
+1. **Time Trends**: Track total headcount and growth patterns over time.
+2. **Cross-Sectional Analysis**: Compare workforce size across different groups (establishments, occupations, demographics) at the latest available period
+3. **Growth Dynamics**: Examine year-over-year changes in headcount by group to identify expansion or contraction patterns
+
+Guidance questions:
+
+- How has the total public sector workforce evolved over time?
+- Which establishments or sectors have experienced the most significant growth or decline?
+- Are there differences in workforce composition across contract types, occupations, or demographic groups?
+- What are the recent hiring or attrition trends across different segments of the public sector?
