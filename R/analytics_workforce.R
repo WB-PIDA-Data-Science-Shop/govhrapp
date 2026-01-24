@@ -3,13 +3,14 @@ library(bslib)
 library(ggplot2)
 library(plotly)
 library(dplyr)
+library(data.table)
 
 workforce_data <- govhr::bra_hrmis_contract |>
-  dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |> 
+  dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |>
   dplyr::left_join(
     govhr::bra_hrmis_personnel |>
       distinct(.data[["ref_date"]], .data[["personnel_id"]], .keep_all = TRUE) |> 
-      select(.data[["ref_date"]], .data[["personnel_id"]], .data[["gender"]], .data[["educat7"]], .data[["status"]]),
+      select(all_of(c("ref_date", "personnel_id", "gender", "educat7", "status"))),
     by = c("ref_date", "personnel_id")
   )
 
@@ -39,7 +40,7 @@ workforce_ui <- function(id, workforce_data) {
     ),
     bslib::layout_sidebar(
       fillable = FALSE,
-      title = "Workforce: Time Trend",
+      title = "Workforce: Headcount",
       sidebar = bslib::sidebar(
         title = "Controls",
         width = "300px",
@@ -73,7 +74,7 @@ workforce_ui <- function(id, workforce_data) {
         )
       ),
       bslib::card(
-        bslib::card_header("Time trends"),
+        bslib::card_header("Headcount"),
         shinyWidgets::materialSwitch(
           shiny::NS(id, "toggle_growth"),
           label = "Switch to baseline index",
@@ -89,10 +90,15 @@ workforce_ui <- function(id, workforce_data) {
           height = "450px"
         ),
         bslib::card(
-          bslib::card_header("Growth dynamics by group"),
-          plotly::plotlyOutput(NS(id, "workforce_change")),
+          bslib::card_header("Growth rate by group"),
+          plotly::plotlyOutput(NS(id, "workforce_growth")),
           height = "450px"
         )
+      ),
+      bslib::card(
+        bslib::card_header("Movements"),
+        plotly::plotlyOutput(NS(id, "workforce_movements")),
+        height = "450px"
       )
     ),
     col_widths = c(12, 12)
@@ -224,7 +230,7 @@ workforce_server <- function(id, workforce_data) {
       bindEvent(input$workforce_group, input$date_range)
 
     # plot 3. growth rate by group
-    output$workforce_change <- plotly::renderPlotly({
+    output$workforce_growth <- plotly::renderPlotly({
       validate(
         need(input$workforce_group != "ref_date", "Please select a group.")
       )
@@ -235,7 +241,11 @@ workforce_server <- function(id, workforce_data) {
           dplyr::filter(
             year %in% c(max(year), max(year) - 1)
           ) |>
-          govhr::fastcount(.data[["ref_date"]], .data[[input$workforce_group]], name = "value")
+          govhr::fastcount(
+            .data[["ref_date"]], 
+            .data[[input$workforce_group]],
+            name = "value"
+          )
 
         workforce_annual |>
           dplyr::group_by(
@@ -262,7 +272,7 @@ workforce_server <- function(id, workforce_data) {
           )
       })
 
-      plot <- change_data() |>
+      plot_growth <- change_data() |>
         ggplot(
           aes(
             x = .data[["growth_rate"]],
@@ -286,7 +296,54 @@ workforce_server <- function(id, workforce_data) {
           y = ""
         )
 
-      plotly::ggplotly(plot)
+      plotly::ggplotly(plot_growth)
+    }) |>
+      bindEvent(input$workforce_group, input$date_range)
+
+    # plot 4. movements
+    output$workforce_movements <- renderPlotly({
+      movement_data <- reactive({
+        min_date <- min(workforce_filtered_date()[["ref_date"]]) |> 
+          as.character()
+        max_date <- max(workforce_filtered_date()[["ref_date"]]) |> 
+          as.character()
+
+        workforce_filtered_date() |> 
+          govhr::detect_personnel_event(
+            event_type = "hire",
+            id_col = "personnel_id",
+            start_date = min_date,
+            end_date = max_date,
+            freq = "year"
+          ) |> 
+          right_join(
+            workforce_filtered_date() ,
+            by = c("personnel_id", "ref_date")
+          ) |> 
+          dplyr::group_by(
+            across(all_of(input$workforce_group))
+          ) |> 
+          summarise(
+            share = mean(!is.na(type_event))
+          ) |>
+          filter(share > 0)
+      })
+
+      plot_movement <- movement_data() |> 
+        ggplot(
+          aes(.data[["ref_date"]], .data[["share"]])
+        ) +
+        geom_point() +
+        geom_line() +
+        labs(
+          x = "Time",
+          y = "Share"
+        ) +
+        scale_y_continuous(
+          breaks = scales::pretty_breaks()
+        )
+
+      plotly::ggplotly(plot_movement)
     }) |>
       bindEvent(input$workforce_group, input$date_range)
   })

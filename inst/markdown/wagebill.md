@@ -2,10 +2,10 @@ This section analyzes public sector wage bill trends over time, examining total 
 
 The analysis provides insights into:
 
-1. **Time Trends**: Track total wage bill and growth patterns over time, with optional baseline indexing to compare relative changes
-2. **Cross-Sectional Analysis**: Compare wage bill spending across different groups (establishments, occupations, demographics) at the latest available period
-3. **Growth Dynamics**: Examine year-over-year changes in wage bill by group to identify spending expansion or contraction patterns
-4. **Equity Analysis**: Assess wage distribution and dispersion across groups to identify potential inequities in compensation
+1. **Time trends**: Wage bill and growth patterns over time, with optional baseline indexing to compare relative changes.
+2. **Total by group**: Compare wage bill spending across different groups (establishments, occupations, demographics) at the latest available period.
+3. **Growth rate by group**: Examine year-over-year changes in wage bill by group to identify spending expansion or contraction patterns.
+4. **Variation**: Assess wage distribution and dispersion across groups to identify potential inequities in compensation.
 
 <!-- **Guidance questions:**
 

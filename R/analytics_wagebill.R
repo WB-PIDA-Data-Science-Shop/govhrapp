@@ -9,7 +9,7 @@ wagebill_data <- govhr::bra_hrmis_contract |>
   dplyr::left_join(
     govhr::bra_hrmis_personnel |>
       distinct(.data[["ref_date"]], .data[["personnel_id"]], .keep_all = TRUE) |> 
-      select(.data[["ref_date"]], .data[["personnel_id"]], .data[["gender"]], .data[["educat7"]], .data[["status"]]),
+      select(all_of(c("ref_date", "personnel_id", "gender", "educat7", "status"))),
     by = c("ref_date", "personnel_id")
   )
 
@@ -98,13 +98,13 @@ wagebill_ui <- function(id, wagebill_data) {
           height = "450px"
         ),
         bslib::card(
-          bslib::card_header("Growth dynamics by group"),
+          bslib::card_header("Growth rate by group"),
           plotly::plotlyOutput(NS(id, "wagebill_change")),
           height = "450px"
         )
       ),
       bslib::card(
-        bslib::card_header("Equity"),
+        bslib::card_header("Variation"),
         plotly::plotlyOutput(NS(id, "wagebill_dispersion")),
         height = "450px"
       )
