@@ -324,9 +324,9 @@ workforce_server <- function(id, workforce_data) {
             across(all_of(input$workforce_group))
           ) |> 
           summarise(
-            share = mean(!is.na(type_event))
+            share = mean(!is.na(.data[["type_event"]]))
           ) |>
-          filter(share > 0)
+          filter(.data[["share"]] > 0)
       })
 
       plot_movement <- movement_data() |> 
