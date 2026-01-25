@@ -336,7 +336,11 @@ workforce_server <- function(id, workforce_data) {
             by = c("personnel_id", "ref_date")
           ) |> 
           dplyr::group_by(
-            across(all_of(input$workforce_group))
+            across(
+              all_of(
+                unique(c("ref_date", input$workforce_group))
+              )
+            )
           ) |> 
           summarise(
             share = mean(!is.na(.data[["type_event"]]))
