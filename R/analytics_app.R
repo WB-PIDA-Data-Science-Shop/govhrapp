@@ -29,44 +29,9 @@ run_govhrapp <- function(...) {
   thematic::thematic_shiny(font = "auto")
 
   # globals
-  wagebill_data <- govhr::bra_hrmis_contract |>
-    # there are duplicate records for personnel
-    dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |>
-    dplyr::left_join(
-      govhr::bra_hrmis_personnel |>
-        distinct(
-          .data[["ref_date"]],
-          .data[["personnel_id"]],
-          .keep_all = TRUE
-        ) |>
-        select(
-          .data[["ref_date"]],
-          .data[["personnel_id"]],
-          .data[["gender"]],
-          .data[["educat7"]],
-          .data[["status"]]
-        ),
-      by = c("ref_date", "personnel_id")
-    )
+  wagebill_data <- govhrapp::wagebill_data
 
-  workforce_data <- govhr::bra_hrmis_contract |>
-    dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |>
-    dplyr::left_join(
-      govhr::bra_hrmis_personnel |>
-        distinct(
-          .data[["ref_date"]],
-          .data[["personnel_id"]],
-          .keep_all = TRUE
-        ) |>
-        select(
-          .data[["ref_date"]],
-          .data[["personnel_id"]],
-          .data[["gender"]],
-          .data[["educat7"]],
-          .data[["status"]]
-        ),
-      by = c("ref_date", "personnel_id")
-    )
+  workforce_data <- govhrapp::workforce_data
 
   ui <- bslib::page_navbar(
     title = "govhr dashboard",
