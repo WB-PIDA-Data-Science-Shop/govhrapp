@@ -1,4 +1,4 @@
-#' Wagebill Data
+#' Personnel Data
 #'
 #' A dataset containing contract and personnel information for Brazilian government
 #' employees, filtered for years up to and including 2017. This dataset combines
@@ -35,21 +35,4 @@
 #' }
 #' @source Derived from \code{govhr::bra_hrmis_contract} and
 #'   \code{govhr::bra_hrmis_personnel}
-"wagebill_data"
-
-#' Workforce Data
-#'
-#' A dataset containing personnel information for Brazilian government employees,
-#' filtered for years up to and including 2017. This dataset provides key
-#' demographic and employment status information for workforce analysis.
-#'
-#' @format A tibble with 7,598 rows and 5 variables:
-#' \describe{
-#'   \item{ref_date}{Reference date (Date)}
-#'   \item{personnel_id}{Personnel identifier}
-#'   \item{gender}{Gender}
-#'   \item{educat7}{Education level (ordered factor)}
-#'   \item{status}{Employment status (e.g., "active")}
-#' }
-#' @source Derived from \code{govhr::bra_hrmis_personnel}
-"workforce_data"
+"personnel_data"

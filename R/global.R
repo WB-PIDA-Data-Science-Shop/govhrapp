@@ -6,7 +6,7 @@ library(dplyr)
 
 workforce_data <- govhr::bra_hrmis_personnel |>
   mutate(
-    educat7 = as.numeric(.data[["educat7"]]) |> 
+    educat7 = as.numeric(.data[["educat7"]]) |>
       recode(
         `1` = "No formal education",
         `2` = "Some primary education",
@@ -36,7 +36,7 @@ workforce_data <- govhr::bra_hrmis_personnel |>
   distinct(.data[["ref_date"]], .data[["personnel_id"]], .keep_all = TRUE) |>
   select(all_of(c("ref_date", "personnel_id", "gender", "educat7", "status")))
 
-wagebill_data <- govhr::bra_hrmis_contract |>
+personnel_data <- govhr::bra_hrmis_contract |>
   dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |>
   dplyr::left_join(
     govhr::bra_hrmis_personnel |>
