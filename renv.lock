@@ -1365,19 +1365,20 @@
       ],
       "Config/testthat/edition": "3",
       "Depends": [
-        "R (>= 3.5)"
+        "R (>= 4.1.0)"
       ],
       "URL": "https://wb-pida-data-science-shop.github.io/govhr/",
-      "Config/Needs/website": "rmarkdown, remotes, polyglotr, AleKoure/labourR, DT, tidyr, here, qs, tibble",
+      "Config/Needs/website": "rmarkdown, remotes, polyglotr, AleKoure/labourR, DT, tidyr, here, tibble, arrow",
       "Authors@R": "c( person(\"Galileu\", \"Kim\", , \"galileukim@worldbank.org\", role = c(\"aut\", \"cre\")), person(\"Ifeanyi\", \"Edochie\", , \"iedochie@worldbank.org\", role = c(\"aut\")) )",
-      "Author": "Galileu Kim [aut, cre], Ifeanyi Edochie [aut]",
-      "Maintainer": "Galileu Kim <galileukim@worldbank.org>",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "govhr",
       "RemoteUsername": "WB-PIDA-Data-Science-Shop",
       "RemoteRef": "HEAD",
-      "RemoteSha": "4d679eca086c30dd8767fba8512c614a2c930e5d"
+      "RemoteSha": "c0eb701bc5cbde3763abeeb69432b3e1e7d8a878",
+      "NeedsCompilation": "no",
+      "Author": "Galileu Kim [aut, cre], Ifeanyi Edochie [aut]",
+      "Maintainer": "Galileu Kim <galileukim@worldbank.org>"
     },
     "gtable": {
       "Package": "gtable",
