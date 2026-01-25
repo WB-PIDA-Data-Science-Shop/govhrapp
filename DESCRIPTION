@@ -13,6 +13,7 @@ Suggests:
 Config/testthat/edition: 3
 Imports: 
     bslib,
+    data.table,
     dplyr,
     ggplot2,
     govhr,
