@@ -24,3 +24,6 @@ Imports:
     shinyWidgets,
     thematic,
     tibble
+Depends: 
+    R (>= 3.5)
+LazyData: true

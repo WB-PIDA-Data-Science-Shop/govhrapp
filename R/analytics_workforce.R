@@ -1,19 +1,15 @@
-library(shiny)
-library(bslib)
-library(ggplot2)
-library(plotly)
-library(dplyr)
-library(data.table)
-
-workforce_data <- govhr::bra_hrmis_contract |>
-  dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |>
-  dplyr::left_join(
-    govhr::bra_hrmis_personnel |>
-      distinct(.data[["ref_date"]], .data[["personnel_id"]], .keep_all = TRUE) |> 
-      select(all_of(c("ref_date", "personnel_id", "gender", "educat7", "status"))),
-    by = c("ref_date", "personnel_id")
-  )
-
+#' Workforce UI Module
+#'
+#' UI for workforce analytics, including overview, controls, and plots.
+#'
+#' @param id Module id.
+#' @param workforce_data Data frame with workforce data.
+#'
+#' @importFrom bslib layout_columns card card_header card_body accordion accordion_panel layout_sidebar sidebar
+#' @importFrom shiny markdown icon NS selectInput
+#' @importFrom shinyWidgets numericRangeInput materialSwitch
+#' @importFrom plotly plotlyOutput
+#' @export
 workforce_ui <- function(id, workforce_data) {
   bslib::layout_columns(
     fillable = FALSE,
@@ -105,6 +101,25 @@ workforce_ui <- function(id, workforce_data) {
   )
 }
 
+#' Workforce Server Module
+#'
+#' Server logic for workforce analytics UI.
+#'
+#' @param id Module id.
+#' @param workforce_data Data frame with workforce data.
+#'
+#' @importFrom shiny moduleServer reactive validate need bindEvent
+#' @importFrom plotly renderPlotly
+#' @importFrom dplyr filter mutate arrange group_by ungroup summarise across first lag
+#' @importFrom lubridate year years ymd
+#' @importFrom govhr fastcount complete_dates detect_personnel_event
+#' @importFrom ggplot2 ggplot aes geom_point geom_line geom_col geom_hline geom_vline scale_y_continuous scale_x_continuous labs xlab ylab
+#' @importFrom plotly ggplotly
+#' @importFrom stats reorder
+#' @importFrom scales label_number cut_short_scale pretty_breaks
+#' @importFrom data.table fifelse shift setorderv as.data.table copy
+#' @importFrom dplyr across
+#' @export
 workforce_server <- function(id, workforce_data) {
   shiny::moduleServer(id, function(input, output, session) {
     workforce_filtered_date <- reactive({

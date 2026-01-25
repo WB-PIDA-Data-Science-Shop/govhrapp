@@ -18,8 +18,10 @@ following required columns:
 \item \code{contract_type_native}: Contract type
 \item \code{paygrade}: Paygrade classification
 \item \code{occupation_native}: Occupation classification
-}
-Defaults to filtered Brazilian HRMIS contract data (years <= 2017).}
+\item \code{gender}: Gender
+\item \code{educat7}: Education level
+\item \code{status}: Employment status
+}}
 
 \item{...}{Additional arguments passed to \code{\link[shiny]{shinyApp}}.}
 }
@@ -36,14 +38,12 @@ The application provides four main analytical views:
 \item Time trend analysis with optional baseline indexing
 \item Cross-sectional wage bill totals by group
 \item Year-over-year growth rates by group
+\item Wage bill dispersion and variation analysis
 \item Interactive filtering by time period, wage type, and grouping variable
 }
 }
 \examples{
 \dontrun{
-# Run with default data
-run_wagebillapp()
-
 # Run with custom data
 my_data <- govhr::bra_hrmis_contract |>
   dplyr::filter(lubridate::year(ref_date) >= 2015)
