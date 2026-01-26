@@ -23,6 +23,7 @@ Imports:
     scales,
     shiny,
     shinyWidgets,
+    stringr,
     thematic,
     tibble
 Depends: 
