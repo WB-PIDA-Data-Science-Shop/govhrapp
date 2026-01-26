@@ -5,7 +5,8 @@
 #' @param id Module id.
 #' @param workforce_data Data frame with workforce data.
 #'
-#' @importFrom bslib layout_columns card card_header card_body accordion accordion_panel layout_sidebar sidebar
+#' @importFrom bslib layout_columns card card_header card_body accordion accordion_panel layout_sidebar sidebar tooltip
+#' @importFrom bsicons bs_icon
 #' @importFrom shiny markdown icon NS selectInput
 #' @importFrom shinyWidgets numericRangeInput materialSwitch
 #' @importFrom plotly plotlyOutput
@@ -88,7 +89,6 @@ workforce_ui <- function(id, workforce_data) {
   )
 
   bslib::layout_columns(
-    fillable = FALSE,
     bslib::card(
       bslib::card_header(
         "Workforce: Overview"
@@ -96,8 +96,7 @@ workforce_ui <- function(id, workforce_data) {
       bslib::card_body(
         shiny::markdown(
           readLines("inst/markdown/workforce.md")
-        ),
-        height = "300px"
+        )
       )
     ),
     bslib::accordion(
@@ -114,30 +113,51 @@ workforce_ui <- function(id, workforce_data) {
       bslib::nav_panel(
         title = "Headcount",
         bslib::layout_sidebar(
-          fillable = FALSE,
           title = "Workforce: Headcount",
           sidebar = sidebar_default,
           bslib::card(
-            bslib::card_header("Headcount"),
+            full_screen = TRUE,
+            bslib::card_header(
+              "Headcount",
+              bslib::tooltip(
+                bsicons::bs_icon("info-circle"),
+                "Headcount trends over time. Choosing a group will add new trend lines, by group."
+              )
+            ),
             shinyWidgets::materialSwitch(
               shiny::NS(id, "toggle_growth"),
               label = "Switch to baseline index",
               value = FALSE
             ),
             plotly::plotlyOutput(NS(id, "workforce_panel")),
-            height = "350px"
+            min_height = "350px"
           ),
           layout_columns(
+            col_widths = c(6, 6),
             bslib::card(
-              bslib::card_header("Total by group"),
+              full_screen = TRUE,
+              fillable = FALSE,
+              bslib::card_header(
+                "Total by group",
+                bslib::tooltip(
+                  bsicons::bs_icon("info-circle"),
+                  "Headcount total, by group. Total refers to the latest available year in the selected time frame."
+                )
+              ),
               plotly::plotlyOutput(NS(id, "workforce_cross_section")),
-              height = "auto",
               min_height = "450px"
             ),
             bslib::card(
-              bslib::card_header("Growth rate by group"),
+              full_screen = TRUE,
+              fillable = FALSE,
+              bslib::card_header(
+                "Growth rate by group",
+                bslib::tooltip(
+                  bsicons::bs_icon("info-circle"),
+                  "Growth rate with respect to the previous year, by group. Growth rate refers to the latest available year in the selected time frame."
+                )
+              ),
               plotly::plotlyOutput(NS(id, "workforce_growth")),
-              height = "auto",
               min_height = "450px"
             )
           )
@@ -146,14 +166,19 @@ workforce_ui <- function(id, workforce_data) {
       bslib::nav_panel(
         title = "Movements",
         bslib::layout_sidebar(
-          fillable = FALSE,
           title = "Workforce: Movements",
           sidebar = sidebar_movement,
           bslib::card(
-            bslib::card_header("Movements"),
+            full_screen = TRUE,
+            bslib::card_header(
+              "Movements",
+              bslib::tooltip(
+                bsicons::bs_icon("info-circle"),
+                "Personnel movements (hires or separations) over time, showing the share of employees affected."
+              )
+            ),
             plotly::plotlyOutput(NS(id, "workforce_movements")),
-            height = "auto",
-            min_height = "450px"
+            min_height = "350px"
           )
         )
       )
@@ -283,6 +308,10 @@ workforce_server <- function(id, workforce_data) {
           )
       })
 
+      # dynamic height
+      n_groups <- nrow(cross_section_data())
+      plot_height <- max(350, n_groups * 10 + 100)
+
       plot <- cross_section_data() |>
         ggplot(
           aes(
@@ -302,7 +331,7 @@ workforce_server <- function(id, workforce_data) {
           y = ""
         )
 
-      plotly::ggplotly(plot)
+      plotly::ggplotly(plot, height = plot_height)
     }) |>
       bindEvent(input$workforce_group, input$date_range)
 
@@ -346,6 +375,10 @@ workforce_server <- function(id, workforce_data) {
           )
       })
 
+       # dynamic height
+      n_groups <- nrow(change_data())
+      plot_height <- max(350, n_groups * 10 + 100)
+
       plot_growth <- change_data() |>
         ggplot(
           aes(
@@ -370,7 +403,7 @@ workforce_server <- function(id, workforce_data) {
           y = ""
         )
 
-      plotly::ggplotly(plot_growth)
+      plotly::ggplotly(plot_growth, height = plot_height)
     }) |>
       bindEvent(input$workforce_group, input$date_range)
 

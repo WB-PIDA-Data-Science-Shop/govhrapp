@@ -5,10 +5,12 @@
 #' @param id Module id.
 #' @param wagebill_data Data frame with wage bill data.
 #'
-#' @importFrom bslib layout_columns card card_header card_body accordion accordion_panel layout_sidebar sidebar
+#' @importFrom bslib layout_columns card card_header card_body accordion accordion_panel layout_sidebar sidebar tooltip
+#' @importFrom bsicons bs_icon
 #' @importFrom shiny markdown icon NS selectInput
 #' @importFrom shinyWidgets numericRangeInput materialSwitch
 #' @importFrom plotly plotlyOutput
+#' @importFrom lubridate year
 #' @export
 wagebill_ui <- function(id, wagebill_data) {
   bslib::layout_columns(
@@ -20,8 +22,7 @@ wagebill_ui <- function(id, wagebill_data) {
       bslib::card_body(
         shiny::markdown(
           readLines("inst/markdown/wagebill.md")
-        ),
-        height = "300px"
+        )
       )
     ),
     bslib::accordion(
@@ -79,31 +80,61 @@ wagebill_ui <- function(id, wagebill_data) {
         )
       ),
       bslib::card(
-        bslib::card_header("Time trends"),
+        bslib::card_header(
+          "Time trends",
+          bslib::tooltip(
+            bsicons::bs_icon("info-circle"),
+            "Wage bill total, by year. Choosing a group will add new totals, by group."
+          )
+        ),
         shinyWidgets::materialSwitch(
           shiny::NS(id, "toggle_growth"),
           label = "Switch to baseline index",
           value = FALSE
         ),
         plotly::plotlyOutput(shiny::NS(id, "wagebill_panel")),
-        height = "350px"
+        min_height = "350px"
       ),
       bslib::layout_columns(
         bslib::card(
-          bslib::card_header("Total by group"),
+          full_screen = TRUE,
+          fillable = FALSE,
+          bslib::card_header(
+            "Total by group",
+            bslib::tooltip(
+              bsicons::bs_icon("info-circle"),
+              "Wage bill total, by group. Total refers to the latest available year in the selected time frame."
+            )
+          ),
           plotly::plotlyOutput(shiny::NS(id, "wagebill_cross_section")),
-          height = "450px"
+          min_height = "450px"
         ),
         bslib::card(
-          bslib::card_header("Growth rate by group"),
+          full_screen = TRUE,
+          fillable = FALSE,
+          bslib::card_header(
+            "Growth rate by group",
+            bslib::tooltip(
+              bsicons::bs_icon("info-circle"),
+              "Growth rate with respect to the previous year, by group. Growth rate refers to the latest available year in the selected time frame."
+            )
+          ),
           plotly::plotlyOutput(shiny::NS(id, "wagebill_change")),
-          height = "450px"
+          min_height = "450px"
         )
       ),
       bslib::card(
-        bslib::card_header("Variation"),
-        plotly::plotlyOutput(shiny::NS(id, "wagebill_dispersion")),
-        height = "450px"
+        full_screen = TRUE,
+        fillable = FALSE,
+        bslib::card_header(
+          "Variation",
+          bslib::tooltip(
+            bsicons::bs_icon("info-circle"),
+            "Variation in wages by group, for the latest year in the selected time frame."
+          )
+        ),
+        plotly::plotlyOutput(shiny::NS(id, "wagebill_variation")),
+        min_height = "450px"
       )
     ),
     col_widths = c(12, 12)
@@ -238,7 +269,11 @@ wagebill_server <- function(id, wagebill_data) {
             !is.na(.data[["value"]]) &
               !is.na(.data[[input$wagebill_group]])
           )
-      })      
+      })
+      
+      # dynamic height
+      n_groups <- nrow(cross_section_data())
+      plot_height <- max(350, n_groups * 10 + 100)
 
       plot <- cross_section_data() |>
         ggplot2::ggplot(
@@ -259,7 +294,7 @@ wagebill_server <- function(id, wagebill_data) {
           y = ""
         )
 
-      plotly::ggplotly(plot)
+      plotly::ggplotly(plot, height = plot_height)
     }) |>
       shiny::bindEvent(input$wagebill_group, input$date_range)
 
@@ -308,6 +343,10 @@ wagebill_server <- function(id, wagebill_data) {
           )
       })
 
+      # dynamic height
+      n_groups <- nrow(change_data())
+      plot_height <- max(350, n_groups * 10 + 100)
+
       plot <- change_data() |>
         ggplot2::ggplot(
           ggplot2::aes(
@@ -332,12 +371,12 @@ wagebill_server <- function(id, wagebill_data) {
           y = ""
         )
 
-      plotly::ggplotly(plot)
+      plotly::ggplotly(plot, height = plot_height)
     }) |>
       shiny::bindEvent(input$wagebill_group, input$date_range)
 
-    # plot 4. equity
-    output$wagebill_dispersion <- plotly::renderPlotly({
+    # plot 4. variation
+    output$wagebill_variation <- plotly::renderPlotly({
       shiny::validate(
         shiny::need(input$wagebill_group != "ref_date", "Please select a group.")
       )
@@ -354,6 +393,15 @@ wagebill_server <- function(id, wagebill_data) {
           )
       })
 
+      # dynamic height
+      n_groups <- dispersion_data() |>
+        dplyr::filter(!is.na(.data[[input$wagebill_group]])) |>
+        dplyr::pull(input$wagebill_group) |>
+        unique() |> 
+        length()
+
+      plot_height <- max(350, n_groups * 10 + 100)
+
       plot <- dispersion_data() |>
         plot_segment(
           col = input$wagebill_measure,
@@ -363,8 +411,8 @@ wagebill_server <- function(id, wagebill_data) {
           x = "Wage bill",
           y = ""
         )
-      
-      plotly::ggplotly(plot)
+
+      plotly::ggplotly(plot, height = plot_height)
     }) |>
       shiny::bindEvent(input$wagebill_group, input$date_range)
   })

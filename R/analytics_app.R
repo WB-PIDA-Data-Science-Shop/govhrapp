@@ -61,7 +61,11 @@ run_govhrapp <- function(...) {
       # content
       bslib::card(
         bslib::card_header(
-          shiny::tags$img(src = "assets/govhr_logo.png", width = "80%")
+          shiny::tags$img(
+            src = "assets/govhr_logo.png", 
+            style = "display: block; margin-left: auto; margin-right: auto;",
+            width = "80%"
+          )
         ),
         bslib::card_body(
           shiny::tags$br(),
