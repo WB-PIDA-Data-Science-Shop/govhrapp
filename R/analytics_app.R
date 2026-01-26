@@ -29,44 +29,7 @@ run_govhrapp <- function(...) {
   thematic::thematic_shiny(font = "auto")
 
   # globals
-  wagebill_data <- govhr::bra_hrmis_contract |>
-    # there are duplicate records for personnel
-    dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |>
-    dplyr::left_join(
-      govhr::bra_hrmis_personnel |>
-        distinct(
-          .data[["ref_date"]],
-          .data[["personnel_id"]],
-          .keep_all = TRUE
-        ) |>
-        select(
-          .data[["ref_date"]],
-          .data[["personnel_id"]],
-          .data[["gender"]],
-          .data[["educat7"]],
-          .data[["status"]]
-        ),
-      by = c("ref_date", "personnel_id")
-    )
-
-  workforce_data <- govhr::bra_hrmis_contract |>
-    dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |>
-    dplyr::left_join(
-      govhr::bra_hrmis_personnel |>
-        distinct(
-          .data[["ref_date"]],
-          .data[["personnel_id"]],
-          .keep_all = TRUE
-        ) |>
-        select(
-          .data[["ref_date"]],
-          .data[["personnel_id"]],
-          .data[["gender"]],
-          .data[["educat7"]],
-          .data[["status"]]
-        ),
-      by = c("ref_date", "personnel_id")
-    )
+  personnel_data <- govhrapp::personnel_data
 
   ui <- bslib::page_navbar(
     title = "govhr dashboard",
@@ -114,20 +77,20 @@ run_govhrapp <- function(...) {
     bslib::nav_panel(
       "Wage Bill",
       icon = shiny::icon("money-bill"),
-      wagebill_ui("wagebill", wagebill_data)
+      wagebill_ui("wagebill", personnel_data)
     ),
 
     # panel 3: workforce planning
     bslib::nav_panel(
       "Workforce",
       icon = shiny::icon("person-walking"),
-      workforce_ui("workforce", workforce_data)
+      workforce_ui("workforce", personnel_data)
     )
   )
 
   server <- function(input, output, session) {
-    wagebill_server("wagebill", wagebill_data)
-    workforce_server("workforce", workforce_data)
+    wagebill_server("wagebill", personnel_data)
+    workforce_server("workforce", personnel_data)
   }
 
   shiny::shinyApp(ui, server, ...)

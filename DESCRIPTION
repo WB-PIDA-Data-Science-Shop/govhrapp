@@ -13,6 +13,7 @@ Suggests:
 Config/testthat/edition: 3
 Imports: 
     bslib,
+    data.table,
     dplyr,
     ggplot2,
     govhr,
@@ -22,5 +23,9 @@ Imports:
     scales,
     shiny,
     shinyWidgets,
+    stringr,
     thematic,
     tibble
+Depends: 
+    R (>= 3.5)
+LazyData: true
