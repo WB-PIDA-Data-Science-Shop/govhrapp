@@ -44,6 +44,11 @@ workforce_ui <- function(id, workforce_data) {
           "Employment Status" = "status"
         )
       )
+    ),
+    shiny::downloadButton(
+      shiny::NS(id, "download_report"),
+      "Generate report",
+      icon = shiny::icon("file-word")
     )
   )
 
@@ -194,7 +199,7 @@ workforce_ui <- function(id, workforce_data) {
 #' @param id Module id.
 #' @param workforce_data Data frame with workforce data.
 #'
-#' @importFrom shiny moduleServer reactive validate need bindEvent
+#' @importFrom shiny moduleServer reactive validate need bindEvent downloadHandler withProgress incProgress
 #' @importFrom plotly renderPlotly
 #' @importFrom dplyr filter mutate arrange group_by ungroup summarise across first lag right_join
 #' @importFrom lubridate year years ymd
@@ -206,6 +211,7 @@ workforce_ui <- function(id, workforce_data) {
 #' @importFrom data.table fifelse shift setorderv as.data.table copy
 #' @importFrom dplyr across
 #' @importFrom scales percent_format
+#' @importFrom rmarkdown render
 #' @export
 workforce_server <- function(id, workforce_data) {
   shiny::moduleServer(id, function(input, output, session) {
@@ -470,6 +476,37 @@ workforce_server <- function(id, workforce_data) {
       plotly::ggplotly(plot_movement)
     }) |>
       bindEvent(input$workforce_group, input$date_range)
+    
+    # Download report
+    output$download_report <- shiny::downloadHandler(
+      filename = function() {
+        paste0("workforce_report_", format(Sys.Date(), "%Y%m%d"), ".docx")
+      },
+      content = function(file) {
+        # Show progress
+        shiny::withProgress(message = 'Generating report...', value = 0, {
+          
+          # Increment progress
+          shiny::incProgress(0.3, detail = "Creating plots...")
+          
+          # Generate report using helper function
+          output_path <- generate_workforce_report(
+            workforce_summary_data = workforce_summary(),
+            workforce_filtered_data = workforce_filtered_date(),
+            date_range = input$date_range,
+            workforce_group = input$workforce_group,
+            toggle_growth = input$toggle_growth
+          )
+          
+          shiny::incProgress(0.9, detail = "Finalizing...")
+          
+          # Copy generated file to download location
+          file.copy(output_path, file, overwrite = TRUE)
+          
+          shiny::incProgress(1, detail = "Complete!")
+        })
+      }
+    )
   })
 }
 

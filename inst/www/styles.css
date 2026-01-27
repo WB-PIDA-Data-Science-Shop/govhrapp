@@ -119,3 +119,10 @@
 .card-body li {
   font-family: "Source Sans Pro", sans-serif !important;
 }
+
+/* customize download button */
+.btn.shiny-download-link {
+  background-color: #C34729 !important;
+  border-color: #C34729 !important;
+  color: white !important;
+}

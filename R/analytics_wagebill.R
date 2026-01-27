@@ -78,6 +78,11 @@ wagebill_ui <- function(id, wagebill_data) {
               "Employment Status" = "status"
             )
           )
+        ),
+        shiny::downloadButton(
+            shiny::NS(id, "download_report"),
+            "Generate report",
+            icon = shiny::icon("file-word")
         )
       ),
       bslib::card(
@@ -136,20 +141,6 @@ wagebill_ui <- function(id, wagebill_data) {
         ),
         plotly::plotlyOutput(shiny::NS(id, "wagebill_variation")),
         min_height = "450px"
-      ),
-      bslib::card(
-        bslib::card_header(
-          "Download Report",
-          bsicons::bs_icon("download")
-        ),
-        bslib::card_body(
-          shiny::p("Generate a Word document with all current visualizations and analysis."),
-          shiny::downloadButton(
-            shiny::NS(id, "download_report"),
-            "Download Word Report",
-            icon = shiny::icon("file-word")
-          )
-        )
       )
     ),
     col_widths = c(12, 12)
