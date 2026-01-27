@@ -6,7 +6,7 @@ All diagnostic tables and visualizations are generated automatically from the go
 
 #### Report Structure
 
-The quality control dashboard is organized into four main sections:
+The quality control dashboard is organized into three main sections:
 
 ##### 1. Data Basics
 Foundational diagnostics including module dimensions, variable structure and dictionary conformity, primary key integrity, cross-module orphan checks, salary logic validation, and date logic checks. This section provides essential structural and consistency assessments before diving into detailed data quality patterns.
