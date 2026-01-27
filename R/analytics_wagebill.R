@@ -136,6 +136,20 @@ wagebill_ui <- function(id, wagebill_data) {
         ),
         plotly::plotlyOutput(shiny::NS(id, "wagebill_variation")),
         min_height = "450px"
+      ),
+      bslib::card(
+        bslib::card_header(
+          "Download Report",
+          bsicons::bs_icon("download")
+        ),
+        bslib::card_body(
+          shiny::p("Generate a Word document with all current visualizations and analysis."),
+          shiny::downloadButton(
+            shiny::NS(id, "download_report"),
+            "Download Word Report",
+            icon = shiny::icon("file-word")
+          )
+        )
       )
     ),
     col_widths = c(12, 12)
@@ -149,7 +163,7 @@ wagebill_ui <- function(id, wagebill_data) {
 #' @param id Module id.
 #' @param wagebill_data Data frame with wage bill data.
 #'
-#' @importFrom shiny moduleServer reactive validate need bindEvent
+#' @importFrom shiny moduleServer reactive validate need bindEvent downloadHandler downloadButton withProgress incProgress
 #' @importFrom plotly renderPlotly
 #' @importFrom dplyr filter mutate arrange group_by ungroup across all_of first lag pull
 #' @importFrom lubridate year years
@@ -159,6 +173,7 @@ wagebill_ui <- function(id, wagebill_data) {
 #' @importFrom stats reorder
 #' @importFrom scales label_number cut_short_scale
 #' @importFrom stringr str_wrap
+#' @importFrom rmarkdown render
 #' @export
 wagebill_server <- function(id, wagebill_data) {
   shiny::moduleServer(id, function(input, output, session) {
@@ -427,6 +442,38 @@ wagebill_server <- function(id, wagebill_data) {
       plotly::ggplotly(plot, height = plot_height)
     }) |>
       shiny::bindEvent(input$wagebill_group, input$date_range)
+    
+    # Download report
+    output$download_report <- shiny::downloadHandler(
+      filename = function() {
+        paste0("wagebill_report_", format(Sys.Date(), "%Y%m%d"), ".docx")
+      },
+      content = function(file) {
+        # Show progress
+        shiny::withProgress(message = 'Generating report...', value = 0, {
+          
+          # Increment progress
+          shiny::incProgress(0.3, detail = "Creating plots...")
+          
+          # Generate report using helper function
+          output_path <- generate_wagebill_report(
+            wagebill_summary_data = wagebill_summary(),
+            wagebill_filtered_data = wagebill_filtered_date(),
+            date_range = input$date_range,
+            wagebill_measure = input$wagebill_measure,
+            wagebill_group = input$wagebill_group,
+            toggle_growth = input$toggle_growth
+          )
+          
+          shiny::incProgress(0.9, detail = "Finalizing...")
+          
+          # Copy generated file to download location
+          file.copy(output_path, file, overwrite = TRUE)
+          
+          shiny::incProgress(1, detail = "Complete!")
+        })
+      }
+    )
   })
 }
 

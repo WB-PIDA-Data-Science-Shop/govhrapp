@@ -1,0 +1,119 @@
+---
+title: "Workforce Analytics Report"
+format: 
+  docx:
+    reference-doc: custom-reference.docx
+    toc: true
+    number-sections: true
+    highlight-style: github
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+params:
+  date_range: NULL
+  workforce_group: NULL
+  plot1: NULL
+  plot2: NULL
+  plot3: NULL
+  plot4: NULL
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(ggplot2)
+library(dplyr)
+```
+
+## Executive Summary
+
+This report presents workforce headcount analytics for the selected time period (`r params$date_range[1]` to `r params$date_range[2]`). The analysis examines workforce composition, growth patterns, and personnel movements.
+
+**Analysis Parameters:**
+
+- **Time Frame:** `r params$date_range[1]` - `r params$date_range[2]`
+- **Grouping Variable:** `r params$workforce_group`
+
+---
+
+## Headcount Trends
+
+The following chart shows the evolution of headcount over time.
+
+```{r plot1, fig.width=8, fig.height=5}
+if (!is.null(params$plot1)) {
+  params$plot1
+}
+```
+
+**Key Observations:**
+
+- Overall workforce size trajectory
+- Growth or contraction periods
+- Stability or volatility in headcount
+
+---
+
+## Total Headcount by Group
+
+This section presents the total headcount broken down by the selected grouping variable.
+
+```{r plot2, fig.width=8, fig.height=6}
+if (!is.null(params$plot2)) {
+  params$plot2
+}
+```
+
+**Analysis:**
+
+- Largest workforce segments
+- Distribution across categories
+- Workforce composition insights
+
+---
+
+## Growth Rate by Group
+
+Year-over-year growth rates reveal which groups are expanding or contracting.
+
+```{r plot3, fig.width=8, fig.height=6}
+if (!is.null(params$plot3)) {
+  params$plot3
+}
+```
+
+**Insights:**
+
+- Groups with highest growth rates
+- Groups experiencing decline
+- Overall workforce dynamics
+
+---
+
+## Personnel Movements
+
+This analysis examines hires and separations over time.
+
+```{r plot4, fig.width=8, fig.height=6}
+if (!is.null(params$plot4)) {
+  params$plot4
+}
+```
+
+**Movement Analysis:**
+
+- Hiring and attrition trends
+- Turnover patterns
+- Workforce stability indicators
+
+---
+
+## Conclusions and Recommendations
+
+Based on the analysis presented in this report:
+
+1. **Summary of key findings**
+2. **Notable trends or patterns**
+3. **Areas requiring attention**
+4. **Recommendations for action**
+
+---
+
+*Report generated on `r format(Sys.time(), '%B %d, %Y at %I:%M %p')`*

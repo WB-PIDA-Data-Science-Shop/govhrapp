@@ -1,0 +1,121 @@
+---
+title: "Wage Bill Analytics Report"
+format: 
+  docx:
+    reference-doc: custom-reference.docx
+    toc: true
+    number-sections: true
+    highlight-style: github
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+params:
+  date_range: NULL
+  wagebill_measure: NULL
+  wagebill_group: NULL
+  plot1: NULL
+  plot2: NULL
+  plot3: NULL
+  plot4: NULL
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(ggplot2)
+library(dplyr)
+```
+
+## Executive Summary
+
+This report presents wage bill analytics for the selected time period (`r params$date_range[1]` to `r params$date_range[2]`). The analysis focuses on **`r params$wagebill_measure`** trends and patterns across different organizational dimensions.
+
+**Analysis Parameters:**
+
+- **Time Frame:** `r params$date_range[1]` - `r params$date_range[2]`
+- **Wage Measure:** `r params$wagebill_measure`
+- **Grouping Variable:** `r params$wagebill_group`
+
+---
+
+## Time Trends
+
+The following chart shows the evolution of wage bill over time.
+
+```{r plot1, fig.width=8, fig.height=5}
+if (!is.null(params$plot1)) {
+  params$plot1
+}
+```
+
+**Key Observations:**
+
+- Overall trend direction (increasing/decreasing/stable)
+- Notable inflection points or changes in trajectory
+- Seasonal or cyclical patterns
+
+---
+
+## Total by Group
+
+This section presents the total wage bill broken down by the selected grouping variable.
+
+```{r plot2, fig.width=8, fig.height=6}
+if (!is.null(params$plot2)) {
+  params$plot2
+}
+```
+
+**Analysis:**
+
+- Largest contributing groups
+- Distribution of wage bill across categories
+- Concentration or dispersion patterns
+
+---
+
+## Growth Rate by Group
+
+Year-over-year growth rates reveal which groups are expanding or contracting.
+
+```{r plot3, fig.width=8, fig.height=6}
+if (!is.null(params$plot3)) {
+  params$plot3
+}
+```
+
+**Insights:**
+
+- Groups with highest growth rates
+- Groups experiencing decline
+- Overall growth dynamics
+
+---
+
+## Wage Bill Variation
+
+This analysis examines wage bill dispersion and variation across groups.
+
+```{r plot4, fig.width=8, fig.height=6}
+if (!is.null(params$plot4)) {
+  params$plot4
+}
+```
+
+**Distribution Analysis:**
+
+- Range and spread of wage bill values
+- Outliers or exceptional cases
+- Equity and fairness considerations
+
+---
+
+## Conclusions and Recommendations
+
+Based on the analysis presented in this report:
+
+1. **Summary of key findings**
+2. **Notable trends or patterns**
+3. **Areas requiring attention**
+4. **Recommendations for action**
+
+---
+
+*Report generated on `r format(Sys.time(), '%B %d, %Y at %I:%M %p')`*

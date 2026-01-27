@@ -54,9 +54,9 @@ run_govhrapp <- function(...) {
     # set theme
     theme = bslib::bs_theme(
       bootswatch = "litera",
-      base_font = font_google("Source Sans Pro"),
-      code_font = font_google("Source Sans Pro"),
-      heading_font = font_google("Fira Sans"),
+      base_font = font_google("Source Sans Pro", local = FALSE),
+      code_font = font_google("Source Sans Pro", local = FALSE),
+      heading_font = font_google("Fira Sans", local = FALSE),
       navbar_bg = "#FFFFFF"
     ) |>
       bslib::bs_add_rules(
