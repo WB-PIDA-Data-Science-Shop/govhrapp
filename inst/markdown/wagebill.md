@@ -1,12 +1,16 @@
-The wage bill represents a large and less flexible component of government expenditures with significant future liabilities. Globally, and noting the difficulties with cross-country comparisons, the wage bill represents approximately 30 percent of government expenditures, with significant variation around this average. 
+This section analyzes public sector wage bill trends over time, examining total compensation expenditures across different dimensions such as establishments, contract types, and personnel demographics. The analysis supports three wage measures: base salary, gross salary, and net salary.
 
-This section presents some indicators that can help governments better understand and manage their wage bill.
+The analysis provides insights into:
 
-Guidance questions for the assessment:
+1. **Time trends**: Wage bill and growth patterns over time, with optional baseline indexing to compare relative changes.
+2. **Total by group**: Compare wage bill spending across different groups (establishments, occupations, demographics) at the latest available period.
+3. **Growth rate by group**: Examine year-over-year changes in wage bill by group to identify spending expansion or contraction patterns.
+4. **Variation**: Assess wage distribution and dispersion across groups to identify potential inequities in compensation.
 
-1. What are the main stylized facts about the wage bill: its actual size, evolution, and decomposition into employment and wages?
-2. Is wage bill management anchored in comprehensive, accurate, and timely data? 
-3. Is wage bill planning integrated in a broader medium-term fiscal framework? Are forward budget estimates derived from models of future wage bill commitments?
-4. How does the institutional regime for salary setting impact wage bill planning? Are there particular challenges for subnational wage bill planning due to mismatches in staffing decisions and funding between central and subnational governments?
-5. Are staffing increases informed by needs and medium-term strategic planning, or primarily by short-term political considerations?
-6. Is there any public debate or public disclosure around wage bill policies?
+<!-- **Guidance questions:**
+
+- How has the total public sector wage bill evolved over time?
+- Which establishments or sectors account for the largest share of wage bill spending?
+- Are there significant differences in compensation levels across contract types, occupations, or demographic groups?
+- What are the recent wage bill growth trends across different segments of the public sector?
+- How equitably are wages distributed within and across different groups? -->
