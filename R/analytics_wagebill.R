@@ -275,7 +275,7 @@ wagebill_server <- function(id, wagebill_data) {
       
       # dynamic height
       n_groups <- nrow(cross_section_data())
-      plot_height <- max(350, n_groups * 15 + 100)
+      plot_height <- max(350, n_groups * 25 + 100)
 
       plot <- cross_section_data() |>
         ggplot2::ggplot(
@@ -290,6 +290,9 @@ wagebill_server <- function(id, wagebill_data) {
         ggplot2::geom_col() +
         ggplot2::scale_x_continuous(
           labels = scales::label_number(scale_cut = scales::cut_short_scale())
+        ) +
+        scale_y_discrete(
+          guide = guide_axis(n.dodge = 2)
         ) +
         ggplot2::labs(
           x = "Wage bill",
@@ -347,7 +350,7 @@ wagebill_server <- function(id, wagebill_data) {
 
       # dynamic height
       n_groups <- nrow(change_data())
-      plot_height <- max(350, n_groups * 15 + 100)
+      plot_height <- max(350, n_groups * 25 + 100)
 
       plot <- change_data() |>
         ggplot2::ggplot(
@@ -360,13 +363,17 @@ wagebill_server <- function(id, wagebill_data) {
           )
         ) +
         ggplot2::geom_col() +
-        ggplot2::geom_vline(
+        geom_vline(
           xintercept = 0,
+          linewidth = 1.5,
           linetype = "dashed",
-          color = "orangered2"
+          color = "#2958c3"
         ) +
         ggplot2::scale_x_continuous(
           labels = scales::label_number(scale_cut = scales::cut_short_scale())
+        ) +
+        scale_y_discrete(
+          guide = guide_axis(n.dodge = 2)
         ) +
         ggplot2::labs(
           x = "Growth rate",
@@ -402,12 +409,15 @@ wagebill_server <- function(id, wagebill_data) {
         unique() |> 
         length()
 
-      plot_height <- max(350, n_groups * 15 + 100)
+      plot_height <- max(350, n_groups * 25 + 100)
 
       plot <- dispersion_data() |>
         plot_segment(
           col = input$wagebill_measure,
           group = input$wagebill_group
+        ) +
+        scale_y_discrete(
+          guide = guide_axis(n.dodge = 2)
         ) +
         ggplot2::labs(
           x = "Wage bill",

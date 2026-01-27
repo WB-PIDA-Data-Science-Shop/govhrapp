@@ -30,7 +30,10 @@ run_govhrapp <- function(...) {
       )
   )
 
-  thematic::thematic_shiny(font = "auto")
+  thematic::thematic_shiny(
+    font = "auto",
+    accent = "#C34729"
+  )
 
   # globals
   personnel_data <- govhrapp::personnel_data

@@ -310,7 +310,7 @@ workforce_server <- function(id, workforce_data) {
 
       # dynamic height
       n_groups <- nrow(cross_section_data())
-      plot_height <- max(350, n_groups * 15 + 100)
+      plot_height <- max(350, n_groups * 25 + 100)
 
       plot <- cross_section_data() |>
         ggplot(
@@ -325,6 +325,9 @@ workforce_server <- function(id, workforce_data) {
         geom_col() +
         scale_x_continuous(
           labels = scales::label_number(scale_cut = scales::cut_short_scale())
+        ) +
+        scale_y_discrete(
+          guide = guide_axis(n.dodge = 2)
         ) +
         labs(
           x = "Headcount",
@@ -377,7 +380,7 @@ workforce_server <- function(id, workforce_data) {
 
        # dynamic height
       n_groups <- nrow(change_data())
-      plot_height <- max(350, n_groups * 15 + 100)
+      plot_height <- max(350, n_groups * 25 + 100)
 
       plot_growth <- change_data() |>
         ggplot(
@@ -392,11 +395,15 @@ workforce_server <- function(id, workforce_data) {
         geom_col() +
         geom_vline(
           xintercept = 0,
+          linewidth = 1.5,
           linetype = "dashed",
-          color = "orangered2"
+          color = "#2958c3"
         ) +
         scale_x_continuous(
           labels = scales::label_number(scale_cut = scales::cut_short_scale())
+        ) +
+        scale_y_discrete(
+          guide = guide_axis(n.dodge = 2)
         ) +
         labs(
           x = "Growth rate",
