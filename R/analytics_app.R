@@ -26,7 +26,7 @@ run_govhrapp <- function(...) {
   ggplot2::theme_set(
     ggplot2::theme_minimal(base_size = 14) +
       ggplot2::theme(
-        axis.text = ggplot2::element_text(size = 12)
+        axis.text = ggplot2::element_text(size = 10.5)
       )
   )
 
@@ -36,9 +36,9 @@ run_govhrapp <- function(...) {
     sequential = "#C34729"
   )
 
-  # ggplot2::update_geom_defaults("point", list(colour = "#C34729"))
-  # ggplot2::update_geom_defaults("line",  list(colour = "#C34729"))
-  # ggplot2::update_geom_defaults("col",   list(fill   = "#C34729"))
+  ggplot2::update_geom_defaults("point", list(colour = "#C34729"))
+  ggplot2::update_geom_defaults("line",  list(colour = "#C34729"))
+  ggplot2::update_geom_defaults("col",   list(fill   = "#C34729"))
 
   # globals
   personnel_data <- govhrapp::personnel_data
