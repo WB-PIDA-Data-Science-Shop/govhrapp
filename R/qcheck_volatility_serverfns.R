@@ -30,6 +30,10 @@ volatility_server <- function(id, dynamicqc_obj) {
         indicators <- unique(vol_obj$salary_vol$indicator)
         indicators <- indicators[!is.na(indicators)]
         
+        # Remove '_sum' suffix for display
+        display_names <- gsub("_sum$", "", as.character(indicators))
+        names(display_names) <- display_names
+        
         shiny::updateSelectInput(
           session,
           "salary_indicator",
@@ -87,7 +91,7 @@ volatility_server <- function(id, dynamicqc_obj) {
       # Prepare top contracts
       plot_dt <- prepare_top_volatile(
         vol_dt = salary_vol,
-        vol_col = "rolling_cv",
+        vol_col = "pct_change",
         id_col = "contract_id",
         top_n = input$salary_top_n,
         indicator_filter = input$salary_indicator
@@ -97,8 +101,9 @@ volatility_server <- function(id, dynamicqc_obj) {
         return(NULL)
       }
       
-      # Remove NA values
-      plot_dt <- plot_dt[!is.na(rolling_cv)]
+      # Remove NA values and convert to percentage
+      plot_dt <- plot_dt[!is.na(pct_change)]
+      plot_dt[, pct_change := pct_change * 100]
       
       if (nrow(plot_dt) == 0) {
         return(NULL)
@@ -112,7 +117,7 @@ volatility_server <- function(id, dynamicqc_obj) {
       heatmap_data <- plot_dt[, .(
         x = match(as.character(ref_date), as.character(sort(ref_dates))) - 1,
         y = match(contract_id, contract_ids) - 1,
-        value = rolling_cv
+        value = pct_change
       )]
       
       highcharter::highchart() |>
@@ -128,24 +133,24 @@ volatility_server <- function(id, dynamicqc_obj) {
         highcharter::hc_add_series(
           data = heatmap_data,
           type = "heatmap",
-          name = "Rolling CV",
+          name = "% Change",
           dataLabels = list(enabled = FALSE)
         ) |>
         highcharter::hc_colorAxis(
           min = 0,
           stops = list(
-            list(0, "#440154"),
-            list(0.25, "#31688e"),
-            list(0.5, "#35b779"),
-            list(0.75, "#fde724"),
-            list(1, "#fde724")
+            list(0, "#000004"),
+            list(0.25, "#56106E"),
+            list(0.5, "#BB3754"),
+            list(0.75, "#F98C0A"),
+            list(1, "#FCFFA4")
           )
         ) |>
         highcharter::hc_title(
-          text = paste0("Top ", input$salary_top_n, " Contracts by Salary Volatility: ", input$salary_indicator)
+          text = paste0("Top ", input$salary_top_n, " Contracts by Salary Volatility: ", gsub("_sum$", "", input$salary_indicator))
         ) |>
         highcharter::hc_tooltip(
-          pointFormat = "Contract: <b>{point.y}</b><br>Date: <b>{point.x}</b><br>CV: <b>{point.value:.3f}</b>"
+          pointFormat = "Contract: <b>{point.y}</b><br>Date: <b>{point.x}</b><br>Change: <b>{point.value:.1f}%</b>"
         ) |>
         highcharter::hc_legend(enabled = TRUE) |>
         add_export_menu()
@@ -185,11 +190,11 @@ volatility_server <- function(id, dynamicqc_obj) {
       est_ids <- unique(plot_dt$est_id)
       ref_dates <- unique(plot_dt$ref_date)
       
-      # Prepare data for heatmap
+      # Prepare data for heatmap (convert to percentage)
       heatmap_data <- plot_dt[, .(
         x = match(as.character(ref_date), as.character(sort(ref_dates))) - 1,
         y = match(est_id, est_ids) - 1,
-        value = pct_change
+        value = pct_change * 100
       )]
       
       highcharter::highchart() |>
@@ -210,11 +215,11 @@ volatility_server <- function(id, dynamicqc_obj) {
         ) |>
         highcharter::hc_colorAxis(
           stops = list(
-            list(0, "#440154"),
-            list(0.25, "#31688e"),
-            list(0.5, "#35b779"),
-            list(0.75, "#fde724"),
-            list(1, "#fde724")
+            list(0, "#000004"),
+            list(0.25, "#56106E"),
+            list(0.5, "#BB3754"),
+            list(0.75, "#F98C0A"),
+            list(1, "#FCFFA4")
           )
         ) |>
         highcharter::hc_title(
@@ -241,7 +246,7 @@ volatility_server <- function(id, dynamicqc_obj) {
       # Prepare top contracts
       plot_dt <- prepare_top_volatile(
         vol_dt = workhours_vol,
-        vol_col = "rolling_cv",
+        vol_col = "pct_change",
         id_col = "contract_id",
         top_n = input$workhours_top_n
       )
@@ -250,8 +255,9 @@ volatility_server <- function(id, dynamicqc_obj) {
         return(NULL)
       }
       
-      # Remove NA values
-      plot_dt <- plot_dt[!is.na(rolling_cv)]
+      # Remove NA values and convert to percentage
+      plot_dt <- plot_dt[!is.na(pct_change)]
+      plot_dt[, pct_change := pct_change * 100]
       
       if (nrow(plot_dt) == 0) {
         return(NULL)
@@ -265,7 +271,7 @@ volatility_server <- function(id, dynamicqc_obj) {
       heatmap_data <- plot_dt[, .(
         x = match(as.character(ref_date), as.character(sort(ref_dates))) - 1,
         y = match(contract_id, contract_ids) - 1,
-        value = rolling_cv
+        value = pct_change
       )]
       
       highcharter::highchart() |>
@@ -281,24 +287,24 @@ volatility_server <- function(id, dynamicqc_obj) {
         highcharter::hc_add_series(
           data = heatmap_data,
           type = "heatmap",
-          name = "Rolling CV",
+          name = "% Change",
           dataLabels = list(enabled = FALSE)
         ) |>
         highcharter::hc_colorAxis(
           min = 0,
           stops = list(
-            list(0, "#440154"),
-            list(0.25, "#31688e"),
-            list(0.5, "#35b779"),
-            list(0.75, "#fde724"),
-            list(1, "#fde724")
+            list(0, "#000004"),
+            list(0.25, "#56106E"),
+            list(0.5, "#BB3754"),
+            list(0.75, "#F98C0A"),
+            list(1, "#FCFFA4")
           )
         ) |>
         highcharter::hc_title(
           text = paste0("Top ", input$workhours_top_n, " Contracts by Work Hours Volatility")
         ) |>
         highcharter::hc_tooltip(
-          pointFormat = "Contract: <b>{point.y}</b><br>Date: <b>{point.x}</b><br>CV: <b>{point.value:.3f}</b>"
+          pointFormat = "Contract: <b>{point.y}</b><br>Date: <b>{point.x}</b><br>Change: <b>{point.value:.1f}%</b>"
         ) |>
         highcharter::hc_legend(enabled = TRUE) |>
         add_export_menu()

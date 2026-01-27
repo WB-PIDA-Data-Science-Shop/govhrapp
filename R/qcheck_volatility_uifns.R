@@ -26,7 +26,7 @@ volatility_ui <- function(id) {
           shiny::markdown(
             "### Volatility Analysis
             
-This section evaluates temporal stability across key HR metrics--salary aggregates, contract counts, and work hours. Volatility is measured using rolling coefficients of variation (CV) or percent changes to identify contracts and establishments with unstable patterns over time.
+This section evaluates temporal stability across key HR metrics--salary aggregates, contract counts, and work hours. Volatility is measured using period-to-period percentage changes to identify contracts and establishments with unstable patterns over time.
 
 **High volatility may indicate:**
 - Data quality issues (inconsistent reporting, missing periods)
@@ -43,7 +43,7 @@ Use the controls to select which indicators to display and how many top volatile
     bslib::layout_columns(
       col_widths = c(12),
       bslib::card(
-        bslib::card_header("Contract Salary Volatility (Rolling CV)"),
+        bslib::card_header("Contract Salary Volatility (% Change)"),
         bslib::card_body(
           bslib::layout_columns(
             col_widths = c(6, 6),
@@ -62,7 +62,7 @@ Use the controls to select which indicators to display and how many top volatile
               step = 5
             )
           ),
-          shiny::p("Top contracts with highest salary volatility. Higher CV values indicate greater instability."),
+          shiny::p("Top contracts with highest salary volatility. Higher percentage changes indicate greater period-to-period instability."),
           highcharter::highchartOutput(ns("salary_heatmap"), height = "700px")
         )
       )
@@ -92,7 +92,7 @@ Use the controls to select which indicators to display and how many top volatile
     bslib::layout_columns(
       col_widths = c(12),
       bslib::card(
-        bslib::card_header("Work Hours Volatility (Rolling CV)"),
+        bslib::card_header("Work Hours Volatility (% Change)"),
         bslib::card_body(
           shiny::sliderInput(
             ns("workhours_top_n"),
