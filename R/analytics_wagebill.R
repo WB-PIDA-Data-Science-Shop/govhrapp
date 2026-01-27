@@ -275,7 +275,7 @@ wagebill_server <- function(id, wagebill_data) {
       
       # dynamic height
       n_groups <- nrow(cross_section_data())
-      plot_height <- max(350, n_groups * 10 + 100)
+      plot_height <- max(350, n_groups * 15 + 100)
 
       plot <- cross_section_data() |>
         ggplot2::ggplot(
@@ -347,7 +347,7 @@ wagebill_server <- function(id, wagebill_data) {
 
       # dynamic height
       n_groups <- nrow(change_data())
-      plot_height <- max(350, n_groups * 10 + 100)
+      plot_height <- max(350, n_groups * 15 + 100)
 
       plot <- change_data() |>
         ggplot2::ggplot(
@@ -402,7 +402,7 @@ wagebill_server <- function(id, wagebill_data) {
         unique() |> 
         length()
 
-      plot_height <- max(350, n_groups * 10 + 100)
+      plot_height <- max(350, n_groups * 15 + 100)
 
       plot <- dispersion_data() |>
         plot_segment(

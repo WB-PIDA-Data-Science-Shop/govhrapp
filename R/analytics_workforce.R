@@ -310,7 +310,7 @@ workforce_server <- function(id, workforce_data) {
 
       # dynamic height
       n_groups <- nrow(cross_section_data())
-      plot_height <- max(350, n_groups * 10 + 100)
+      plot_height <- max(350, n_groups * 15 + 100)
 
       plot <- cross_section_data() |>
         ggplot(
@@ -377,7 +377,7 @@ workforce_server <- function(id, workforce_data) {
 
        # dynamic height
       n_groups <- nrow(change_data())
-      plot_height <- max(350, n_groups * 10 + 100)
+      plot_height <- max(350, n_groups * 15 + 100)
 
       plot_growth <- change_data() |>
         ggplot(
