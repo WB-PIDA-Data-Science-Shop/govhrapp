@@ -365,7 +365,7 @@ wagebill_server <- function(id, wagebill_data) {
         ggplot2::geom_col() +
         geom_vline(
           xintercept = 0,
-          linewidth = 1.5,
+          linewidth = 1.25,
           linetype = "dashed",
           color = "#2958c3"
         ) +
