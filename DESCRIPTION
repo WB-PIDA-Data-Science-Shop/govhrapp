@@ -22,6 +22,7 @@ Imports:
     lubridate,
     plotly,
     rlang,
+    rsconnect,
     scales,
     shiny,
     shinyWidgets,

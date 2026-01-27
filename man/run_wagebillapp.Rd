@@ -44,8 +44,11 @@ The application provides four main analytical views:
 }
 \examples{
 \dontrun{
-# Run with custom data
-my_data <- govhr::bra_hrmis_contract |>
+# Run with default data
+run_wagebillapp(wagebill_data = govhr::wagebill)
+
+# Run with filtered data
+my_data <- govhr::wagebill |>
   dplyr::filter(lubridate::year(ref_date) >= 2015)
 run_wagebillapp(wagebill_data = my_data)
 }

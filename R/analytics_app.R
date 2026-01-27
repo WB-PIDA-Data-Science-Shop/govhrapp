@@ -32,8 +32,13 @@ run_govhrapp <- function(...) {
 
   thematic::thematic_shiny(
     font = "auto",
-    accent = "#C34729"
+    accent = "#C34729",
+    sequential = "#C34729"
   )
+
+  # ggplot2::update_geom_defaults("point", list(colour = "#C34729"))
+  # ggplot2::update_geom_defaults("line",  list(colour = "#C34729"))
+  # ggplot2::update_geom_defaults("col",   list(fill   = "#C34729"))
 
   # globals
   personnel_data <- govhrapp::personnel_data
@@ -41,6 +46,10 @@ run_govhrapp <- function(...) {
   ui <- bslib::page_navbar(
     # title = "govhr dashboard",
     fillable = FALSE,
+
+    navbar_options = navbar_options(
+      underline = TRUE
+    ),
 
     # set theme
     theme = bslib::bs_theme(
@@ -54,11 +63,7 @@ run_govhrapp <- function(...) {
         readLines("inst/www/styles.css")
       ),
 
-    navbar_options = navbar_options(
-      underline = TRUE
-    ),
-
-    padding = "20px",
+    padding = "10px",
 
     # panel 1: home
     bslib::nav_panel(
@@ -98,18 +103,22 @@ run_govhrapp <- function(...) {
       workforce_ui("workforce", personnel_data)
     ),
 
-    # add spacer to push logo to the right
-    bslib::nav_spacer(),
-
-    # add logo on the right side with hyperlink
-    bslib::nav_item(
-      shiny::tags$a(
-        href = "https://github.com/WB-PIDA-Data-Science-Shop/govhr/tree/master",
-        target = "_blank",
-        shiny::tags$img(
-          src = "assets/package_logo.png",
-          height = "90px",
-          style = "margin-top: -10px;"
+    # panel 4: code
+    nav_menu(
+      title = "Code",
+      icon = shiny::icon("github"),
+      bslib::nav_item(
+        shiny::tags$a(
+          "govhr dashboard",
+          href = "https://github.com/WB-PIDA-Data-Science-Shop/govhrapp",
+          target = "_blank"
+        )
+      ),
+      bslib::nav_item(
+        shiny::tags$a(
+          "govhr",
+          href = "https://github.com/WB-PIDA-Data-Science-Shop/govhr",
+          target = "_blank"
         )
       )
     )
