@@ -17,7 +17,8 @@
 #' run_qcheckapp(dynamicqc_obj = qc_data)
 #' }
 #'
-#' @importFrom shiny shinyApp addResourcePath
+#' @importFrom shiny shinyApp addResourcePath icon tags
+#' @importFrom bslib page_navbar bs_theme bs_add_rules nav_panel nav_spacer nav_menu nav_item navbar_options font_google
 #' @importFrom thematic thematic_shiny
 #' @export
 run_qcheckapp <- function(dynamicqc_obj, ...) {
@@ -95,6 +96,26 @@ run_qcheckapp <- function(dynamicqc_obj, ...) {
       "Volatility",
       icon = shiny::icon("chart-line"),
       volatility_ui("volatility")
+    ),
+    
+    # GitHub code links
+    bslib::nav_menu(
+      title = "Code",
+      icon = shiny::icon("github"),
+      bslib::nav_item(
+        shiny::tags$a(
+          "govhr dashboard",
+          href = "https://github.com/WB-PIDA-Data-Science-Shop/govhrapp",
+          target = "_blank"
+        )
+      ),
+      bslib::nav_item(
+        shiny::tags$a(
+          "govhr",
+          href = "https://github.com/WB-PIDA-Data-Science-Shop/govhr",
+          target = "_blank"
+        )
+      )
     )
 
  )

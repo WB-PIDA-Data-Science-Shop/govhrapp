@@ -12,8 +12,8 @@
 #' }
 #'
 #' @importFrom shiny shinyApp addResourcePath
-#' @importFrom bslib page_navbar nav_panel nav_spacer
-#' @importFrom ggplot2 theme_set theme_minimal
+#' @importFrom bslib page_navbar nav_panel nav_spacer bs_theme bs_add_rules navbar_options font_google
+#' @importFrom ggplot2 theme_set theme_minimal theme element_text update_geom_defaults
 #' @importFrom thematic thematic_shiny
 #' @importFrom lubridate year
 #' @export

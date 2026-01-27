@@ -101,6 +101,12 @@ replace_volatility_with_pct_change <- function(qc_obj, contract_dt) {
 #' }
 compute_dynamicqc <- function(contract_dt, personnel_dt = NULL, est_dt = NULL) {
   
+  # Ensure govhr package is loaded to access internal objects like harmonization_dict
+  if (!("package:govhr" %in% search())) {
+    requireNamespace("govhr", quietly = TRUE)
+    attachNamespace("govhr")
+  }
+  
   # Convert to data.table
   contract_dt <- data.table::as.data.table(contract_dt)
   if (!is.null(personnel_dt)) personnel_dt <- data.table::as.data.table(personnel_dt)

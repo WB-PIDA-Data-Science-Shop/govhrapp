@@ -41,13 +41,30 @@
 #' @importFrom rsconnect deployApp
 #' @export
 deploy_govhrapp <- function(suite){
+  
+  # Get the app ID from environment variable
   app_id = switch(
     suite,
     quality = Sys.getenv("govhrapp_quality_guid"),
-    analytics = Sys.getenv("govhrapp_analytics_guid")
+    analytics = Sys.getenv("govhrapp_analytics_guid"),
+    stop("suite must be either 'quality' or 'analytics'")
   )
-
+  
+  # Get the app file to deploy
+  app_file = switch(
+    suite,
+    quality = "app_quality.R",
+    analytics = "app.R"
+  )
+  
+  # Check if app file exists
+  if (!file.exists(app_file)) {
+    stop("App file '", app_file, "' not found in package root directory")
+  }
+  
+  # Deploy the app
   rsconnect::deployApp(
-    appId = app_id
+    appId = app_id,
+    appPrimaryDoc = app_file
   )
 }

@@ -29,5 +29,10 @@ utils::globalVariables(c(
   "indicator",
   "rolling_cv",
   "pct_change",
-  "."
+  ".",
+  # data.table and dplyr symbols
+  ".N",
+  ".data",
+  # some functions
+  "nav_menu"
 ))

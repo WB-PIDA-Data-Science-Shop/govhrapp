@@ -12,6 +12,7 @@
 #' @importFrom highcharter renderHighchart highchart hc_chart hc_xAxis hc_yAxis hc_add_series hc_title hc_subtitle hc_tooltip hc_legend hcaes hc_colorAxis hc_exporting
 #' @importFrom plotly renderPlotly plot_ly layout colorbar
 #' @importFrom scales percent_format
+#' @importFrom stats as.formula
 #'
 #' @keywords internal
 missingness_server <- function(id, dynamicqc_obj) {

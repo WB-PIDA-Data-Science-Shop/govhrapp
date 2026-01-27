@@ -154,7 +154,7 @@ wagebill_ui <- function(id, wagebill_data) {
 #' @importFrom dplyr filter mutate arrange group_by ungroup across all_of first lag pull
 #' @importFrom lubridate year years
 #' @importFrom govhr compute_fastsummary complete_dates convert_constant_ppp
-#' @importFrom ggplot2 ggplot aes geom_point geom_line geom_col geom_hline geom_vline scale_y_continuous scale_x_continuous labs xlab ylab
+#' @importFrom ggplot2 ggplot aes geom_point geom_line geom_col geom_hline geom_vline scale_y_continuous scale_x_continuous labs xlab ylab guide_axis
 #' @importFrom plotly ggplotly
 #' @importFrom stats reorder
 #' @importFrom scales label_number cut_short_scale
