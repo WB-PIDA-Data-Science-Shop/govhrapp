@@ -33,23 +33,34 @@ missingness_ui <- function(id) {
     ),
     
     bslib::layout_columns(
-      col_widths = c(6, 6),
+      col_widths = c(12),
       
-      # Card 2: Missingness by Occupation
+      # Card 2: Missingness by Occupation (Consolidated)
       bslib::card(
-        bslib::card_header("Missingness by Occupation (Top 15)"),
+        bslib::card_header("Missingness by Occupation"),
         bslib::card_body(
-          shiny::p("Missingness patterns across the most affected occupations."),
-          highcharter::highchartOutput(ns("occupation_plot"), height = "500px")
-        )
-      ),
-      
-      # Card 3: Missingness by ISCO
-      bslib::card(
-        bslib::card_header("Missingness by ISCO Code (Top 15)"),
-        bslib::card_body(
-          shiny::p("Missingness patterns across standardized occupation classifications."),
-          highcharter::highchartOutput(ns("isco_plot"), height = "500px")
+          bslib::layout_columns(
+            col_widths = c(6, 6),
+            shiny::selectInput(
+              ns("occupation_type"),
+              "Occupation Type:",
+              choices = c(
+                "Native Occupation" = "native",
+                "ISCO Occupation Code" = "isco"
+              ),
+              selected = "native"
+            ),
+            shiny::sliderInput(
+              ns("occupation_top_n"),
+              "Number of Occupations to Display:",
+              min = 10,
+              max = 50,
+              value = 15,
+              step = 5
+            )
+          ),
+          shiny::p("Occupations with highest missingness rates across fields."),
+          plotly::plotlyOutput(ns("occupation_plot"), height = "600px")
         )
       )
     ),

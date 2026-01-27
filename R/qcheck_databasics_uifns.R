@@ -39,7 +39,7 @@ databasics_ui <- function(id) {
     
     # Variable Structure Card
     bslib::card(
-      bslib::card_header("Variable Structure & Dictionary Conformity"),
+      bslib::card_header("Do the data fields match the standard dictionary?"),
       bslib::card_body(
         gt::gt_output(ns("structure_table"))
       )
@@ -47,7 +47,7 @@ databasics_ui <- function(id) {
     
     # Primary Key Integrity Card
     bslib::card(
-      bslib::card_header("Primary Key Integrity"),
+      bslib::card_header("Are all IDs unique within all 3 files?"),
       bslib::card_body(
         gt::gt_output(ns("keys_table")),
         shiny::uiOutput(ns("duplicate_keys_ui"))
@@ -56,7 +56,7 @@ databasics_ui <- function(id) {
     
     # Orphan Checks Card
     bslib::card(
-      bslib::card_header("Cross-Module Orphan Checks"),
+      bslib::card_header("Do IDs match across files?"),
       bslib::card_body(
         gt::gt_output(ns("orphans_table")),
         shiny::uiOutput(ns("orphan_details_ui"))

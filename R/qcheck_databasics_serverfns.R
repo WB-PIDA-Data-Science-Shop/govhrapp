@@ -14,7 +14,7 @@
 #' @importFrom gt render_gt gt fmt_number fmt_markdown cols_align cols_width px tab_style cell_fill cell_text cells_body opt_table_outline opt_row_striping tab_header md tab_footnote
 #' @importFrom scales comma_format
 #' @importFrom utils head
-#' @importFrom highcharter renderHighchart highchart hc_xAxis hc_yAxis hc_add_series hc_title hc_subtitle hc_tooltip hc_legend hcaes datetime_to_timestamp
+#' @importFrom highcharter renderHighchart highchart hc_xAxis hc_yAxis hc_add_series hc_title hc_subtitle hc_tooltip hc_legend hcaes datetime_to_timestamp hc_exporting
 #'
 #' @keywords internal
 databasics_server <- function(id, dynamicqc_obj) {
@@ -31,12 +31,12 @@ databasics_server <- function(id, dynamicqc_obj) {
     output$dimensions_table <- gt::render_gt({
       dim_dt <- data.table::data.table(
         Module = c("Contract", "Personnel", "Establishment"),
-        Observations = c(
+        Records = c(
           metadata$n_obs$contract,
           metadata$n_obs$personnel,
           metadata$n_obs$establishment
         ),
-        Variables = c(
+        Fields = c(
           metadata$n_vars$contract,
           metadata$n_vars$personnel,
           metadata$n_vars$establishment
@@ -46,13 +46,13 @@ databasics_server <- function(id, dynamicqc_obj) {
       dim_dt |>
         gt::gt() |>
         gt::fmt_number(
-          columns = c(Observations, Variables),
+          columns = c(Records, Fields),
           use_seps = TRUE,
           decimals = 0
         ) |>
         gt::cols_align(
           align = "center",
-          columns = c(Observations, Variables)
+          columns = c(Records, Fields)
         ) |>
         gt::tab_style(
           style = list(gt::cell_fill(color = "#f7f7f7")),
@@ -110,9 +110,9 @@ databasics_server <- function(id, dynamicqc_obj) {
         highcharter::highchart() |>
         highcharter::hc_xAxis(type = "datetime", 
                               title = list(text = "Reference Date")) |>
-        highcharter::hc_yAxis(title = list(text = "Number of Observations")) |>
+        highcharter::hc_yAxis(title = list(text = "Number of Records")) |>
         highcharter::hc_title(
-          text = "Observation Counts by Reference Period and Module"
+          text = "Record Counts by Reference Period and Module"
         ) |>
         highcharter::hc_subtitle(
           text = "Spikes or gaps may indicate data quality issues or organizational changes"
@@ -162,7 +162,7 @@ databasics_server <- function(id, dynamicqc_obj) {
           )
       }
       
-      hc
+      hc |> add_export_menu()
     })
     
     # Variable Structure Table
@@ -171,12 +171,12 @@ databasics_server <- function(id, dynamicqc_obj) {
       
       structure_dt <- data.table::data.table(
         Module = c("Contract", "Establishment", "Personnel"),
-        `Missing Variables` = c(
+        `Missing Fields` = c(
           structure_list[[1]]$missing,
           structure_list[[2]]$missing,
           structure_list[[3]]$missing
         ),
-        `Extra Variables` = c(
+        `Extra Fields` = c(
           structure_list[[1]]$extra,
           structure_list[[2]]$extra,
           structure_list[[3]]$extra
@@ -185,11 +185,11 @@ databasics_server <- function(id, dynamicqc_obj) {
       
       structure_dt |>
         gt::gt() |>
-        gt::fmt_markdown(columns = c(`Missing Variables`, `Extra Variables`)) |>
+        gt::fmt_markdown(columns = c(`Missing Fields`, `Extra Fields`)) |>
         gt::cols_width(
           Module ~ gt::px(120),
-          `Missing Variables` ~ gt::px(400),
-          `Extra Variables` ~ gt::px(400)
+          `Missing Fields` ~ gt::px(400),
+          `Extra Fields` ~ gt::px(400)
         ) |>
         gt::tab_style(
           style = list(gt::cell_text(weight = "bold")),
@@ -204,7 +204,7 @@ databasics_server <- function(id, dynamicqc_obj) {
       keys_obj <- qc_obj$keys
       
       keys_dt <- data.table::data.table(
-        Check = c("Primary Keys Unique", "Number of Duplicate Groups"),
+        Check = c("Are all employee IDs unique?", "Number of duplicate ID groups found"),
         Status = c(
           ifelse(keys_obj$is_unique, 
                  "<span style='background:#4caf50;color:white;padding:2px 8px;border-radius:4px;'>\u2713 PASS</span>",
@@ -253,10 +253,10 @@ databasics_server <- function(id, dynamicqc_obj) {
       
       orphans_dt <- data.table::data.table(
         Check = c(
-          "Personnel IDs in Contract missing from Personnel module",
-          "Establishment IDs in Contract missing from Establishment module"
+          "Are all contract employee IDs found in the personnel file?",
+          "Are all contract establishment IDs found in the establishment file?"
         ),
-        `Missing Count` = c(
+        `Unmatched Records` = c(
           orphans_obj$personnel_vs_contract$n_missing,
           orphans_obj$establishment_vs_contract$n_missing
         ),
@@ -273,10 +273,10 @@ databasics_server <- function(id, dynamicqc_obj) {
       orphans_dt |>
         gt::gt() |>
         gt::fmt_markdown(columns = Status) |>
-        gt::fmt_number(columns = `Missing Count`, decimals = 0, use_seps = TRUE) |>
+        gt::fmt_number(columns = `Unmatched Records`, decimals = 0, use_seps = TRUE) |>
         gt::cols_width(
           Check ~ gt::px(450),
-          `Missing Count` ~ gt::px(150),
+          `Unmatched Records` ~ gt::px(150),
           Status ~ gt::px(120)
         ) |>
         gt::opt_table_outline() |>

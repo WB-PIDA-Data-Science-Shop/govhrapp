@@ -14,7 +14,7 @@
 #'
 #' @importFrom shiny moduleServer updateSelectInput observeEvent
 #' @importFrom data.table data.table copy setorder
-#' @importFrom highcharter renderHighchart highchart hc_chart hc_xAxis hc_yAxis hc_add_series hc_title hc_subtitle hc_tooltip hc_legend hc_colorAxis
+#' @importFrom highcharter renderHighchart highchart hc_chart hc_xAxis hc_yAxis hc_add_series hc_title hc_subtitle hc_tooltip hc_legend hc_colorAxis hc_exporting
 #'
 #' @keywords internal
 volatility_server <- function(id, dynamicqc_obj) {
@@ -147,7 +147,8 @@ volatility_server <- function(id, dynamicqc_obj) {
         highcharter::hc_tooltip(
           pointFormat = "Contract: <b>{point.y}</b><br>Date: <b>{point.x}</b><br>CV: <b>{point.value:.3f}</b>"
         ) |>
-        highcharter::hc_legend(enabled = TRUE)
+        highcharter::hc_legend(enabled = TRUE) |>
+        add_export_menu()
     })
     
     # Contract Count Volatility Heatmap
@@ -220,9 +221,10 @@ volatility_server <- function(id, dynamicqc_obj) {
           text = paste0("Top ", input$contract_count_top_n, " Establishments by Contract Count Volatility")
         ) |>
         highcharter::hc_tooltip(
-          pointFormat = "Establishment: <b>{point.y}</b><br>Date: <b>{point.x}</b><br>% Change: <b>{point.value:.1f}%</b>"
+          pointFormat = "Establishment: <b>{point.y}</b><br>Date: <b>{point.x}</b><br>Change: <b>{point.value:.1f}%</b>"
         ) |>
-        highcharter::hc_legend(enabled = TRUE)
+        highcharter::hc_legend(enabled = TRUE) |>
+        add_export_menu()
     })
     
     # Work Hours Volatility Heatmap
@@ -298,7 +300,8 @@ volatility_server <- function(id, dynamicqc_obj) {
         highcharter::hc_tooltip(
           pointFormat = "Contract: <b>{point.y}</b><br>Date: <b>{point.x}</b><br>CV: <b>{point.value:.3f}</b>"
         ) |>
-        highcharter::hc_legend(enabled = TRUE)
+        highcharter::hc_legend(enabled = TRUE) |>
+        add_export_menu()
     })
   })
 }

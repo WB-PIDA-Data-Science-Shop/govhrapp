@@ -3,14 +3,15 @@
 
 utils::globalVariables(c(
   # Column names used in databasics_server
-  "Observations",
-  "Variables",
+  "Records",
+  "Fields",
   "Module",
   "Status",
   "N",
-  "Missing Variables",
-  "Extra Variables",
-  "Missing Count",
+  "Check",
+  "Missing Fields",
+  "Extra Fields",
+  "Unmatched Records",
   "ref_date",
   "n_obs",
   "module",
