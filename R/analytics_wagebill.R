@@ -10,6 +10,7 @@
 #' @importFrom shiny markdown icon NS selectInput
 #' @importFrom shinyWidgets numericRangeInput materialSwitch
 #' @importFrom plotly plotlyOutput
+#' @importFrom stringr str_wrap
 #' @importFrom lubridate year
 #' @export
 wagebill_ui <- function(id, wagebill_data) {
@@ -150,13 +151,14 @@ wagebill_ui <- function(id, wagebill_data) {
 #'
 #' @importFrom shiny moduleServer reactive validate need bindEvent
 #' @importFrom plotly renderPlotly
-#' @importFrom dplyr filter mutate arrange group_by ungroup across all_of first lag
+#' @importFrom dplyr filter mutate arrange group_by ungroup across all_of first lag pull
 #' @importFrom lubridate year years
 #' @importFrom govhr compute_fastsummary complete_dates convert_constant_ppp
 #' @importFrom ggplot2 ggplot aes geom_point geom_line geom_col geom_hline geom_vline scale_y_continuous scale_x_continuous labs xlab ylab
 #' @importFrom plotly ggplotly
 #' @importFrom stats reorder
 #' @importFrom scales label_number cut_short_scale
+#' @importFrom stringr str_wrap
 #' @export
 wagebill_server <- function(id, wagebill_data) {
   shiny::moduleServer(id, function(input, output, session) {
@@ -280,7 +282,7 @@ wagebill_server <- function(id, wagebill_data) {
           ggplot2::aes(
             x = .data[["value"]],
             y = stats::reorder(
-              .data[[input$wagebill_group]],
+              stringr::str_wrap(.data[[input$wagebill_group]], width = 30),
               .data[["value"]]
             )
           )
@@ -306,7 +308,7 @@ wagebill_server <- function(id, wagebill_data) {
 
       change_data <- shiny::reactive({
         wagebill_annual <- wagebill_filtered_date() |>
-          # only present latest year and previous one
+          # only present latest year
           dplyr::filter(
             year %in% c(max(year), max(year) - 1)
           ) |>
@@ -352,7 +354,7 @@ wagebill_server <- function(id, wagebill_data) {
           ggplot2::aes(
             x = .data[["growth_rate"]],
             y = stats::reorder(
-              .data[[input$wagebill_group]],
+              stringr::str_wrap(.data[[input$wagebill_group]], width = 30),
               .data[["growth_rate"]]
             )
           )
@@ -454,8 +456,11 @@ wagebill_server <- function(id, wagebill_data) {
 #'
 #' @examples
 #' \dontrun{
-#' # Run with custom data
-#' my_data <- govhr::bra_hrmis_contract |>
+#' # Run with default data
+#' run_wagebillapp(wagebill_data = govhr::wagebill)
+#'
+#' # Run with filtered data
+#' my_data <- govhr::wagebill |>
 #'   dplyr::filter(lubridate::year(ref_date) >= 2015)
 #' run_wagebillapp(wagebill_data = my_data)
 #' }
@@ -470,10 +475,10 @@ run_wagebillapp <- function(
   ...
 ) {
   ui <- wagebill_ui("test", wagebill_data)
-
+  
   server <- function(input, output, session) {
     wagebill_server("test", wagebill_data)
   }
-
-  shiny::shinyApp(ui, server)
+  
+  shiny::shinyApp(ui, server, ...)
 }
