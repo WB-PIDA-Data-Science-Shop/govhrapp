@@ -17,13 +17,17 @@
 #' @import dplyr
 #' @importFrom thematic thematic_shiny
 #' @importFrom lubridate year
+#' @export
 run_govhrapp <- function(...) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", "inst/www")
 
   # ensure ggplot2 and plotly inherit bslib themes
   ggplot2::theme_set(
-    ggplot2::theme_minimal()
+    ggplot2::theme_minimal(base_size = 14) +
+      ggplot2::theme(
+        axis.text = ggplot2::element_text(size = 12)
+      )
   )
 
   thematic::thematic_shiny(font = "auto")
@@ -32,7 +36,7 @@ run_govhrapp <- function(...) {
   personnel_data <- govhrapp::personnel_data
 
   ui <- bslib::page_navbar(
-    title = "govhr dashboard",
+    # title = "govhr dashboard",
     fillable = FALSE,
 
     # set theme
@@ -89,6 +93,22 @@ run_govhrapp <- function(...) {
       "Workforce",
       icon = shiny::icon("person-walking"),
       workforce_ui("workforce", personnel_data)
+    ),
+
+    # add spacer to push logo to the right
+    bslib::nav_spacer(),
+
+    # add logo on the right side with hyperlink
+    bslib::nav_item(
+      shiny::tags$a(
+        href = "https://github.com/WB-PIDA-Data-Science-Shop/govhr/tree/master",
+        target = "_blank",
+        shiny::tags$img(
+          src = "assets/package_logo.png",
+          height = "90px",
+          style = "margin-top: -10px;"
+        )
+      )
     )
   )
 

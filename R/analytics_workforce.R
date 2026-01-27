@@ -196,7 +196,7 @@ workforce_ui <- function(id, workforce_data) {
 #'
 #' @importFrom shiny moduleServer reactive validate need bindEvent
 #' @importFrom plotly renderPlotly
-#' @importFrom dplyr filter mutate arrange group_by ungroup summarise across first lag
+#' @importFrom dplyr filter mutate arrange group_by ungroup summarise across first lag right_join
 #' @importFrom lubridate year years ymd
 #' @importFrom govhr fastcount complete_dates detect_personnel_event
 #' @importFrom ggplot2 ggplot aes geom_point geom_line geom_col geom_hline geom_vline scale_y_continuous scale_x_continuous labs xlab ylab
@@ -423,7 +423,7 @@ workforce_server <- function(id, workforce_data) {
             end_date = max_date,
             freq = "year"
           ) |>
-          right_join(
+          dplyr::right_join(
             workforce_filtered_date(),
             by = c("personnel_id", "ref_date")
           ) |>

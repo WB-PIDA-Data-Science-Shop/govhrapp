@@ -31,7 +31,7 @@
 #' plot_segment(mtcars, col = "mpg", group = "cyl")
 #'
 #' @importFrom dplyr group_by summarise mutate arrange pull
-#' @importFrom ggplot2 ggplot aes geom_segment geom_jitter scale_y_discrete labs theme_minimal
+#' @importFrom ggplot2 ggplot aes geom_segment geom_jitter scale_y_discrete labs
 #' @importFrom tibble tibble
 #' @importFrom rlang :=
 #' 
@@ -94,6 +94,5 @@ plot_segment <- function(.data, col, group) {
       shape = 1
     ) +
     ggplot2::scale_y_discrete() +
-    ggplot2::labs(x = col, y = group) +
-    ggplot2::theme_minimal()
+    ggplot2::labs(x = col, y = group)
 }
