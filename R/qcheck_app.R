@@ -17,7 +17,8 @@
 #' run_qcheckapp(dynamicqc_obj = qc_data)
 #' }
 #'
-#' @import shiny bslib ggplot2 data.table
+#' @importFrom shiny shinyApp addResourcePath
+#' @importFrom thematic thematic_shiny
 #' @export
 run_qcheckapp <- function(dynamicqc_obj, ...) {
   

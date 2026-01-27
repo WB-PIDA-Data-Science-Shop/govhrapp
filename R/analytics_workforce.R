@@ -516,9 +516,8 @@ workforce_server <- function(id, workforce_data) {
 #' run_workforceapp(workforce_data = my_data)
 #' }
 #'
-#' @import shiny
-#' @import bslib
-#' @import ggplot2
+#' @importFrom shiny shinyApp
+#' @importFrom bslib page_sidebar sidebar
 #' @importFrom plotly plotlyOutput renderPlotly ggplotly
 #' @export
 run_workforceapp <- function(

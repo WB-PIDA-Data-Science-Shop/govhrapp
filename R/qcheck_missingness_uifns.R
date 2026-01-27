@@ -10,8 +10,10 @@
 #'
 #' @return A Shiny UI object containing missingness analysis cards.
 #'
-#' @import shiny bslib
+#' @importFrom shiny NS tagList markdown selectInput sliderInput
+#' @importFrom bslib layout_columns card card_header card_body
 #' @importFrom highcharter highchartOutput
+#' @importFrom plotly plotlyOutput
 #' @importFrom gt gt_output
 #'
 #' @keywords internal

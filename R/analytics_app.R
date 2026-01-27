@@ -11,10 +11,9 @@
 #' run_govhrapp()
 #' }
 #'
-#' @import shiny
-#' @import bslib
-#' @import ggplot2
-#' @import dplyr
+#' @importFrom shiny shinyApp addResourcePath
+#' @importFrom bslib page_navbar nav_panel nav_spacer
+#' @importFrom ggplot2 theme_set theme_minimal
 #' @importFrom thematic thematic_shiny
 #' @importFrom lubridate year
 #' @export

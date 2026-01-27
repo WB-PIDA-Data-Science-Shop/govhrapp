@@ -475,9 +475,8 @@ wagebill_server <- function(id, wagebill_data) {
 #' run_wagebillapp(wagebill_data = my_data)
 #' }
 #'
-#' @import shiny
-#' @import bslib
-#' @import ggplot2
+#' @importFrom shiny shinyApp
+#' @importFrom bslib page_sidebar sidebar
 #' @importFrom plotly plotlyOutput renderPlotly ggplotly
 #' @export
 run_wagebillapp <- function(
