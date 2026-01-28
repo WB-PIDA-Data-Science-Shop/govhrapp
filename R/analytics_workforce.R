@@ -179,7 +179,7 @@ workforce_ui <- function(id, workforce_data) {
               "Movements",
               bslib::tooltip(
                 bsicons::bs_icon("info-circle"),
-                "Personnel movements (hires or separations) over time, showing the share of employees affected."
+                "Personnel movements (hires or separations) over time, showing the share of workforce affected."
               )
             ),
             plotly::plotlyOutput(NS(id, "workforce_movements")),

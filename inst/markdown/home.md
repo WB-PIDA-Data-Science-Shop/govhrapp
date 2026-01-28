@@ -7,11 +7,11 @@ This dashboard provides a standardized set of indicators and visualizations base
 ### 💵 Wage Bill Analytics
 *Analyze the cost and distribution of public sector compensation.*
 
-* **Overview:** Static visualizations of wage bill trends, group comparisons, growth rates, and distribution patterns.
-* **Animation:** Interactive scatter plot showing the relationship between wage bill spending and headcount over time.
+* **Overview:** Vizualize wage bill trends, group comparisons, growth rates, and distribution patterns.
+* **Animation:** Interactive scatter plot show the relationship between wage bill spending and headcount over time.
 
 ### 🚶 Workforce Analytics
 *Examine the size, composition, and movements in the public sector.*
 
-* **Headcount:** Time trends, group totals, and growth rate analysis of workforce size.
-* **Movements:** Personnel flows including hires and separations across time and groups.
+* **Headcount:** Explore time trends, group totals, and growth rate analysis of workforce size.
+* **Movements:** Assess movements hires and separations across time and groups.
