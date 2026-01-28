@@ -7,7 +7,7 @@
 #'
 #' @importFrom bslib layout_columns card card_header card_body accordion accordion_panel layout_sidebar sidebar tooltip
 #' @importFrom bsicons bs_icon
-#' @importFrom shiny markdown icon NS selectInput
+#' @importFrom shiny markdown icon NS selectInput downloadButton
 #' @importFrom shinyWidgets numericRangeInput materialSwitch
 #' @importFrom plotly plotlyOutput
 #' @importFrom stringr str_wrap
@@ -36,111 +36,175 @@ wagebill_ui <- function(id, wagebill_data) {
       ),
       open = FALSE
     ),
-    bslib::layout_sidebar(
-      fillable = FALSE,
-      title = "Wagebill: Overview",
-      sidebar = bslib::sidebar(
-        title = "Controls",
-        width = "300px",
-        shinyWidgets::numericRangeInput(
-          shiny::NS(id, "date_range"),
-          "Time frame:",
-          value = c(
-            min(lubridate::year(wagebill_data$ref_date), na.rm = TRUE),
-            max(lubridate::year(wagebill_data$ref_date), na.rm = TRUE)
-          ),
-          min = min(lubridate::year(wagebill_data$ref_date), na.rm = TRUE),
-          max = max(lubridate::year(wagebill_data$ref_date), na.rm = TRUE)
-        ),
-        shiny::selectInput(
-          shiny::NS(id, "wagebill_measure"),
-          "Type of Wage:",
-          choices = list(
-            "Base Salary" = "base_salary_lcu",
-            "Gross Salary" = "gross_salary_lcu",
-            "Net Salary" = "net_salary_lcu"
-          )
-        ),
-        shiny::selectInput(
-          shiny::NS(id, "wagebill_group"),
-          "Group:",
-          choices = list(
-            "All" = "ref_date",
-            "Establishment" = "est_id",
-            "Contract" = c(
-              "Contract type (native)" = "contract_type_native",
-              "Paygrade" = "paygrade",
-              "Occupation" = "occupation_native"
+    bslib::page_navbar(
+      bslib::nav_panel(
+        title = "Overview",
+        bslib::layout_sidebar(
+          fillable = FALSE,
+          title = "Wagebill: Overview",
+          sidebar = bslib::sidebar(
+            title = "Controls",
+            width = "300px",
+            shinyWidgets::numericRangeInput(
+              shiny::NS(id, "date_range"),
+              "Time frame:",
+              value = c(
+                min(lubridate::year(wagebill_data$ref_date), na.rm = TRUE),
+                max(lubridate::year(wagebill_data$ref_date), na.rm = TRUE)
+              ),
+              min = min(lubridate::year(wagebill_data$ref_date), na.rm = TRUE),
+              max = max(lubridate::year(wagebill_data$ref_date), na.rm = TRUE)
             ),
-            "Personnel" = c(
-              "Gender" = "gender",
-              "Education" = "educat7",
-              "Employment Status" = "status"
-            )
-          )
-        ),
-        shiny::downloadButton(
-            shiny::NS(id, "download_report"),
-            "Generate report",
-            icon = shiny::icon("file-word")
-        )
-      ),
-      bslib::card(
-        bslib::card_header(
-          "Time trends",
-          bslib::tooltip(
-            bsicons::bs_icon("info-circle"),
-            "Wage bill total, by year. Choosing a group will add new totals, by group."
-          )
-        ),
-        shinyWidgets::materialSwitch(
-          shiny::NS(id, "toggle_growth"),
-          label = "Switch to baseline index",
-          value = FALSE
-        ),
-        plotly::plotlyOutput(shiny::NS(id, "wagebill_panel")),
-        min_height = "350px"
-      ),
-      bslib::layout_columns(
-        bslib::card(
-          full_screen = TRUE,
-          fillable = FALSE,
-          bslib::card_header(
-            "Total by group",
-            bslib::tooltip(
-              bsicons::bs_icon("info-circle"),
-              "Wage bill total, by group. Total refers to the latest available year in the selected time frame."
+            shiny::selectInput(
+              shiny::NS(id, "wagebill_measure"),
+              "Type of Wage:",
+              choices = list(
+                "Base Salary" = "base_salary_lcu",
+                "Gross Salary" = "gross_salary_lcu",
+                "Net Salary" = "net_salary_lcu"
+              )
+            ),
+            shiny::selectInput(
+              shiny::NS(id, "wagebill_group"),
+              "Group:",
+              choices = list(
+                "All" = "ref_date",
+                "Establishment" = "est_id",
+                "Contract" = c(
+                  "Contract type (native)" = "contract_type_native",
+                  "Paygrade" = "paygrade",
+                  "Occupation" = "occupation_native"
+                ),
+                "Personnel" = c(
+                  "Gender" = "gender",
+                  "Education" = "educat7",
+                  "Employment Status" = "status"
+                )
+              )
+            ),
+            shiny::downloadButton(
+                shiny::NS(id, "download_report"),
+                "Generate report",
+                icon = shiny::icon("file-word")
             )
           ),
-          plotly::plotlyOutput(shiny::NS(id, "wagebill_cross_section")),
-          min_height = "450px"
-        ),
-        bslib::card(
-          full_screen = TRUE,
-          fillable = FALSE,
-          bslib::card_header(
-            "Growth rate by group",
-            bslib::tooltip(
-              bsicons::bs_icon("info-circle"),
-              "Growth rate with respect to the previous year, by group. Growth rate refers to the latest available year in the selected time frame."
+          bslib::card(
+            bslib::card_header(
+              "Time trends",
+              bslib::tooltip(
+                bsicons::bs_icon("info-circle"),
+                "Wage bill total, by year. Choosing a group will add new totals, by group."
+              )
+            ),
+            shinyWidgets::materialSwitch(
+              shiny::NS(id, "toggle_growth"),
+              label = "Switch to baseline index",
+              value = FALSE
+            ),
+            plotly::plotlyOutput(shiny::NS(id, "wagebill_panel")),
+            min_height = "350px"
+          ),
+          bslib::layout_columns(
+            bslib::card(
+              full_screen = TRUE,
+              fillable = FALSE,
+              bslib::card_header(
+                "Total by group",
+                bslib::tooltip(
+                  bsicons::bs_icon("info-circle"),
+                  "Wage bill total, by group. Total refers to the latest available year in the selected time frame."
+                )
+              ),
+              plotly::plotlyOutput(shiny::NS(id, "wagebill_cross_section")),
+              min_height = "450px"
+            ),
+            bslib::card(
+              full_screen = TRUE,
+              fillable = FALSE,
+              bslib::card_header(
+                "Growth rate by group",
+                bslib::tooltip(
+                  bsicons::bs_icon("info-circle"),
+                  "Growth rate with respect to the previous year, by group. Growth rate refers to the latest available year in the selected time frame."
+                )
+              ),
+              plotly::plotlyOutput(shiny::NS(id, "wagebill_change")),
+              min_height = "450px"
             )
           ),
-          plotly::plotlyOutput(shiny::NS(id, "wagebill_change")),
-          min_height = "450px"
+          bslib::card(
+            full_screen = TRUE,
+            fillable = FALSE,
+            bslib::card_header(
+              "Variation",
+              bslib::tooltip(
+                bsicons::bs_icon("info-circle"),
+                "Variation in wages by group, for the latest year in the selected time frame."
+              )
+            ),
+            plotly::plotlyOutput(shiny::NS(id, "wagebill_variation")),
+            min_height = "450px"
+          )
         )
       ),
-      bslib::card(
-        full_screen = TRUE,
-        fillable = FALSE,
-        bslib::card_header(
-          "Variation",
-          bslib::tooltip(
-            bsicons::bs_icon("info-circle"),
-            "Variation in wages by group, for the latest year in the selected time frame."
+      bslib::nav_panel(
+        title = "Evolution",
+        bslib::layout_sidebar(
+          title = "Wagebill: Animation",
+          sidebar = bslib::sidebar(
+            title = "Controls",
+            width = "300px",
+            shinyWidgets::numericRangeInput(
+              shiny::NS(id, "date_range"),
+              "Time frame:",
+              value = c(
+                min(lubridate::year(wagebill_data$ref_date), na.rm = TRUE),
+                max(lubridate::year(wagebill_data$ref_date), na.rm = TRUE)
+              ),
+              min = min(lubridate::year(wagebill_data$ref_date), na.rm = TRUE),
+              max = max(lubridate::year(wagebill_data$ref_date), na.rm = TRUE)
+            ),
+            shiny::selectInput(
+              shiny::NS(id, "wagebill_measure"),
+              "Type of Wage:",
+              choices = list(
+                "Base Salary" = "base_salary_lcu",
+                "Gross Salary" = "gross_salary_lcu",
+                "Net Salary" = "net_salary_lcu"
+              )
+            ),
+            shiny::selectInput(
+              shiny::NS(id, "wagebill_group"),
+              "Group:",
+              choices = list(
+                "All" = "ref_date",
+                "Establishment" = "est_id",
+                "Contract" = c(
+                  "Contract type (native)" = "contract_type_native",
+                  "Paygrade" = "paygrade",
+                  "Occupation" = "occupation_native"
+                ),
+                "Personnel" = c(
+                  "Gender" = "gender",
+                  "Education" = "educat7",
+                  "Employment Status" = "status"
+                )
+              )
+            )
+          ),
+          bslib::card(
+            full_screen = TRUE,
+            bslib::card_header(
+              "Animation",
+              bslib::tooltip(
+                bsicons::bs_icon("info-circle"),
+                "Evolution of wage bill and headcount, by group."
+              )
+            ),
+            plotly::plotlyOutput(shiny::NS(id, "wagebill_animation")),
+            min_height = "450px"
           )
-        ),
-        plotly::plotlyOutput(shiny::NS(id, "wagebill_variation")),
-        min_height = "450px"
+        )
       )
     ),
     col_widths = c(12, 12)
@@ -154,15 +218,14 @@ wagebill_ui <- function(id, wagebill_data) {
 #' @param id Module id.
 #' @param wagebill_data Data frame with wage bill data.
 #'
-#' @importFrom shiny moduleServer reactive validate need bindEvent downloadHandler downloadButton withProgress incProgress
-#' @importFrom plotly renderPlotly
-#' @importFrom dplyr filter mutate arrange group_by ungroup across all_of first lag pull
+#' @importFrom shiny moduleServer reactive validate need bindEvent downloadHandler withProgress incProgress
+#' @importFrom plotly renderPlotly ggplotly plot_ly layout animation_opts animation_slider
+#' @importFrom dplyr filter mutate arrange group_by ungroup across all_of first lag pull left_join summarise
 #' @importFrom lubridate year years
 #' @importFrom govhr compute_fastsummary complete_dates convert_constant_ppp
-#' @importFrom ggplot2 ggplot aes geom_point geom_line geom_col geom_hline geom_vline scale_y_continuous scale_x_continuous labs xlab ylab
-#' @importFrom plotly ggplotly
+#' @importFrom ggplot2 ggplot aes geom_point geom_line geom_col geom_hline geom_vline scale_y_continuous scale_x_continuous scale_y_discrete guide_axis labs xlab ylab
 #' @importFrom stats reorder
-#' @importFrom scales label_number cut_short_scale
+#' @importFrom scales label_number cut_short_scale comma
 #' @importFrom stringr str_wrap
 #' @importFrom rmarkdown render
 #' @export
@@ -434,7 +497,83 @@ wagebill_server <- function(id, wagebill_data) {
     }) |>
       shiny::bindEvent(input$wagebill_group, input$date_range)
     
-    # Download report
+    # plot 5. wagebill animation
+    output$wagebill_animation <- plotly::renderPlotly({
+      shiny::validate(
+        shiny::need(input$wagebill_group != "ref_date", "Please select a group.")
+      )
+
+      animation_data <- shiny::reactive({
+        wagebill <- wagebill_filtered_date() |>
+          govhr::compute_fastsummary(
+            cols = input$wagebill_measure,
+            fns = "sum",
+            groups = c("ref_date", input$wagebill_group)
+          ) |>
+          # drop missing values and groups
+          dplyr::filter(
+            !is.na(.data[["value"]]) &
+              !is.na(.data[[input$wagebill_group]])
+          )
+        
+        personnel <- wagebill_filtered_date() |> 
+          group_by(
+            across(
+              all_of(
+                c("ref_date", input$wagebill_group)
+              )
+            )
+          ) |> 
+          summarise(
+            headcount = n_distinct(.data[["personnel_id"]])
+          )
+
+        wagebill |> 
+          left_join(
+            personnel,
+            by = c("ref_date", input$wagebill_group)
+          )
+      })
+
+      plotly::plot_ly(
+        data = animation_data(),
+        x = ~headcount,
+        y = ~value,
+        frame = ~ref_date,
+        text = ~paste0(
+          input$wagebill_group, ": ", get(input$wagebill_group), "<br>",
+          "Headcount: ", scales::comma(headcount), "<br>",
+          "Wage bill: ", scales::comma(value)
+        ),
+        hoverinfo = "text",
+        type = "scatter",
+        mode = "markers",
+        marker = list(size = 10, opacity = 0.7)
+      ) |>
+        plotly::layout(
+          xaxis = list(
+            title = "Headcount (log scale)",
+            type = "log",
+            dtick = 1
+          ),
+          yaxis = list(
+            title = "Wage bill (log scale)",
+            type = "log",
+            dtick = 1
+          )
+        ) |>
+        plotly::animation_opts(
+          frame = 500,
+          transition = 300,
+          redraw = FALSE
+        ) |>
+        plotly::animation_slider(
+          currentvalue = list(prefix = "Date: ")
+        )
+    }) |>
+      shiny::bindEvent(input$wagebill_group, input$date_range)
+    
+    # report
     output$download_report <- shiny::downloadHandler(
       filename = function() {
         paste0("wagebill_report_", format(Sys.Date(), "%Y%m%d"), ".docx")
@@ -471,12 +610,14 @@ wagebill_server <- function(id, wagebill_data) {
 #' Run the Wage Bill Shiny Application
 #'
 #' Launches an interactive Shiny application for analyzing wage bill data,
-#' including time trends, cross-sectional comparisons, and growth rate analysis.
+#' including time trends, cross-sectional comparisons, growth rate analysis,
+#' and animated visualizations.
 #'
 #' @param wagebill_data A data frame containing wage bill information with the
 #'   following required columns:
 #'   \itemize{
 #'     \item \code{ref_date}: Reference date (Date class)
+#'     \item \code{personnel_id}: Personnel identifier (for animation)
 #'     \item \code{base_salary_lcu}: Base salary in local currency units
 #'     \item \code{gross_salary_lcu}: Gross salary in local currency units
 #'     \item \code{net_salary_lcu}: Net salary in local currency units
@@ -493,14 +634,27 @@ wagebill_server <- function(id, wagebill_data) {
 #' @return A Shiny app object.
 #'
 #' @details
-#' The application provides four main analytical views:
+#' The application is organized into two main tabs:
+#' 
+#' \strong{Overview Tab:}
 #' \itemize{
 #'   \item Time trend analysis with optional baseline indexing
 #'   \item Cross-sectional wage bill totals by group
 #'   \item Year-over-year growth rates by group
 #'   \item Wage bill dispersion and variation analysis
-#'   \item Interactive filtering by time period, wage type, and grouping variable
+#'   \item Download Word report functionality
 #' }
+#' 
+#' \strong{Animation Tab:}
+#' \itemize{
+#'   \item Animated scatter plot showing the evolution of wage bill vs. headcount over time
+#'   \item Log-scale axes for better visualization of different magnitudes
+#'   \item Frame-by-frame animation through time periods
+#' }
+#' 
+#' All visualizations support interactive filtering by time period, wage type 
+#' (base/gross/net salary), and grouping variable (establishment, contract type, 
+#' personnel characteristics).
 #'
 #' @examples
 #' \dontrun{
@@ -528,5 +682,6 @@ run_wagebillapp <- function(
     wagebill_server("test", wagebill_data)
   }
   
+  shiny::shinyApp(ui, server, ...)
   shiny::shinyApp(ui, server, ...)
 }

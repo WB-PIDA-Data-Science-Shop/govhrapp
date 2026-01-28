@@ -20,6 +20,7 @@ params:
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 library(ggplot2)
 library(dplyr)
+thematic::thematic_rmd()
 ```
 
 ## Executive Summary

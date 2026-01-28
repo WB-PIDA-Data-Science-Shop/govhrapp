@@ -116,7 +116,7 @@ workforce_ui <- function(id, workforce_data) {
     ),
     bslib::page_navbar(
       bslib::nav_panel(
-        title = "Headcount",
+        title = "Overview",
         bslib::layout_sidebar(
           title = "Workforce: Headcount",
           sidebar = sidebar_default,
@@ -475,9 +475,9 @@ workforce_server <- function(id, workforce_data) {
 
       plotly::ggplotly(plot_movement)
     }) |>
-      bindEvent(input$workforce_group, input$date_range)
-    
-    # Download report
+      bindEvent(input$movement_type, input$workforce_group, input$date_range)
+
+    # report
     output$download_report <- shiny::downloadHandler(
       filename = function() {
         paste0("workforce_report_", format(Sys.Date(), "%Y%m%d"), ".docx")

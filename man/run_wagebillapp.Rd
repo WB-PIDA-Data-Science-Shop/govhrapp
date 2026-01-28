@@ -11,6 +11,7 @@ run_wagebillapp(wagebill_data, ...)
 following required columns:
 \itemize{
 \item \code{ref_date}: Reference date (Date class)
+\item \code{personnel_id}: Personnel identifier (for animation)
 \item \code{base_salary_lcu}: Base salary in local currency units
 \item \code{gross_salary_lcu}: Gross salary in local currency units
 \item \code{net_salary_lcu}: Net salary in local currency units
@@ -30,17 +31,31 @@ A Shiny app object.
 }
 \description{
 Launches an interactive Shiny application for analyzing wage bill data,
-including time trends, cross-sectional comparisons, and growth rate analysis.
+including time trends, cross-sectional comparisons, growth rate analysis,
+and animated visualizations.
 }
 \details{
-The application provides four main analytical views:
+The application is organized into two main tabs:
+
+\strong{Overview Tab:}
 \itemize{
 \item Time trend analysis with optional baseline indexing
 \item Cross-sectional wage bill totals by group
 \item Year-over-year growth rates by group
 \item Wage bill dispersion and variation analysis
-\item Interactive filtering by time period, wage type, and grouping variable
+\item Download Word report functionality
 }
+
+\strong{Animation Tab:}
+\itemize{
+\item Animated scatter plot showing the evolution of wage bill vs. headcount over time
+\item Log-scale axes for better visualization of different magnitudes
+\item Frame-by-frame animation through time periods
+}
+
+All visualizations support interactive filtering by time period, wage type
+(base/gross/net salary), and grouping variable (establishment, contract type,
+personnel characteristics).
 }
 \examples{
 \dontrun{
