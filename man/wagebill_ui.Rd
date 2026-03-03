@@ -4,16 +4,13 @@
 \alias{wagebill_ui}
 \title{Wage Bill UI Module}
 \usage{
-wagebill_ui(id)
+wagebill_ui(id, wagebill_data)
 }
 \arguments{
-\item{id}{Character string. The module namespace ID.}
-}
-\value{
-A Shiny UI element containing wage bill analytics cards.
+\item{id}{Module id.}
+
+\item{wagebill_data}{Data frame with wage bill data.}
 }
 \description{
-Creates the UI for the Wage Bill analytics section of the dashboard,
-displaying overview information and time trend visualizations.
+UI for wage bill analytics, including overview, controls, and plots.
 }
-\keyword{internal}

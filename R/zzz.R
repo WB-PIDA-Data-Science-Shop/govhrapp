@@ -8,6 +8,8 @@ utils::globalVariables(c(
   "Module",
   "Status",
   "N",
+  ".N",
+  "n_distinct",
   "Missing Variables",
   "Extra Variables",
   "Missing Count",
