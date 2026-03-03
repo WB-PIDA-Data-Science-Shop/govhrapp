@@ -17,7 +17,8 @@
 #' run_qcheckapp(dynamicqc_obj = qc_data)
 #' }
 #'
-#' @import shiny bslib ggplot2 data.table
+#' @import shiny bslib ggplot2
+#' @importFrom data.table as.data.table copy data.table fifelse rbindlist setDT setorder setorderv shift
 #' @export
 run_qcheckapp <- function(dynamicqc_obj, ...) {
   

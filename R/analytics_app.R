@@ -14,7 +14,6 @@
 #' @import shiny
 #' @import bslib
 #' @import ggplot2
-#' @import dplyr
 #' @importFrom thematic thematic_shiny
 #' @importFrom lubridate year
 #' @export
@@ -39,9 +38,6 @@ run_govhrapp <- function(...) {
   ggplot2::update_geom_defaults("point", list(colour = "#C34729"))
   ggplot2::update_geom_defaults("line",  list(colour = "#C34729"))
   ggplot2::update_geom_defaults("col",   list(fill   = "#C34729"))
-
-  # globals
-  personnel_data <- govhrapp::personnel_data
 
   ui <- bslib::page_navbar(
     # title = "govhr dashboard",
