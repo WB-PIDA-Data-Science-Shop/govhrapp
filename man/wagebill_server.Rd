@@ -4,13 +4,16 @@
 \alias{wagebill_server}
 \title{Wage Bill Server Module}
 \usage{
-wagebill_server(id, wagebill_data)
+wagebill_server(id)
 }
 \arguments{
-\item{id}{Module id.}
-
-\item{wagebill_data}{Data frame with wage bill data.}
+\item{id}{Character string. The module namespace ID.}
+}
+\value{
+None. Called for side effects (renders Shiny outputs).
 }
 \description{
-Server logic for wage bill analytics UI.
+Server logic for the Wage Bill section, processing and visualizing
+wage bill time trends grouped by various dimensions.
 }
+\keyword{internal}

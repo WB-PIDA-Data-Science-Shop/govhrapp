@@ -20,7 +20,13 @@ Imports:
     data.table,
     dplyr,
     ggplot2,
-    govhr (>= 0.1.3),
+    govhr,
+    gt,
+    highcharter,
+    rlang,
+    scales,
+    shiny,
+    thematic,
     lubridate,
     plotly,    
     rlang,
@@ -34,6 +40,5 @@ Imports:
     tibble
 Depends: 
     R (>= 3.5)
-LazyData: true
 Remotes: 
     WB-PIDA-Data-Science-Shop/govhr
