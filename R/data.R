@@ -1,0 +1,38 @@
+#' Personnel Data
+#'
+#' A dataset containing contract and personnel information for Brazilian government
+#' employees, filtered for years up to and including 2017. This dataset combines
+#' contract details with personnel attributes for wage bill analysis.
+#'
+#' @format A tibble with 7,955 rows and 26 variables:
+#' \describe{
+#'   \item{contract_id}{Contract identifier}
+#'   \item{personnel_id}{Personnel identifier}
+#'   \item{est_id}{Establishment identifier}
+#'   \item{ref_date}{Reference date (Date)}
+#'   \item{base_salary_lcu}{Base salary in local currency units}
+#'   \item{allowance_lcu}{Allowance in local currency units}
+#'   \item{gross_salary_lcu}{Gross salary in local currency units}
+#'   \item{net_salary_lcu}{Net salary in local currency units}
+#'   \item{whours}{Working hours}
+#'   \item{country_code}{Country code (ISO 3166-1 alpha-3)}
+#'   \item{country_name}{Country name}
+#'   \item{adm1_name}{First-level administrative division name}
+#'   \item{adm1_code}{First-level administrative division code}
+#'   \item{start_date}{Contract start date (Date)}
+#'   \item{end_date}{Contract end date (Date)}
+#'   \item{paygrade}{Pay grade}
+#'   \item{seniority}{Seniority level}
+#'   \item{occupation_native}{Occupation in native language}
+#'   \item{occupation_english}{Occupation in English}
+#'   \item{occupation_iscocode}{ISCO occupation code}
+#'   \item{occupation_isconame}{ISCO occupation name}
+#'   \item{contract_type_native}{Contract type in native language}
+#'   \item{contract_type_code}{Contract type code}
+#'   \item{gender}{Gender}
+#'   \item{educat7}{Education level (ordered factor)}
+#'   \item{status}{Employment status (e.g., "active")}
+#' }
+#' @source Derived from \code{govhr::bra_hrmis_contract} and
+#'   \code{govhr::bra_hrmis_personnel}
+"personnel_data"

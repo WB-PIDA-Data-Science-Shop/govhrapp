@@ -8,12 +8,17 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-Suggests: 
+Suggests:
+    knitr,
+    pkgload,
+    quarto,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Imports: 
+    bsicons,
     bslib,
     data.table,
+    dplyr,
     ggplot2,
     govhr,
     gt,
@@ -21,6 +26,19 @@ Imports:
     rlang,
     scales,
     shiny,
-    thematic
+    thematic,
+    lubridate,
+    plotly,    
+    rlang,
+    rmarkdown,
+    rsconnect,
+    scales,
+    shiny,
+    shinyWidgets,
+    stringr,
+    thematic,
+    tibble
+Depends: 
+    R (>= 3.5)
 Remotes: 
     WB-PIDA-Data-Science-Shop/govhr

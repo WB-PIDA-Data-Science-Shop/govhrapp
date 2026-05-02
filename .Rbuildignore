@@ -6,3 +6,7 @@
 ^\.github$
 ^LICENSE\.md$
 ^codecov\.yml$
+^data-raw$
+^app.R$
+^manifest.json$
+^rsconnect$
