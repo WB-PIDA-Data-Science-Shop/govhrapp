@@ -8,7 +8,7 @@
 #'
 #' @return A Shiny UI element containing cards with diagnostic visualizations.
 #'
-#' @importFrom shiny NS plotOutput uiOutput sliderInput
+#' @importFrom shiny NS uiOutput
 #' @importFrom bslib layout_columns card card_header card_body
 #' @importFrom gt gt_output
 #' @importFrom highcharter highchartOutput
@@ -16,10 +16,10 @@
 #' @keywords internal
 databasics_ui <- function(id) {
   ns <- shiny::NS(id)
-  
+
   bslib::layout_columns(
     col_widths = 12,
-    
+
     # Module Dimensions Card
     bslib::card(
       bslib::card_header("Module Dimensions"),
@@ -27,17 +27,14 @@ databasics_ui <- function(id) {
         gt::gt_output(ns("dimensions_table"))
       )
     ),
-    
+
     # Temporal Coverage Card
     bslib::card(
-      bslib::card_header("Temporal and Cross-Sectional Coverage"),
+      bslib::card_header("Temporal Coverage"),
       bslib::card_body(
-        shiny::uiOutput(ns("date_slider_ui")),
-        highcharter::highchartOutput(ns("coverage_plot"), height = "500px")
+        highcharter::highchartOutput(ns("coverage_plot"), height = "400px")
       )
     ),
-    
-    # Variable Structure Card
     bslib::card(
       bslib::card_header("Do the data fields match the standard dictionary?"),
       bslib::card_body(

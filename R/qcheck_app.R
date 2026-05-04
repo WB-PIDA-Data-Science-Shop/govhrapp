@@ -2,31 +2,26 @@
 #'
 #' Launches an interactive Shiny dashboard for govhr data visualization and analysis.
 #'
-#' @param dynamicqc_obj A dynamicqc object created by \code{\link{compute_dynamicqc}}.
+#' @param qc_obj A quality control object created by \code{govhr::compute_qualitycontrol()}.
 #' @param ... Additional arguments passed to \code{\link[shiny]{shinyApp}}.
 #'
 #' @return A Shiny app object.
 #'
 #' @examples
 #' \dontrun{
-#' qc_data <- compute_dynamicqc(
-#'   contract_dt = govhr::bra_hrmis_contract,
+#' qc_obj <- govhr::compute_qualitycontrol(
+#'   contract_dt  = govhr::bra_hrmis_contract,
 #'   personnel_dt = govhr::bra_hrmis_personnel,
-#'   est_dt = govhr::bra_hrmis_est
+#'   est_dt       = govhr::bra_hrmis_est
 #' )
-#' run_qcheckapp(dynamicqc_obj = qc_data)
+#' run_qcheckapp(qc_obj)
 #' }
 #'
 #' @importFrom shiny shinyApp addResourcePath icon tags
 #' @importFrom bslib page_navbar bs_theme bs_add_rules nav_panel nav_spacer nav_menu nav_item navbar_options font_google
 #' @importFrom thematic thematic_shiny
 #' @export
-run_qcheckapp <- function(dynamicqc_obj, ...) {
-  
-  # Validate input
-  if (!inherits(dynamicqc_obj, "dynamicqc")) {
-    stop("Input must be a dynamicqc object created by compute_dynamicqc()")
-  }
+run_qcheckapp <- function(qc_obj, ...) {
   
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", "inst/www")
@@ -91,7 +86,14 @@ run_qcheckapp <- function(dynamicqc_obj, ...) {
       missingness_ui("missingness")
     ),
     
-    # panel 4: Volatility
+    # panel 4: Validation Rules
+    bslib::nav_panel(
+      "Validation",
+      icon = shiny::icon("circle-check"),
+      validation_ui("validation")
+    ),
+    
+    # panel 5: Volatility
     bslib::nav_panel(
       "Volatility",
       icon = shiny::icon("chart-line"),
@@ -121,9 +123,10 @@ run_qcheckapp <- function(dynamicqc_obj, ...) {
  )
 
   server <- function(input, output, session){
-    databasics_server("databasics", dynamicqc_obj)
-    missingness_server("missingness", dynamicqc_obj)
-    volatility_server("volatility", dynamicqc_obj)
+    databasics_server("databasics",  qc_obj)
+    missingness_server("missingness", qc_obj)
+    validation_server("validation",  qc_obj)
+    volatility_server("volatility",  qc_obj)
   }
 
   shiny::shinyApp(ui, server, ...)

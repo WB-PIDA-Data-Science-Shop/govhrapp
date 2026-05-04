@@ -4,10 +4,10 @@
 \alias{run_qcheckapp}
 \title{Run the Quality Assessment Shiny Application}
 \usage{
-run_qcheckapp(dynamicqc_obj, ...)
+run_qcheckapp(qc_obj, ...)
 }
 \arguments{
-\item{dynamicqc_obj}{A dynamicqc object created by \code{\link{compute_dynamicqc}}.}
+\item{qc_obj}{A quality control object created by \code{govhr::compute_qualitycontrol()}.}
 
 \item{...}{Additional arguments passed to \code{\link[shiny]{shinyApp}}.}
 }
@@ -19,12 +19,12 @@ Launches an interactive Shiny dashboard for govhr data visualization and analysi
 }
 \examples{
 \dontrun{
-qc_data <- compute_dynamicqc(
-  contract_dt = govhr::bra_hrmis_contract,
+qc_obj <- govhr::compute_qualitycontrol(
+  contract_dt  = govhr::bra_hrmis_contract,
   personnel_dt = govhr::bra_hrmis_personnel,
-  est_dt = govhr::bra_hrmis_est
+  est_dt       = govhr::bra_hrmis_est
 )
-run_qcheckapp(dynamicqc_obj = qc_data)
+run_qcheckapp(qc_obj)
 }
 
 }

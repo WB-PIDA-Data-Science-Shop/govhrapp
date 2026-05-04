@@ -1,5 +1,5 @@
-#############################################################################################
-################################# MISSINGNESS MODULE UI & SERVER #############################
+﻿#############################################################################################
+################################# MISSINGNESS MODULE UI ######################################
 #############################################################################################
 
 #' Missingness UI Module
@@ -10,89 +10,87 @@
 #'
 #' @return A Shiny UI object containing missingness analysis cards.
 #'
-#' @importFrom shiny NS tagList markdown selectInput sliderInput
+#' @importFrom shiny NS tagList markdown selectInput sliderInput p
 #' @importFrom bslib layout_columns card card_header card_body
 #' @importFrom highcharter highchartOutput
-#' @importFrom plotly plotlyOutput
-#' @importFrom gt gt_output
 #'
 #' @keywords internal
 missingness_ui <- function(id) {
   ns <- shiny::NS(id)
-  
+
   shiny::tagList(
+
+    # Module selector (shared between both cards)
     bslib::layout_columns(
       col_widths = c(12),
-      
-      # Card 1: Overall Missingness
       bslib::card(
-        bslib::card_header("Overall Missingness by Variable"),
-        bslib::card_body(
-          shiny::p("Variables with missing data across all modules. Higher percentages indicate potential data quality issues."),
-          highcharter::highchartOutput(ns("overall_plot"), height = "600px")
-        )
-      )
-    ),
-    
-    bslib::layout_columns(
-      col_widths = c(12),
-      
-      # Card 2: Missingness by Occupation (Consolidated)
-      bslib::card(
-        bslib::card_header("Missingness by Occupation"),
         bslib::card_body(
           bslib::layout_columns(
-            col_widths = c(6, 6),
+            col_widths = c(3, 9),
             shiny::selectInput(
-              ns("occupation_type"),
-              "Occupation Type:",
-              choices = c(
-                "Native Occupation" = "native",
-                "ISCO Occupation Code" = "isco"
-              ),
-              selected = "native"
+              ns("module"),
+              "Module:",
+              choices = NULL
+            ),
+            shiny::markdown(
+              "### Data Coverage Analysis
+
+This section shows missing data rates across key fields.
+Select a module above to switch between contract and personnel fields.
+**Card 1** shows the overall rate per field. **Card 2** breaks it down by a grouping variable."
+            )
+          )
+        )
+      )
+    ),
+
+    # Card 1: Overall missingness bar chart
+    bslib::layout_columns(
+      col_widths = c(12),
+      bslib::card(
+        bslib::card_header("Overall Missingness by Field"),
+        bslib::card_body(
+          shiny::p("Overall missingness rate per field. Fields with 0% missing are hidden."),
+          highcharter::highchartOutput(ns("overall_bar"), height = "300px")
+        )
+      )
+    ),
+
+    # Card 2: Grouped heatmap
+    bslib::layout_columns(
+      col_widths = c(12),
+      bslib::card(
+        bslib::card_header("Missingness by Group"),
+        bslib::card_body(
+          bslib::layout_columns(
+            col_widths = c(4, 4, 4),
+            shiny::selectInput(
+              ns("group_var"),
+              "Group By:",
+              choices = NULL
             ),
             shiny::sliderInput(
-              ns("occupation_top_n"),
-              "Number of Occupations to Display:",
-              min = 10,
-              max = 50,
-              value = 15,
-              step = 5
+              ns("top_n"),
+              "Top N groups to show:",
+              min = 5, max = 50, value = 20, step = 5
+            ),
+            shiny::selectInput(
+              ns("sort_by"),
+              "Sort groups by:",
+              choices = c(
+                "Highest overall missingness" = "desc",
+                "Lowest overall missingness"  = "asc",
+                "Alphabetical"                = "alpha"
+              )
             )
           ),
-          shiny::p("Occupations with highest missingness rates across fields."),
-          plotly::plotlyOutput(ns("occupation_plot"), height = "600px")
-        )
-      )
-    ),
-    
-    bslib::layout_columns(
-      col_widths = c(12),
-      
-      # Card 4: Missingness Heatmap by Reference Date
-      bslib::card(
-        bslib::card_header("Missingness Heatmap by Reference Date"),
-        bslib::card_body(
-          shiny::p("Temporal patterns in missing data. Darker colors indicate higher missingness."),
-          highcharter::highchartOutput(ns("ref_date_heatmap"), height = "500px")
-        )
-      )
-    ),
-    
-    bslib::layout_columns(
-      col_widths = c(12),
-      
-      # Card 5: Missingness by Establishment
-      bslib::card(
-        bslib::card_header("Missingness by Establishment (Top 15)"),
-        bslib::card_body(
-          shiny::p("Establishments with the highest missingness rates."),
-          highcharter::highchartOutput(ns("establishment_plot"), height = "500px")
+          shiny::p(
+            "Rows = fields, Columns = group values.",
+            "Darker red = higher missingness."
+          ),
+          highcharter::highchartOutput(ns("missingness_heatmap"), height = "500px")
         )
       )
     )
   )
 }
-
-

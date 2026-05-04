@@ -4,18 +4,18 @@
 \alias{volatility_server}
 \title{Volatility Server Module}
 \usage{
-volatility_server(id, dynamicqc_obj)
+volatility_server(id, qc_obj)
 }
 \arguments{
 \item{id}{Character string. The module namespace ID.}
 
-\item{dynamicqc_obj}{A dynamicqc object created by \code{compute_dynamicqc()}.}
+\item{qc_obj}{A quality control object from \code{govhr::compute_qualitycontrol()}.}
 }
 \value{
 None. Called for side effects (renders Shiny outputs).
 }
 \description{
 Server logic for the Volatility Analysis section, processing and visualizing
-temporal volatility in salary, contract counts, and work hours.
+temporal volatility in salary, headcount, and other HR metrics.
 }
 \keyword{internal}
