@@ -22,7 +22,7 @@ validation_ui <- function(id) {
 
     # Summary value boxes
     bslib::layout_columns(
-      col_widths = c(4, 4, 4),
+      col_widths = c(6, 6),
       bslib::value_box(
         title = "Contract Rules Pass Rate",
         value = shiny::textOutput(ns("contract_pass_rate")),
@@ -34,12 +34,6 @@ validation_ui <- function(id) {
         value = shiny::textOutput(ns("personnel_pass_rate")),
         showcase = shiny::icon("users"),
         theme = "primary"
-      ),
-      bslib::value_box(
-        title = "Total Failing Records",
-        value = shiny::textOutput(ns("total_fails")),
-        showcase = shiny::icon("triangle-exclamation"),
-        theme = "warning"
       )
     ),
 

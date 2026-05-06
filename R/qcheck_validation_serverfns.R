@@ -38,19 +38,13 @@ validation_server <- function(id, qc_obj) {
       paste0(round(total_passes / total_records * 100, 1), "%")
     })
 
-    # Total failing records across both modules
-    output$total_fails <- shiny::renderText({
-      total <- sum(validation$contract$Fails) + sum(validation$personnel$Fails)
-      format(total, big.mark = ",")
-    })
-
     # Helper to build a styled gt validation table
     make_validation_table <- function(df) {
       df$Status <- ifelse(
         df$Errors,
         "<span style='background:#9e9e9e;color:white;padding:2px 8px;border-radius:4px;'>ERROR</span>",
         ifelse(
-          df$`Pass Rate` >= 95,
+          df$`Pass Rate` >= 100,
           "<span style='background:#4caf50;color:white;padding:2px 8px;border-radius:4px;'>PASS</span>",
           ifelse(
             df$`Pass Rate` >= 80,
@@ -79,7 +73,7 @@ validation_server <- function(id, qc_obj) {
         ) |>
         gt::tab_style(
           style = gt::cell_fill(color = "#fff3cd"),
-          locations = gt::cells_body(rows = `Pass Rate` < 95 & `Pass Rate` >= 80 & !Errors)
+          locations = gt::cells_body(rows = `Pass Rate` < 100 & `Pass Rate` >= 80 & !Errors)
         ) |>
         gt::tab_style(
           style = gt::cell_fill(color = "#fce4e4"),

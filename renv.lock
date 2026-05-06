@@ -858,7 +858,7 @@
     },
     "cpp11": {
       "Package": "cpp11",
-      "Version": "0.5.4",
+      "Version": "0.5.5",
       "Source": "Repository",
       "Title": "A C++11 Interface for R's C Interface",
       "Authors@R": "c( person(\"Davis\", \"Vaughan\", email = \"davis@posit.co\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0003-4777-038X\")), person(\"Jim\",\"Hester\", role = \"aut\", comment = c(ORCID = \"0000-0002-2739-7082\")), person(\"Romain\", \"François\", role = \"aut\", comment = c(ORCID = \"0000-0002-2444-4226\")), person(\"Benjamin\", \"Kietzman\", role = \"ctb\"), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")) )",
@@ -1846,7 +1846,7 @@
       "RemoteRepo": "govhr",
       "RemoteUsername": "WB-PIDA-Data-Science-Shop",
       "RemoteRef": "add-analyticsfns",
-      "RemoteSha": "264a6942f24a45d0cb0c0502e5cb09205f750c57",
+      "RemoteSha": "40463d60162034186ef28843574e8bbe98ab052e",
       "NeedsCompilation": "no",
       "Author": "Galileu Kim [aut, cre], Ifeanyi Edochie [aut]",
       "Maintainer": "Galileu Kim <galileukim@worldbank.org>"

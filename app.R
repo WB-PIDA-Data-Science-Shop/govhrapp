@@ -1,8 +1,8 @@
 # Quality Control Dashboard App
 # This file is used for deploying the quality control dashboard to Posit Connect
 
-# Load the package
-pkgload::load_all(".")
+# Load the package from the app bundle directory
+pkgload::load_all(path = ".")
 
 # Compute quality control object directly
 qc_obj <- govhr::compute_qualitycontrol(

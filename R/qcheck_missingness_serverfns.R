@@ -1,4 +1,4 @@
-﻿#' Missingness Server Module
+#' Missingness Server Module
 #'
 #' Server logic for the Missingness section, processing and visualizing missing data patterns.
 #'

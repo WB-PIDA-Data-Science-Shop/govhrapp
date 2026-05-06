@@ -1,4 +1,4 @@
-﻿#############################################################################################
+#############################################################################################
 ################################# VOLATILITY MODULE UI #######################################
 #############################################################################################
 
@@ -28,15 +28,16 @@ volatility_ui <- function(id) {
           shiny::markdown(
             "### Temporal Stability Analysis
 
-This section evaluates period-to-period percentage changes to identify contracts and
-establishments with unstable patterns over time.
+This section evaluates period-to-period percentage changes to identify entities with
+unstable patterns over time.
 
 **High volatility may indicate:**
 - Data quality issues (inconsistent reporting, missing periods)
 - Legitimate organizational changes (restructuring, budget changes)
 - Seasonal patterns or policy changes
 
-Use the controls to select indicators and how many top volatile entities to display."
+Select a **Statistic Type** to define what is being measured, then choose a **Group By**
+dimension to slice the data. Use the Top N slider to limit the display to the most volatile entities."
           )
         )
       )
@@ -46,39 +47,61 @@ Use the controls to select indicators and how many top volatile entities to disp
     bslib::layout_columns(
       col_widths = c(12),
       bslib::card(
-        bslib::card_header("Contract-Level Volatility (% Change)"),
+        bslib::card_header("Contract Volatility (% Change)"),
         bslib::card_body(
           bslib::layout_columns(
-            col_widths = c(6, 6),
+            col_widths = c(4, 4, 4),
             shiny::selectInput(
-              ns("contract_indicator"),
-              "Indicator:",
+              ns("contract_stat_type"),
+              "Statistic Type:",
+              choices = NULL
+            ),
+            shiny::selectInput(
+              ns("contract_group_var"),
+              "Group By:",
               choices = NULL
             ),
             shiny::sliderInput(
               ns("contract_top_n"),
-              "Number of Contracts to Display:",
+              "Top N Entities:",
               min = 10, max = 100, value = 50, step = 5
             )
           ),
-          shiny::p("Top contracts with highest period-to-period volatility. Brighter colors indicate greater instability."),
+          # Conditional indicator selector (only for salary_vol which has 4 indicators)
+          shiny::conditionalPanel(
+            condition = paste0("input['" , ns("contract_stat_type"), "'] == 'salary_vol'"),
+            shiny::selectInput(
+              ns("contract_indicator"),
+              "Salary Indicator:",
+              choices = NULL
+            )
+          ),
+          shiny::p("Top entities with highest period-to-period volatility. Brighter colours indicate greater instability."),
           highcharter::highchartOutput(ns("contract_heatmap"), height = "700px")
         )
       )
     ),
 
-    # Personnel / headcount volatility
+    # Personnel volatility
     bslib::layout_columns(
       col_widths = c(12),
       bslib::card(
-        bslib::card_header("Headcount Volatility by Establishment (% Change)"),
+        bslib::card_header("Personnel Volatility (% Change)"),
         bslib::card_body(
-          shiny::sliderInput(
-            ns("personnel_top_n"),
-            "Number of Establishments to Display:",
-            min = 10, max = 100, value = 50, step = 5
+          bslib::layout_columns(
+            col_widths = c(6, 6),
+            shiny::selectInput(
+              ns("personnel_group_var"),
+              "Group By:",
+              choices = NULL
+            ),
+            shiny::sliderInput(
+              ns("personnel_top_n"),
+              "Top N Entities:",
+              min = 10, max = 100, value = 50, step = 5
+            )
           ),
-          shiny::p("Establishments with the highest volatility in headcount over time."),
+          shiny::p("Entities with the highest volatility in headcount over time."),
           highcharter::highchartOutput(ns("personnel_heatmap"), height = "700px")
         )
       )
