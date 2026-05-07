@@ -59,7 +59,7 @@ run_govhrapp <- function(...) {
       navbar_bg = "#FFFFFF"
     ) |>
       bslib::bs_add_rules(
-        readLines("inst/www/styles.css")
+        readLines(system.file("www/styles.css", package = "govhrapp"))
       ),
 
     padding = "10px",
@@ -82,7 +82,7 @@ run_govhrapp <- function(...) {
           shiny::tags$br(),
           shiny::tags$h3("Welcome to govhr."),
           shiny::markdown(
-            readLines("inst/markdown/home.md")
+            readLines(system.file("markdown/home.md", package = "govhrapp"))
           )
         )
       )

@@ -22,7 +22,7 @@ wagebill_ui <- function(id, wagebill_data) {
       ),
       bslib::card_body(
         shiny::markdown(
-          readLines("inst/markdown/wagebill.md")
+          readLines(system.file("markdown/wagebill.md", package = "govhrapp"))
         )
       )
     ),
@@ -31,7 +31,7 @@ wagebill_ui <- function(id, wagebill_data) {
         title = "Guidance Questions",
         icon = shiny::icon("question-circle"),
         shiny::markdown(
-          readLines("inst/markdown/wagebill_questions.md")
+          readLines(system.file("markdown/wagebill_questions.md", package = "govhrapp"))
         )
       ),
       open = FALSE
