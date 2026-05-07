@@ -24,7 +24,7 @@
 run_qcheckapp <- function(qc_obj, ...) {
   
   # add path to visual assets (image and css)
-  shiny::addResourcePath("assets", "inst/www")
+  shiny::addResourcePath("assets", system.file("www", package = "govhrapp"))
   thematic::thematic_shiny(font = "auto")
 
   ui <- bslib::page_navbar(

@@ -19,7 +19,7 @@
 #' @export
 run_govhrapp <- function(...) {
   # add path to visual assets (image and css)
-  shiny::addResourcePath("assets", "inst/www")
+  shiny::addResourcePath("assets", system.file("www", package = "govhrapp"))
 
   # ensure ggplot2 and plotly inherit bslib themes
   ggplot2::theme_set(
