@@ -2,6 +2,7 @@
 #'
 #' Launches an interactive Shiny dashboard for govhr data visualization and analysis.
 #'
+#' @param personnel_data Data with personnel and contract attributes.
 #' @param ... Additional arguments passed to \code{\link[shiny]{shinyApp}}.
 #'
 #' @return A Shiny app object.
@@ -17,7 +18,7 @@
 #' @importFrom thematic thematic_shiny
 #' @importFrom lubridate year
 #' @export
-run_govhrapp <- function(...) {
+run_govhrapp <- function(personnel_data, ...) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", "inst/www")
 

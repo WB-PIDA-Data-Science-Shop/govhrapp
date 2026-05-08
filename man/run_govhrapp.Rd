@@ -4,9 +4,11 @@
 \alias{run_govhrapp}
 \title{Run the govhr Shiny Dashboard Application}
 \usage{
-run_govhrapp(...)
+run_govhrapp(personnel_data, ...)
 }
 \arguments{
+\item{personnel_data}{Data with personnel and contract attributes.}
+
 \item{...}{Additional arguments passed to \code{\link[shiny]{shinyApp}}.}
 }
 \value{
