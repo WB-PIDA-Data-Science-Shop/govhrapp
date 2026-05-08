@@ -55,6 +55,7 @@ workforce_ui <- function(id, workforce_data) {
       "Group:",
       choices = workforce_group_choices
     ),
+    shiny::uiOutput(shiny::NS(id, "group_filter_ui")),
     shiny::downloadButton(
       shiny::NS(id, "download_report"),
       "Generate report",
@@ -80,6 +81,7 @@ workforce_ui <- function(id, workforce_data) {
       "Group:",
       choices = workforce_group_choices
     ),
+    shiny::uiOutput(shiny::NS(id, "group_filter_ui_movement")),
     shiny::selectInput(
       shiny::NS(id, "movement_type"),
       "Movement type:",
@@ -196,18 +198,18 @@ workforce_ui <- function(id, workforce_data) {
 #' @param id Module id.
 #' @param workforce_data Data frame with workforce data.
 #'
-#' @importFrom shiny moduleServer reactive validate need bindEvent downloadHandler withProgress incProgress
+#' @importFrom shiny moduleServer reactive validate need bindEvent downloadHandler withProgress incProgress renderUI outputOptions selectizeInput
 #' @importFrom plotly renderPlotly
-#' @importFrom dplyr filter mutate arrange group_by ungroup summarise across first last between right_join lag
+#' @importFrom dplyr filter mutate arrange group_by ungroup summarise across all_of first last n_distinct right_join
 #' @importFrom lubridate year years ymd
 #' @importFrom rlang :=
-#' @importFrom govhr fastcount complete_dates detect_personnel_event
-#' @importFrom ggplot2 ggplot aes geom_point geom_line geom_col geom_hline geom_vline scale_y_continuous scale_x_continuous labs xlab ylab
+#' @importFrom govhr fastcount detect_personnel_event
+#' @importFrom ggplot2 ggplot aes geom_point geom_line geom_col geom_hline geom_vline scale_y_continuous scale_x_continuous scale_y_discrete scale_color_manual guide_axis labs xlab ylab
+#' @importFrom grDevices colorRampPalette
 #' @importFrom plotly ggplotly
 #' @importFrom stats reorder
-#' @importFrom scales label_number cut_short_scale pretty_breaks
+#' @importFrom scales label_number cut_short_scale pretty_breaks percent_format
 #' @importFrom data.table fifelse shift setorderv as.data.table copy
-#' @importFrom scales percent_format
 #' @importFrom rmarkdown render
 #' @export
 workforce_server <- function(id, workforce_data) {
@@ -223,12 +225,48 @@ workforce_server <- function(id, workforce_data) {
         )
     })
 
+    # Conditional UI: group filter when > 8 unique values
+    group_filter_widget <- function(input_id) {
+      shiny::req(input$workforce_group != "ref_date")
+      group_vals <- sort(as.character(unique(na.omit(
+        workforce_data[[input$workforce_group]]
+      ))))
+      if (length(group_vals) > 8) {
+        shiny::selectizeInput(
+          session$ns("group_filter"),
+          "Display groups:",
+          choices = group_vals,
+          selected = group_vals[seq_len(8)],
+          multiple = TRUE,
+          options = list(plugins = list("remove_button"))
+        )
+      }
+    }
+
+    output$group_filter_ui <- shiny::renderUI(group_filter_widget())
+    shiny::outputOptions(output, "group_filter_ui", suspendWhenHidden = FALSE)
+
+    output$group_filter_ui_movement <- shiny::renderUI(group_filter_widget())
+    shiny::outputOptions(output, "group_filter_ui_movement", suspendWhenHidden = FALSE)
+
+    # Data filtered by both date and selected groups
+    workforce_group_filtered <- shiny::reactive({
+      data <- workforce_filtered_date()
+      if (input$workforce_group == "ref_date") return(data)
+      group_vals <- unique(na.omit(workforce_data[[input$workforce_group]]))
+      if (length(group_vals) > 8 && !is.null(input$group_filter)) {
+        data <- data |>
+          dplyr::filter(.data[[input$workforce_group]] %in% input$group_filter)
+      }
+      data
+    })
+
     workforce_summary <- reactive({
       if (input$workforce_group == "ref_date") {
-        workforce_out <- workforce_filtered_date() |>
+        workforce_out <- workforce_group_filtered() |>
           govhr::fastcount(.data[["ref_date"]], name = "value")
       } else {
-        workforce_out <- workforce_filtered_date() |>
+        workforce_out <- workforce_group_filtered() |>
           govhr::fastcount(
             .data[["ref_date"]],
             .data[[input$workforce_group]],
@@ -275,8 +313,14 @@ workforce_server <- function(id, workforce_data) {
         xlab("Time")
 
       if (input$workforce_group != "ref_date") {
+        n_groups <- dplyr::n_distinct(workforce_summary()[[input$workforce_group]], na.rm = TRUE)
+        orange_palette <- colorRampPalette(c("#C34729", "#F5C6A0"))(n_groups)
         plot <- plot +
-          aes(group = .data[[input$workforce_group]])
+          aes(
+            color = .data[[input$workforce_group]],
+            group = .data[[input$workforce_group]]
+          ) +
+          ggplot2::scale_color_manual(values = orange_palette)
       }
 
       if (input$toggle_growth) {
@@ -302,7 +346,7 @@ workforce_server <- function(id, workforce_data) {
       )
 
       cross_section_data <- reactive({
-        workforce_filtered_date() |>
+        workforce_group_filtered() |>
           filter(year == max(year)) |>
           govhr::fastcount(.data[[input$workforce_group]], name = "value") |>
           filter(
@@ -339,7 +383,7 @@ workforce_server <- function(id, workforce_data) {
 
       plotly::ggplotly(plot, height = plot_height)
     }) |>
-      bindEvent(input$workforce_group, input$date_range)
+      bindEvent(input$workforce_group, input$date_range, input$group_filter)
 
     # plot 3. growth rate by group
     output$workforce_growth <- plotly::renderPlotly({
@@ -348,10 +392,10 @@ workforce_server <- function(id, workforce_data) {
       )
 
       change_data <- reactive({
-        max_filtered_date <- max(workforce_filtered_date()$ref_date, na.rm = TRUE)
-        min_filtered_date <- min(workforce_filtered_date()$ref_date, na.rm = TRUE)
+        max_filtered_date <- max(workforce_group_filtered()$ref_date, na.rm = TRUE)
+        min_filtered_date <- min(workforce_group_filtered()$ref_date, na.rm = TRUE)
 
-        workforce_filtered_date() |>
+        workforce_group_filtered() |>
           dplyr::filter(
             year %in% c(max(year), min(year))
           ) |>
@@ -406,17 +450,17 @@ workforce_server <- function(id, workforce_data) {
 
       plotly::ggplotly(plot_growth, height = plot_height)
     }) |>
-      bindEvent(input$workforce_group, input$date_range)
+      bindEvent(input$workforce_group, input$date_range, input$group_filter)
 
     # plot 4. movements
     output$workforce_movements <- renderPlotly({
       movement_data <- reactive({
-        min_date <- min(workforce_filtered_date()[["ref_date"]]) |>
+        min_date <- min(workforce_group_filtered()[["ref_date"]]) |>
           as.character()
-        max_date <- max(workforce_filtered_date()[["ref_date"]]) |>
+        max_date <- max(workforce_group_filtered()[["ref_date"]]) |>
           as.character()
 
-        workforce_filtered_date() |>
+        workforce_group_filtered() |>
           govhr::detect_personnel_event(
             event_type = input$movement_type,
             id_col = "personnel_id",
@@ -425,7 +469,7 @@ workforce_server <- function(id, workforce_data) {
             freq = "year"
           ) |>
           dplyr::right_join(
-            workforce_filtered_date(),
+            workforce_group_filtered(),
             by = c("personnel_id", "ref_date")
           ) |>
           dplyr::group_by(
@@ -463,7 +507,7 @@ workforce_server <- function(id, workforce_data) {
 
       plotly::ggplotly(plot_movement)
     }) |>
-      bindEvent(input$movement_type, input$workforce_group, input$date_range)
+      bindEvent(input$movement_type, input$workforce_group, input$date_range, input$group_filter)
 
     # report
     output$download_report <- shiny::downloadHandler(
