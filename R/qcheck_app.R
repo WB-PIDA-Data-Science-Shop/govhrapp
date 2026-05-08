@@ -40,7 +40,7 @@ run_qcheckapp <- function(qc_obj, ...) {
       navbar_bg = "#FFFFFF"
     ) |>
       bslib::bs_add_rules(
-        system.file("www/styles.css", package = "govhrapp")
+        readLines(system.file("www/styles.css", package = "govhrapp"))
       ),
 
     navbar_options = navbar_options(
