@@ -7,7 +7,7 @@
 #'
 #' @return None. Called for side effects (renders Shiny outputs).
 #'
-#' @importFrom shiny moduleServer req observe observeEvent updateSelectInput
+#' @importFrom shiny moduleServer req observe observeEvent updateSelectInput renderUI
 #' @importFrom data.table copy
 #' @importFrom stats setNames
 #' @importFrom highcharter renderHighchart highchart hc_chart hc_xAxis hc_yAxis hc_add_series hc_title hc_subtitle hc_tooltip hc_colorAxis hc_legend
@@ -80,6 +80,43 @@ missingness_server <- function(id, qc_obj) {
         highcharter::hc_tooltip(pointFormat = "<b>{point.y:.1f}%</b> missing") |>
         highcharter::hc_legend(enabled = FALSE) |>
         add_export_menu()
+    })
+
+    # --- Footnote: fields with zero or near-zero missingness ---
+    output$overall_footnote <- shiny::renderUI({
+      shiny::req(input$module)
+
+      all_dt   <- overall_dt[overall_dt$module == input$module, ]
+      zero_dt  <- all_dt[all_dt$pct_missing == 0, ]
+      near_dt  <- all_dt[all_dt$pct_missing > 0 & all_dt$pct_missing < 0.01, ]
+
+      if (nrow(zero_dt) == 0 && nrow(near_dt) == 0) return(NULL)
+
+      parts <- character(0)
+
+      if (nrow(zero_dt) > 0) {
+        field_list <- paste(zero_dt$target_label, collapse = ", ")
+        parts <- c(parts, paste0(
+          "The following fields have no missing records: ", field_list, "."
+        ))
+      }
+
+      if (nrow(near_dt) > 0) {
+        near_dt  <- near_dt[order(near_dt$pct_missing), ]
+        snippets <- paste0(
+          near_dt$target_label, " (", format(near_dt$n_missing, big.mark = ","), " missing)"
+        )
+        field_list <- paste(snippets, collapse = "; ")
+        parts <- c(parts, paste0(
+          "The following fields have fewer than 1% missing records and may not be ",
+          "visible on the chart: ", field_list, "."
+        ))
+      }
+
+      shiny::p(
+        paste(parts, collapse = " "),
+        style = "font-size:0.85em; color:#555; font-style:italic; margin-top:8px;"
+      )
     })
 
     # --- Card 2: Grouped heatmap ---

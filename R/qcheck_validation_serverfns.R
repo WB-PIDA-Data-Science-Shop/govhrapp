@@ -42,7 +42,7 @@ validation_server <- function(id, qc_obj) {
     make_validation_table <- function(df) {
       df$Status <- ifelse(
         df$Errors,
-        "<span style='background:#9e9e9e;color:white;padding:2px 8px;border-radius:4px;'>ERROR</span>",
+        "<span style='background:#9e9e9e;color:white;padding:2px 8px;border-radius:4px;'>Does Not Apply</span>",
         ifelse(
           df$`Pass Rate` >= 100,
           "<span style='background:#4caf50;color:white;padding:2px 8px;border-radius:4px;'>PASS</span>",

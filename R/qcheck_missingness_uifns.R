@@ -51,7 +51,8 @@ Select a module above to switch between contract and personnel fields.
         bslib::card_header("Overall Missingness by Field"),
         bslib::card_body(
           shiny::p("Overall missingness rate per field. Fields with 0% missing are hidden."),
-          highcharter::highchartOutput(ns("overall_bar"), height = "300px")
+          highcharter::highchartOutput(ns("overall_bar"), height = "300px"),
+          shiny::uiOutput(ns("overall_footnote"))
         )
       )
     ),

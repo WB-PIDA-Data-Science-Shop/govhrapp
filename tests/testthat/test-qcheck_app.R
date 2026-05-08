@@ -166,6 +166,70 @@ test_that("bs_add_rules receives CSS text, not a file path", {
     label = "First line of CSS content looks like a Unix file path"
   )
   expect_match(paste(css_content, collapse = "\n"), "[{:;]",
-    label = "CSS content contains no CSS syntax — may be a raw path"
+    label = "CSS content contains no CSS syntax -- may be a raw path"
   )
+})
+
+# ---------------------------------------------------------------------------
+# Missingness footnote logic
+# ---------------------------------------------------------------------------
+
+test_that("overall_footnote: zero-missing fields are identified correctly", {
+  qc <- make_minimal_qc_obj()
+  dt <- qc$missingness$overall
+  dt <- dt[dt$module == dt$module[1], ]
+
+  zero_dt <- dt[dt$pct_missing == 0, ]
+  near_dt <- dt[dt$pct_missing > 0 & dt$pct_missing < 0.01, ]
+
+  # zero_dt must contain only rows with exactly 0 pct_missing
+  expect_true(all(zero_dt$pct_missing == 0))
+  # near_dt must exclude zero rows and include only sub-1% rows
+  expect_true(all(near_dt$pct_missing > 0))
+  expect_true(all(near_dt$pct_missing < 0.01))
+})
+
+test_that("overall_footnote: near-zero snippet format contains field name and count", {
+  near_dt <- data.frame(
+    target_label = c("Base Salary", "Allowance"),
+    n_missing    = c(12L, 3L),
+    pct_missing  = c(0.005, 0.002),
+    stringsAsFactors = FALSE
+  )
+  near_dt  <- near_dt[order(near_dt$pct_missing), ]
+  snippets <- paste0(
+    near_dt$target_label, " (", format(near_dt$n_missing, big.mark = ","), " missing)"
+  )
+  expect_match(snippets[1], "Allowance")
+  expect_match(snippets[1], "3 missing")
+  expect_match(snippets[2], "Base Salary")
+  expect_match(snippets[2], "12 missing")
+})
+
+# ---------------------------------------------------------------------------
+# Validation badge label
+# ---------------------------------------------------------------------------
+
+test_that("make_validation_table: Errors TRUE rows get 'Does Not Apply' badge", {
+  df <- data.frame(
+    Rule            = c("Valid date", "Valid status"),
+    Description     = c("date check", "status check"),
+    `Total Records` = c(0L, 100L),
+    Passes          = c(0L, 95L),
+    `Pass Rate`     = c(NaN, 95.0),
+    Fails           = c(0L, 5L),
+    Errors          = c(TRUE, FALSE),
+    check.names     = FALSE,
+    stringsAsFactors = FALSE
+  )
+
+  status <- ifelse(
+    df$Errors,
+    "Does Not Apply",
+    ifelse(df$`Pass Rate` >= 100, "PASS",
+    ifelse(df$`Pass Rate` >= 80,  "WARNING", "FAIL"))
+  )
+
+  expect_equal(status[1], "Does Not Apply")
+  expect_equal(status[2], "WARNING")
 })
