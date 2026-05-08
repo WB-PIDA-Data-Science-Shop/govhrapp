@@ -13,6 +13,7 @@
 #' @importFrom stringr str_wrap
 #' @importFrom lubridate year
 #' @importFrom purrr keep map set_names
+#' @importFrom stats na.omit
 #' @import dplyr
 #' @export
 wagebill_ui <- function(id, wagebill_data) {
