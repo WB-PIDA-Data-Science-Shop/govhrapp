@@ -12,8 +12,30 @@
 #' @importFrom plotly plotlyOutput
 #' @importFrom stringr str_wrap
 #' @importFrom lubridate year
+#' @importFrom dplyr filter group_by summarise pull
 #' @export
 workforce_ui <- function(id, workforce_data) {
+  available_cols <- names(workforce_data)
+
+  workforce_group_choices <- c(
+    list("All" = "ref_date"),
+    govhr::dictionary |>
+      dplyr::filter(
+        .data[["variable_id"]] %in% available_cols,
+        .data[["variable_class"]] == "character",
+        !.data[["variable_id"]] %in% c("ref_date", "contract_id", "personnel_id")
+      ) |>
+      dplyr::group_by(.data[["module"]]) |>
+      dplyr::summarise(
+        choices = list(
+          setNames(.data[["variable_id"]], .data[["variable_name"]])
+        ),
+        .groups = "drop"
+      ) |>
+      dplyr::pull(.data[["choices"]],
+                  name = .data[["module"]])
+  )
+
   sidebar_default <- bslib::sidebar(
     title = "Controls",
     width = "300px",
@@ -30,20 +52,7 @@ workforce_ui <- function(id, workforce_data) {
     shiny::selectInput(
       shiny::NS(id, "workforce_group"),
       "Group:",
-      choices = list(
-        "All" = "ref_date",
-        "Establishment" = "est_id",
-        "Contract" = c(
-          "Contract type (native)" = "contract_type_native",
-          "Paygrade" = "paygrade",
-          "Occupation" = "occupation_native"
-        ),
-        "Personnel" = c(
-          "Gender" = "gender",
-          "Education" = "educat7",
-          "Employment Status" = "status"
-        )
-      )
+      choices = workforce_group_choices
     ),
     shiny::downloadButton(
       shiny::NS(id, "download_report"),
@@ -68,20 +77,7 @@ workforce_ui <- function(id, workforce_data) {
     shiny::selectInput(
       shiny::NS(id, "workforce_group"),
       "Group:",
-      choices = list(
-        "All" = "ref_date",
-        "Establishment" = "est_id",
-        "Contract" = c(
-          "Contract type (native)" = "contract_type_native",
-          "Paygrade" = "paygrade",
-          "Occupation" = "occupation_native"
-        ),
-        "Personnel" = c(
-          "Gender" = "gender",
-          "Education" = "educat7",
-          "Employment Status" = "status"
-        )
-      )
+      choices = workforce_group_choices
     ),
     shiny::selectInput(
       shiny::NS(id, "movement_type"),

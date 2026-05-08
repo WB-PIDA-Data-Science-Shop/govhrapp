@@ -12,8 +12,38 @@
 #' @importFrom plotly plotlyOutput
 #' @importFrom stringr str_wrap
 #' @importFrom lubridate year
+#' @import dplyr
 #' @export
 wagebill_ui <- function(id, wagebill_data) {
+  available_cols <- names(wagebill_data)
+
+  wagebill_measure_choices <- list(
+    "Base Salary"  = "base_salary_lcu",
+    "Gross Salary" = "gross_salary_lcu",
+    "Net Salary"   = "net_salary_lcu",
+    "Allowance"    = "allowance_lcu"
+  ) |>
+    purrr::keep(\(x) x %in% available_cols)
+
+  wagebill_group_choices <- c(
+    list("All" = "ref_date"),
+    govhr::dictionary |>
+      dplyr::filter(
+        .data[["variable_id"]] %in% available_cols &
+          .data[["variable_class"]] == "character" &
+          !.data[["variable_id"]] %in% c("ref_date", "contract_id", "personnel_id")
+      ) |>
+      dplyr::group_by(.data[["module"]]) |>
+      dplyr::summarise(
+        choices = list(
+          setNames(.data[["variable_id"]], .data[["variable_name"]])
+        ),
+        .groups = "drop"
+      ) |>
+      dplyr::pull(.data[["choices"]],
+                  name = .data[["module"]])
+  )
+
   bslib::layout_columns(
     fillable = FALSE,
     bslib::card(
@@ -58,29 +88,12 @@ wagebill_ui <- function(id, wagebill_data) {
             shiny::selectInput(
               shiny::NS(id, "wagebill_measure"),
               "Type of Wage:",
-              choices = list(
-                "Base Salary" = "base_salary_lcu",
-                "Gross Salary" = "gross_salary_lcu",
-                "Net Salary" = "net_salary_lcu"
-              )
+              choices = wagebill_measure_choices
             ),
             shiny::selectInput(
               shiny::NS(id, "wagebill_group"),
               "Group:",
-              choices = list(
-                "All" = "ref_date",
-                "Establishment" = "est_id",
-                "Contract" = c(
-                  "Contract type (native)" = "contract_type_native",
-                  "Paygrade" = "paygrade",
-                  "Occupation" = "occupation_native"
-                ),
-                "Personnel" = c(
-                  "Gender" = "gender",
-                  "Education" = "educat7",
-                  "Employment Status" = "status"
-                )
-              )
+              choices = wagebill_group_choices
             ),
             shiny::downloadButton(
                 shiny::NS(id, "download_report"),
@@ -167,29 +180,12 @@ wagebill_ui <- function(id, wagebill_data) {
             shiny::selectInput(
               shiny::NS(id, "wagebill_measure"),
               "Type of Wage:",
-              choices = list(
-                "Base Salary" = "base_salary_lcu",
-                "Gross Salary" = "gross_salary_lcu",
-                "Net Salary" = "net_salary_lcu"
-              )
+              choices = wagebill_measure_choices
             ),
             shiny::selectInput(
               shiny::NS(id, "wagebill_group"),
               "Group:",
-              choices = list(
-                "All" = "ref_date",
-                "Establishment" = "est_id",
-                "Contract" = c(
-                  "Contract type (native)" = "contract_type_native",
-                  "Paygrade" = "paygrade",
-                  "Occupation" = "occupation_native"
-                ),
-                "Personnel" = c(
-                  "Gender" = "gender",
-                  "Education" = "educat7",
-                  "Employment Status" = "status"
-                )
-              )
+              choices = wagebill_group_choices
             )
           ),
           bslib::card(
@@ -682,6 +678,5 @@ run_wagebillapp <- function(
     wagebill_server("test", wagebill_data)
   }
   
-  shiny::shinyApp(ui, server, ...)
   shiny::shinyApp(ui, server, ...)
 }
