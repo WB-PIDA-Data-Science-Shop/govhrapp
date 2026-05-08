@@ -12,7 +12,8 @@
 #' @importFrom plotly plotlyOutput
 #' @importFrom stringr str_wrap
 #' @importFrom lubridate year
-#' @importFrom dplyr filter group_by summarise pull
+#' @importFrom purrr keep map set_names
+#' @import dplyr
 #' @export
 workforce_ui <- function(id, workforce_data) {
   available_cols <- names(workforce_data)
@@ -28,7 +29,7 @@ workforce_ui <- function(id, workforce_data) {
       dplyr::group_by(.data[["module"]]) |>
       dplyr::summarise(
         choices = list(
-          setNames(.data[["variable_id"]], .data[["variable_name"]])
+          purrr::set_names(.data[["variable_id"]], .data[["variable_name"]])
         ),
         .groups = "drop"
       ) |>
@@ -155,7 +156,7 @@ workforce_ui <- function(id, workforce_data) {
                 "Growth rate by group",
                 bslib::tooltip(
                   bsicons::bs_icon("info-circle"),
-                  "Growth rate with respect to the previous year, by group. Growth rate refers to the latest available year in the selected time frame."
+                  "Growth rate with respect to first reference date, by group."
                 )
               ),
               plotly::plotlyOutput(NS(id, "workforce_growth")),
@@ -347,37 +348,28 @@ workforce_server <- function(id, workforce_data) {
       )
 
       change_data <- reactive({
-        workforce_annual <- workforce_filtered_date() |>
+        max_filtered_date <- max(workforce_filtered_date()$ref_date, na.rm = TRUE)
+        min_filtered_date <- min(workforce_filtered_date()$ref_date, na.rm = TRUE)
+
+        workforce_filtered_date() |>
           dplyr::filter(
-            year %in% c(max(year), max(year) - 1)
+            year %in% c(max(year), min(year))
           ) |>
           govhr::fastcount(
             .data[["ref_date"]],
             .data[[input$workforce_group]],
             name = "value"
-          )
-
-        workforce_annual |>
-          dplyr::group_by(
-            across(all_of(input$workforce_group))
           ) |>
-          govhr::complete_dates(
-            id_col = input$workforce_group,
-            start_date = max(workforce_data$ref_date) - lubridate::years(1),
-            end_date = max(workforce_data$ref_date)
-          ) |>
-          dplyr::mutate(
+          dplyr::filter(!is.na(.data[[input$workforce_group]])) |>
+          dplyr::group_by(dplyr::across(dplyr::all_of(input$workforce_group))) |>
+          dplyr::summarise(
             growth_rate = round(
-              .data[["value"]] / dplyr::lag(.data[["value"]]) - 1,
+              dplyr::last(.data[["value"]]) / dplyr::first(.data[["value"]]) - 1,
               3
-            ) *
-              100
+            ) * 100,
+            .groups = "drop"
           ) |>
-          filter(
-            .data[["ref_date"]] == max(.data[["ref_date"]]) &
-              !is.na(.data[["growth_rate"]]) &
-              !is.na(.data[[input$workforce_group]])
-          )
+          dplyr::filter(!is.na(.data[["growth_rate"]]))
       })
 
        # dynamic height
