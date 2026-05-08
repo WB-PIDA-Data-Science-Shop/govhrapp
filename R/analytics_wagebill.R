@@ -217,7 +217,7 @@ wagebill_ui <- function(id, wagebill_data) {
 #' @param id Module id.
 #' @param wagebill_data Data frame with wage bill data.
 #'
-#' @importFrom shiny moduleServer reactive validate need bindEvent downloadHandler withProgress incProgress renderUI uiOutput selectizeInput
+#' @importFrom shiny moduleServer reactive validate need bindEvent downloadHandler withProgress incProgress renderUI uiOutput selectizeInput debounce
 #' @importFrom plotly renderPlotly ggplotly plot_ly layout animation_opts animation_slider
 #' @importFrom dplyr filter mutate arrange group_by ungroup across all_of first last pull left_join summarise n_distinct
 #' @importFrom lubridate year years
@@ -253,7 +253,7 @@ wagebill_server <- function(id, wagebill_data) {
           session$ns("group_filter"),
           "Groups to display:",
           choices = group_vals,
-          selected = group_vals[seq_len(8)],
+          selected = group_vals,
           multiple = TRUE,
           options = list(plugins = list("remove_button"))
         )
@@ -271,7 +271,7 @@ wagebill_server <- function(id, wagebill_data) {
           session$ns("group_filter"),
           "Display groups:",
           choices = group_vals,
-          selected = group_vals[seq_len(8)],
+          selected = group_vals,
           multiple = TRUE,
           options = list(plugins = list("remove_button"))
         )
@@ -279,14 +279,17 @@ wagebill_server <- function(id, wagebill_data) {
     })
     shiny::outputOptions(output, "group_filter_ui_evolution", suspendWhenHidden = FALSE)
 
+    # Debounced group filter to avoid over-triggering computation
+    input_group_filter_debounced <- shiny::debounce(shiny::reactive(input$group_filter), 1000)
+
     # Data filtered by both date and selected groups
     wagebill_group_filtered <- shiny::reactive({
       data <- wagebill_filtered_date()
       if (input$wagebill_group == "ref_date") return(data)
       group_vals <- unique(na.omit(wagebill_data[[input$wagebill_group]]))
-      if (length(group_vals) > 8 && !is.null(input$group_filter)) {
+      if (length(group_vals) > 8 && !is.null(input_group_filter_debounced())) {
         data <- data |>
-          dplyr::filter(.data[[input$wagebill_group]] %in% input$group_filter)
+          dplyr::filter(.data[[input$wagebill_group]] %in% input_group_filter_debounced())
       }
       data
     })
@@ -379,29 +382,32 @@ wagebill_server <- function(id, wagebill_data) {
         shiny::need(input$wagebill_group != "ref_date", "Please select a group.")
       )
 
-      cross_section_data <- shiny::reactive({
-        wagebill_group_filtered() |>
-          # only present latest year
-          dplyr::filter(
-            year == max(year)
-          ) |>
-          govhr::compute_fastsummary(
-            cols = input$wagebill_measure,
-            fns = "sum",
-            groups = input$wagebill_group
-          ) |>
-          # drop missing values and groups
-          dplyr::filter(
-            !is.na(.data[["value"]]) &
-              !is.na(.data[[input$wagebill_group]])
+      cross_section_data <- wagebill_group_filtered() |>
+        group_by(
+          across(
+            all_of(input$wagebill_group)
           )
-      })
-      
+        ) |>
+        # only present latest reference date
+        dplyr::filter(
+          ref_date == max(ref_date)
+        ) |>
+        govhr::compute_fastsummary(
+          cols = input$wagebill_measure,
+          fns = "sum",
+          groups = input$wagebill_group
+        ) |>
+        # drop missing values and groups
+        dplyr::filter(
+          !is.na(.data[["value"]]) &
+            !is.na(.data[[input$wagebill_group]])
+        )
+
       # dynamic height
-      n_groups <- nrow(cross_section_data())
+      n_groups <- nrow(cross_section_data)
       plot_height <- max(350, n_groups * 35 + 100)
 
-      plot <- cross_section_data() |>
+      plot <- cross_section_data |>
         ggplot2::ggplot(
           ggplot2::aes(
             x = .data[["value"]],
@@ -425,7 +431,7 @@ wagebill_server <- function(id, wagebill_data) {
 
       plotly::ggplotly(plot, height = plot_height)
     }) |>
-      shiny::bindEvent(input$wagebill_group, input$wagebill_measure, input$date_range, input$group_filter)
+      shiny::bindEvent(input$wagebill_group, input$wagebill_measure, input$date_range, input_group_filter_debounced())
 
     # plot 3. growth rate by group
     output$wagebill_change <- plotly::renderPlotly({
@@ -433,33 +439,36 @@ wagebill_server <- function(id, wagebill_data) {
         shiny::need(input$wagebill_group != "ref_date", "Please select a group.")
       )
 
-      change_data <- shiny::reactive({
-        wagebill_group_filtered() |>
-          dplyr::filter(
-            year %in% c(max(year), min(year))
-          ) |>
-          govhr::compute_fastsummary(
-            cols = input$wagebill_measure,
-            fns = "sum",
-            groups = c("ref_date", input$wagebill_group)
-          ) |>
-          dplyr::filter(!is.na(.data[[input$wagebill_group]])) |>
-          dplyr::group_by(dplyr::across(dplyr::all_of(input$wagebill_group))) |>
-          dplyr::summarise(
-            growth_rate = round(
-              dplyr::last(.data[["value"]]) / dplyr::first(.data[["value"]]) - 1,
-              3
-            ) * 100,
-            .groups = "drop"
-          ) |>
-          dplyr::filter(!is.na(.data[["growth_rate"]]))
-      })
+      change_data <- wagebill_group_filtered() |>
+        group_by(
+          across(
+            all_of(input$wagebill_group)
+          )
+        ) |> 
+        dplyr::filter(
+          ref_date %in% c(max(ref_date), min(ref_date))
+        ) |>
+        govhr::compute_fastsummary(
+          cols = input$wagebill_measure,
+          fns = "sum",
+          groups = c("ref_date", input$wagebill_group)
+        ) |>
+        dplyr::filter(!is.na(.data[[input$wagebill_group]])) |>
+        dplyr::group_by(dplyr::across(dplyr::all_of(input$wagebill_group))) |>
+        dplyr::summarise(
+          growth_rate = round(
+            dplyr::last(.data[["value"]]) / dplyr::first(.data[["value"]]) - 1,
+            3
+          ) * 100,
+          .groups = "drop"
+        ) |>
+        dplyr::filter(!is.na(.data[["growth_rate"]]))
 
       # dynamic height
-      n_groups <- nrow(change_data())
+      n_groups <- nrow(change_data)
       plot_height <- max(350, n_groups * 35 + 100)
 
-      plot <- change_data() |>
+      plot <- change_data |>
         ggplot2::ggplot(
           ggplot2::aes(
             x = .data[["growth_rate"]],
@@ -489,7 +498,7 @@ wagebill_server <- function(id, wagebill_data) {
 
       plotly::ggplotly(plot, height = plot_height)
     }) |>
-      shiny::bindEvent(input$wagebill_group, input$wagebill_measure, input$date_range, input$group_filter)
+      shiny::bindEvent(input$wagebill_group, input$wagebill_measure, input$date_range, input_group_filter_debounced())
 
     # plot 4. variation
     output$wagebill_variation <- plotly::renderPlotly({
@@ -497,28 +506,31 @@ wagebill_server <- function(id, wagebill_data) {
         shiny::need(input$wagebill_group != "ref_date", "Please select a group.")
       )
 
-      dispersion_data <- shiny::reactive({
-        wagebill_group_filtered() |>
-          govhr::convert_constant_ppp(
-            cols = input$wagebill_measure,
-            macro_indicators = govhr::macro_indicators
-          ) |>
-          # only present latest year
-          dplyr::filter(
-            year == max(year)
+      dispersion_data <- wagebill_group_filtered() |>
+        govhr::convert_constant_ppp(
+          cols = input$wagebill_measure,
+          macro_indicators = govhr::macro_indicators
+        ) |>
+        group_by(
+          across(
+            all_of(input$wagebill_group)
           )
-      })
+        ) |> 
+        # only present latest reference date
+        dplyr::filter(
+          ref_date == max(ref_date)
+        )
 
       # dynamic height
-      n_groups <- dispersion_data() |>
+      n_groups <- dispersion_data |>
         dplyr::filter(!is.na(.data[[input$wagebill_group]])) |>
         dplyr::pull(input$wagebill_group) |>
-        unique() |> 
+        unique() |>
         length()
 
       plot_height <- max(350, n_groups * 25 + 100)
 
-      plot <- dispersion_data() |>
+      plot <- dispersion_data |>
         plot_segment(
           col = input$wagebill_measure,
           group = input$wagebill_group
@@ -533,7 +545,7 @@ wagebill_server <- function(id, wagebill_data) {
 
       plotly::ggplotly(plot, height = plot_height)
     }) |>
-      shiny::bindEvent(input$wagebill_group, input$wagebill_measure, input$date_range, input$group_filter)
+      shiny::bindEvent(input$wagebill_group, input$wagebill_measure, input$date_range, input_group_filter_debounced())
 
     # plot 5. wagebill animation
     output$wagebill_animation <- plotly::renderPlotly({
@@ -541,7 +553,7 @@ wagebill_server <- function(id, wagebill_data) {
         shiny::need(input$wagebill_group != "ref_date", "Please select a group.")
       )
 
-      animation_data <- shiny::reactive({
+      animation_data <- {
         wagebill <- wagebill_group_filtered() |>
           govhr::compute_fastsummary(
             cols = input$wagebill_measure,
@@ -570,10 +582,10 @@ wagebill_server <- function(id, wagebill_data) {
             personnel,
             by = c("ref_date", input$wagebill_group)
           )
-      })
+      }
 
       plotly::plot_ly(
-        data = animation_data(),
+        data = animation_data,
         x = ~headcount,
         y = ~value,
         frame = ~ref_date,
@@ -608,7 +620,7 @@ wagebill_server <- function(id, wagebill_data) {
           currentvalue = list(prefix = "Date: ")
         )
     }) |>
-      shiny::bindEvent(input$wagebill_group, input$wagebill_measure, input$date_range, input$group_filter)
+      shiny::bindEvent(input$wagebill_group, input$wagebill_measure, input$date_range, input_group_filter_debounced())
     
     # report
     output$download_report <- shiny::downloadHandler(
