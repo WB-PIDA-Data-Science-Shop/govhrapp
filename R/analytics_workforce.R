@@ -112,7 +112,7 @@ workforce_ui <- function(id, workforce_data) {
       ),
       bslib::card_body(
         shiny::markdown(
-          readLines("inst/markdown/workforce.md")
+          readLines(system.file("markdown/workforce.md", package = "govhrapp"))
         )
       )
     ),
@@ -121,7 +121,7 @@ workforce_ui <- function(id, workforce_data) {
         title = "Guidance Questions",
         icon = shiny::icon("question-circle"),
         shiny::markdown(
-          readLines("inst/markdown/workforce_questions.md")
+          readLines(system.file("markdown/workforce_questions.md", package = "govhrapp"))
         )
       ),
       open = FALSE

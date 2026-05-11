@@ -44,7 +44,7 @@ run_qcheckapp <- function(dynamicqc_obj, ...) {
       navbar_bg = "#FFFFFF"
     ) |>
       bslib::bs_add_rules(
-        readLines("inst/www/styles.css")
+        readLines(system.file("www/styles.css", package = "govhrapp"))
       ),
 
     navbar_options = navbar_options(
@@ -70,7 +70,7 @@ run_qcheckapp <- function(dynamicqc_obj, ...) {
           shiny::tags$br(),
           shiny::tags$h3("Welcome to govhr: Quality Control Suite."),
           shiny::markdown(
-            readLines("inst/markdown/qcheck_home.md")
+            readLines(system.file("markdown/qcheck_home.md", package = "govhrapp"))
           )          
         )
       )

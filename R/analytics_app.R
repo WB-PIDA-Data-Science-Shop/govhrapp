@@ -9,7 +9,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' run_govhrapp()
+#' run_govhrapp(personnel_data)
 #' }
 #'
 #' @import shiny
@@ -20,7 +20,7 @@
 #' @export
 run_govhrapp <- function(personnel_data, ...) {
   # add path to visual assets (image and css)
-  shiny::addResourcePath("assets", "inst/www")
+  shiny::addResourcePath("assets", system.file("www", package = "govhrapp"))
 
   # ensure ggplot2 and plotly inherit bslib themes
   ggplot2::theme_set(
@@ -57,7 +57,7 @@ run_govhrapp <- function(personnel_data, ...) {
       navbar_bg = "#FFFFFF"
     ) |>
       bslib::bs_add_rules(
-        readLines("inst/www/styles.css")
+        readLines(system.file("www/styles.css", package = "govhrapp"))
       ),
 
     padding = "10px",
@@ -84,7 +84,7 @@ run_govhrapp <- function(personnel_data, ...) {
               style = "max-width: 800px; margin: 0 auto; padding: 2rem 3rem;",
               shiny::tags$h3("Welcome to govhr."),
               shiny::markdown(
-                readLines("inst/markdown/home.md")
+                readLines(system.file("markdown/home.md", package = "govhrapp"))
               )
             )
           )
