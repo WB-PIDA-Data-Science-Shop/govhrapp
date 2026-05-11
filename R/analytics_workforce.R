@@ -7,8 +7,8 @@
 #'
 #' @importFrom bslib layout_columns card card_header card_body accordion accordion_panel layout_sidebar sidebar tooltip
 #' @importFrom bsicons bs_icon
-#' @importFrom shiny markdown icon NS selectInput
-#' @importFrom shinyWidgets numericRangeInput materialSwitch
+#' @importFrom shiny markdown icon NS selectInput actionButton uiOutput
+#' @importFrom shinyWidgets numericRangeInput materialSwitch pickerInput
 #' @importFrom plotly plotlyOutput
 #' @importFrom stringr str_wrap
 #' @importFrom lubridate year
@@ -57,6 +57,12 @@ workforce_ui <- function(id, workforce_data) {
       choices = workforce_group_choices
     ),
     shiny::uiOutput(shiny::NS(id, "group_filter_ui")),
+    shiny::actionButton(
+      shiny::NS(id, "apply_btn"),
+      "Apply selection",
+      icon = shiny::icon("play"),
+      class = "btn-primary w-100 mt-2"
+    ),
     shiny::downloadButton(
       shiny::NS(id, "download_report"),
       "Generate report",
@@ -83,6 +89,12 @@ workforce_ui <- function(id, workforce_data) {
       choices = workforce_group_choices
     ),
     shiny::uiOutput(shiny::NS(id, "group_filter_ui_movement")),
+    shiny::actionButton(
+      shiny::NS(id, "apply_btn"),
+      "Apply selection",
+      icon = shiny::icon("play"),
+      class = "btn-primary w-100 mt-2"
+    ),
     shiny::selectInput(
       shiny::NS(id, "movement_type"),
       "Movement type:",
@@ -199,7 +211,8 @@ workforce_ui <- function(id, workforce_data) {
 #' @param id Module id.
 #' @param workforce_data Data frame with workforce data.
 #'
-#' @importFrom shiny moduleServer reactive validate need bindEvent downloadHandler withProgress incProgress renderUI outputOptions selectizeInput debounce
+#' @importFrom shiny moduleServer reactive validate need bindEvent downloadHandler withProgress incProgress renderUI selectizeInput actionButton
+#' @importFrom shinyWidgets pickerInput pickerOptions
 #' @importFrom plotly renderPlotly
 #' @importFrom dplyr filter mutate arrange group_by ungroup summarise across all_of first last n_distinct right_join
 #' @importFrom lubridate year years ymd
@@ -233,25 +246,27 @@ workforce_server <- function(id, workforce_data) {
         workforce_data[[input$workforce_group]]
       ))))
       if (length(group_vals) > 8) {
-        shiny::selectizeInput(
+        shinyWidgets::pickerInput(
           session$ns("group_filter"),
           "Display groups:",
           choices = group_vals,
           selected = group_vals,
           multiple = TRUE,
-          options = list(plugins = list("remove_button"))
+          options = shinyWidgets::pickerOptions(
+            actionsBox = TRUE,
+            liveSearch = TRUE,
+            selectedTextFormat = "count > 3",
+            countSelectedText = "{0} groups selected",
+            noneSelectedText = "No groups selected",
+            container = "body"
+          )
         )
       }
     }
 
     output$group_filter_ui <- shiny::renderUI(group_filter_widget())
-    shiny::outputOptions(output, "group_filter_ui", suspendWhenHidden = FALSE)
 
     output$group_filter_ui_movement <- shiny::renderUI(group_filter_widget())
-    shiny::outputOptions(output, "group_filter_ui_movement", suspendWhenHidden = FALSE)
-
-    # Debounced group filter to avoid over-triggering computation
-    input_group_filter_debounced <- shiny::debounce(shiny::reactive(input$group_filter), 1000)
 
     # Data filtered by both date and selected groups
     workforce_group_filtered <- shiny::reactive({
@@ -260,9 +275,9 @@ workforce_server <- function(id, workforce_data) {
       
       group_vals <- unique(na.omit(workforce_data[[input$workforce_group]]))
       
-      if (length(group_vals) > 8 && !is.null(input_group_filter_debounced())) {
+      if (length(group_vals) > 8 && !is.null(input$group_filter)) {
         data <- data |>
-          dplyr::filter(.data[[input$workforce_group]] %in% input_group_filter_debounced())
+          dplyr::filter(.data[[input$workforce_group]] %in% input$group_filter)
       }
       data
     })
@@ -305,6 +320,7 @@ workforce_server <- function(id, workforce_data) {
     # plot 1. panel
     output$workforce_panel <- plotly::renderPlotly({
       plot <- workforce_summary() |>
+        dplyr::ungroup() |>
         ggplot(
           aes(
             x = .data[["ref_date"]],
@@ -343,7 +359,8 @@ workforce_server <- function(id, workforce_data) {
       }
 
       plotly::ggplotly(plot)
-    })
+    }) |>
+      bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
     # plot 2. total by group
     output$workforce_cross_section <- plotly::renderPlotly({
@@ -392,7 +409,7 @@ workforce_server <- function(id, workforce_data) {
 
       plotly::ggplotly(plot, height = plot_height)
     }) |>
-      bindEvent(input$workforce_group, input$date_range, input_group_filter_debounced())
+      bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
     # plot 3. growth rate by group
     output$workforce_growth <- plotly::renderPlotly({
@@ -459,7 +476,7 @@ workforce_server <- function(id, workforce_data) {
 
       plotly::ggplotly(plot_growth, height = plot_height)
     }) |>
-      bindEvent(input$workforce_group, input$date_range, input_group_filter_debounced())
+      bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
     # plot 4. movements
     output$workforce_movements <- renderPlotly({
@@ -503,8 +520,14 @@ workforce_server <- function(id, workforce_data) {
         )
 
       if (input$workforce_group != "ref_date") {
+        n_groups <- dplyr::n_distinct(movement_data[[input$workforce_group]], na.rm = TRUE)
+        orange_palette <- colorRampPalette(c("#C34729", "#F5C6A0"))(n_groups)
         plot_movement <- plot_movement +
-          aes(group = .data[[input$workforce_group]])
+          aes(
+            color = .data[[input$workforce_group]],
+            group = .data[[input$workforce_group]]
+          ) +
+          ggplot2::scale_color_manual(values = orange_palette)
       }
 
       plot_movement <- plot_movement +
@@ -514,7 +537,7 @@ workforce_server <- function(id, workforce_data) {
 
       plotly::ggplotly(plot_movement)
     }) |>
-      bindEvent(input$movement_type, input$workforce_group, input$date_range, input_group_filter_debounced())
+      bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
     # report
     output$download_report <- shiny::downloadHandler(
