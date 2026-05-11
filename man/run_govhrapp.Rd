@@ -19,7 +19,7 @@ Launches an interactive Shiny dashboard for govhr data visualization and analysi
 }
 \examples{
 \dontrun{
-run_govhrapp()
+run_govhrapp(personnel_data)
 }
 
 }
