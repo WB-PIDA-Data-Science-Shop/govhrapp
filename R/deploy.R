@@ -64,7 +64,9 @@ deploy_govhrapp <- function(suite){
   
   # Deploy the app
   rsconnect::deployApp(
+    appDir = ".",
     appId = app_id,
-    appPrimaryDoc = app_file
+    appPrimaryDoc = app_file,
+    forceUpdate = TRUE
   )
 }

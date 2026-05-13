@@ -2,6 +2,7 @@
 #'
 #' Launches an interactive Shiny dashboard for govhr data visualization and analysis.
 #'
+#' @param personnel_data Data with personnel and contract attributes.
 #' @param ... Additional arguments passed to \code{\link[shiny]{shinyApp}}.
 #'
 #' @return A Shiny app object.
@@ -17,7 +18,7 @@
 #' @importFrom thematic thematic_shiny
 #' @importFrom lubridate year
 #' @export
-run_govhrapp <- function(...) {
+run_govhrapp <- function(personnel_data, ...) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", system.file("www", package = "govhrapp"))
 
@@ -39,9 +40,6 @@ run_govhrapp <- function(...) {
   ggplot2::update_geom_defaults("line",  list(colour = "#C34729"))
   ggplot2::update_geom_defaults("col",   list(fill   = "#C34729"))
 
-  # globals
-  personnel_data <- govhrapp::personnel_data
-
   ui <- bslib::page_navbar(
     # title = "govhr dashboard",
     fillable = FALSE,
@@ -53,9 +51,9 @@ run_govhrapp <- function(...) {
     # set theme
     theme = bslib::bs_theme(
       bootswatch = "litera",
-      base_font = font_google("Source Sans Pro"),
-      code_font = font_google("Source Sans Pro"),
-      heading_font = font_google("Fira Sans"),
+      base_font = font_google("Source Sans Pro", local = FALSE),
+      code_font = font_google("Source Sans Pro", local = FALSE),
+      heading_font = font_google("Fira Sans", local = FALSE),
       navbar_bg = "#FFFFFF"
     ) |>
       bslib::bs_add_rules(
@@ -70,21 +68,28 @@ run_govhrapp <- function(...) {
       icon = shiny::icon("home"),
 
       # content
-      bslib::card(
-        bslib::card_header(
-          shiny::tags$img(
-            src = "assets/govhr_logo.png", 
-            style = "display: block; margin-left: auto; margin-right: auto;",
-            width = "80%"
+      bslib::layout_columns(
+        col_widths = bslib::breakpoints(sm = 12, md = c(1, 10, 1), lg = c(1.5, 9, 1.5)),
+        shiny::div(),
+        bslib::card(
+          bslib::card_header(
+            shiny::tags$img(
+              src = "assets/govhr_logo.png",
+              style = "max-width: 1200px; display: block; margin-left: auto; margin-right: auto;",
+              width = "80%"
+            )
+          ),
+          bslib::card_body(
+            shiny::tags$div(
+              style = "max-width: 800px; margin: 0 auto; padding: 2rem 3rem;",
+              shiny::tags$h3("Welcome to govhr."),
+              shiny::markdown(
+                readLines("inst/markdown/home.md")
+              )
+            )
           )
         ),
-        bslib::card_body(
-          shiny::tags$br(),
-          shiny::tags$h3("Welcome to govhr."),
-          shiny::markdown(
-            readLines(system.file("markdown/home.md", package = "govhrapp"))
-          )
-        )
+        shiny::div()
       )
     ),
 
