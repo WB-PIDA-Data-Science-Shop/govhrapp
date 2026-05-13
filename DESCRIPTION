@@ -28,7 +28,7 @@ Imports:
     shiny,
     thematic,
     lubridate,
-    plotly,    
+    plotly,
     rlang,
     rmarkdown,
     rsconnect,
@@ -37,7 +37,8 @@ Imports:
     shinyWidgets,
     stringr,
     thematic,
-    tibble
+    tibble,
+    purrr
 Depends: 
     R (>= 3.5)
 Remotes: 

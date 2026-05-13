@@ -41,6 +41,7 @@ plot_segment <- function(.data, col, group) {
   
   # Calculate summary statistics using .data[[]]
   summary_df <- df |>
+    dplyr::filter(!is.na(.data[[col]]), !is.na(.data[[group]])) |>
     dplyr::group_by(.data[[group]]) |>
     dplyr::summarise(
       xmin = min(.data[[col]], na.rm = TRUE),

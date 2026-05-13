@@ -2,6 +2,7 @@
 #'
 #' Launches an interactive Shiny dashboard for govhr data visualization and analysis.
 #'
+#' @param personnel_data Data with personnel and contract attributes.
 #' @param ... Additional arguments passed to \code{\link[shiny]{shinyApp}}.
 #'
 #' @return A Shiny app object.
@@ -17,7 +18,7 @@
 #' @importFrom thematic thematic_shiny
 #' @importFrom lubridate year
 #' @export
-run_govhrapp <- function(...) {
+run_govhrapp <- function(personnel_data, ...) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", "inst/www")
 
@@ -67,21 +68,28 @@ run_govhrapp <- function(...) {
       icon = shiny::icon("home"),
 
       # content
-      bslib::card(
-        bslib::card_header(
-          shiny::tags$img(
-            src = "assets/govhr_logo.png", 
-            style = "display: block; margin-left: auto; margin-right: auto;",
-            width = "80%"
+      bslib::layout_columns(
+        col_widths = bslib::breakpoints(sm = 12, md = c(1, 10, 1), lg = c(1.5, 9, 1.5)),
+        shiny::div(),
+        bslib::card(
+          bslib::card_header(
+            shiny::tags$img(
+              src = "assets/govhr_logo.png",
+              style = "max-width: 1200px; display: block; margin-left: auto; margin-right: auto;",
+              width = "80%"
+            )
+          ),
+          bslib::card_body(
+            shiny::tags$div(
+              style = "max-width: 800px; margin: 0 auto; padding: 2rem 3rem;",
+              shiny::tags$h3("Welcome to govhr."),
+              shiny::markdown(
+                readLines("inst/markdown/home.md")
+              )
+            )
           )
         ),
-        bslib::card_body(
-          shiny::tags$br(),
-          shiny::tags$h3("Welcome to govhr."),
-          shiny::markdown(
-            readLines("inst/markdown/home.md")
-          )
-        )
+        shiny::div()
       )
     ),
 
