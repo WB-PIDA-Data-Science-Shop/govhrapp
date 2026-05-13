@@ -121,10 +121,6 @@ generate_wagebill_report <- function(wagebill_summary_data,
   
   plot4_static <- if (wagebill_group != "ref_date") {
     wagebill_filtered_data |>
-      govhr::convert_constant_ppp(
-        cols = wagebill_measure,
-        macro_indicators = govhr::macro_indicators
-      ) |>
       dplyr::mutate(year = lubridate::year(.data[["ref_date"]])) |>
       dplyr::filter(year == max(year)) |>
       plot_segment(

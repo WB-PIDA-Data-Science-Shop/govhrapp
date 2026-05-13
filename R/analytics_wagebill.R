@@ -236,7 +236,7 @@ wagebill_ui <- function(id, wagebill_data) {
 #' @importFrom plotly renderPlotly ggplotly plot_ly layout animation_opts animation_slider
 #' @importFrom dplyr filter mutate arrange group_by ungroup across all_of first last pull left_join summarise n_distinct
 #' @importFrom lubridate year years
-#' @importFrom govhr compute_fastsummary convert_constant_ppp
+#' @importFrom govhr compute_fastsummary
 #' @importFrom ggplot2 ggplot aes geom_point geom_line geom_col geom_hline geom_vline scale_y_continuous scale_x_continuous scale_y_discrete scale_color_manual guide_axis labs xlab ylab
 #' @importFrom grDevices colorRampPalette
 #' @importFrom stats reorder
@@ -552,10 +552,6 @@ wagebill_server <- function(id, wagebill_data) {
       )
 
       dispersion_data <- wagebill_group_filtered() |>
-        govhr::convert_constant_ppp(
-          cols = input$wagebill_measure,
-          macro_indicators = govhr::macro_indicators
-        ) |>
         group_by(
           across(
             all_of(input$wagebill_group)
