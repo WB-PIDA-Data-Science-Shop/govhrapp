@@ -23,7 +23,6 @@ Imports:
     govhr (>= 0.1.3),
     gt,
     highcharter,
-    jsonlite,
     lubridate,
     plotly,
     purrr,
