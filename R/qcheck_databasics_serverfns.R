@@ -139,9 +139,14 @@ databasics_server <- function(id, qc_obj) {
       keys_obj <- qc_obj$keys
 
       if (is.null(keys_obj)) {
-        # Fall back to validation rules summary
-        unique_rules <- qc_obj$validation$contract[
-          grepl("[Uu]nique", qc_obj$validation$contract$Rule), ]
+        # Fall back to validation rules summary — use $report with new structure
+        contract_report <- if (is.data.frame(qc_obj$validation$contract)) {
+          qc_obj$validation$contract
+        } else {
+          qc_obj$validation$contract$report
+        }
+        unique_rules <- contract_report[
+          grepl("[Uu]nique", contract_report$Rule), ]
         data.table::data.table(
           Check = unique_rules$Rule,
           Description = unique_rules$Description,

@@ -12,10 +12,9 @@
 #'
 #' @return None. Called for side effects (renders Shiny outputs).
 #'
-#' @importFrom shiny moduleServer renderText reactive reactiveVal observeEvent req
+#' @importFrom shiny moduleServer renderText observeEvent updateSelectInput downloadHandler req
 #' @importFrom gt render_gt gt fmt_number fmt_markdown cols_align tab_style cell_fill opt_table_outline opt_row_striping
 #' @importFrom writexl write_xlsx
-#' @importFrom jsonlite base64_enc
 #'
 #' @keywords internal
 validation_server <- function(id, qc_obj) {
@@ -43,36 +42,23 @@ validation_server <- function(id, qc_obj) {
       paste0(round(total_passes / total_records * 100, 1), "%")
     })
 
-    # Helper: build clickable badge HTML for WARNING/FAIL rules
-    make_badge <- function(rule, pass_rate, is_error, input_id) {
+    # Helper: non-clickable badge HTML
+    make_badge <- function(pass_rate, is_error) {
       if (is_error) {
         return("<span style='background:#9e9e9e;color:white;padding:2px 8px;border-radius:4px;'>Does Not Apply</span>")
       }
       if (pass_rate >= 100) {
         return("<span style='background:#4caf50;color:white;padding:2px 8px;border-radius:4px;'>PASS</span>")
       }
-      label  <- if (pass_rate >= 80) "WARNING" else "FAIL"
-      colour <- if (pass_rate >= 80) "#ff9800" else "#f44336"
-      rule_js <- gsub("'", "\\\\'", rule)
-      paste0(
-        "<span style='background:", colour, ";color:white;padding:2px 8px;",
-        "border-radius:4px;cursor:pointer;' ",
-        "title='Click to download violations' ",
-        "onclick=\"Shiny.setInputValue('", session$ns(input_id), "', '",
-        rule_js, "', {priority: 'event'})\">",
-        label, " &#11123;</span>"
-      )
+      if (pass_rate >= 80) {
+        return("<span style='background:#ff9800;color:white;padding:2px 8px;border-radius:4px;'>WARNING</span>")
+      }
+      "<span style='background:#f44336;color:white;padding:2px 8px;border-radius:4px;'>FAIL</span>"
     }
 
-    # Helper: build styled gt validation table with clickable badges
-    make_validation_table <- function(df, input_id) {
-      df$Status <- mapply(
-        make_badge,
-        rule      = df$Rule,
-        pass_rate = df$`Pass Rate`,
-        is_error  = df$Errors,
-        input_id  = input_id
-      )
+    # Helper: build styled gt validation table
+    make_validation_table <- function(df) {
+      df$Status <- mapply(make_badge, pass_rate = df$`Pass Rate`, is_error = df$Errors)
 
       df |>
         gt::gt() |>
@@ -83,7 +69,7 @@ validation_server <- function(id, qc_obj) {
           use_seps = TRUE
         ) |>
         gt::fmt_number(
-          columns = `Pass Rate`,
+          columns  = `Pass Rate`,
           decimals = 1,
           suffix   = "%"
         ) |>
@@ -103,35 +89,65 @@ validation_server <- function(id, qc_obj) {
         gt::opt_row_striping(row_striping = FALSE)
     }
 
-    output$contract_table <- gt::render_gt({
-      make_validation_table(contract_report, "contract_rule_click")
-    })
+    output$contract_table <- gt::render_gt(make_validation_table(contract_report))
+    output$personnel_table <- gt::render_gt(make_validation_table(personnel_report))
 
-    output$personnel_table <- gt::render_gt({
-      make_validation_table(personnel_report, "personnel_rule_click")
-    })
-
-    # Helper: write data.table to temp xlsx and return base64-encoded bytes
-    to_filename <- function(rule) gsub("[^A-Za-z0-9_]", "_", trimws(rule))
-
-    send_xlsx_download <- function(violations, rule) {
-      dt <- violations[[rule]]
-      shiny::req(!is.null(dt), nrow(dt) > 0)
-      tmp <- tempfile(fileext = ".xlsx")
-      on.exit(unlink(tmp), add = TRUE)
-      writexl::write_xlsx(as.data.frame(dt), tmp)
-      b64      <- jsonlite::base64_enc(readBin(tmp, "raw", file.info(tmp)$size))
-      filename <- paste0(to_filename(rule), "_violations.xlsx")
-      session$sendCustomMessage("download_blob", list(b64 = b64, filename = filename))
+    # Populate selectInputs with only rules that have violations
+    failing_rules <- function(report) {
+      report$Rule[!is.na(report$`Pass Rate`) & report$`Pass Rate` < 100 & !report$Errors]
     }
 
-    shiny::observeEvent(input$contract_rule_click, {
-      send_xlsx_download(contract_violation, input$contract_rule_click)
+    shiny::observe({
+      rules <- failing_rules(contract_report)
+      shiny::updateSelectInput(session, "contract_rule_select",
+        choices  = if (length(rules) > 0) rules else c("No failing rules" = ""),
+        selected = if (length(rules) > 0) rules[1] else ""
+      )
     })
 
-    shiny::observeEvent(input$personnel_rule_click, {
-      send_xlsx_download(personnel_violation, input$personnel_rule_click)
+    shiny::observe({
+      rules <- failing_rules(personnel_report)
+      shiny::updateSelectInput(session, "personnel_rule_select",
+        choices  = if (length(rules) > 0) rules else c("No failing rules" = ""),
+        selected = if (length(rules) > 0) rules[1] else ""
+      )
     })
+
+    # Helper: sanitise data.frame — strip illegal XML chars from character cols
+    sanitise_df <- function(df) {
+      df <- as.data.frame(df)
+      char_cols <- vapply(df, is.character, logical(1))
+      df[char_cols] <- lapply(df[char_cols], function(x) {
+        gsub("[[:cntrl:]]", "", x)
+      })
+      df
+    }
+
+    to_filename <- function(rule) gsub("[^A-Za-z0-9_]", "_", trimws(rule))
+
+    output$contract_download <- shiny::downloadHandler(
+      filename = function() {
+        paste0(to_filename(shiny::req(input$contract_rule_select)), "_violations.xlsx")
+      },
+      content = function(file) {
+        rule <- shiny::req(input$contract_rule_select)
+        dt   <- contract_violation[[rule]]
+        shiny::req(!is.null(dt), nrow(dt) > 0)
+        writexl::write_xlsx(sanitise_df(dt), file)
+      }
+    )
+
+    output$personnel_download <- shiny::downloadHandler(
+      filename = function() {
+        paste0(to_filename(shiny::req(input$personnel_rule_select)), "_violations.xlsx")
+      },
+      content = function(file) {
+        rule <- shiny::req(input$personnel_rule_select)
+        dt   <- personnel_violation[[rule]]
+        shiny::req(!is.null(dt), nrow(dt) > 0)
+        writexl::write_xlsx(sanitise_df(dt), file)
+      }
+    )
 
   })
 }
