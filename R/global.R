@@ -36,7 +36,7 @@ workforce_data <- govhr::bra_hrmis_personnel |>
   distinct(.data[["ref_date"]], .data[["personnel_id"]], .keep_all = TRUE) |>
   select(all_of(c("ref_date", "personnel_id", "gender", "educat7", "status")))
 
-personnel_data <- govhr::bra_hrmis_contract |>
+wagebill_data <- govhr::bra_hrmis_contract |>
   dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |>
   dplyr::left_join(
     govhr::bra_hrmis_personnel |>

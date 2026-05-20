@@ -2,14 +2,15 @@
 #'
 #' Launches an interactive Shiny dashboard for govhr data visualization and analysis.
 #'
-#' @param personnel_data Data with personnel and contract attributes.
+#' @param workforce_data Data frame with workforce/personnel attributes (headcount).
+#' @param wagebill_data Data frame with contract/salary attributes (wage bill).
 #' @param ... Additional arguments passed to \code{\link[shiny]{shinyApp}}.
 #'
 #' @return A Shiny app object.
 #'
 #' @examples
 #' \dontrun{
-#' run_govhrapp()
+#' run_govhrapp(workforce_data, wagebill_data)
 #' }
 #'
 #' @import shiny
@@ -17,10 +18,11 @@
 #' @import ggplot2
 #' @importFrom thematic thematic_shiny
 #' @importFrom lubridate year
+#' @importFrom scales label_number cut_short_scale
 #' @export
-run_govhrapp <- function(personnel_data, ...) {
+run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   # add path to visual assets (image and css)
-  shiny::addResourcePath("assets", "inst/www")
+  shiny::addResourcePath("assets", system.file("www", package = "govhrapp"))
 
   # ensure ggplot2 and plotly inherit bslib themes
   ggplot2::theme_set(
@@ -57,7 +59,7 @@ run_govhrapp <- function(personnel_data, ...) {
       navbar_bg = "#FFFFFF"
     ) |>
       bslib::bs_add_rules(
-        readLines("inst/www/styles.css")
+        readLines(system.file("www/styles.css", package = "govhrapp"))
       ),
 
     padding = "10px",
@@ -84,7 +86,7 @@ run_govhrapp <- function(personnel_data, ...) {
               style = "max-width: 800px; margin: 0 auto; padding: 2rem 3rem;",
               shiny::tags$h3("Welcome to govhr."),
               shiny::markdown(
-                readLines("inst/markdown/home.md")
+                readLines(system.file("markdown/home.md", package = "govhrapp"))
               )
             )
           )
@@ -93,21 +95,29 @@ run_govhrapp <- function(personnel_data, ...) {
       )
     ),
 
-    # panel 2: wage bill
+    # panel 2: overview
     bslib::nav_panel(
-      "Wage Bill",
-      icon = shiny::icon("money-bill"),
-      wagebill_ui("wagebill", personnel_data)
+      "Overview",
+      icon = shiny::icon("gauge"),
+      overview_ui("overview", workforce_data, wagebill_data)
     ),
 
     # panel 3: workforce planning
     bslib::nav_panel(
       "Workforce",
       icon = shiny::icon("person-walking"),
-      workforce_ui("workforce", personnel_data)
+      workforce_ui("workforce", workforce_data)
     ),
 
-    # panel 4: code
+
+    # panel 4: wage bill
+    bslib::nav_panel(
+      "Wage Bill",
+      icon = shiny::icon("money-bill"),
+      wagebill_ui("wagebill", wagebill_data)
+    ),
+
+    # panel 5: code
     nav_menu(
       title = "Code",
       icon = shiny::icon("github"),
@@ -129,8 +139,9 @@ run_govhrapp <- function(personnel_data, ...) {
   )
 
   server <- function(input, output, session) {
-    wagebill_server("wagebill", personnel_data)
-    workforce_server("workforce", personnel_data)
+    overview_server("overview", workforce_data, wagebill_data)
+    wagebill_server("wagebill", wagebill_data)
+    workforce_server("workforce", workforce_data)
   }
 
   shiny::shinyApp(ui, server, ...)

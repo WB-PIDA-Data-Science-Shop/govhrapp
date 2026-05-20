@@ -1,4 +1,4 @@
-- How has the total public sector workforce evolved over time?
+- How has the total public sector wage bill evolved over time?
 - Which establishments or sectors have experienced the most significant growth or decline?
-- Are there differences in workforce composition across contract types, occupations, or demographic groups?
-- What are the recent hiring or attrition trends across different segments of the public sector?
+- Are there differences in compensation across contract types, occupations, or demographic characteristics such as gender?
+- What is the relative share of base salaries and allowances in total compensation?

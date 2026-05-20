@@ -57,6 +57,11 @@ workforce_ui <- function(id, workforce_data) {
       choices = workforce_group_choices
     ),
     shiny::uiOutput(shiny::NS(id, "group_filter_ui")),
+    shinyWidgets::materialSwitch(
+      shiny::NS(id, "toggle_growth"),
+      label = "Switch to baseline index",
+      value = FALSE
+    ),
     shiny::actionButton(
       shiny::NS(id, "apply_btn"),
       "Apply selection",
@@ -112,7 +117,7 @@ workforce_ui <- function(id, workforce_data) {
       ),
       bslib::card_body(
         shiny::markdown(
-          readLines("inst/markdown/workforce.md")
+          readLines(system.file("markdown/workforce.md", package = "govhrapp"))
         )
       )
     ),
@@ -121,7 +126,7 @@ workforce_ui <- function(id, workforce_data) {
         title = "Guidance Questions",
         icon = shiny::icon("question-circle"),
         shiny::markdown(
-          readLines("inst/markdown/workforce_questions.md")
+          readLines(system.file("markdown/workforce_questions.md", package = "govhrapp"))
         )
       ),
       open = FALSE
@@ -140,11 +145,6 @@ workforce_ui <- function(id, workforce_data) {
                 bsicons::bs_icon("info-circle"),
                 "Headcount trends over time. Choosing a group will add new trend lines, by group."
               )
-            ),
-            shinyWidgets::materialSwitch(
-              shiny::NS(id, "toggle_growth"),
-              label = "Switch to baseline index",
-              value = FALSE
             ),
             plotly::plotlyOutput(NS(id, "workforce_panel")),
             min_height = "350px"
@@ -329,9 +329,6 @@ workforce_server <- function(id, workforce_data) {
         ) +
         geom_point() +
         geom_line() +
-        scale_y_continuous(
-          labels = scales::label_number(scale_cut = scales::cut_short_scale())
-        ) +
         xlab("Time")
 
       if (input$workforce_group != "ref_date") {
@@ -347,7 +344,10 @@ workforce_server <- function(id, workforce_data) {
 
       if (input$toggle_growth) {
         plot <- plot +
-          ylab("Growth Rate (Base = 100%)") +
+          scale_y_continuous(
+            labels = scales::label_number(accuracy = 0.1)
+          ) +
+          ylab("Baseline index (first period = 100)") +
           geom_hline(
             yintercept = 100,
             linetype = "dashed",
@@ -355,6 +355,9 @@ workforce_server <- function(id, workforce_data) {
           )
       } else {
         plot <- plot +
+          scale_y_continuous(
+            labels = scales::label_number(scale_cut = scales::cut_short_scale())
+          ) +
           ylab("Headcount")
       }
 

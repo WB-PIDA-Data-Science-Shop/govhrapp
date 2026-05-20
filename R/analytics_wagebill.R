@@ -99,6 +99,11 @@ wagebill_ui <- function(id, wagebill_data) {
               choices = wagebill_group_choices
             ),
             shiny::uiOutput(shiny::NS(id, "group_filter_ui")),
+            shinyWidgets::materialSwitch(
+              shiny::NS(id, "toggle_growth"),
+              label = "Switch to baseline index",
+              value = FALSE
+            ),
             shiny::actionButton(
               shiny::NS(id, "apply_btn"),
               "Apply selection",
@@ -118,11 +123,6 @@ wagebill_ui <- function(id, wagebill_data) {
                 bsicons::bs_icon("info-circle"),
                 "Wage bill total, by year. Choosing a group will add new totals, by group."
               )
-            ),
-            shinyWidgets::materialSwitch(
-              shiny::NS(id, "toggle_growth"),
-              label = "Switch to baseline index",
-              value = FALSE
             ),
             plotly::plotlyOutput(shiny::NS(id, "wagebill_panel")),
             min_height = "350px"
@@ -375,9 +375,6 @@ wagebill_server <- function(id, wagebill_data) {
         ) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
-        ggplot2::scale_y_continuous(
-          labels = scales::label_number(scale_cut = scales::cut_short_scale())
-        ) +
         ggplot2::xlab("Time")
 
       if (input$wagebill_group != "ref_date") {
@@ -396,7 +393,10 @@ wagebill_server <- function(id, wagebill_data) {
 
       if (input$toggle_growth) {
         plot <- plot +
-          ggplot2::ylab("Growth Rate (Base = 100%)") +
+          ggplot2::scale_y_continuous(
+            labels = scales::label_number(accuracy = 0.1)
+          ) +
+          ggplot2::ylab("Baseline index (first period = 100)") +
           ggplot2::geom_hline(
             yintercept = 100,
             linetype = "dashed",
@@ -404,6 +404,9 @@ wagebill_server <- function(id, wagebill_data) {
           )
       } else {
         plot <- plot +
+          ggplot2::scale_y_continuous(
+            labels = scales::label_number(scale_cut = scales::cut_short_scale())
+          ) +
           ggplot2::ylab("Wage Bill")
       }
 
