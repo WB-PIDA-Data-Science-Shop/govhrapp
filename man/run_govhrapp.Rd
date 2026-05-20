@@ -4,10 +4,12 @@
 \alias{run_govhrapp}
 \title{Run the govhr Shiny Dashboard Application}
 \usage{
-run_govhrapp(personnel_data, ...)
+run_govhrapp(workforce_data, wagebill_data, ...)
 }
 \arguments{
-\item{personnel_data}{Data with personnel and contract attributes.}
+\item{workforce_data}{Data frame with workforce/personnel attributes (headcount).}
+
+\item{wagebill_data}{Data frame with contract/salary attributes (wage bill).}
 
 \item{...}{Additional arguments passed to \code{\link[shiny]{shinyApp}}.}
 }
@@ -19,7 +21,7 @@ Launches an interactive Shiny dashboard for govhr data visualization and analysi
 }
 \examples{
 \dontrun{
-run_govhrapp()
+run_govhrapp(workforce_data, wagebill_data)
 }
 
 }
