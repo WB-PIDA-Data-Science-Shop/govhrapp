@@ -217,7 +217,7 @@ workforce_ui <- function(id, workforce_data) {
 #' @importFrom dplyr filter mutate arrange group_by ungroup summarise across all_of first last n_distinct right_join
 #' @importFrom lubridate year years ymd
 #' @importFrom rlang :=
-#' @importFrom govhr fastcount detect_personnel_event
+#' @importFrom govhr fastcount complete_dates detect_personnel_event
 #' @importFrom ggplot2 ggplot aes geom_point geom_line geom_col geom_hline geom_vline scale_y_continuous scale_x_continuous scale_y_discrete scale_color_manual guide_axis labs xlab ylab
 #' @importFrom grDevices colorRampPalette
 #' @importFrom plotly ggplotly
@@ -618,9 +618,8 @@ workforce_server <- function(id, workforce_data) {
 #' run_workforceapp(workforce_data = my_data)
 #' }
 #'
-#' @import shiny
-#' @import bslib
-#' @import ggplot2
+#' @importFrom shiny shinyApp
+#' @importFrom bslib page_sidebar sidebar
 #' @importFrom plotly plotlyOutput renderPlotly ggplotly
 #' @export
 run_workforceapp <- function(

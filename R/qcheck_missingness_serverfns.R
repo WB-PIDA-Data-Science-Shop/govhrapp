@@ -3,283 +3,210 @@
 #' Server logic for the Missingness section, processing and visualizing missing data patterns.
 #'
 #' @param id Character string. The module namespace ID.
-#' @param dynamicqc_obj A dynamicqc object created by \code{compute_dynamicqc()}.
+#' @param qc_obj A quality control object from \code{govhr::compute_qualitycontrol()}.
 #'
 #' @return None. Called for side effects (renders Shiny outputs).
 #'
-#' @importFrom shiny moduleServer
-#' @importFrom data.table data.table copy setorder
-#' @importFrom highcharter renderHighchart highchart hc_chart hc_xAxis hc_yAxis hc_add_series hc_title hc_subtitle hc_tooltip hc_legend hcaes hc_colorAxis
-#' @importFrom scales percent_format
+#' @importFrom shiny moduleServer req observe observeEvent updateSelectInput renderUI
+#' @importFrom data.table copy
+#' @importFrom stats setNames
+#' @importFrom highcharter renderHighchart highchart hc_chart hc_xAxis hc_yAxis hc_add_series hc_title hc_subtitle hc_tooltip hc_colorAxis hc_legend
 #'
 #' @keywords internal
-missingness_server <- function(id, dynamicqc_obj) {
-  
+missingness_server <- function(id, qc_obj) {
+
   shiny::moduleServer(id, function(input, output, session) {
-    
-    # Extract missingness data
-    miss_obj <- dynamicqc_obj$qc_obj$missingness
-    
-    # Overall Missingness Plot
-    output$overall_plot <- highcharter::renderHighchart({
-      overall_dt <- data.table::copy(miss_obj$overall)
-      
-      # Filter to only show variables with missing data
-      plot_dt <- overall_dt[pct_missing > 0]
-      
-      if (nrow(plot_dt) == 0) {
-        return(NULL)
-      }
-      
-      # Sort by missingness
-      data.table::setorder(plot_dt, -pct_missing)
-      
+
+    overall_dt <- qc_obj$missingness$overall
+    group_dt   <- qc_obj$missingness$group
+
+    # --- Populate module choices ---
+    shiny::observe({
+      modules <- sort(unique(overall_dt$module))
+      labels  <- paste0(toupper(substr(modules, 1, 1)), substring(modules, 2))
+      shiny::updateSelectInput(session, "module",
+                               choices  = stats::setNames(modules, labels),
+                               selected = modules[1])
+    })
+
+    # --- Update group_var choices when module changes ---
+    shiny::observeEvent(input$module, {
+      req(input$module)
+      grp <- unique(group_dt[group_dt$module == input$module,
+                              c("group_var", "group_label")])
+      grp <- grp[order(grp$group_var), ]
+      shiny::updateSelectInput(session, "group_var",
+                               choices  = stats::setNames(grp$group_var,
+                                                          grp$group_label),
+                               selected = grp$group_var[1])
+    })
+
+    # --- Card 1: Overall missingness bar chart ---
+    output$overall_bar <- highcharter::renderHighchart({
+      shiny::req(input$module)
+
+      plot_dt <- overall_dt[overall_dt$module == input$module & overall_dt$pct_missing > 0, ]
+      plot_dt <- plot_dt[order(-plot_dt$pct_missing), ]
+
+      if (nrow(plot_dt) == 0) return(NULL)
+
+      bar_colors <- ifelse(plot_dt$pct_missing >= 0.5,  "#d32f2f",
+                    ifelse(plot_dt$pct_missing >= 0.2,  "#ff9800", "#4caf50"))
+
       highcharter::highchart() |>
         highcharter::hc_chart(type = "bar") |>
         highcharter::hc_xAxis(
-          categories = plot_dt$variable,
-          title = list(text = "Variable")
+          categories = plot_dt$target_label,
+          title      = list(text = "Field")
         ) |>
         highcharter::hc_yAxis(
-          title = list(text = "Percent Missing"),
+          title  = list(text = "% Missing"),
           labels = list(format = "{value}%"),
-          max = 100
+          max    = 100
         ) |>
         highcharter::hc_add_series(
-          data = plot_dt$pct_missing * 100,
-          name = "Percent Missing",
-          color = "#d32f2f"
+          data = lapply(seq_len(nrow(plot_dt)), function(i) {
+            list(y     = round(plot_dt$pct_missing[i] * 100, 1),
+                 color = bar_colors[i])
+          }),
+          type         = "bar",
+          name         = "Missing",
+          showInLegend = FALSE
         ) |>
-        highcharter::hc_title(text = "Variables with Missing Data") |>
-        highcharter::hc_tooltip(
-          pointFormat = "<b>{point.y:.1f}%</b> missing",
-          valueSuffix = "%"
-        ) |>
-        highcharter::hc_legend(enabled = FALSE)
+        highcharter::hc_title(text = paste0(
+          toupper(substr(input$module, 1, 1)), substring(input$module, 2),
+          " -- Overall Missingness by Field"
+        )) |>
+        highcharter::hc_tooltip(pointFormat = "<b>{point.y:.1f}%</b> missing") |>
+        highcharter::hc_legend(enabled = FALSE) |>
+        add_export_menu()
     })
-    
-    # Missingness by Occupation
-    output$occupation_plot <- highcharter::renderHighchart({
-      miss_occ <- data.table::copy(miss_obj$by_occupation)
-      
-      if (nrow(miss_occ) == 0 || !"occupation_native" %in% names(miss_occ)) {
-        return(NULL)
+
+    # --- Footnote: fields with zero or near-zero missingness ---
+    output$overall_footnote <- shiny::renderUI({
+      shiny::req(input$module)
+
+      all_dt   <- overall_dt[overall_dt$module == input$module, ]
+      zero_dt  <- all_dt[all_dt$pct_missing == 0, ]
+      near_dt  <- all_dt[all_dt$pct_missing > 0 & all_dt$pct_missing < 0.01, ]
+
+      if (nrow(zero_dt) == 0 && nrow(near_dt) == 0) return(NULL)
+
+      parts <- character(0)
+
+      if (nrow(zero_dt) > 0) {
+        field_list <- paste(zero_dt$target_label, collapse = ", ")
+        parts <- c(parts, paste0(
+          "The following fields have no missing records: ", field_list, "."
+        ))
       }
-      
-      # Get top 15 occupations by mean missingness
-      top_occ <- miss_occ[
-        , .(mean_missing = mean(pct_missing)), by = occupation_native
-      ][order(-mean_missing)][1:15]
-      
-      plot_dt <- miss_occ[occupation_native %in% top_occ$occupation_native]
-      
-      # Filter to variables with some missingness
-      plot_dt <- plot_dt[pct_missing > 0]
-      
-      if (nrow(plot_dt) == 0) {
-        return(NULL)
+
+      if (nrow(near_dt) > 0) {
+        near_dt  <- near_dt[order(near_dt$pct_missing), ]
+        snippets <- paste0(
+          near_dt$target_label, " (", format(near_dt$n_missing, big.mark = ","), " missing)"
+        )
+        field_list <- paste(snippets, collapse = "; ")
+        parts <- c(parts, paste0(
+          "The following fields have fewer than 1% missing records and may not be ",
+          "visible on the chart: ", field_list, "."
+        ))
       }
-      
+
+      shiny::p(
+        paste(parts, collapse = " "),
+        style = "font-size:0.85em; color:#555; font-style:italic; margin-top:8px;"
+      )
+    })
+
+    # --- Card 2: Grouped heatmap ---
+    output$missingness_heatmap <- highcharter::renderHighchart({
+      shiny::req(input$module, input$group_var, input$top_n, input$sort_by)
+
+      plot_dt <- data.table::copy(
+        group_dt[group_dt$module    == input$module &
+                 group_dt$group_var == input$group_var, ]
+      )
+      if (nrow(plot_dt) == 0) return(NULL)
+
+      # Aggregate to pick top N group_vals
+      agg <- plot_dt[, .(mean_missing = sum(n_missing) / sum(N)), by = .(group_val)]
+
+      if (input$sort_by == "desc") {
+        agg <- agg[order(-mean_missing)]
+      } else if (input$sort_by == "asc") {
+        agg <- agg[order(mean_missing)]
+      } else {
+        agg <- agg[order(group_val)]
+      }
+
+      top_vals <- agg[seq_len(min(input$top_n, .N))]$group_val
+      plot_dt  <- plot_dt[group_val %in% top_vals]
+
+      # Preserve sort order for x-axis
+      group_vals   <- top_vals[top_vals %in% unique(plot_dt$group_val)]
+      target_labels <- sort(unique(plot_dt$target_label))
+      grp_label    <- plot_dt$group_label[1]
+
+      heatmap_data <- plot_dt[, .(
+        x     = match(group_val,    group_vals)    - 1L,
+        y     = match(target_label, target_labels) - 1L,
+        value = round(pct_missing * 100, 1)
+      )]
+
       highcharter::highchart() |>
         highcharter::hc_chart(type = "heatmap") |>
         highcharter::hc_xAxis(
-          categories = unique(plot_dt$occupation_native),
-          title = list(text = "Occupation")
+          categories = as.character(group_vals),
+          title      = list(text = grp_label)
         ) |>
         highcharter::hc_yAxis(
-          categories = unique(plot_dt$variable),
-          title = list(text = "Variable")
+          categories = as.character(target_labels),
+          title      = list(text = "Field")
         ) |>
         highcharter::hc_add_series(
-          data = plot_dt[, .(
-            x = match(occupation_native, unique(plot_dt$occupation_native)) - 1,
-            y = match(variable, unique(plot_dt$variable)) - 1,
-            value = pct_missing * 100
-          )],
-          type = "heatmap",
-          name = "Missingness",
-          dataLabels = list(enabled = FALSE)
+          data       = heatmap_data,
+          type       = "heatmap",
+          name       = "Missing %",
+          dataLabels = list(
+            enabled = TRUE,
+            format  = "{point.value:.0f}%",
+            style   = list(fontSize = "10px", fontWeight = "normal",
+                           textOutline = "none")
+          )
         ) |>
         highcharter::hc_colorAxis(
-          min = 0,
-          max = 100,
+          min   = 0,
+          max   = 100,
           stops = list(
-            list(0, "#ffffff"),
-            list(0.5, "#ffeb3b"),
-            list(1, "#d32f2f")
+            list(0,    "#FFFFFF"),
+            list(0.25, "#FEF0D9"),
+            list(0.5,  "#FDCC8A"),
+            list(0.75, "#FC8D59"),
+            list(1,    "#D7301F")
           ),
           labels = list(format = "{value}%")
         ) |>
-        highcharter::hc_title(text = "Top 15 Occupations by Missingness") |>
+        highcharter::hc_title(
+          text = paste0("Missingness by ", grp_label)
+        ) |>
+        highcharter::hc_subtitle(
+          text = paste0(
+            "Top ", length(group_vals), " groups -- sorted by ",
+            ifelse(input$sort_by == "desc", "highest",
+            ifelse(input$sort_by == "asc",  "lowest", "alphabetical")),
+            " overall missingness"
+          )
+        ) |>
         highcharter::hc_tooltip(
-          pointFormat = "<b>{point.value:.1f}%</b> missing"
-        )
+          pointFormat = paste0(
+            "<b>", grp_label, ":</b> {point.x}<br>",
+            "<b>Field:</b> {point.y}<br>",
+            "<b>Missing:</b> {point.value:.1f}%"
+          )
+        ) |>
+        add_export_menu()
     })
-    
-    # Missingness by ISCO
-    output$isco_plot <- highcharter::renderHighchart({
-      miss_isco <- data.table::copy(miss_obj$by_isco)
-      
-      if (nrow(miss_isco) == 0 || !"occupation_isconame" %in% names(miss_isco)) {
-        return(NULL)
-      }
-      
-      # Get top 15 ISCO groups by mean missingness
-      top_isco <- miss_isco[
-        , .(mean_missing = mean(pct_missing)), by = occupation_isconame
-      ][order(-mean_missing)][1:15]
-      
-      plot_dt <- miss_isco[occupation_isconame %in% top_isco$occupation_isconame]
-      plot_dt <- plot_dt[pct_missing > 0]
-      
-      if (nrow(plot_dt) == 0) {
-        return(NULL)
-      }
-      
-      highcharter::highchart() |>
-        highcharter::hc_chart(type = "heatmap") |>
-        highcharter::hc_xAxis(
-          categories = unique(plot_dt$occupation_isconame),
-          title = list(text = "ISCO Occupation")
-        ) |>
-        highcharter::hc_yAxis(
-          categories = unique(plot_dt$variable),
-          title = list(text = "Variable")
-        ) |>
-        highcharter::hc_add_series(
-          data = plot_dt[, .(
-            x = match(occupation_isconame, unique(plot_dt$occupation_isconame)) - 1,
-            y = match(variable, unique(plot_dt$variable)) - 1,
-            value = pct_missing * 100
-          )],
-          type = "heatmap",
-          name = "Missingness",
-          dataLabels = list(enabled = FALSE)
-        ) |>
-        highcharter::hc_colorAxis(
-          min = 0,
-          max = 100,
-          stops = list(
-            list(0, "#ffffff"),
-            list(0.5, "#ffeb3b"),
-            list(1, "#d32f2f")
-          ),
-          labels = list(format = "{value}%")
-        ) |>
-        highcharter::hc_title(text = "Top 15 ISCO Groups by Missingness") |>
-        highcharter::hc_tooltip(
-          pointFormat = "<b>{point.value:.1f}%</b> missing"
-        )
-    })
-    
-    # Missingness Heatmap by Reference Date
-    output$ref_date_heatmap <- highcharter::renderHighchart({
-      miss_ref <- data.table::copy(miss_obj$by_ref)
-      
-      if (nrow(miss_ref) == 0 || !"ref_date" %in% names(miss_ref)) {
-        return(NULL)
-      }
-      
-      # Extract year for grouping
-      miss_ref[, year := format(ref_date, "%Y")]
-      
-      # Filter to variables with some missingness
-      plot_dt <- miss_ref[pct_missing > 0]
-      
-      if (nrow(plot_dt) == 0) {
-        return(NULL)
-      }
-      
-      highcharter::highchart() |>
-        highcharter::hc_chart(type = "heatmap") |>
-        highcharter::hc_xAxis(
-          categories = unique(plot_dt$year),
-          title = list(text = "Year")
-        ) |>
-        highcharter::hc_yAxis(
-          categories = unique(plot_dt$variable),
-          title = list(text = "Variable")
-        ) |>
-        highcharter::hc_add_series(
-          data = plot_dt[, .(
-            x = match(year, unique(plot_dt$year)) - 1,
-            y = match(variable, unique(plot_dt$variable)) - 1,
-            value = pct_missing * 100
-          )],
-          type = "heatmap",
-          name = "Missingness",
-          dataLabels = list(enabled = FALSE)
-        ) |>
-        highcharter::hc_colorAxis(
-          min = 0,
-          max = 100,
-          stops = list(
-            list(0, "#ffffff"),
-            list(0.5, "#ffeb3b"),
-            list(1, "#d32f2f")
-          ),
-          labels = list(format = "{value}%")
-        ) |>
-        highcharter::hc_title(text = "Missingness Over Time") |>
-        highcharter::hc_tooltip(
-          pointFormat = "<b>{point.value:.1f}%</b> missing"
-        )
-    })
-    
-    # Missingness by Establishment
-    output$establishment_plot <- highcharter::renderHighchart({
-      miss_est <- data.table::copy(miss_obj$by_est)
-      
-      if (nrow(miss_est) == 0 || !"est_id" %in% names(miss_est)) {
-        return(NULL)
-      }
-      
-      # Get top 15 establishments by mean missingness
-      top_est <- miss_est[
-        , .(mean_missing = mean(pct_missing)), by = est_id
-      ][order(-mean_missing)][1:15]
-      
-      plot_dt <- miss_est[est_id %in% top_est$est_id]
-      plot_dt <- plot_dt[pct_missing > 0]
-      
-      if (nrow(plot_dt) == 0) {
-        return(NULL)
-      }
-      
-      highcharter::highchart() |>
-        highcharter::hc_chart(type = "heatmap") |>
-        highcharter::hc_xAxis(
-          categories = unique(plot_dt$est_id),
-          title = list(text = "Establishment ID")
-        ) |>
-        highcharter::hc_yAxis(
-          categories = unique(plot_dt$variable),
-          title = list(text = "Variable")
-        ) |>
-        highcharter::hc_add_series(
-          data = plot_dt[, .(
-            x = match(est_id, unique(plot_dt$est_id)) - 1,
-            y = match(variable, unique(plot_dt$variable)) - 1,
-            value = pct_missing * 100
-          )],
-          type = "heatmap",
-          name = "Missingness",
-          dataLabels = list(enabled = FALSE)
-        ) |>
-        highcharter::hc_colorAxis(
-          min = 0,
-          max = 100,
-          stops = list(
-            list(0, "#ffffff"),
-            list(0.5, "#ffeb3b"),
-            list(1, "#d32f2f")
-          ),
-          labels = list(format = "{value}%")
-        ) |>
-        highcharter::hc_title(text = "Top 15 Establishments by Missingness") |>
-        highcharter::hc_tooltip(
-          pointFormat = "<b>{point.value:.1f}%</b> missing"
-        )
-    })
+
   })
 }

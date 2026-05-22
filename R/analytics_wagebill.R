@@ -55,7 +55,7 @@ wagebill_ui <- function(id, wagebill_data) {
       ),
       bslib::card_body(
         shiny::markdown(
-          readLines("inst/markdown/wagebill.md")
+          readLines(system.file("markdown/wagebill.md", package = "govhrapp"))
         )
       )
     ),
@@ -64,7 +64,7 @@ wagebill_ui <- function(id, wagebill_data) {
         title = "Guidance Questions",
         icon = shiny::icon("question-circle"),
         shiny::markdown(
-          readLines("inst/markdown/wagebill_questions.md")
+          readLines(system.file("markdown/wagebill_questions.md", package = "govhrapp"))
         )
       ),
       open = FALSE
@@ -236,7 +236,7 @@ wagebill_ui <- function(id, wagebill_data) {
 #' @importFrom plotly renderPlotly ggplotly plot_ly layout animation_opts animation_slider
 #' @importFrom dplyr filter mutate arrange group_by ungroup across all_of first last pull left_join summarise n_distinct
 #' @importFrom lubridate year years
-#' @importFrom govhr compute_fastsummary convert_constant_ppp
+#' @importFrom govhr compute_fastsummary complete_dates convert_constant_ppp
 #' @importFrom ggplot2 ggplot aes geom_point geom_line geom_col geom_hline geom_vline scale_y_continuous scale_x_continuous scale_y_discrete scale_color_manual guide_axis labs xlab ylab
 #' @importFrom grDevices colorRampPalette
 #' @importFrom stats reorder
@@ -772,9 +772,8 @@ wagebill_server <- function(id, wagebill_data) {
 #' run_wagebillapp(wagebill_data = my_data)
 #' }
 #'
-#' @import shiny
-#' @import bslib
-#' @import ggplot2
+#' @importFrom shiny shinyApp
+#' @importFrom bslib page_sidebar sidebar
 #' @importFrom plotly plotlyOutput renderPlotly ggplotly
 #' @export
 run_wagebillapp <- function(

@@ -5,300 +5,195 @@
 #' Volatility Server Module
 #'
 #' Server logic for the Volatility Analysis section, processing and visualizing
-#' temporal volatility in salary, contract counts, and work hours.
+#' temporal volatility in salary, headcount, and other HR metrics.
 #'
 #' @param id Character string. The module namespace ID.
-#' @param dynamicqc_obj A dynamicqc object created by \code{compute_dynamicqc()}.
+#' @param qc_obj A quality control object from \code{govhr::compute_qualitycontrol()}.
 #'
 #' @return None. Called for side effects (renders Shiny outputs).
 #'
-#' @importFrom shiny moduleServer updateSelectInput observeEvent
-#' @importFrom data.table data.table copy setorder
-#' @importFrom highcharter renderHighchart highchart hc_chart hc_xAxis hc_yAxis hc_add_series hc_title hc_subtitle hc_tooltip hc_legend hc_colorAxis
+#' @importFrom shiny moduleServer observe observeEvent updateSelectInput req
+#' @importFrom data.table copy
+#' @importFrom stats setNames
+#' @importFrom highcharter renderHighchart highchart hc_chart hc_xAxis hc_yAxis hc_add_series hc_title hc_tooltip hc_colorAxis hc_legend
 #'
 #' @keywords internal
-volatility_server <- function(id, dynamicqc_obj) {
-  
+volatility_server <- function(id, qc_obj) {
+
   shiny::moduleServer(id, function(input, output, session) {
-    
-    # Extract volatility data
-    vol_obj <- dynamicqc_obj$qc_obj$volatility
-    
-    # Update salary indicator choices dynamically
+
+    vol_contract  <- qc_obj$volatility$contract
+    vol_personnel <- qc_obj$volatility$personnel
+
+    # Human-readable labels for stat_type values
+    stat_type_labels <- c(
+      salary_vol         = "Salary Volatility",
+      ctrcount_vol       = "Contract Count Volatility",
+      workhours_vol      = "Work Hours Volatility",
+      occ_diversity_vol  = "Occupation Diversity Volatility",
+      ctype_diversity_vol = "Contract Type Diversity Volatility"
+    )
+
+    # -------------------------------------------------------------------------
+    # CONTRACT: populate stat_type choices on load
+    # -------------------------------------------------------------------------
     shiny::observe({
-      if (!is.null(vol_obj$salary_vol)) {
-        indicators <- unique(vol_obj$salary_vol$indicator)
-        indicators <- indicators[!is.na(indicators)]
-        
-        shiny::updateSelectInput(
-          session,
-          "salary_indicator",
-          choices = as.character(indicators),
-          selected = if (length(indicators) > 0) as.character(indicators[1]) else NULL
-        )
-      }
+      shiny::req(!is.null(vol_contract) && nrow(vol_contract) > 0)
+      types   <- unique(vol_contract$stat_type)
+      labels  <- ifelse(types %in% names(stat_type_labels), unname(stat_type_labels[types]), types)
+      choices <- stats::setNames(types, labels)
+      shiny::updateSelectInput(session, "contract_stat_type", choices = choices)
     })
-    
-    # Helper function to prepare top volatile entities
-    prepare_top_volatile <- function(vol_dt, vol_col, id_col, top_n, indicator_filter = NULL) {
-      
+
+    # CONTRACT: cascade group_var from stat_type
+    shiny::observeEvent(input$contract_stat_type, {
+      shiny::req(input$contract_stat_type)
+      sub_dt  <- vol_contract[stat_type == input$contract_stat_type]
+      grp_dt  <- unique(sub_dt[, .(group_var, group_var_label)])
+      labels  <- ifelse(!is.na(grp_dt$group_var_label), grp_dt$group_var_label, grp_dt$group_var)
+      choices <- stats::setNames(grp_dt$group_var, labels)
+      shiny::updateSelectInput(session, "contract_group_var", choices = choices)
+    })
+
+    # CONTRACT: cascade indicator from stat_type (only relevant for salary_vol)
+    shiny::observeEvent(input$contract_stat_type, {
+      shiny::req(input$contract_stat_type)
+      sub_dt  <- vol_contract[stat_type == input$contract_stat_type]
+      ind_dt  <- unique(sub_dt[, .(indicator, indicator_label)])
+      labels  <- ifelse(!is.na(ind_dt$indicator_label), ind_dt$indicator_label, as.character(ind_dt$indicator))
+      choices <- stats::setNames(as.character(ind_dt$indicator), labels)
+      shiny::updateSelectInput(session, "contract_indicator", choices = choices)
+    })
+
+    # -------------------------------------------------------------------------
+    # PERSONNEL: populate group_var choices on load
+    # -------------------------------------------------------------------------
+    shiny::observe({
+      shiny::req(!is.null(vol_personnel) && nrow(vol_personnel) > 0)
+      grp_dt  <- unique(vol_personnel[, .(group_var, group_var_label)])
+      labels  <- ifelse(!is.na(grp_dt$group_var_label), grp_dt$group_var_label, grp_dt$group_var)
+      choices <- stats::setNames(grp_dt$group_var, labels)
+      shiny::updateSelectInput(session, "personnel_group_var", choices = choices)
+    })
+
+    # -------------------------------------------------------------------------
+    # Helper: top N entities by max absolute vol_stat
+    # -------------------------------------------------------------------------
+    prepare_top_volatile <- function(vol_dt, top_n) {
+      vol_dt <- vol_dt[!is.na(vol_stat) & !is.nan(vol_stat) & is.finite(vol_stat)]
       if (nrow(vol_dt) == 0) return(NULL)
-      
-      # Filter by indicator if specified
-      if (!is.null(indicator_filter)) {
-        vol_dt <- vol_dt[indicator == indicator_filter]
-      }
-      
-      # Remove rows where volatility column is NA
-      vol_dt <- vol_dt[!is.na(get(vol_col))]
-      
-      if (nrow(vol_dt) == 0) return(NULL)
-      
-      # Calculate max volatility per entity
-      agg_col <- paste0("max_", vol_col)
-      vol_dt[, (agg_col) := max(get(vol_col), na.rm = TRUE), by = id_col]
-      
-      # Get top N entities
-      top_ids <- vol_dt[
-        order(-get(agg_col))
-      ][
-        !duplicated(get(id_col))
-      ][
-        1:min(top_n, .N)
-      ][[id_col]]
-      
-      # Filter to top entities
-      result <- vol_dt[get(id_col) %in% top_ids]
-      
-      return(result)
+      vol_dt[, max_vol := max(abs(vol_stat), na.rm = TRUE), by = group_val]
+      top_ids <- vol_dt[order(-max_vol)][!duplicated(group_val)][seq_len(min(top_n, .N))]$group_val
+      vol_dt[group_val %in% top_ids]
     }
-    
-    # Salary Volatility Heatmap
-    output$salary_heatmap <- highcharter::renderHighchart({
-      
-      req(input$salary_indicator, input$salary_top_n)
-      
-      salary_vol <- data.table::copy(vol_obj$salary_vol)
-      
-      if (nrow(salary_vol) == 0) {
-        return(NULL)
-      }
-      
-      # Prepare top contracts
-      plot_dt <- prepare_top_volatile(
-        vol_dt = salary_vol,
-        vol_col = "rolling_cv",
-        id_col = "contract_id",
-        top_n = input$salary_top_n,
-        indicator_filter = input$salary_indicator
-      )
-      
-      if (is.null(plot_dt) || nrow(plot_dt) == 0) {
-        return(NULL)
-      }
-      
-      # Remove NA values
-      plot_dt <- plot_dt[!is.na(rolling_cv)]
-      
-      if (nrow(plot_dt) == 0) {
-        return(NULL)
-      }
-      
-      # Create categories
-      contract_ids <- unique(plot_dt$contract_id)
-      ref_dates <- unique(plot_dt$ref_date)
-      
-      # Prepare data for heatmap
+
+    # -------------------------------------------------------------------------
+    # Helper: build heatmap
+    # -------------------------------------------------------------------------
+    build_heatmap <- function(plot_dt, title_text) {
+      group_vals  <- unique(plot_dt$group_val)
+      ref_dates   <- sort(unique(plot_dt$ref_date))
+      group_label <- plot_dt$group_var_label[1]
+
       heatmap_data <- plot_dt[, .(
-        x = match(as.character(ref_date), as.character(sort(ref_dates))) - 1,
-        y = match(contract_id, contract_ids) - 1,
-        value = rolling_cv
+        x     = match(as.character(ref_date), as.character(ref_dates)) - 1L,
+        y     = match(group_val, group_vals) - 1L,
+        value = round(vol_stat * 100, 2)
       )]
-      
+
       highcharter::highchart() |>
         highcharter::hc_chart(type = "heatmap") |>
         highcharter::hc_xAxis(
-          categories = as.character(sort(ref_dates)),
-          title = list(text = "Reference Date")
+          categories = as.character(ref_dates),
+          title      = list(text = "Reference Date")
         ) |>
         highcharter::hc_yAxis(
-          categories = contract_ids,
-          title = list(text = "Contract ID")
+          categories = group_vals,
+          title      = list(text = group_label)
         ) |>
         highcharter::hc_add_series(
-          data = heatmap_data,
-          type = "heatmap",
-          name = "Rolling CV",
+          data       = heatmap_data,
+          type       = "heatmap",
+          name       = "% Change",
           dataLabels = list(enabled = FALSE)
         ) |>
         highcharter::hc_colorAxis(
-          min = 0,
+          min   = 0,
           stops = list(
-            list(0, "#440154"),
-            list(0.25, "#31688e"),
-            list(0.5, "#35b779"),
-            list(0.75, "#fde724"),
-            list(1, "#fde724")
+            list(0,    "#000004"),
+            list(0.25, "#56106E"),
+            list(0.5,  "#BB3754"),
+            list(0.75, "#F98C0A"),
+            list(1,    "#FCFFA4")
           )
         ) |>
-        highcharter::hc_title(
-          text = paste0("Top ", input$salary_top_n, " Contracts by Salary Volatility: ", input$salary_indicator)
-        ) |>
+        highcharter::hc_title(text = title_text) |>
         highcharter::hc_tooltip(
-          pointFormat = "Contract: <b>{point.y}</b><br>Date: <b>{point.x}</b><br>CV: <b>{point.value:.3f}</b>"
+          pointFormat = paste0(
+            group_label, ": <b>{point.yCategory}</b><br>",
+            "Date: <b>{point.xCategory}</b><br>",
+            "% Change: <b>{point.value:.1f}%</b>"
+          )
         ) |>
-        highcharter::hc_legend(enabled = TRUE)
-    })
-    
-    # Contract Count Volatility Heatmap
-    output$contract_count_heatmap <- highcharter::renderHighchart({
-      
-      req(input$contract_count_top_n)
-      
-      ctrcount_vol <- data.table::copy(vol_obj$ctrcount_vol)
-      
-      if (nrow(ctrcount_vol) == 0) {
-        return(NULL)
+        highcharter::hc_legend(enabled = TRUE) |>
+        add_export_menu()
+    }
+
+    # -------------------------------------------------------------------------
+    # CONTRACT heatmap
+    # -------------------------------------------------------------------------
+    output$contract_heatmap <- highcharter::renderHighchart({
+      shiny::req(input$contract_stat_type, input$contract_group_var, input$contract_top_n)
+
+      plot_dt <- data.table::copy(vol_contract)
+
+      # Filter to selected stat_type and group_var
+      plot_dt <- plot_dt[
+        stat_type == input$contract_stat_type &
+        group_var == input$contract_group_var
+      ]
+
+      # For salary_vol (multiple indicators), further filter to selected indicator
+      if (input$contract_stat_type == "salary_vol") {
+        shiny::req(input$contract_indicator)
+        plot_dt <- plot_dt[as.character(indicator) == input$contract_indicator]
       }
-      
-      # Prepare top establishments
-      plot_dt <- prepare_top_volatile(
-        vol_dt = ctrcount_vol,
-        vol_col = "pct_change",
-        id_col = "est_id",
-        top_n = input$contract_count_top_n
+
+      plot_dt <- prepare_top_volatile(plot_dt, top_n = input$contract_top_n)
+      if (is.null(plot_dt) || nrow(plot_dt) == 0) return(NULL)
+
+      stat_label <- stat_type_labels[input$contract_stat_type]
+      grp_label  <- plot_dt$group_var_label[1]
+      ind_label  <- if (input$contract_stat_type == "salary_vol") {
+        paste0(" -- ", plot_dt$indicator_label[1])
+      } else ""
+
+      build_heatmap(
+        plot_dt,
+        paste0("Top ", input$contract_top_n, " ", grp_label, "s by ",
+               stat_label, ind_label)
       )
-      
-      if (is.null(plot_dt) || nrow(plot_dt) == 0) {
-        return(NULL)
-      }
-      
-      # Remove NA values
-      plot_dt <- plot_dt[!is.na(pct_change)]
-      
-      if (nrow(plot_dt) == 0) {
-        return(NULL)
-      }
-      
-      # Create categories
-      est_ids <- unique(plot_dt$est_id)
-      ref_dates <- unique(plot_dt$ref_date)
-      
-      # Prepare data for heatmap
-      heatmap_data <- plot_dt[, .(
-        x = match(as.character(ref_date), as.character(sort(ref_dates))) - 1,
-        y = match(est_id, est_ids) - 1,
-        value = pct_change
-      )]
-      
-      highcharter::highchart() |>
-        highcharter::hc_chart(type = "heatmap") |>
-        highcharter::hc_xAxis(
-          categories = as.character(sort(ref_dates)),
-          title = list(text = "Reference Date")
-        ) |>
-        highcharter::hc_yAxis(
-          categories = est_ids,
-          title = list(text = "Establishment ID")
-        ) |>
-        highcharter::hc_add_series(
-          data = heatmap_data,
-          type = "heatmap",
-          name = "% Change",
-          dataLabels = list(enabled = FALSE)
-        ) |>
-        highcharter::hc_colorAxis(
-          stops = list(
-            list(0, "#440154"),
-            list(0.25, "#31688e"),
-            list(0.5, "#35b779"),
-            list(0.75, "#fde724"),
-            list(1, "#fde724")
-          )
-        ) |>
-        highcharter::hc_title(
-          text = paste0("Top ", input$contract_count_top_n, " Establishments by Contract Count Volatility")
-        ) |>
-        highcharter::hc_tooltip(
-          pointFormat = "Establishment: <b>{point.y}</b><br>Date: <b>{point.x}</b><br>% Change: <b>{point.value:.1f}%</b>"
-        ) |>
-        highcharter::hc_legend(enabled = TRUE)
     })
-    
-    # Work Hours Volatility Heatmap
-    output$workhours_heatmap <- highcharter::renderHighchart({
-      
-      req(input$workhours_top_n)
-      
-      workhours_vol <- data.table::copy(vol_obj$workhours_vol)
-      
-      if (nrow(workhours_vol) == 0) {
-        return(NULL)
-      }
-      
-      # Prepare top contracts
-      plot_dt <- prepare_top_volatile(
-        vol_dt = workhours_vol,
-        vol_col = "rolling_cv",
-        id_col = "contract_id",
-        top_n = input$workhours_top_n
+
+    # -------------------------------------------------------------------------
+    # PERSONNEL heatmap
+    # -------------------------------------------------------------------------
+    output$personnel_heatmap <- highcharter::renderHighchart({
+      shiny::req(input$personnel_group_var, input$personnel_top_n)
+
+      plot_dt <- data.table::copy(vol_personnel)
+      plot_dt <- plot_dt[group_var == input$personnel_group_var]
+
+      plot_dt <- prepare_top_volatile(plot_dt, top_n = input$personnel_top_n)
+      if (is.null(plot_dt) || nrow(plot_dt) == 0) return(NULL)
+
+      grp_label <- plot_dt$group_var_label[1]
+
+      build_heatmap(
+        plot_dt,
+        paste0("Top ", input$personnel_top_n, " ", grp_label, "s by Headcount Volatility")
       )
-      
-      if (is.null(plot_dt) || nrow(plot_dt) == 0) {
-        return(NULL)
-      }
-      
-      # Remove NA values
-      plot_dt <- plot_dt[!is.na(rolling_cv)]
-      
-      if (nrow(plot_dt) == 0) {
-        return(NULL)
-      }
-      
-      # Create categories
-      contract_ids <- unique(plot_dt$contract_id)
-      ref_dates <- unique(plot_dt$ref_date)
-      
-      # Prepare data for heatmap
-      heatmap_data <- plot_dt[, .(
-        x = match(as.character(ref_date), as.character(sort(ref_dates))) - 1,
-        y = match(contract_id, contract_ids) - 1,
-        value = rolling_cv
-      )]
-      
-      highcharter::highchart() |>
-        highcharter::hc_chart(type = "heatmap") |>
-        highcharter::hc_xAxis(
-          categories = as.character(sort(ref_dates)),
-          title = list(text = "Reference Date")
-        ) |>
-        highcharter::hc_yAxis(
-          categories = contract_ids,
-          title = list(text = "Contract ID")
-        ) |>
-        highcharter::hc_add_series(
-          data = heatmap_data,
-          type = "heatmap",
-          name = "Rolling CV",
-          dataLabels = list(enabled = FALSE)
-        ) |>
-        highcharter::hc_colorAxis(
-          min = 0,
-          stops = list(
-            list(0, "#440154"),
-            list(0.25, "#31688e"),
-            list(0.5, "#35b779"),
-            list(0.75, "#fde724"),
-            list(1, "#fde724")
-          )
-        ) |>
-        highcharter::hc_title(
-          text = paste0("Top ", input$workhours_top_n, " Contracts by Work Hours Volatility")
-        ) |>
-        highcharter::hc_tooltip(
-          pointFormat = "Contract: <b>{point.y}</b><br>Date: <b>{point.x}</b><br>CV: <b>{point.value:.3f}</b>"
-        ) |>
-        highcharter::hc_legend(enabled = TRUE)
     })
+
   })
 }

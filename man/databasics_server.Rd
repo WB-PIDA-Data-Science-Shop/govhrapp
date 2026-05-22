@@ -4,18 +4,18 @@
 \alias{databasics_server}
 \title{Data Basics Server Module}
 \usage{
-databasics_server(id, dynamicqc_obj)
+databasics_server(id, qc_obj)
 }
 \arguments{
 \item{id}{Character string. The module namespace ID.}
 
-\item{dynamicqc_obj}{A dynamicqc object created by \code{compute_dynamicqc()}.}
+\item{qc_obj}{A quality control object created by \code{govhr::compute_qualitycontrol()}.}
 }
 \value{
 None. Called for side effects (renders Shiny outputs).
 }
 \description{
 Server logic for the Data Basics section, processing quality control diagnostics
-from the dynamicqc_obj object and rendering tables and visualizations.
+from the qc_obj object and rendering tables and visualizations.
 }
 \keyword{internal}
