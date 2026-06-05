@@ -5,7 +5,7 @@
 #' @param id Module id.
 #' @param workforce_data Data frame with workforce data.
 #'
-#' @importFrom bslib layout_columns card card_header card_body accordion accordion_panel layout_sidebar sidebar tooltip
+#' @importFrom bslib layout_columns card card_header card_body accordion accordion_panel layout_sidebar sidebar tooltip navset_tab nav_panel
 #' @importFrom bsicons bs_icon
 #' @importFrom shiny markdown icon NS selectInput actionButton uiOutput
 #' @importFrom shinyWidgets numericRangeInput materialSwitch pickerInput
@@ -65,8 +65,7 @@ workforce_ui <- function(id, workforce_data) {
     shiny::actionButton(
       shiny::NS(id, "apply_btn"),
       "Apply selection",
-      icon = shiny::icon("play"),
-      class = "btn-primary w-100 mt-2"
+      icon = shiny::icon("play")
     ),
     shiny::downloadButton(
       shiny::NS(id, "download_report"),
@@ -94,12 +93,6 @@ workforce_ui <- function(id, workforce_data) {
       choices = workforce_group_choices
     ),
     shiny::uiOutput(shiny::NS(id, "group_filter_ui_movement")),
-    shiny::actionButton(
-      shiny::NS(id, "apply_btn"),
-      "Apply selection",
-      icon = shiny::icon("play"),
-      class = "btn-primary w-100 mt-2"
-    ),
     shiny::selectInput(
       shiny::NS(id, "movement_type"),
       "Movement type:",
@@ -107,6 +100,12 @@ workforce_ui <- function(id, workforce_data) {
         "Hires" = "hire",
         "Separations" = "fire"
       )
+    ),
+    shiny::actionButton(
+      shiny::NS(id, "apply_btn"),
+      "Apply selection",
+      icon = shiny::icon("play"),
+      class = "btn-primary w-100 mt-2"
     )
   )
 
@@ -131,11 +130,11 @@ workforce_ui <- function(id, workforce_data) {
       ),
       open = FALSE
     ),
-    bslib::page_navbar(
+    bslib::navset_underline(
       bslib::nav_panel(
         title = "Overview",
         bslib::layout_sidebar(
-          title = "Workforce: Headcount",
+          fillable = FALSE,
           sidebar = sidebar_default,
           bslib::card(
             full_screen = TRUE,
@@ -146,8 +145,7 @@ workforce_ui <- function(id, workforce_data) {
                 "Headcount trends over time. Choosing a group will add new trend lines, by group."
               )
             ),
-            plotly::plotlyOutput(NS(id, "workforce_panel")),
-            min_height = "350px"
+            plotly::plotlyOutput(NS(id, "workforce_panel"), height = "350px")
           ),
           layout_columns(
             col_widths = c(6, 6),
@@ -183,7 +181,7 @@ workforce_ui <- function(id, workforce_data) {
       bslib::nav_panel(
         title = "Movements",
         bslib::layout_sidebar(
-          title = "Workforce: Movements",
+          fillable = FALSE,
           sidebar = sidebar_movement,
           bslib::card(
             full_screen = TRUE,
@@ -194,13 +192,12 @@ workforce_ui <- function(id, workforce_data) {
                 "Personnel movements (hires or separations) over time, showing the share of workforce affected."
               )
             ),
-            plotly::plotlyOutput(NS(id, "workforce_movements")),
-            min_height = "350px"
+            plotly::plotlyOutput(NS(id, "workforce_movements"), height = "350px")
           )
         )
       )
     ),
-    col_widths = c(12, 12)
+    col_widths = c(12, 12, 12)
   )
 }
 

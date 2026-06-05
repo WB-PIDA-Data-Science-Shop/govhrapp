@@ -33,7 +33,7 @@ overview_ui <- function(id, workforce_data, wagebill_data) {
         title = shiny::uiOutput(ns("vb_wagebill_label")),
         value = shiny::uiOutput(ns("vb_wagebill")),
         showcase = bsicons::bs_icon("cash-stack"),
-        theme = bslib::value_box_theme(bg = "#29A3C3", fg = "#FFFFFF")
+        theme = bslib::value_box_theme(bg = "#004181", fg = "#FFFFFF")
       )
     ),
 
@@ -229,8 +229,8 @@ overview_server <- function(id, workforce_data, wagebill_data) {
     output$plot_wagebill <- plotly::renderPlotly({
       plot <- wagebill_panel() |>
         ggplot2::ggplot(ggplot2::aes(x = .data[["ref_date"]], y = .data[["value"]])) +
-        ggplot2::geom_point(colour = "#29A3C3") +
-        ggplot2::geom_line(colour  = "#29A3C3") +
+        ggplot2::geom_point(colour = "#004181") +
+        ggplot2::geom_line(colour  = "#004181") +
         ggplot2::scale_y_continuous(
           labels = scales::label_number(scale_cut = scales::cut_short_scale())
         ) +
@@ -255,7 +255,7 @@ overview_server <- function(id, workforce_data, wagebill_data) {
         index_to_100(wagebill_panel(),  "Total compensation")
       )
 
-      palette <- c("Headcount" = "#C34729", "Total compensation" = "#29A3C3")
+      palette <- c("Headcount" = "#C34729", "Total compensation" = "#004181")
 
       plot <- combined |>
         ggplot2::ggplot(

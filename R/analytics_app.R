@@ -56,7 +56,7 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
       base_font = font_google("Source Sans Pro", local = FALSE),
       code_font = font_google("Source Sans Pro", local = FALSE),
       heading_font = font_google("Fira Sans", local = FALSE),
-      navbar_bg = "#FFFFFF"
+      navbar_bg = "#ffffff"
     ) |>
       bslib::bs_add_rules(
         readLines(system.file("www/styles.css", package = "govhrapp"))

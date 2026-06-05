@@ -5,7 +5,7 @@
 #' @param id Module id.
 #' @param wagebill_data Data frame with wage bill data.
 #'
-#' @importFrom bslib layout_columns card card_header card_body accordion accordion_panel layout_sidebar sidebar tooltip
+#' @importFrom bslib layout_columns card card_header card_body accordion accordion_panel layout_sidebar sidebar tooltip navset_tab nav_panel
 #' @importFrom bsicons bs_icon
 #' @importFrom shiny markdown icon NS selectInput downloadButton actionButton uiOutput
 #' @importFrom shinyWidgets numericRangeInput materialSwitch pickerInput
@@ -69,12 +69,11 @@ wagebill_ui <- function(id, wagebill_data) {
       ),
       open = FALSE
     ),
-    bslib::page_navbar(
+    bslib::navset_underline(
       bslib::nav_panel(
         title = "Overview",
         bslib::layout_sidebar(
           fillable = FALSE,
-          title = "Wagebill: Overview",
           sidebar = bslib::sidebar(
             title = "Controls",
             width = "300px",
@@ -108,7 +107,6 @@ wagebill_ui <- function(id, wagebill_data) {
               shiny::NS(id, "apply_btn"),
               "Apply selection",
               icon = shiny::icon("play"),
-              class = "btn-primary w-100 mt-2"
             ),
             shiny::downloadButton(
               shiny::NS(id, "download_report"),
@@ -117,6 +115,8 @@ wagebill_ui <- function(id, wagebill_data) {
             )
           ),
           bslib::card(
+            full_screen = TRUE,
+            fillable = FALSE,
             bslib::card_header(
               "Time trends",
               bslib::tooltip(
@@ -124,8 +124,7 @@ wagebill_ui <- function(id, wagebill_data) {
                 "Wage bill total, by year. Choosing a group will add new totals, by group."
               )
             ),
-            plotly::plotlyOutput(shiny::NS(id, "wagebill_panel")),
-            min_height = "350px"
+            plotly::plotlyOutput(shiny::NS(id, "wagebill_panel"), height = "350px")
           ),
           bslib::layout_columns(
             bslib::card(
@@ -173,7 +172,7 @@ wagebill_ui <- function(id, wagebill_data) {
       bslib::nav_panel(
         title = "Evolution",
         bslib::layout_sidebar(
-          title = "Wagebill: Animation",
+          fillable = FALSE,
           sidebar = bslib::sidebar(
             title = "Controls",
             width = "300px",
@@ -220,11 +219,9 @@ wagebill_ui <- function(id, wagebill_data) {
         )
       )
     ),
-    col_widths = c(12, 12)
+    col_widths = c(12, 12, 12)
   )
 }
-
-#' Wage Bill Server Module
 #'
 #' Server logic for wage bill analytics UI.
 #'
