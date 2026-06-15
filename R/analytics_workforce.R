@@ -98,7 +98,8 @@ workforce_ui <- function(id, workforce_data) {
       "Movement type:",
       choices = list(
         "Hires" = "hire",
-        "Separations" = "fire"
+        "Separations" = "fire",
+        "Replacement rate" = "replacement_rate"
       )
     ),
     shiny::actionButton(
@@ -106,7 +107,8 @@ workforce_ui <- function(id, workforce_data) {
       "Apply selection",
       icon = shiny::icon("play"),
       class = "btn-primary w-100 mt-2"
-    )
+    ),
+    tags$div(style = "height: 30px;")
   )
 
   bslib::layout_columns(
@@ -484,33 +486,94 @@ workforce_server <- function(id, workforce_data) {
         as.character()
       max_date <- max(workforce_group_filtered()[["ref_date"]]) |>
         as.character()
+      
+    # extract frequency of reference dates for plot 4. movements
+    freq_ref_date <- workforce_group_filtered() |>
+      guess_date_frequency()
 
-      movement_data <- workforce_group_filtered() |>
-        govhr::detect_personnel_event(
-          event_type = input$movement_type,
-          id_col = "personnel_id",
-          start_date = min_date,
-          end_date = max_date,
-          freq = "year"
-        ) |>
-        dplyr::right_join(
-          workforce_group_filtered(),
-          by = c("personnel_id", "ref_date")
-        ) |>
-        dplyr::group_by(
-          across(
-            all_of(
-              unique(c("ref_date", input$workforce_group))
+      if(input$movement_type %in% c("hire", "fire")) {
+        movement_data <- workforce_group_filtered() |>
+          govhr::detect_personnel_event(
+            event_type = input$movement_type,
+            id_col = "personnel_id",
+            start_date = min_date,
+            end_date = max_date,
+            freq = freq_ref_date
+          ) |>
+          dplyr::right_join(
+            workforce_group_filtered(),
+            by = c("personnel_id", "ref_date")
+          ) |>
+          dplyr::group_by(
+            across(
+              all_of(
+                unique(c("ref_date", input$workforce_group))
+              )
             )
+          ) |>
+          summarise(
+            indicator = mean(!is.na(.data[["type_event"]]))
           )
-        ) |>
-        summarise(
-          share = mean(!is.na(.data[["type_event"]]))
-        )
+      } else {
+        hire_data <- workforce_group_filtered() |>
+          govhr::detect_personnel_event(
+            event_type = "hire",
+            id_col = "personnel_id",
+            start_date = min_date,
+            end_date = max_date,
+            freq = freq_ref_date
+          ) |> 
+          dplyr::left_join(
+            workforce_group_filtered(),
+            by = c("personnel_id", "ref_date")
+          ) |>
+          dplyr::group_by(
+            across(
+              all_of(
+                unique(c("ref_date", input$workforce_group))
+              )
+            )
+          ) |>
+          summarise(
+            hires = n()
+          )
 
+        fire_data <- workforce_group_filtered() |>
+          govhr::detect_personnel_event(
+            event_type = "fire",
+            id_col = "personnel_id",
+            start_date = min_date,
+            end_date = max_date,
+            freq = freq_ref_date
+          ) |> 
+          dplyr::left_join(
+            workforce_group_filtered(),
+            by = c("personnel_id", "ref_date")
+          ) |>
+          dplyr::group_by(
+            across(
+              all_of(
+                unique(c("ref_date", input$workforce_group))
+              )
+            )
+          ) |>
+          summarise(
+            fires = n()
+          )
+
+        movement_data <- hire_data |> 
+          left_join(
+            fire_data, 
+            by = unique(c("ref_date", input$workforce_group))
+          ) |>
+          mutate(
+            indicator = hires/fires
+          )
+      }
+      
       plot_movement <- movement_data |>
         ggplot(
-          aes(.data[["ref_date"]], .data[["share"]])
+          aes(.data[["ref_date"]], .data[["indicator"]])
         ) +
         geom_point() +
         geom_line() +
@@ -529,11 +592,33 @@ workforce_server <- function(id, workforce_data) {
           ) +
           ggplot2::scale_color_manual(values = orange_palette)
       }
-
-      plot_movement <- plot_movement +
-        scale_y_continuous(
-          labels = scales::percent_format()
-        )
+      
+      if(input$movement_type %in% c("hire", "fire")) {
+          plot_movement <- plot_movement +
+            scale_y_continuous(
+              labels = scales::percent_format()
+            )
+      } else if(input$movement_type == "replacement_rate") {
+          plot_movement <- plot_movement +
+            scale_y_continuous(
+              labels = scales::label_number(accuracy = 0.1)
+            ) +
+            geom_hline(
+              yintercept = 1,
+              linetype = "dashed",
+              color = "#004181"
+            ) +
+            annotate(
+              "text",
+              x = as.Date(max_date) - (as.Date(max_date) - as.Date(min_date)) * 0.05,
+              y = 1.15,
+              label = "Replacement rate = 1",
+              color = "#004181"
+            ) +
+            labs(
+              y = "Replacement rate"
+            )
+      }
 
       plotly::ggplotly(plot_movement)
     }) |>
@@ -557,7 +642,8 @@ workforce_server <- function(id, workforce_data) {
             workforce_filtered_data = workforce_filtered_date(),
             date_range = input$date_range,
             workforce_group = input$workforce_group,
-            toggle_growth = input$toggle_growth
+            toggle_growth = input$toggle_growth,
+            movement_type = input$movement_type
           )
           
           shiny::incProgress(0.9, detail = "Finalizing...")

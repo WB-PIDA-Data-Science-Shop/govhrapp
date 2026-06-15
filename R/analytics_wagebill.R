@@ -552,10 +552,6 @@ wagebill_server <- function(id, wagebill_data) {
       )
 
       dispersion_data <- wagebill_group_filtered() |>
-        govhr::convert_constant_ppp(
-          cols = input$wagebill_measure,
-          macro_indicators = govhr::macro_indicators
-        ) |>
         group_by(
           across(
             all_of(input$wagebill_group)
