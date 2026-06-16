@@ -4,7 +4,7 @@
 #' string representing the data's reporting interval (e.g., "year", "month").
 #' The function calculates the median day difference between consecutive dates.
 #'
-#' @param ref_date A vector of dates (inheriting from \code{Date} or \code{POSIXt}).
+#' @param .data A dataset containing a column named \code{ref_date} with date values.
 #'
 #' @return A single character scalar: \code{"year"}, \code{"quarter"}, 
 #'   \code{"month"}, \code{"week"}, or \code{"day"}.
@@ -13,9 +13,13 @@
 #'
 #' @examples
 #' # Monthly reporting dates
-#' dates <- seq(as.Date("2020-01-01"), by = "month", length.out = 12)
-#' guess_date_frequency(dates)
+#' data <- data.frame(
+#'  ref_date = seq(as.Date("2020-01-01"), as.Date("2020-12-01"), by = "months")
+#' )
+#' 
+#' guess_date_frequency(data)
 #' #> [1] "month"
+#' @importFrom stats median
 guess_date_frequency <- function(.data) {
   ref_date <- .data[["ref_date"]] |> 
     unique() |> 

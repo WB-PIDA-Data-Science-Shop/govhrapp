@@ -217,13 +217,13 @@ workforce_ui <- function(id, workforce_data) {
 #' @importFrom lubridate year years ymd
 #' @importFrom rlang :=
 #' @importFrom govhr fastcount complete_dates detect_personnel_event
-#' @importFrom ggplot2 ggplot aes geom_point geom_line geom_col geom_hline geom_vline scale_y_continuous scale_x_continuous scale_y_discrete scale_color_manual guide_axis labs xlab ylab
 #' @importFrom grDevices colorRampPalette
 #' @importFrom plotly ggplotly
 #' @importFrom stats reorder
 #' @importFrom scales label_number cut_short_scale pretty_breaks percent_format
 #' @importFrom data.table fifelse shift setorderv as.data.table copy
 #' @importFrom rmarkdown render
+#' @import ggplot2
 #' @export
 workforce_server <- function(id, workforce_data) {
   shiny::moduleServer(id, function(input, output, session) {
@@ -567,7 +567,7 @@ workforce_server <- function(id, workforce_data) {
             by = unique(c("ref_date", input$workforce_group))
           ) |>
           mutate(
-            indicator = hires/fires
+            indicator = .data[["hires"]] / .data[["fires"]]
           )
       }
       
@@ -608,7 +608,7 @@ workforce_server <- function(id, workforce_data) {
               linetype = "dashed",
               color = "#004181"
             ) +
-            annotate(
+            ggplot2::annotate(
               "text",
               x = as.Date(max_date) - (as.Date(max_date) - as.Date(min_date)) * 0.05,
               y = 1.15,
