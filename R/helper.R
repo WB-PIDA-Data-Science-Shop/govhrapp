@@ -48,7 +48,13 @@ guess_date_frequency <- function(.data) {
 #' @importFrom purrr set_names
 #'
 #' @examples
-#' choices <- build_wagebill_group_choices(bra_hrmis_contract)
+#' example_data <- data.frame(
+#' "ref_date" = as.Date(c("2020-01-01", "2020-02-01")),
+#' "personnel_id" = c(1, 2),
+#' "gross_salary_lcu" = c(1000, 1500)
+#' )
+#' 
+#' choices <- build_wagebill_group_choices(example_data)
 #'
 #' @export
 build_wagebill_group_choices <- function(data) {

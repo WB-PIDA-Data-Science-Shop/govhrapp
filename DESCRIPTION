@@ -1,9 +1,11 @@
 Package: govhrapp
-Title: What the Package Does (One Line, Title Case)
+Title: A Shiny application suite to inform human resource management
+Authors@R: c(
+    person("Galileu", "Kim", , "galileukim@worldbank.org", role = c("aut", "cre")),
+    person("Ifeanyi", "Edochie", , "iedochie@worldbank.org", role = c("aut"))
+  )
 Version: 0.1.1
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Description: This package is developed by the World Bank. It enables users to quality check, analyze and forecast HR data to inform human resource management.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
