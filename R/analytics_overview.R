@@ -20,7 +20,7 @@ overview_ui <- function(id, workforce_data, wagebill_data) {
     fillable = FALSE,
     col_widths = 12,
 
-    # ── Value boxes ──────────────────────────────────────────────────────────
+    # value boxes
     bslib::layout_columns(
       col_widths = c(6, 6),
       bslib::value_box(
@@ -36,8 +36,8 @@ overview_ui <- function(id, workforce_data, wagebill_data) {
         theme = bslib::value_box_theme(bg = "#004181", fg = "#FFFFFF")
       )
     ),
-
-    # ── Trend charts ──────────────────────────────────────────────────────────
+    
+    # plot
     bslib::layout_sidebar(
       fillable = FALSE,
       sidebar = bslib::sidebar(
@@ -79,8 +79,7 @@ overview_ui <- function(id, workforce_data, wagebill_data) {
 overview_server <- function(id, workforce_data, wagebill_data) {
   shiny::moduleServer(id, function(input, output, session) {
 
-    # ── Latest reference dates (one per dataset) ──────────────────────────────
-
+    # obtain latest reference date
     latest_workforce_date <- reactive({
       max(workforce_data[["ref_date"]], na.rm = TRUE)
     })
@@ -99,7 +98,7 @@ overview_server <- function(id, workforce_data, wagebill_data) {
         dplyr::filter(.data[["ref_date"]] == latest_wagebill_date())
     })
 
-    # Detect which salary columns are present in wagebill_data
+    # detect which salary columns are present in wagebill_data
     salary_cols <- intersect(
       c("base_salary_lcu", "gross_salary_lcu", "net_salary_lcu", "allowance_lcu"),
       names(wagebill_data)
@@ -151,9 +150,8 @@ overview_server <- function(id, workforce_data, wagebill_data) {
         govhr::fastcount(.data[["ref_date"]], name = "value")
     })
 
-    # ── Wage bill time series ──────────────────────────────────────────────────
+    # plot 1. wage bill
     # Total compensation = base_salary_lcu + allowance_lcu
-    # Complementary colour of #C34729 (hue ~15°) → hue ~195° = #29A3C3
 
     wagebill_panel <- reactive({
       has_base  <- "base_salary_lcu" %in% names(wagebill_data)
@@ -174,8 +172,6 @@ overview_server <- function(id, workforce_data, wagebill_data) {
           .groups = "drop"
         )
     })
-
-    # ── Chart area (switches on display_mode) ────────────────────────────────
 
     output$chart_area <- shiny::renderUI({
       switch(
@@ -211,7 +207,6 @@ overview_server <- function(id, workforce_data, wagebill_data) {
     })
 
     # plot option 1. headcount
-
     output$plot_headcount <- plotly::renderPlotly({
       plot <- heacount_panel() |>
         ggplot2::ggplot(ggplot2::aes(x = .data[["ref_date"]], y = .data[["value"]])) +

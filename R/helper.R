@@ -33,3 +33,36 @@ guess_date_frequency <- function(.data) {
   if (median_days >= 6)   return("week")
   return("day")
 }
+
+#' Build grouping variable choices for wagebill UI
+#'
+#' Constructs a named list of grouping choices for use in a Shiny selectInput,
+#' grouped by dictionary module. Always includes an "All" option mapped to
+#' \code{ref_date}.
+#'
+#' @param data A data frame.
+#'
+#' @return A named list of choices available in the data.
+#'
+#' @importFrom dplyr filter summarise pull
+#' @importFrom purrr set_names
+#'
+#' @examples
+#' choices <- build_wagebill_group_choices(bra_hrmis_contract)
+#'
+#' @export
+build_wagebill_group_choices <- function(data) {
+  module_choices <- govhr::dictionary |>
+    dplyr::filter(
+      .data[["variable_id"]] %in% names(data),
+      .data[["variable_class"]] == "character",
+      !.data[["variable_id"]] %in% c("ref_date", "contract_id", "personnel_id")
+    ) |>
+    dplyr::summarise(
+      choices = list(purrr::set_names(.data[["variable_id"]], .data[["variable_name"]])),
+      .by = "module"
+    ) |>
+    dplyr::pull(.data[["choices"]], name = .data[["module"]])
+
+  c(list("All" = "ref_date"), module_choices)
+}
