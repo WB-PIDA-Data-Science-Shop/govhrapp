@@ -1,12 +1,12 @@
-**This is the Quality Control Suite.**
+**This is the Quality Check Suite.**
 
 Across the world, public sectors employ over [400 million workers](https://www.worldbank.org/en/publication/public-workforce-performance-and-prosperity). The wage bill of this public sector workforce represents around 40 percent of government expenditure. Strengthening how government manage their large and complex workforce, while ensuring fiscal sustainability, is a key priority for the World Bank's [Governance Global Practice](https://www.worldbank.org/ext/en/topic/governance).
 
-`govhrapp` provides governments with user-friendly [data and analytics](https://www.worldbank.org/en/publication/government-analytics) that enable you to better understand (and manage) your public sector workforce and wagebill. This suite, called **Quality Control**, helps users identify data quality issues, inconsistencies, and patterns requiring attention in a static report. This dashboard provides an interactive interface which provides further flexibility to our users to further customize data quality assurance to suit the unique needs of their country contexts. 
+`govhrapp` provides governments with user-friendly [data and analytics](https://www.worldbank.org/en/publication/government-analytics) that enable you to better understand (and manage) your public sector workforce and wagebill. This suite, called **Quality Check**, helps users identify data quality issues, inconsistencies, and patterns requiring attention in a static report. This dashboard provides an interactive interface which provides further flexibility to our users to further customize data quality assurance to suit the unique needs of their country contexts. 
 
 ---
 
-**Quality Control** comprises the following modules:
+**Quality Check** comprises the following modules:
 
 ##### 1. Data Basics
 Foundational diagnostics including module dimensions, variable structure and dictionary conformity, primary key integrity, cross-module orphan checks, salary logic validation, and date logic checks. This section provides essential structural and consistency assessments before diving into detailed data quality patterns.
