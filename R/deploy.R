@@ -53,8 +53,8 @@ deploy_govhrapp <- function(suite){
   # Get the app file to deploy
   app_file = switch(
     suite,
-    quality = "app_quality.R",
-    analytics = "app.R"
+    quality = "R/qcheck_app.R",
+    analytics = "R/analytics_app.R"
   )
   
   # Check if app file exists
