@@ -25,7 +25,8 @@ workforce_ui <- function(id, workforce_data) {
       dplyr::filter(
         .data[["variable_id"]] %in% available_cols,
         .data[["variable_class"]] == "character",
-        !.data[["variable_id"]] %in% c("ref_date", "contract_id", "personnel_id")
+        !.data[["variable_id"]] %in%
+          c("ref_date", "contract_id", "personnel_id")
       ) |>
       dplyr::group_by(.data[["module"]]) |>
       dplyr::summarise(
@@ -69,13 +70,7 @@ workforce_ui <- function(id, workforce_data) {
         noneSelectedText = "No subgroups selected",
         container = "body"
       )
-    ),
-    shiny::selectInput(
-      shiny::NS(id, "workforce_group"),
-      "Group:",
-      choices = workforce_group_choices
-    ),
-    shiny::uiOutput(shiny::NS(id, "group_filter_ui"))
+    )
   )
 
   # the namespaced id of the navset, for the conditional panel
@@ -84,33 +79,40 @@ workforce_ui <- function(id, workforce_data) {
   sidebar_combined <- bslib::sidebar(
     title = "Controls",
     width = "300px",
-    !!!shared_filter_controls,
-
-    # overview-specific controls
-    shiny::conditionalPanel(
-      condition = sprintf("input['%s'] == 'Overview'", navset_id),
-      shinyWidgets::materialSwitch(
-        shiny::NS(id, "toggle_growth"),
-        label = "Switch to baseline index",
-        value = FALSE
+    bslib::accordion(
+      bslib::accordion_panel(
+        "Filters",
+        icon = bsicons::bs_icon("sliders"),
+        !!!shared_filter_controls
       ),
-      shiny::downloadButton(
-        shiny::NS(id, "download_report"),
-        "Generate report",
-        icon = shiny::icon("file-word")
-      )
-    ),
-
-    # movements-specific controls
-    shiny::conditionalPanel(
-      condition = sprintf("input['%s'] == 'Movements'", navset_id),
-      shiny::selectInput(
-        shiny::NS(id, "movement_type"),
-        "Movement type:",
-        choices = list(
-          "Hires" = "hire",
-          "Separations" = "fire",
-          "Replacement rate" = "replacement_rate"
+      bslib::accordion_panel(
+        "Measures",
+        icon = bsicons::bs_icon("bar-chart"),
+        shiny::selectInput(
+          shiny::NS(id, "workforce_group"),
+          "Group:",
+          choices = workforce_group_choices
+        ),
+        shiny::uiOutput(shiny::NS(id, "group_filter_ui")),
+        shiny::conditionalPanel(
+          condition = sprintf("input['%s'] == 'Overview'", navset_id),
+          shinyWidgets::materialSwitch(
+            shiny::NS(id, "toggle_growth"),
+            label = "Switch to baseline index",
+            value = FALSE
+          )
+        ),
+        shiny::conditionalPanel(
+          condition = sprintf("input['%s'] == 'Movements'", navset_id),
+          shiny::selectInput(
+            shiny::NS(id, "movement_type"),
+            "Movement type:",
+            choices = list(
+              "Hires" = "hire",
+              "Separations" = "fire",
+              "Replacement rate" = "replacement_rate"
+            )
+          )
         )
       )
     ),
@@ -118,8 +120,16 @@ workforce_ui <- function(id, workforce_data) {
     shiny::actionButton(
       shiny::NS(id, "apply_btn"),
       "Apply selection",
-      icon = shiny::icon("play"),
-      class = "btn-primary w-100 mt-2"
+      icon = shiny::icon("play")
+    ),
+    shiny::conditionalPanel(
+      condition = sprintf("input['%s'] == 'Overview'", navset_id),
+      class = "d-grid mt-2",
+      shiny::downloadButton(
+        shiny::NS(id, "download_report"),
+        "Generate report",
+        icon = shiny::icon("file-word")
+      )
     )
   )
 
@@ -137,11 +147,15 @@ workforce_ui <- function(id, workforce_data) {
         title = "Guidance Questions",
         icon = shiny::icon("question-circle"),
         shiny::markdown(
-          readLines(system.file("markdown/workforce_questions.md", package = "govhrapp"))
+          readLines(system.file(
+            "markdown/workforce_questions.md",
+            package = "govhrapp"
+          ))
         )
       ),
       open = FALSE
     ),
+
     bslib::layout_sidebar(
       fillable = FALSE,
       sidebar = sidebar_combined,
@@ -158,7 +172,10 @@ workforce_ui <- function(id, workforce_data) {
                 "Headcount trends over time. Choosing a group will add new trend lines, by group."
               )
             ),
-            plotly::plotlyOutput(shiny::NS(id, "workforce_panel"), height = "350px")
+            plotly::plotlyOutput(
+              shiny::NS(id, "workforce_panel"),
+              height = "350px"
+            )
           ),
           bslib::layout_columns(
             col_widths = c(6, 6),
@@ -201,7 +218,10 @@ workforce_ui <- function(id, workforce_data) {
                 "Personnel movements (hires or separations) over time, showing the share of workforce affected."
               )
             ),
-            plotly::plotlyOutput(shiny::NS(id, "workforce_movements"), height = "350px")
+            plotly::plotlyOutput(
+              shiny::NS(id, "workforce_movements"),
+              height = "350px"
+            )
           )
         )
       )
@@ -270,7 +290,8 @@ workforce_server <- function(id, workforce_data) {
             unique(
               stats::na.omit(
                 workforce_data[[variable]]
-              ))
+              )
+            )
           )
         )
 
@@ -338,10 +359,12 @@ workforce_server <- function(id, workforce_data) {
     # Data filtered by both date and selected groups
     workforce_group_filtered <- shiny::reactive({
       data <- workforce_filtered()
-      if (input$workforce_group == "ref_date") return(data)
-      
+      if (input$workforce_group == "ref_date") {
+        return(data)
+      }
+
       group_vals <- unique(na.omit(workforce_data[[input$workforce_group]]))
-      
+
       if (length(group_vals) > 8 && !is.null(input$group_filter)) {
         data <- data |>
           dplyr::filter(.data[[input$workforce_group]] %in% input$group_filter)
@@ -427,12 +450,12 @@ workforce_server <- function(id, workforce_data) {
         as.character()
       max_date <- max(workforce_group_filtered()[["ref_date"]]) |>
         as.character()
-      
-    # extract frequency of reference dates for plot 4. movements
-    freq_ref_date <- workforce_group_filtered() |>
-      guess_date_frequency()
 
-      if(input$movement_type %in% c("hire", "fire")) {
+      # extract frequency of reference dates for plot 4. movements
+      freq_ref_date <- workforce_group_filtered() |>
+        guess_date_frequency()
+
+      if (input$movement_type %in% c("hire", "fire")) {
         movement_data <- workforce_group_filtered() |>
           govhr::detect_personnel_event(
             event_type = input$movement_type,
@@ -463,7 +486,7 @@ workforce_server <- function(id, workforce_data) {
             start_date = min_date,
             end_date = max_date,
             freq = freq_ref_date
-          ) |> 
+          ) |>
           dplyr::left_join(
             workforce_group_filtered(),
             by = c("personnel_id", "ref_date")
@@ -486,7 +509,7 @@ workforce_server <- function(id, workforce_data) {
             start_date = min_date,
             end_date = max_date,
             freq = freq_ref_date
-          ) |> 
+          ) |>
           dplyr::left_join(
             workforce_group_filtered(),
             by = c("personnel_id", "ref_date")
@@ -502,16 +525,16 @@ workforce_server <- function(id, workforce_data) {
             fires = n()
           )
 
-        movement_data <- hire_data |> 
+        movement_data <- hire_data |>
           left_join(
-            fire_data, 
+            fire_data,
             by = unique(c("ref_date", input$workforce_group))
           ) |>
           mutate(
             indicator = .data[["hires"]] / .data[["fires"]]
           )
       }
-      
+
       plot_movement <- movement_data |>
         ggplot(
           aes(.data[["ref_date"]], .data[["indicator"]])
@@ -524,7 +547,10 @@ workforce_server <- function(id, workforce_data) {
         )
 
       if (input$workforce_group != "ref_date") {
-        n_groups <- dplyr::n_distinct(movement_data[[input$workforce_group]], na.rm = TRUE)
+        n_groups <- dplyr::n_distinct(
+          movement_data[[input$workforce_group]],
+          na.rm = TRUE
+        )
         orange_palette <- colorRampPalette(c("#C34729", "#F5C6A0"))(n_groups)
         plot_movement <- plot_movement +
           aes(
@@ -533,32 +559,33 @@ workforce_server <- function(id, workforce_data) {
           ) +
           ggplot2::scale_color_manual(values = orange_palette)
       }
-      
-      if(input$movement_type %in% c("hire", "fire")) {
-          plot_movement <- plot_movement +
-            scale_y_continuous(
-              labels = scales::percent_format()
-            )
-      } else if(input$movement_type == "replacement_rate") {
-          plot_movement <- plot_movement +
-            scale_y_continuous(
-              labels = scales::label_number(accuracy = 0.1)
-            ) +
-            geom_hline(
-              yintercept = 1,
-              linetype = "dashed",
-              color = "#004181"
-            ) +
-            ggplot2::annotate(
-              "text",
-              x = as.Date(max_date) - (as.Date(max_date) - as.Date(min_date)) * 0.05,
-              y = 1.15,
-              label = "Replacement rate = 1",
-              color = "#004181"
-            ) +
-            labs(
-              y = "Replacement rate"
-            )
+
+      if (input$movement_type %in% c("hire", "fire")) {
+        plot_movement <- plot_movement +
+          scale_y_continuous(
+            labels = scales::percent_format()
+          )
+      } else if (input$movement_type == "replacement_rate") {
+        plot_movement <- plot_movement +
+          scale_y_continuous(
+            labels = scales::label_number(accuracy = 0.1)
+          ) +
+          geom_hline(
+            yintercept = 1,
+            linetype = "dashed",
+            color = "#004181"
+          ) +
+          ggplot2::annotate(
+            "text",
+            x = as.Date(max_date) -
+              (as.Date(max_date) - as.Date(min_date)) * 0.05,
+            y = 1.15,
+            label = "Replacement rate = 1",
+            color = "#004181"
+          ) +
+          labs(
+            y = "Replacement rate"
+          )
       }
 
       plotly::ggplotly(plot_movement)
@@ -573,10 +600,9 @@ workforce_server <- function(id, workforce_data) {
       content = function(file) {
         # Show progress
         shiny::withProgress(message = 'Generating report...', value = 0, {
-          
           # Increment progress
           shiny::incProgress(0.3, detail = "Creating plots...")
-          
+
           # Generate report using helper function
           output_path <- generate_workforce_report(
             workforce_summary_data = workforce_summary(),
@@ -586,12 +612,12 @@ workforce_server <- function(id, workforce_data) {
             toggle_growth = input$toggle_growth,
             movement_type = input$movement_type
           )
-          
+
           shiny::incProgress(0.9, detail = "Finalizing...")
-          
+
           # Copy generated file to download location
           file.copy(output_path, file, overwrite = TRUE)
-          
+
           shiny::incProgress(1, detail = "Complete!")
         })
       }
