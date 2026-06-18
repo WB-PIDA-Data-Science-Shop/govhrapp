@@ -53,8 +53,8 @@ deploy_govhrapp <- function(suite){
   # Get the app file to deploy
   app_primary_doc = switch(
     suite,
-    quality = "inst/app/qcheck_app.R",
-    analytics = "inst/app/analytics_app.R"
+    quality = "inst/app/qcheck/qcheck_app.R",
+    analytics = "inst/app/analytics/analytics_app.R"
   )
 
   # Bundle
@@ -82,8 +82,9 @@ deploy_govhrapp <- function(suite){
     appDir = ".",
     appId = app_id,
     appPrimaryDoc = app_primary_doc,
-    appFiles = app_files,
+    # appFiles = app_files,
     server = "internal-server",
+    dependencyResolution = "library",
     forceUpdate = TRUE
   )
 }
