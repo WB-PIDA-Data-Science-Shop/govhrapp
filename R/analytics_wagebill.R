@@ -59,7 +59,7 @@ wagebill_ui <- function(id, wagebill_data) {
   year_min <- min(lubridate::year(wagebill_data$ref_date), na.rm = TRUE)
   year_max <- max(lubridate::year(wagebill_data$ref_date), na.rm = TRUE)
 
-  # Shared filter controls (defined ONCE, used across tabs via shared input IDs)
+  # filter controls
   shared_filter_controls <- list(
     shinyWidgets::numericRangeInput(
       shiny::NS(id, "date_range"),

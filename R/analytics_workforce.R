@@ -34,88 +34,98 @@ workforce_ui <- function(id, workforce_data) {
         ),
         .groups = "drop"
       ) |>
-      dplyr::pull(.data[["choices"]],
-                  name = .data[["module"]])
+      dplyr::pull(.data[["choices"]], name = .data[["module"]])
   )
 
-  sidebar_default <- bslib::sidebar(
-    title = "Controls",
-    width = "300px",
+  filter_choices <- c(list("None" = "none"), workforce_group_choices[-1])
+
+  year_min <- min(lubridate::year(workforce_data$ref_date), na.rm = TRUE)
+  year_max <- max(lubridate::year(workforce_data$ref_date), na.rm = TRUE)
+
+  # single shared block, used in both tabs
+  shared_filter_controls <- list(
     shinyWidgets::numericRangeInput(
       shiny::NS(id, "date_range"),
       "Time frame:",
-      value = c(
-        min(lubridate::year(workforce_data$ref_date), na.rm = TRUE),
-        max(lubridate::year(workforce_data$ref_date), na.rm = TRUE)
-      ),
-      min = min(lubridate::year(workforce_data$ref_date), na.rm = TRUE),
-      max = max(lubridate::year(workforce_data$ref_date), na.rm = TRUE)
+      value = c(year_min, year_max),
+      min = year_min,
+      max = year_max
     ),
     shiny::selectInput(
-      shiny::NS(id, "workforce_group"),
-      "Group:",
-      choices = workforce_group_choices
+      shiny::NS(id, "workforce_filter_variable"),
+      "Filter by:",
+      choices = filter_choices
     ),
-    shiny::uiOutput(shiny::NS(id, "group_filter_ui")),
-    shinyWidgets::materialSwitch(
-      shiny::NS(id, "toggle_growth"),
-      label = "Switch to baseline index",
-      value = FALSE
-    ),
-    shiny::actionButton(
-      shiny::NS(id, "apply_btn"),
-      "Apply selection",
-      icon = shiny::icon("play")
-    ),
-    shiny::downloadButton(
-      shiny::NS(id, "download_report"),
-      "Generate report",
-      icon = shiny::icon("file-word")
-    )
-  )
-
-  sidebar_movement <- bslib::sidebar(
-    title = "Controls",
-    width = "300px",
-    shinyWidgets::numericRangeInput(
-      shiny::NS(id, "date_range"),
-      "Time frame:",
-      value = c(
-        min(lubridate::year(workforce_data$ref_date), na.rm = TRUE),
-        max(lubridate::year(workforce_data$ref_date), na.rm = TRUE)
-      ),
-      min = min(lubridate::year(workforce_data$ref_date), na.rm = TRUE),
-      max = max(lubridate::year(workforce_data$ref_date), na.rm = TRUE)
-    ),
-    shiny::selectInput(
-      shiny::NS(id, "workforce_group"),
-      "Group:",
-      choices = workforce_group_choices
-    ),
-    shiny::uiOutput(shiny::NS(id, "group_filter_ui_movement")),
-    shiny::selectInput(
-      shiny::NS(id, "movement_type"),
-      "Movement type:",
-      choices = list(
-        "Hires" = "hire",
-        "Separations" = "fire",
-        "Replacement rate" = "replacement_rate"
+    shinyWidgets::pickerInput(
+      shiny::NS(id, "workforce_filter_values"),
+      "Select subgroups:",
+      choices = NULL,
+      multiple = TRUE,
+      options = shinyWidgets::pickerOptions(
+        actionsBox = TRUE,
+        liveSearch = TRUE,
+        selectedTextFormat = "count > 3",
+        countSelectedText = "{0} subgroups selected",
+        noneSelectedText = "No subgroups selected",
+        container = "body"
       )
     ),
+    shiny::selectInput(
+      shiny::NS(id, "workforce_group"),
+      "Group:",
+      choices = workforce_group_choices
+    ),
+    shiny::uiOutput(shiny::NS(id, "group_filter_ui"))
+  )
+
+  # the namespaced id of the navset, for the conditional panel
+  navset_id <- shiny::NS(id, "workforce_tabs")
+
+  sidebar_combined <- bslib::sidebar(
+    title = "Controls",
+    width = "300px",
+    !!!shared_filter_controls,
+
+    # overview-specific controls
+    shiny::conditionalPanel(
+      condition = sprintf("input['%s'] == 'Overview'", navset_id),
+      shinyWidgets::materialSwitch(
+        shiny::NS(id, "toggle_growth"),
+        label = "Switch to baseline index",
+        value = FALSE
+      ),
+      shiny::downloadButton(
+        shiny::NS(id, "download_report"),
+        "Generate report",
+        icon = shiny::icon("file-word")
+      )
+    ),
+
+    # movements-specific controls
+    shiny::conditionalPanel(
+      condition = sprintf("input['%s'] == 'Movements'", navset_id),
+      shiny::selectInput(
+        shiny::NS(id, "movement_type"),
+        "Movement type:",
+        choices = list(
+          "Hires" = "hire",
+          "Separations" = "fire",
+          "Replacement rate" = "replacement_rate"
+        )
+      )
+    ),
+
     shiny::actionButton(
       shiny::NS(id, "apply_btn"),
       "Apply selection",
       icon = shiny::icon("play"),
       class = "btn-primary w-100 mt-2"
-    ),
-    tags$div(style = "height: 30px;")
+    )
   )
 
   bslib::layout_columns(
     bslib::card(
-      bslib::card_header(
-        "Workforce: Overview"
-      ),
+      bslib::card_header("Workforce: Overview"),
       bslib::card_body(
         shiny::markdown(
           readLines(system.file("markdown/workforce.md", package = "govhrapp"))
@@ -132,12 +142,13 @@ workforce_ui <- function(id, workforce_data) {
       ),
       open = FALSE
     ),
-    bslib::navset_underline(
-      bslib::nav_panel(
-        title = "Overview",
-        bslib::layout_sidebar(
-          fillable = FALSE,
-          sidebar = sidebar_default,
+    bslib::layout_sidebar(
+      fillable = FALSE,
+      sidebar = sidebar_combined,
+      bslib::navset_underline(
+        id = navset_id,
+        bslib::nav_panel(
+          title = "Overview",
           bslib::card(
             full_screen = TRUE,
             bslib::card_header(
@@ -147,9 +158,9 @@ workforce_ui <- function(id, workforce_data) {
                 "Headcount trends over time. Choosing a group will add new trend lines, by group."
               )
             ),
-            plotly::plotlyOutput(NS(id, "workforce_panel"), height = "350px")
+            plotly::plotlyOutput(shiny::NS(id, "workforce_panel"), height = "350px")
           ),
-          layout_columns(
+          bslib::layout_columns(
             col_widths = c(6, 6),
             bslib::card(
               full_screen = TRUE,
@@ -161,7 +172,7 @@ workforce_ui <- function(id, workforce_data) {
                   "Headcount total, by group. Total refers to the latest available year in the selected time frame."
                 )
               ),
-              plotly::plotlyOutput(NS(id, "workforce_cross_section")),
+              plotly::plotlyOutput(shiny::NS(id, "workforce_cross_section")),
               min_height = "450px"
             ),
             bslib::card(
@@ -174,17 +185,13 @@ workforce_ui <- function(id, workforce_data) {
                   "Growth rate with respect to first reference date, by group."
                 )
               ),
-              plotly::plotlyOutput(NS(id, "workforce_growth")),
+              plotly::plotlyOutput(shiny::NS(id, "workforce_growth")),
               min_height = "450px"
             )
           )
-        )
-      ),
-      bslib::nav_panel(
-        title = "Movements",
-        bslib::layout_sidebar(
-          fillable = FALSE,
-          sidebar = sidebar_movement,
+        ),
+        bslib::nav_panel(
+          title = "Movements",
           bslib::card(
             full_screen = TRUE,
             bslib::card_header(
@@ -194,7 +201,7 @@ workforce_ui <- function(id, workforce_data) {
                 "Personnel movements (hires or separations) over time, showing the share of workforce affected."
               )
             ),
-            plotly::plotlyOutput(NS(id, "workforce_movements"), height = "350px")
+            plotly::plotlyOutput(shiny::NS(id, "workforce_movements"), height = "350px")
           )
         )
       )
@@ -223,11 +230,76 @@ workforce_ui <- function(id, workforce_data) {
 #' @export
 workforce_server <- function(id, workforce_data) {
   shiny::moduleServer(id, function(input, output, session) {
-    workforce_filtered_date <- reactive({
-      workforce_data |>
-        mutate(
-          year = lubridate::year(.data[["ref_date"]])
+    # choice of cols
+    available_cols <- names(workforce_data)
+
+    workforce_group_choices <- c(
+      list("All" = "ref_date"),
+      govhr::dictionary |>
+        dplyr::filter(
+          .data[["variable_id"]] %in%
+            available_cols &
+            .data[["variable_class"]] == "character" &
+            !.data[["variable_id"]] %in%
+              c("ref_date", "contract_id", "personnel_id")
         ) |>
+        dplyr::group_by(.data[["module"]]) |>
+        dplyr::summarise(
+          choices = list(
+            purrr::set_names(.data[["variable_id"]], .data[["variable_name"]])
+          ),
+          .groups = "drop"
+        ) |>
+        dplyr::pull(.data[["choices"]], name = .data[["module"]])
+    )
+
+    # update filter values
+    shiny::observe({
+      variable <- input$workforce_filter_variable
+
+      if (is.null(variable) || variable == "none") {
+        shinyWidgets::updatePickerInput(
+          session,
+          "workforce_filter_values",
+          choices = NULL,
+          selected = character(0)
+        )
+      } else {
+        filter_vals <- sort(
+          as.character(
+            unique(
+              stats::na.omit(
+                workforce_data[[variable]]
+              ))
+          )
+        )
+
+        shinyWidgets::updatePickerInput(
+          session,
+          "workforce_filter_values",
+          choices = filter_vals,
+          selected = filter_vals
+        )
+      }
+    })
+
+    workforce_filtered <- shiny::reactive({
+      data <- workforce_data
+
+      if (
+        !is.null(input$workforce_filter_variable) &&
+          input$workforce_filter_variable != "none" &&
+          length(input$workforce_filter_values) > 0
+      ) {
+        data <- data |>
+          dplyr::filter(
+            .data[[input$workforce_filter_variable]] %in%
+              input$workforce_filter_values
+          )
+      }
+
+      data |>
+        dplyr::mutate(year = lubridate::year(.data[["ref_date"]])) |>
         dplyr::filter(
           .data[["year"]] >= input$date_range[1],
           .data[["year"]] <= input$date_range[2]
@@ -265,7 +337,7 @@ workforce_server <- function(id, workforce_data) {
 
     # Data filtered by both date and selected groups
     workforce_group_filtered <- shiny::reactive({
-      data <- workforce_filtered_date()
+      data <- workforce_filtered()
       if (input$workforce_group == "ref_date") return(data)
       
       group_vals <- unique(na.omit(workforce_data[[input$workforce_group]]))
@@ -508,7 +580,7 @@ workforce_server <- function(id, workforce_data) {
           # Generate report using helper function
           output_path <- generate_workforce_report(
             workforce_summary_data = workforce_summary(),
-            workforce_filtered_data = workforce_filtered_date(),
+            workforce_filtered_data = workforce_filtered(),
             date_range = input$date_range,
             workforce_group = input$workforce_group,
             toggle_growth = input$toggle_growth,
