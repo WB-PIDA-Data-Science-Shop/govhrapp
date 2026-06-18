@@ -51,22 +51,39 @@ deploy_govhrapp <- function(suite){
   )
   
   # Get the app file to deploy
-  app_file = switch(
+  app_primary_doc = switch(
     suite,
-    quality = "R/qcheck_app.R",
-    analytics = "R/analytics_app.R"
+    quality = "inst/app/qcheck_app.R",
+    analytics = "inst/app/analytics_app.R"
+  )
+
+  # Bundle
+  app_files = switch(
+    suite,
+    quality = c(
+      list.files("R", pattern = "qcheck_.*\\.R$", full.names = TRUE),
+      list.files("inst", full.names = TRUE)
+    ),
+    analytics = c(
+      list.files("R", pattern = "analytics_.*\\.R$", full.names = TRUE),
+      "R/helper.R",
+      "R/global.R",
+      list.files("inst", full.names = TRUE)
+    )
   )
   
   # Check if app file exists
-  if (!file.exists(app_file)) {
-    stop("App file '", app_file, "' not found in package root directory")
+  if (!file.exists(app_primary_doc)) {
+    stop("App file '", app_primary_doc, "' not found in package root directory")
   }
   
   # Deploy the app
   rsconnect::deployApp(
     appDir = ".",
     appId = app_id,
-    appPrimaryDoc = app_file,
+    appPrimaryDoc = app_primary_doc,
+    appFiles = app_files,
+    server = "internal-server",
     forceUpdate = TRUE
   )
 }
