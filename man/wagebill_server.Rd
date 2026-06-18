@@ -2,7 +2,7 @@
 % Please edit documentation in R/analytics_wagebill.R
 \name{wagebill_server}
 \alias{wagebill_server}
-\title{Server logic for wage bill analytics UI.}
+\title{Wage Bill Server Module}
 \usage{
 wagebill_server(id, wagebill_data)
 }
@@ -12,5 +12,5 @@ wagebill_server(id, wagebill_data)
 \item{wagebill_data}{Data frame with wage bill data.}
 }
 \description{
-Server logic for wage bill analytics UI.
+Server logic for wage bill analytics server
 }

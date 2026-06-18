@@ -267,6 +267,27 @@ wagebill_ui <- function(id, wagebill_data) {
   )
 }
 
+#' Wage Bill Server Module
+#'
+#' Server logic for wage bill analytics server
+#'
+#' @param id Module id.
+#' @param wagebill_data Data frame with wage bill data.
+#'
+#' @importFrom shiny moduleServer reactive validate need bindEvent downloadHandler withProgress incProgress renderUI uiOutput
+#' @importFrom shinyWidgets pickerInput
+#' @importFrom plotly renderPlotly ggplotly plot_ly layout animation_opts animation_slider
+#' @importFrom dplyr filter mutate arrange group_by ungroup across all_of first last pull left_join summarise n_distinct
+#' @importFrom lubridate year years
+#' @importFrom govhr compute_fastsummary complete_dates convert_constant_ppp
+#' @importFrom ggplot2 ggplot aes geom_point geom_line geom_col geom_hline geom_vline scale_y_continuous scale_x_continuous scale_y_discrete scale_color_manual guide_axis labs xlab ylab
+#' @importFrom grDevices colorRampPalette
+#' @importFrom stats reorder
+#' @importFrom scales label_number cut_short_scale comma
+#' @importFrom stringr str_wrap
+#' @importFrom rmarkdown render
+#' @importFrom stats na.omit
+#' @export
 wagebill_server <- function(id, wagebill_data) {
   shiny::moduleServer(id, function(input, output, session) {
     # choice of cols
@@ -303,9 +324,14 @@ wagebill_server <- function(id, wagebill_data) {
           selected = character(0)
         )
       } else {
-        filter_vals <- sort(as.character(unique(stats::na.omit(
-          wagebill_data[[variable]]
-        ))))
+        filter_vals <- sort(
+          as.character(
+            unique(
+              stats::na.omit(
+                wagebill_data[[variable]]
+              ))
+          )
+        )
 
         shinyWidgets::updatePickerInput(
           session,
