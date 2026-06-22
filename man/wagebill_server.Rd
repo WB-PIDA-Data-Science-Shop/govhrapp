@@ -12,5 +12,5 @@ wagebill_server(id, wagebill_data)
 \item{wagebill_data}{Data frame with wage bill data.}
 }
 \description{
-Server logic for wage bill analytics UI.
+Server logic for wage bill analytics server
 }

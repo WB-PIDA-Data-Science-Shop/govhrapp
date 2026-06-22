@@ -5,7 +5,7 @@
 #' @param id Module id.
 #' @param wagebill_data Data frame with wage bill data.
 #'
-#' @importFrom bslib layout_columns card card_header card_body accordion accordion_panel layout_sidebar sidebar tooltip
+#' @importFrom bslib layout_columns card card_header card_body accordion accordion_panel layout_sidebar sidebar tooltip navset_tab nav_panel
 #' @importFrom bsicons bs_icon
 #' @importFrom shiny markdown icon NS selectInput downloadButton actionButton uiOutput
 #' @importFrom shinyWidgets numericRangeInput materialSwitch pickerInput
@@ -47,12 +47,84 @@ wagebill_ui <- function(id, wagebill_data) {
       dplyr::pull(.data[["choices"]], name = .data[["module"]])
   )
 
+  # filter choices: optgroups from module structure, with a "None" entry on top
+  filter_choices <- c(list("None" = "none"), wagebill_group_choices[-1])
+
+  macroindicator_choices <- c(
+    "GDP" = "gdp_lcu",
+    "Public expenditure" = "pexpenditure_lcu",
+    "Public revenue" = "prevenue_lcu"
+  )
+
+  year_min <- min(lubridate::year(wagebill_data$ref_date), na.rm = TRUE)
+  year_max <- max(lubridate::year(wagebill_data$ref_date), na.rm = TRUE)
+
+  # filter controls
+  shared_filter_controls <- list(
+    shinyWidgets::numericRangeInput(
+      shiny::NS(id, "date_range"),
+      "Time frame:",
+      value = c(year_min, year_max),
+      min = year_min,
+      max = year_max
+    ),
+    shiny::selectInput(
+      shiny::NS(id, "wagebill_filter_variable"),
+      "Filter by:",
+      choices = filter_choices
+    ),
+    shinyWidgets::pickerInput(
+      shiny::NS(id, "wagebill_filter_values"),
+      "Select subgroups:",
+      choices = NULL,
+      multiple = TRUE,
+      options = shinyWidgets::pickerOptions(
+        actionsBox = TRUE,
+        liveSearch = TRUE,
+        selectedTextFormat = "count > 3",
+        countSelectedText = "{0} subgroups selected",
+        noneSelectedText = "No subgroups selected",
+        container = "body"
+      )
+    )
+  )
+
+  wagebill_measure_controls <- list(
+    shiny::selectInput(
+      shiny::NS(id, "wagebill_measure"),
+      "Type of Wage:",
+      choices = wagebill_measure_choices
+    ),
+    shiny::selectInput(
+      shiny::NS(id, "wagebill_group"),
+      "Group:",
+      choices = wagebill_group_choices
+    ),
+    shiny::uiOutput(shiny::NS(id, "group_filter_ui")),
+    shinyWidgets::materialSwitch(
+      shiny::NS(id, "toggle_growth"),
+      label = "Switch to baseline index",
+      value = FALSE
+    )
+  )
+
+  accordion_controls <- bslib::accordion(
+    accordion_panel(
+      "Filters",
+      icon = bsicons::bs_icon("sliders"),
+      !!!shared_filter_controls
+    ),
+    accordion_panel(
+      "Measures",
+      icon = bsicons::bs_icon("bar-chart"),
+      !!!wagebill_measure_controls
+    )
+  )
+
   bslib::layout_columns(
     fillable = FALSE,
     bslib::card(
-      bslib::card_header(
-        "Wage Bill Analytics"
-      ),
+      bslib::card_header("Wage Bill Analytics"),
       bslib::card_body(
         shiny::markdown(
           readLines(system.file("markdown/wagebill.md", package = "govhrapp"))
@@ -64,51 +136,27 @@ wagebill_ui <- function(id, wagebill_data) {
         title = "Guidance Questions",
         icon = shiny::icon("question-circle"),
         shiny::markdown(
-          readLines(system.file("markdown/wagebill_questions.md", package = "govhrapp"))
+          readLines(system.file(
+            "markdown/wagebill_questions.md",
+            package = "govhrapp"
+          ))
         )
       ),
       open = FALSE
     ),
-    bslib::page_navbar(
+    bslib::navset_underline(
       bslib::nav_panel(
         title = "Overview",
         bslib::layout_sidebar(
           fillable = FALSE,
-          title = "Wagebill: Overview",
           sidebar = bslib::sidebar(
             title = "Controls",
             width = "300px",
-            shinyWidgets::numericRangeInput(
-              shiny::NS(id, "date_range"),
-              "Time frame:",
-              value = c(
-                min(lubridate::year(wagebill_data$ref_date), na.rm = TRUE),
-                max(lubridate::year(wagebill_data$ref_date), na.rm = TRUE)
-              ),
-              min = min(lubridate::year(wagebill_data$ref_date), na.rm = TRUE),
-              max = max(lubridate::year(wagebill_data$ref_date), na.rm = TRUE)
-            ),
-            shiny::selectInput(
-              shiny::NS(id, "wagebill_measure"),
-              "Type of Wage:",
-              choices = wagebill_measure_choices
-            ),
-            shiny::selectInput(
-              shiny::NS(id, "wagebill_group"),
-              "Group:",
-              choices = wagebill_group_choices
-            ),
-            shiny::uiOutput(shiny::NS(id, "group_filter_ui")),
-            shinyWidgets::materialSwitch(
-              shiny::NS(id, "toggle_growth"),
-              label = "Switch to baseline index",
-              value = FALSE
-            ),
+            accordion_controls,
             shiny::actionButton(
               shiny::NS(id, "apply_btn"),
               "Apply selection",
-              icon = shiny::icon("play"),
-              class = "btn-primary w-100 mt-2"
+              icon = shiny::icon("play")
             ),
             shiny::downloadButton(
               shiny::NS(id, "download_report"),
@@ -117,6 +165,8 @@ wagebill_ui <- function(id, wagebill_data) {
             )
           ),
           bslib::card(
+            full_screen = TRUE,
+            fillable = FALSE,
             bslib::card_header(
               "Time trends",
               bslib::tooltip(
@@ -124,8 +174,10 @@ wagebill_ui <- function(id, wagebill_data) {
                 "Wage bill total, by year. Choosing a group will add new totals, by group."
               )
             ),
-            plotly::plotlyOutput(shiny::NS(id, "wagebill_panel")),
-            min_height = "350px"
+            plotly::plotlyOutput(
+              shiny::NS(id, "wagebill_panel"),
+              height = "350px"
+            )
           ),
           bslib::layout_columns(
             bslib::card(
@@ -135,7 +187,7 @@ wagebill_ui <- function(id, wagebill_data) {
                 "Total by group",
                 bslib::tooltip(
                   bsicons::bs_icon("info-circle"),
-                  "Wage bill total, by group. Total refers to the latest available year in the selected time frame."
+                  "Wage bill total, by group. Total refers to the latest available year."
                 )
               ),
               plotly::plotlyOutput(shiny::NS(id, "wagebill_cross_section")),
@@ -171,33 +223,24 @@ wagebill_ui <- function(id, wagebill_data) {
         )
       ),
       bslib::nav_panel(
-        title = "Evolution",
+        title = "Fiscal Sustainability",
         bslib::layout_sidebar(
-          title = "Wagebill: Animation",
+          fillable = FALSE,
           sidebar = bslib::sidebar(
             title = "Controls",
             width = "300px",
-            shinyWidgets::numericRangeInput(
-              shiny::NS(id, "date_range"),
-              "Time frame:",
-              value = c(
-                min(lubridate::year(wagebill_data$ref_date), na.rm = TRUE),
-                max(lubridate::year(wagebill_data$ref_date), na.rm = TRUE)
-              ),
-              min = min(lubridate::year(wagebill_data$ref_date), na.rm = TRUE),
-              max = max(lubridate::year(wagebill_data$ref_date), na.rm = TRUE)
-            ),
+            # Reuse shared filter controls — same input IDs, so state is shared
+            shared_filter_controls,
             shiny::selectInput(
               shiny::NS(id, "wagebill_measure"),
               "Type of Wage:",
               choices = wagebill_measure_choices
             ),
             shiny::selectInput(
-              shiny::NS(id, "wagebill_group"),
-              "Group:",
-              choices = wagebill_group_choices
+              shiny::NS(id, "macroindicator_measure"),
+              "Macro indicator:",
+              choices = macroindicator_choices
             ),
-            shiny::uiOutput(shiny::NS(id, "group_filter_ui_evolution")),
             shiny::actionButton(
               shiny::NS(id, "apply_btn"),
               "Apply selection",
@@ -208,25 +251,25 @@ wagebill_ui <- function(id, wagebill_data) {
           bslib::card(
             full_screen = TRUE,
             bslib::card_header(
-              "Animation",
+              "Fiscal Sustainability",
               bslib::tooltip(
                 bsicons::bs_icon("info-circle"),
-                "Evolution of wage bill and headcount, by group."
+                "Evolution of wage bill, normalized by macroeconomic indicators."
               )
             ),
-            plotly::plotlyOutput(shiny::NS(id, "wagebill_animation")),
+            plotly::plotlyOutput(shiny::NS(id, "wagebill_fiscal")),
             min_height = "450px"
           )
         )
       )
     ),
-    col_widths = c(12, 12)
+    col_widths = c(12, 12, 12)
   )
 }
 
 #' Wage Bill Server Module
 #'
-#' Server logic for wage bill analytics UI.
+#' Server logic for wage bill analytics server
 #'
 #' @param id Module id.
 #' @param wagebill_data Data frame with wage bill data.
@@ -243,174 +286,118 @@ wagebill_ui <- function(id, wagebill_data) {
 #' @importFrom scales label_number cut_short_scale comma
 #' @importFrom stringr str_wrap
 #' @importFrom rmarkdown render
+#' @importFrom stats na.omit
 #' @export
 wagebill_server <- function(id, wagebill_data) {
   shiny::moduleServer(id, function(input, output, session) {
-    wagebill_filtered_date <- shiny::reactive({
-      wagebill_data |>
-        dplyr::mutate(
-          year = lubridate::year(.data[["ref_date"]])
+    # choice of cols
+    available_cols <- names(wagebill_data)
+    wagebill_group_choices <- c(
+      list("All" = "ref_date"),
+      govhr::dictionary |>
+        dplyr::filter(
+          .data[["variable_id"]] %in%
+            available_cols &
+            .data[["variable_class"]] == "character" &
+            !.data[["variable_id"]] %in%
+              c("ref_date", "contract_id", "personnel_id")
         ) |>
+        dplyr::group_by(.data[["module"]]) |>
+        dplyr::summarise(
+          choices = list(
+            purrr::set_names(.data[["variable_id"]], .data[["variable_name"]])
+          ),
+          .groups = "drop"
+        ) |>
+        dplyr::pull(.data[["choices"]], name = .data[["module"]])
+    )
+
+    # update filter values
+    shiny::observe({
+      variable <- input$wagebill_filter_variable
+
+      if (is.null(variable) || variable == "none") {
+        shinyWidgets::updatePickerInput(
+          session,
+          "wagebill_filter_values",
+          choices = NULL,
+          selected = character(0)
+        )
+      } else {
+        filter_vals <- sort(
+          as.character(
+            unique(
+              stats::na.omit(
+                wagebill_data[[variable]]
+              ))
+          )
+        )
+
+        shinyWidgets::updatePickerInput(
+          session,
+          "wagebill_filter_values",
+          choices = filter_vals,
+          selected = filter_vals
+        )
+      }
+    })
+
+    wagebill_filtered <- shiny::reactive({
+      data <- wagebill_data
+
+      if (
+        !is.null(input$wagebill_filter_variable) &&
+          input$wagebill_filter_variable != "none" &&
+          length(input$wagebill_filter_values) > 0
+      ) {
+        data <- data |>
+          dplyr::filter(
+            .data[[input$wagebill_filter_variable]] %in%
+              input$wagebill_filter_values
+          )
+      }
+
+      data |>
+        dplyr::mutate(year = lubridate::year(.data[["ref_date"]])) |>
         dplyr::filter(
           .data[["year"]] >= input$date_range[1],
           .data[["year"]] <= input$date_range[2]
         )
     })
 
-    # Conditional UI: group filter when > 8 unique values
-    output$group_filter_ui <- shiny::renderUI({
-      shiny::req(input$wagebill_group != "ref_date")
-      group_vals <- sort(as.character(unique(na.omit(
-        wagebill_data[[input$wagebill_group]]
-      ))))
-      if (length(group_vals) > 8) {
-        shinyWidgets::pickerInput(
-          session$ns("group_filter"),
-          "Groups to display:",
-          choices = group_vals,
-          selected = group_vals,
-          multiple = TRUE,
-          options = shinyWidgets::pickerOptions(
-            actionsBox = TRUE,
-            liveSearch = TRUE,
-            selectedTextFormat = "count > 3",
-            countSelectedText = "{0} groups selected",
-            noneSelectedText = "No groups selected",
-            container = "body"
-          )
-        )
-      }
-    })
-
-    output$group_filter_ui_evolution <- shiny::renderUI({
-      shiny::req(input$wagebill_group != "ref_date")
-      group_vals <- sort(as.character(unique(na.omit(
-        wagebill_data[[input$wagebill_group]]
-      ))))
-      if (length(group_vals) > 8) {
-        shinyWidgets::pickerInput(
-          session$ns("group_filter"),
-          "Display groups:",
-          choices = group_vals,
-          selected = group_vals,
-          multiple = TRUE,
-          options = shinyWidgets::pickerOptions(
-            actionsBox = TRUE,
-            liveSearch = TRUE,
-            selectedTextFormat = "count > 3",
-            countSelectedText = "{0} groups selected",
-            noneSelectedText = "No groups selected",
-            container = "body"
-          )
-        )
-      }
-    })
-
-    # Data filtered by both date and selected groups
-    wagebill_group_filtered <- shiny::reactive({
-      data <- wagebill_filtered_date()
-      if (input$wagebill_group == "ref_date") {
-        return(data)
-      }
-      group_vals <- unique(na.omit(wagebill_data[[input$wagebill_group]]))
-      if (length(group_vals) > 8 && !is.null(input$group_filter)) {
-        data <- data |>
-          dplyr::filter(
-            .data[[input$wagebill_group]] %in% input$group_filter
-          )
-      }
-      data
-    })
-
     wagebill_summary <- shiny::reactive({
-      if (input$wagebill_group == "ref_date") {
-        wagebill_out <- wagebill_group_filtered() |>
-          govhr::compute_fastsummary(
-            cols = input$wagebill_measure,
-            fns = "sum",
-            groups = c(input$wagebill_group)
-          )
-      } else {
-        wagebill_out <- wagebill_group_filtered() |>
-          govhr::compute_fastsummary(
-            cols = input$wagebill_measure,
-            fns = "sum",
-            groups = c("ref_date", input$wagebill_group)
-          )
-      }
+      out <- compute_trend_summary(
+        wagebill_filtered(),
+        group = input$wagebill_group,
+        measure_col = input$wagebill_measure
+      )
 
-      # if growth rate toggle is on
       if (input$toggle_growth) {
-        if (input$wagebill_group == "ref_date") {
-          wagebill_out <- wagebill_out |>
-            dplyr::arrange(.data[["ref_date"]]) |>
-            dplyr::mutate(
-              value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100
-            )
-        } else {
-          wagebill_out <- wagebill_out |>
-            dplyr::group_by(dplyr::across(dplyr::all_of(
-              input$wagebill_group
-            ))) |>
-            dplyr::arrange(.data[["ref_date"]]) |>
-            dplyr::mutate(
-              value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100
-            ) |>
-            dplyr::ungroup()
-        }
+        out <- apply_baseline_index(out, group = input$wagebill_group)
       }
 
-      wagebill_out
+      out
+    })
+
+    wagebill_annual <- shiny::reactive({
+      wagebill_filtered() |>
+        govhr::compute_fastsummary(
+          cols = input$wagebill_measure,
+          fns = "sum",
+          groups = c("ref_date", "country_code")
+        )
     })
 
     # plot 1. panel
     output$wagebill_panel <- plotly::renderPlotly({
-      plot <- wagebill_summary() |>
-        dplyr::ungroup() |>
-        ggplot2::ggplot(
-          ggplot2::aes(
-            x = .data[["ref_date"]],
-            y = .data[["value"]]
-          )
-        ) +
-        ggplot2::geom_point() +
-        ggplot2::geom_line() +
-        ggplot2::xlab("Time")
-
-      if (input$wagebill_group != "ref_date") {
-        n_groups <- dplyr::n_distinct(
-          wagebill_summary()[[input$wagebill_group]],
-          na.rm = TRUE
+      plotly::ggplotly(
+        plot_trend(
+          wagebill_summary(),
+          group = input$wagebill_group,
+          toggle_growth = input$toggle_growth,
+          y_label = "Wage Bill"
         )
-        orange_palette <- colorRampPalette(c("#C34729", "#F5C6A0"))(n_groups)
-        plot <- plot +
-          ggplot2::aes(
-            color = .data[[input$wagebill_group]],
-            group = .data[[input$wagebill_group]]
-          ) +
-          ggplot2::scale_color_manual(values = orange_palette)
-      }
-
-      if (input$toggle_growth) {
-        plot <- plot +
-          ggplot2::scale_y_continuous(
-            labels = scales::label_number(accuracy = 0.1)
-          ) +
-          ggplot2::ylab("Baseline index (first period = 100)") +
-          ggplot2::geom_hline(
-            yintercept = 100,
-            linetype = "dashed",
-            color = "red3"
-          )
-      } else {
-        plot <- plot +
-          ggplot2::scale_y_continuous(
-            labels = scales::label_number(scale_cut = scales::cut_short_scale())
-          ) +
-          ggplot2::ylab("Wage Bill")
-      }
-
-      plotly::ggplotly(plot)
+      )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
@@ -423,54 +410,23 @@ wagebill_server <- function(id, wagebill_data) {
         )
       )
 
-      cross_section_data <- wagebill_group_filtered() |>
-        group_by(
-          across(
-            all_of(input$wagebill_group)
-          )
-        ) |>
-        # only present latest reference date
-        dplyr::filter(
-          ref_date == max(ref_date)
-        ) |>
-        govhr::compute_fastsummary(
-          cols = input$wagebill_measure,
-          fns = "sum",
-          groups = input$wagebill_group
-        ) |>
-        # drop missing values and groups
-        dplyr::filter(
-          !is.na(.data[["value"]]) &
-            !is.na(.data[[input$wagebill_group]])
-        )
+      cross_section_data <- compute_cross_section_summary(
+        wagebill_filtered(),
+        group = input$wagebill_group,
+        measure_col = input$wagebill_measure
+      )
 
-      # dynamic height
       n_groups <- nrow(cross_section_data)
       plot_height <- max(350, n_groups * 35 + 100)
 
-      plot <- cross_section_data |>
-        ggplot2::ggplot(
-          ggplot2::aes(
-            x = .data[["value"]],
-            y = stats::reorder(
-              stringr::str_wrap(.data[[input$wagebill_group]], width = 30),
-              .data[["value"]]
-            )
-          )
-        ) +
-        ggplot2::geom_col() +
-        ggplot2::scale_x_continuous(
-          labels = scales::label_number(scale_cut = scales::cut_short_scale())
-        ) +
-        scale_y_discrete(
-          guide = guide_axis(n.dodge = 2)
-        ) +
-        ggplot2::labs(
-          x = "Wage bill",
-          y = ""
-        )
-
-      plotly::ggplotly(plot, height = plot_height)
+      plotly::ggplotly(
+        plot_bar_total(
+          cross_section_data,
+          group = input$wagebill_group,
+          x_label = "Wage bill"
+        ),
+        height = plot_height
+      )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
@@ -483,65 +439,19 @@ wagebill_server <- function(id, wagebill_data) {
         )
       )
 
-      change_data <- wagebill_group_filtered() |>
-        group_by(
-          across(
-            all_of(input$wagebill_group)
-          )
-        ) |>
-        dplyr::filter(
-          ref_date %in% c(max(ref_date), min(ref_date))
-        ) |>
-        govhr::compute_fastsummary(
-          cols = input$wagebill_measure,
-          fns = "sum",
-          groups = c("ref_date", input$wagebill_group)
-        ) |>
-        dplyr::filter(!is.na(.data[[input$wagebill_group]])) |>
-        dplyr::group_by(dplyr::across(dplyr::all_of(input$wagebill_group))) |>
-        dplyr::summarise(
-          growth_rate = round(
-            dplyr::last(.data[["value"]]) / dplyr::first(.data[["value"]]) - 1,
-            3
-          ) *
-            100,
-          .groups = "drop"
-        ) |>
-        dplyr::filter(!is.na(.data[["growth_rate"]]))
+      change_data <- compute_growth_summary(
+        wagebill_filtered(),
+        group = input$wagebill_group,
+        measure_col = input$wagebill_measure
+      )
 
-      # dynamic height
       n_groups <- nrow(change_data)
       plot_height <- max(350, n_groups * 35 + 100)
 
-      plot <- change_data |>
-        ggplot2::ggplot(
-          ggplot2::aes(
-            x = .data[["growth_rate"]],
-            y = stats::reorder(
-              stringr::str_wrap(.data[[input$wagebill_group]], width = 30),
-              .data[["growth_rate"]]
-            )
-          )
-        ) +
-        ggplot2::geom_col() +
-        geom_vline(
-          xintercept = 0,
-          linewidth = 1.25,
-          linetype = "dashed",
-          color = "#2958c3"
-        ) +
-        ggplot2::scale_x_continuous(
-          labels = scales::label_number(scale_cut = scales::cut_short_scale())
-        ) +
-        scale_y_discrete(
-          guide = guide_axis(n.dodge = 2)
-        ) +
-        ggplot2::labs(
-          x = "Growth rate",
-          y = ""
-        )
-
-      plotly::ggplotly(plot, height = plot_height)
+      plotly::ggplotly(
+        plot_bar_growth(change_data, group = input$wagebill_group),
+        height = plot_height
+      )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
@@ -554,11 +464,7 @@ wagebill_server <- function(id, wagebill_data) {
         )
       )
 
-      dispersion_data <- wagebill_group_filtered() |>
-        govhr::convert_constant_ppp(
-          cols = input$wagebill_measure,
-          macro_indicators = govhr::macro_indicators
-        ) |>
+      dispersion_data <- wagebill_filtered() |>
         group_by(
           across(
             all_of(input$wagebill_group)
@@ -595,87 +501,33 @@ wagebill_server <- function(id, wagebill_data) {
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
-    # plot 5. wagebill animation
-    output$wagebill_animation <- plotly::renderPlotly({
-      shiny::validate(
-        shiny::need(
-          input$wagebill_group != "ref_date",
-          "Please select a group."
-        )
-      )
-
-      animation_data <- {
-        wagebill <- wagebill_group_filtered() |>
-          govhr::compute_fastsummary(
-            cols = input$wagebill_measure,
-            fns = "sum",
-            groups = c("ref_date", input$wagebill_group)
-          ) |>
-          dplyr::filter(
-            !is.na(.data[["value"]]) &
-              !is.na(.data[[input$wagebill_group]])
-          )
-
-        personnel <- wagebill_group_filtered() |>
-          group_by(
-            across(
-              all_of(
-                c("ref_date", input$wagebill_group)
-              )
-            )
-          ) |>
-          summarise(
-            headcount = n_distinct(.data[["personnel_id"]])
-          )
-
-        wagebill |>
-          left_join(
-            personnel,
-            by = c("ref_date", input$wagebill_group)
-          )
-      }
-
-      plotly::plot_ly(
-        data = animation_data,
-        x = ~headcount,
-        y = ~value,
-        frame = ~ref_date,
-        text = ~ paste0(
-          input$wagebill_group,
-          ": ",
-          get(input$wagebill_group),
-          "<br>",
-          "Headcount: ",
-          scales::comma(headcount),
-          "<br>",
-          "Wage bill: ",
-          scales::comma(value)
-        ),
-        hoverinfo = "text",
-        type = "scatter",
-        mode = "markers",
-        marker = list(size = 10, opacity = 0.7)
-      ) |>
-        plotly::layout(
-          xaxis = list(
-            title = "Headcount (log scale)",
-            type = "log",
-            dtick = 1
-          ),
-          yaxis = list(
-            title = "Wage bill (log scale)",
-            type = "log",
-            dtick = 1
-          )
+    # plot 5. fiscal sustainability (wage bill as % of GDP)
+    output$wagebill_fiscal <- renderPlotly({
+      wagebill_fiscal <- wagebill_annual() |>
+        mutate(
+          year = lubridate::year(ref_date)
         ) |>
-        plotly::animation_opts(
-          frame = 500,
-          transition = 300,
-          redraw = FALSE
+        left_join(
+          govhr::macro_indicators,
+          by = c("country_code", "year")
         ) |>
-        plotly::animation_slider(
-          currentvalue = list(prefix = "Date: ")
+        mutate(
+          ratio = .data[["value"]] / .data[[input$macroindicator_measure]] * 100
         )
+
+      plot <- wagebill_fiscal |>
+        ggplot2::ggplot(
+          ggplot2::aes(x = .data[["ref_date"]], y = .data[["ratio"]])
+        ) +
+        ggplot2::geom_point() +
+        ggplot2::geom_line() +
+        ggplot2::xlab("Time") +
+        ggplot2::ylab("Ratio") +
+        ggplot2::scale_y_continuous(
+          labels = scales::percent_format(scale = 1)
+        )
+
+      plotly::ggplotly(plot)
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
@@ -693,7 +545,7 @@ wagebill_server <- function(id, wagebill_data) {
           # Generate report using helper function
           output_path <- generate_wagebill_report(
             wagebill_summary_data = wagebill_summary(),
-            wagebill_filtered_data = wagebill_filtered_date(),
+            wagebill_filtered_data = wagebill_filtered(),
             date_range = input$date_range,
             wagebill_measure = input$wagebill_measure,
             wagebill_group = input$wagebill_group,

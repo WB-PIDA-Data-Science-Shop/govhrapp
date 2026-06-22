@@ -2,7 +2,7 @@
 
 Across the world, public sectors employ over [400 million workers](https://www.worldbank.org/en/publication/public-workforce-performance-and-prosperity). The wage bill of this public sector workforce represents around 40 percent of government expenditure. Strengthening how government manage their large and complex workforce, while ensuring fiscal sustainability, is a key priority for the World Bank's [Governance Global Practice](https://www.worldbank.org/ext/en/topic/governance).
 
-`govhr` provides governments with [data and analytics](https://www.worldbank.org/en/publication/government-analytics) that enable you to better understand (and manage) your public sector workforce and wagebill. This suite, called **Standard Analytics**, provides a standard set of indicators and visualizations to do so. It is based on the World Bank’s [Public Sector Employment and Compensation Assessment Framework](https://documents1.worldbank.org/curated/en/324801640074379484/pdf/Public-Sector-Employment-and-Compensation-An-Assessment-Framework.pdf).
+`govhrapp` provides governments with user-friendly [data and analytics](https://www.worldbank.org/en/publication/government-analytics) that enable you to better understand (and manage) your public sector workforce and wagebill. This suite, called **Standard Analytics**, provides a standard set of indicators and visualizations to do so. It is based on the World Bank’s [Public Sector Employment and Compensation Assessment Framework](https://documents1.worldbank.org/curated/en/324801640074379484/pdf/Public-Sector-Employment-and-Compensation-An-Assessment-Framework.pdf).
 
 ---
 

@@ -35,6 +35,7 @@ missingness_server <- function(id, qc_obj) {
       grp <- unique(group_dt[group_dt$module == input$module,
                               c("group_var", "group_label")])
       grp <- grp[order(grp$group_var), ]
+      grp$group_label[is.na(grp$group_label)] <- grp$group_var[is.na(grp$group_label)]
       shiny::updateSelectInput(session, "group_var",
                                choices  = stats::setNames(grp$group_var,
                                                           grp$group_label),

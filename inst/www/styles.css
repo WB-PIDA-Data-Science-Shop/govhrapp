@@ -47,7 +47,7 @@
 }
  
 #download_data_1{
-  background-color: #3326da;
+  background-color: #002244;
   color: white;
 }
 
@@ -125,4 +125,21 @@
   background-color: #C34729 !important;
   border-color: #C34729 !important;
   color: white !important;
+}
+
+/* customize action button */
+.action-button {
+  background-color: #012d58  !important;
+  color: white !important;
+}
+
+/* Color of unselected underline tabs */
+.nav-underline .nav-link {
+  color: #002244 !important; 
+}
+
+/* Color of the active/selected underline tab */
+.nav-underline .nav-link.active {
+  color: #002244 !important; 
+  font-weight: bold;
 }

@@ -28,7 +28,6 @@ run_qcheckapp <- function(qc_obj, ...) {
   thematic::thematic_shiny(font = "auto")
 
   ui <- bslib::page_navbar(
-    title = "govhr quality control",
     fillable = FALSE,
 
     # set theme
@@ -53,22 +52,34 @@ run_qcheckapp <- function(qc_obj, ...) {
     # shiny::tags$head(shiny::includeCSS("www/styles.css")),
 
     # panel 1: home
+    # panel 1: home
     bslib::nav_panel(
       "Home",
       icon = shiny::icon("home"),
 
       # content
-      bslib::card(
-        bslib::card_header(
-          shiny::tags$img(src = "assets/govhr_logo.png", width = "80%")
+      bslib::layout_columns(
+        col_widths = bslib::breakpoints(sm = 12, md = c(1, 10, 1), lg = c(1.5, 9, 1.5)),
+        shiny::div(),
+        bslib::card(
+          bslib::card_header(
+            shiny::tags$img(
+              src = "assets/govhr_logo.png",
+              style = "max-width: 1200px; display: block; margin-left: auto; margin-right: auto;",
+              width = "80%"
+            )
+          ),
+          bslib::card_body(
+            shiny::tags$div(
+              style = "max-width: 800px; margin: 0 auto; padding: 2rem 3rem;",
+              shiny::tags$h3("Welcome to govhr."),
+              shiny::markdown(
+                readLines(system.file("markdown/qcheck_home.md", package = "govhrapp"))
+              )
+            )
+          )
         ),
-        bslib::card_body(
-          shiny::tags$br(),
-          shiny::tags$h3("Welcome to govhr: Quality Control Suite."),
-          shiny::markdown(
-            readLines(system.file("markdown/qcheck_home.md", package = "govhrapp"))
-          )          
-        )
+        shiny::div()
       )
     ),
     
