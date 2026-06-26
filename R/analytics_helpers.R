@@ -72,3 +72,37 @@ build_wagebill_group_choices <- function(data) {
 
   c(list("All" = "ref_date"), module_choices)
 }
+
+#' Render a Data Coverage Value Box
+#'
+#' @param .data Data frame. A dataframe to compute the coverage on.
+#' @param title String. Value box title.
+#' @param icon String. Icon name. Defaults to `"table"`.
+#'
+#' @return A [shiny::renderUI()] producing a [bslib::value_box()] themed
+#'   `"danger"` (<50%), `"warning"` (50–79%), or `"success"` (≥80%).
+#'
+#' @importFrom shiny renderUI
+#' @importFrom bslib value_box
+#' @importFrom dplyr case_when
+#'
+#' @details Coverage denotes the total number of non-missing records in a dataset, expressed as a percentage of the total records. For example, if a dataset has 10 rows and 10 columns, i.e., 100 records, and 10 of them are available, the coverage would be 10 percent.
+#' @export
+render_coverage_box <- function(.data, title, icon = "table") {
+  shiny::renderUI({
+    value_coverage <- compute_global_coverage(.data)
+
+    theme <- dplyr::case_when(
+      value_coverage < 50                         ~ "danger",
+      value_coverage >= 50 & value_coverage < 80 ~ "warning",
+      TRUE                                        ~ "success"
+    )
+
+    bslib::value_box(
+      title = title,
+      value = value_coverage,
+      icon  = icon,
+      theme = theme
+    )
+  })
+}

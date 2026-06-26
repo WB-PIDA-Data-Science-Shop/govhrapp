@@ -54,3 +54,7 @@ wagebill_data <- govhr::bra_hrmis_contract |>
       ))),
     by = c("ref_date", "personnel_id")
   )
+
+est_data <- govhr::bra_hrmis_est
+personnel_data <- govhr::bra_hrmis_personnel
+contract_data <- govhr::bra_hrmis_contract

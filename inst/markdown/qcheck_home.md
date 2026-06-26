@@ -8,14 +8,11 @@ Across the world, public sectors employ over [400 million workers](https://www.w
 
 **Quality Check** comprises the following modules:
 
-##### 1. Data Basics
-Foundational diagnostics including module dimensions, variable structure and dictionary conformity, primary key integrity, cross-module orphan checks, salary logic validation, and date logic checks. This section provides essential structural and consistency assessments before diving into detailed data quality patterns.
+##### 1. Coverage
+This module checks the coverage of the dataset, ensuring that records are complete and identifying any missing data patterns. This helps identify potential data gaps.
 
-##### 2. Data Coverage Report
-Comprehensive measurement and visualization of missing data patterns overall and across key analytical dimensions (occupation, ISCO mapping, reference period, and establishment). Helps identify variables requiring cleaning, imputation, or further validation. Regression analytics may be used to study non-random coverage gaps in this section as well. 
+##### 2. Uniqueness
+This module checks for duplicate records in the dataset, ensuring that each entity is uniquely represented. This helps identify potential data entry errors or inconsistencies that could affect analysis and reporting.
 
-##### 3. Data Validation
+##### 3.Validity
 Rule-based quality checks applied separately to the Contract and Personnel modules. Each rule is evaluated against all records and summarised with a pass rate, pass/fail counts, and a status badge (Pass = 100%, Warning ≥ 80%, Fail < 80%). Rules that cannot be evaluated due to missing variables are flagged as errors. Summary indicators at the top of the tab show the overall weighted pass rate for each module.
-
-##### 4. Volatility Analysis
-Time-series diagnostics evaluating temporal stability of salary aggregates, contract counts, and work hours across reference periods as well as other fields as selected by the user. High volatility may indicate data quality issues, organizational changes, or policy shifts requiring investigation.

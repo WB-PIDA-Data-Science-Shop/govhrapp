@@ -48,10 +48,6 @@ run_qcheckapp <- function(qc_obj, ...) {
 
     padding = "20px",
 
-    # custom CSS
-    # shiny::tags$head(shiny::includeCSS("www/styles.css")),
-
-    # panel 1: home
     # panel 1: home
     bslib::nav_panel(
       "Home",

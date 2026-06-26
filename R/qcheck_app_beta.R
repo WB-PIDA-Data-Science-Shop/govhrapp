@@ -1,16 +1,17 @@
 #' Run the govhr Shiny Dashboard Application
 #'
-#' Launches an interactive Shiny dashboard for govhr data visualization and analysis.
+#' Launches an interactive Shiny dashboard for govhr data quality check.
 #'
-#' @param workforce_data Data frame with workforce/personnel attributes (headcount).
-#' @param wagebill_data Data frame with contract/salary attributes (wage bill).
+#' @param est_data Data frame with establishment attributes.
+#' @param personnel_data Data frame with workforce/personnel attributes (headcount).
+#' @param contract_data Data frame with contract/salary attributes (wage bill).
 #' @param ... Additional arguments passed to \code{\link[shiny]{shinyApp}}.
 #'
 #' @return A Shiny app object.
 #'
 #' @examples
 #' \dontrun{
-#' run_govhrapp(workforce_data, wagebill_data)
+#' run_govhrapp_qcheck(est_data, personnel_data, contract_data)
 #' }
 #'
 #' @importFrom shiny shinyApp addResourcePath
@@ -20,7 +21,7 @@
 #' @importFrom lubridate year
 #' @importFrom scales label_number cut_short_scale
 #' @export
-run_govhrapp <- function(workforce_data, wagebill_data, ...) {
+run_govhrapp_qcheck <- function(est_data, personnel_data, contract_data, ...) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", system.file("www", package = "govhrapp"))
 
@@ -45,23 +46,26 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   ui <- bslib::page_navbar(
     fillable = FALSE,
 
-    navbar_options = navbar_options(
-      underline = TRUE
-    ),
-
     # set theme
     theme = bslib::bs_theme(
       bootswatch = "litera",
-      base_font = font_google("Source Sans Pro", local = FALSE),
-      code_font = font_google("Source Sans Pro", local = FALSE),
-      heading_font = font_google("Fira Sans", local = FALSE),
-      navbar_bg = "#ffffff"
+      base_font = font_google("Source Sans Pro"),
+      code_font = font_google("Source Sans Pro"),
+      heading_font = font_google("Fira Sans"),
+      navbar_bg = "#FFFFFF"
     ) |>
       bslib::bs_add_rules(
         readLines(system.file("www/styles.css", package = "govhrapp"))
       ),
 
-    padding = "10px",
+    navbar_options = navbar_options(
+      underline = TRUE
+    ),
+
+    padding = "20px",
+
+    # custom CSS
+    # shiny::tags$head(shiny::includeCSS("www/styles.css")),
 
     # panel 1: home
     bslib::nav_panel(
@@ -85,7 +89,7 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
               style = "max-width: 800px; margin: 0 auto; padding: 2rem 3rem;",
               shiny::tags$h3("Welcome to govhr."),
               shiny::markdown(
-                readLines(system.file("markdown/home.md", package = "govhrapp"))
+                readLines(system.file("markdown/qcheck_home.md", package = "govhrapp"))
               )
             )
           )
@@ -93,54 +97,19 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
         shiny::div()
       )
     ),
-
-    # panel 2: overview
+    
+    # panel 2: coverage
     bslib::nav_panel(
-      "Overview",
-      icon = shiny::icon("gauge"),
-      overview_ui("overview", workforce_data, wagebill_data)
-    ),
+      "Coverage",
+      icon = shiny::icon("building"),
 
-    # panel 3: workforce planning
-    bslib::nav_panel(
-      "Workforce",
-      icon = shiny::icon("person-walking"),
-      workforce_ui("workforce", workforce_data)
-    ),
-
-
-    # panel 4: wage bill
-    bslib::nav_panel(
-      "Wage Bill",
-      icon = shiny::icon("money-bill"),
-      wagebill_ui("wagebill", wagebill_data)
-    ),
-
-    # panel 5: code
-    nav_menu(
-      title = "Code",
-      icon = shiny::icon("github"),
-      bslib::nav_item(
-        shiny::tags$a(
-          "govhr dashboard",
-          href = "https://github.com/WB-PIDA-Data-Science-Shop/govhrapp",
-          target = "_blank"
-        )
-      ),
-      bslib::nav_item(
-        shiny::tags$a(
-          "govhr",
-          href = "https://github.com/WB-PIDA-Data-Science-Shop/govhr",
-          target = "_blank"
-        )
-      )
+      # content
+      coverage_ui("coverage", est_data, personnel_data, contract_data)
     )
   )
 
   server <- function(input, output, session) {
-    overview_server("overview", workforce_data, wagebill_data)
-    wagebill_server("wagebill", wagebill_data)
-    workforce_server("workforce", workforce_data)
+    coverage_server("coverage", est_data, personnel_data, contract_data)
   }
 
   shiny::shinyApp(ui, server, ...)
