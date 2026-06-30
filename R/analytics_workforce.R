@@ -253,26 +253,8 @@ workforce_server <- function(id, workforce_data) {
     # choice of cols
     available_cols <- names(workforce_data)
 
-    workforce_group_choices <- c(
-      list("All" = "ref_date"),
-      govhr::dictionary |>
-        dplyr::filter(
-          .data[["variable_id"]] %in%
-            available_cols &
-            .data[["variable_class"]] == "character" &
-            !.data[["variable_id"]] %in%
-              c("ref_date", "contract_id", "personnel_id")
-        ) |>
-        dplyr::group_by(.data[["module"]]) |>
-        dplyr::summarise(
-          choices = list(
-            purrr::set_names(.data[["variable_id"]], .data[["variable_name"]])
-          ),
-          .groups = "drop"
-        ) |>
-        dplyr::pull(.data[["choices"]], name = .data[["module"]])
-    )
-
+    workforce_group_choices <- identify_group_choices(workforce_data)
+    
     # update filter values
     shiny::observe({
       variable <- input$workforce_filter_variable

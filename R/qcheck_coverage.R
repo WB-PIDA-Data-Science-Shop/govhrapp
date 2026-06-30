@@ -38,6 +38,17 @@ coverage_ui <- function(id,  est_data, contract_data, personnel_data) {
         fill = FALSE,
         !!!value_boxes
       )
+    ),
+    # 2. coverage plots where users can select which data to visualize coverage for
+    bslib::card(
+      bslib::card_header(
+        "Coverage Plots"
+      ),
+      layout_column_wrap(
+        fill = FALSE,
+        width = 1,
+        plotOutput(NS(id, "coverage_plot"))
+      )
     )
   )
 }
@@ -58,11 +69,13 @@ coverage_ui <- function(id,  est_data, contract_data, personnel_data) {
 #' @keywords internal
 coverage_server <- function(id, est_data, contract_data, personnel_data) {
   shiny::moduleServer(id, function(input, output, session) {
+    # 1. value boxes for coverage metrics
     output$coverage_est <- render_coverage_box(est_data, "Establishments", "building")
-
     output$coverage_personnel <- render_coverage_box(personnel_data, "Personnel", "users")
-    
     output$coverage_contract <- render_coverage_box(contract_data, "Contracts", "file-contract")
+
+    # 2. coverage plots where users can select which data to visualize coverage for
+
   })
 }
 

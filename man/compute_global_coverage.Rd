@@ -8,6 +8,8 @@ compute_global_coverage(data, digits = 2)
 }
 \arguments{
 \item{data}{A data frame.}
+
+\item{digits}{An integer specifying the number of decimal places to round the result to. Default is 2.}
 }
 \value{
 A numeric value representing the proportion of missing values in the data frame.
