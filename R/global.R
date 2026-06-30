@@ -7,6 +7,7 @@
 #'
 #' @import dplyr DBI duckdb
 #' @importFrom lubridate year
+#' @importFrom purrr map
 #'
 #' @return Invisibly returns the path to the DuckDB file.
 #' @export
@@ -101,7 +102,11 @@ build_govhrdb <- function(force = FALSE) {
     est = est_data,
     personnel = personnel_data,
     contract = contract_data
-  )
+  ) |> 
+    # convert to UTF-8
+    purrr::map(\(df)
+      mutate(df, across(where(is.character), \(col) iconv(col, from = "", to = "UTF-8", sub = "byte")))
+    )
 
   for (tbl_name in names(tables)) {
     DBI::dbWriteTable(con, tbl_name, tables[[tbl_name]], overwrite = TRUE)
