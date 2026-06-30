@@ -171,6 +171,7 @@ compute_growth_summary <- function(data, group, measure_col = NULL) {
 #'   no grouping.
 #' @param toggle_growth Logical. If `TRUE`, format the y-axis as a baseline
 #'   index and add a dashed reference line at 100. Default `FALSE`.
+#' @param y_col Character string of the column to plot on the y-axis. Default `"value"`.
 #' @param y_label Character string for the y-axis label used when
 #'   `toggle_growth` is `FALSE`. Default `"Value"`.
 #'
@@ -181,11 +182,11 @@ compute_growth_summary <- function(data, group, measure_col = NULL) {
 #' @importFrom grDevices colorRampPalette
 #' @importFrom scales label_number cut_short_scale
 #' @export
-plot_trend <- function(data, group, toggle_growth = FALSE, y_label = "Value") {
+plot_trend <- function(data, group, toggle_growth = FALSE, y_col = "value", y_label = "Value") {
   plot <- data |>
     dplyr::ungroup() |>
     ggplot2::ggplot(
-      ggplot2::aes(x = .data[["ref_date"]], y = .data[["value"]])
+      ggplot2::aes(x = .data[["ref_date"]], y = .data[[y_col]])
     ) +
     ggplot2::geom_point() +
     ggplot2::geom_line() +
