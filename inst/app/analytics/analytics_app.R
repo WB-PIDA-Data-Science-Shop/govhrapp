@@ -9,13 +9,13 @@ govhrapp_con <- DBI::dbConnect(
   read_only = TRUE
 )
 
-workforce_data <- dbplyr::tbl(
+workforce_data <- dplyr::tbl(
   govhrapp_con,
   "personnel"
 ) |> 
   duckplyr::as_duckdb_tibble()
 
-wagebill_data <- dbplyr::tbl(
+wagebill_data <- dplyr::tbl(
   govhrapp_con,
   "contract"
 ) |> 

@@ -82,9 +82,7 @@ deploy_govhrapp <- function(suite){
     appDir = ".",
     appId = app_id,
     appPrimaryDoc = app_primary_doc,
-    # appFiles = app_files,
     server = "internal-server",
-    # dependencyResolution = "library",
     forceUpdate = TRUE
   )
 }
