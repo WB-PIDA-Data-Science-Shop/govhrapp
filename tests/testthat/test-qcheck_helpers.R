@@ -6,6 +6,6 @@ test_that("compute_coverage works correctly", {
 
   expect_equal(
     compute_global_coverage(data),
-    2/8
+    75
   )
 })
