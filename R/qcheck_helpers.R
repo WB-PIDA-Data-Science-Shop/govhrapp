@@ -157,8 +157,7 @@ coverage_panel_ui <- function(id, .data) {
 #'   automatically when called inside [shiny::moduleServer()]).
 #' @param .data Data frame for this panel (est, personnel, or contract).
 #'
-#' @return None. Called for side effects.
-#' @keywords internal
+#' @return A set of Shiny outputs for the coverage panel.
 coverage_panel_server <- function(id, .data) {
   shiny::moduleServer(id, function(input, output, session) {
     # update subgroup_filter choices whenever the group column changes
