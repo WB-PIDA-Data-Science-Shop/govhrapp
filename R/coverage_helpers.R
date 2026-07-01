@@ -37,7 +37,7 @@ compute_coverage <- function(.data, group_var = NULL, aggregate = FALSE) {
       ) |>
       dplyr::summarise(
         coverage = mean(
-          coverage,
+          .data[["coverage"]],
           na.rm = TRUE
         ),
         .groups = "drop"

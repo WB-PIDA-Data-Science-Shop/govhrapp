@@ -5,7 +5,8 @@
 #' @param force Logical. If \code{FALSE} (default), skips writing if the
 #'   database file already exists. Set to \code{TRUE} to overwrite.
 #'
-#' @import dplyr DBI duckdb
+#' @import DBI dplyr
+#' @importFrom duckdb duckdb
 #' @importFrom lubridate year
 #' @importFrom purrr map
 #'

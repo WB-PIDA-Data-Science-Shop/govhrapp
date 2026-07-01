@@ -68,7 +68,7 @@ coverage_ui <- function(id, est_data, contract_data, personnel_data) {
             )
           ),
           # plot 1. overall coverage over time
-           bslib::card(
+          bslib::card(
             full_screen = TRUE,
             fillable = FALSE,
             bslib::card_header(
@@ -84,7 +84,7 @@ coverage_ui <- function(id, est_data, contract_data, personnel_data) {
             )
           )
         )
-        )
+      )
     )
   )
 }
@@ -124,7 +124,11 @@ coverage_server <- function(id, est_data, contract_data, personnel_data) {
 
     # 2. coverage plots
     data_coverage_overall <- shiny::reactive({
-      compute_coverage(contract_data, group = input$coverage_group, aggregate = TRUE)
+      compute_coverage(
+        contract_data,
+        group = input$coverage_group,
+        aggregate = TRUE
+      )
     })
 
     output$coverage_panel <- plotly::renderPlotly({

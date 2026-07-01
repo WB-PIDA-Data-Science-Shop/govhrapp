@@ -2,20 +2,20 @@
 % Please edit documentation in R/coverage_helpers.R
 \name{compute_coverage}
 \alias{compute_coverage}
-\title{Compute coverage of non-missing values in a data frame or data table.}
+\title{Compute coverage of non-missing values in a dataset.}
 \usage{
 compute_coverage(.data, group_var = NULL, aggregate = FALSE)
 }
 \arguments{
-\item{.data}{A data frame or data table.}
+\item{.data}{A data frame.}
 
 \item{group_var}{A character string specifying the column name to group by. If NULL, coverage is computed for the entire data set.}
 
 \item{aggregate}{A logical value indicating whether to aggregate coverage values by the \code{group_var}.}
 }
 \value{
-A data table with coverage values for each column, optionally grouped by the specified \code{group_var}.
+A data frame with coverage values for each column, optionally grouped by the specified \code{group_var}.
 }
 \description{
-Compute coverage of non-missing values in a data frame or data table.
+Compute coverage of non-missing values in a dataset.
 }

@@ -6,4 +6,22 @@ qc_obj <- govhr::compute_qualitycontrol(
   est_dt       = govhr::bra_hrmis_est
 )
 
+est_data <- dplyr::tbl(
+  govhrapp_con,
+  "est"
+) |> 
+  duckplyr::as_duckdb_tibble()
+
+personnel_data <- dplyr::tbl(
+  govhrapp_con,
+  "personnel"
+) |> 
+  duckplyr::as_duckdb_tibble()
+
+contract_data <- dplyr::tbl(
+  govhrapp_con,
+  "contract"
+) |> 
+  duckplyr::as_duckdb_tibble()
+
 run_qcheckapp(qc_obj)

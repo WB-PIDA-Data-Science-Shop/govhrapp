@@ -4,7 +4,13 @@
 \alias{plot_trend}
 \title{Plot Time Trend}
 \usage{
-plot_trend(data, group, toggle_growth = FALSE, y_label = "Value")
+plot_trend(
+  data,
+  group,
+  toggle_growth = FALSE,
+  y_col = "value",
+  y_label = "Value"
+)
 }
 \arguments{
 \item{data}{A data frame with columns \code{ref_date} and \code{value}, as returned by
@@ -15,6 +21,8 @@ no grouping.}
 
 \item{toggle_growth}{Logical. If \code{TRUE}, format the y-axis as a baseline
 index and add a dashed reference line at 100. Default \code{FALSE}.}
+
+\item{y_col}{Character string of the column to plot on the y-axis. Default \code{"value"}.}
 
 \item{y_label}{Character string for the y-axis label used when
 \code{toggle_growth} is \code{FALSE}. Default \code{"Value"}.}
