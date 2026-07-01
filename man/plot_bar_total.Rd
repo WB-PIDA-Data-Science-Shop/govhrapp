@@ -4,13 +4,15 @@
 \alias{plot_bar_total}
 \title{Plot Horizontal Bar Chart of Totals by Group}
 \usage{
-plot_bar_total(data, group, x_label = "Value")
+plot_bar_total(data, group, x_col = "value", x_label = "Value")
 }
 \arguments{
 \item{data}{A data frame with the grouping column and a \code{value} column, as
 returned by \code{\link[=compute_cross_section_summary]{compute_cross_section_summary()}}.}
 
 \item{group}{Character string naming the grouping column.}
+
+\item{x_col}{Character string of the column to plot on the x-axis. Default \code{"value"}.}
 
 \item{x_label}{Character string for the x-axis label. Default \code{"Value"}.}
 }

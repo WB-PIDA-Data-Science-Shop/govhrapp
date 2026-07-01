@@ -52,7 +52,7 @@ wagebill_ui <- function(id, wagebill_data) {
     ),
     shiny::selectInput(
       shiny::NS(id, "wagebill_filter_variable"),
-      "Filter by:",
+      "Select group:",
       choices = filter_choices
     ),
     shinyWidgets::pickerInput(
@@ -82,7 +82,6 @@ wagebill_ui <- function(id, wagebill_data) {
       "Group:",
       choices = wagebill_group_choices
     ),
-    shiny::uiOutput(shiny::NS(id, "group_filter_ui")),
     shinyWidgets::materialSwitch(
       shiny::NS(id, "toggle_growth"),
       label = "Switch to baseline index",

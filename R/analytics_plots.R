@@ -231,6 +231,7 @@ plot_trend <- function(data, group, toggle_growth = FALSE, y_col = "value", y_la
 #' @param data A data frame with the grouping column and a `value` column, as
 #'   returned by [compute_cross_section_summary()].
 #' @param group Character string naming the grouping column.
+#' @param x_col Character string of the column to plot on the x-axis. Default `"value"`.
 #' @param x_label Character string for the x-axis label. Default `"Value"`.
 #'
 #' @return A ggplot2 object.
@@ -241,17 +242,17 @@ plot_trend <- function(data, group, toggle_growth = FALSE, y_col = "value", y_la
 #' @importFrom stringr str_wrap
 #' @importFrom scales label_number cut_short_scale
 #' @export
-plot_bar_total <- function(data, group, x_label = "Value") {
+plot_bar_total <- function(data, group, x_col = "value", x_label = "Value") {
   data |>
     dplyr::filter(
-      !is.na(.data[["value"]]) & !is.na(.data[[group]])
+      !is.na(.data[[x_col]]) & !is.na(.data[[group]])
     ) |>
     ggplot2::ggplot(
       ggplot2::aes(
-        x = .data[["value"]],
+        x = .data[[x_col]],
         y = stats::reorder(
           stringr::str_wrap(.data[[group]], width = 30),
-          .data[["value"]]
+          .data[[x_col]]
         )
       )
     ) +
@@ -305,8 +306,6 @@ plot_bar_growth <- function(data, group) {
     ggplot2::scale_y_discrete(guide = ggplot2::guide_axis(n.dodge = 2)) +
     ggplot2::labs(x = "Growth rate", y = "")
 }
-
-# ---- plot_segment -------------------------------------------------------------
 
 #' Create a Segment Plot with Jittered Points
 #'

@@ -6,6 +6,15 @@ qc_obj <- govhr::compute_qualitycontrol(
   est_dt       = govhr::bra_hrmis_est
 )
 
+govhrapp_con <- DBI::dbConnect(
+  duckdb::duckdb(),
+  dbdir = fs::path(
+    system.file("db", package = "govhrapp"),
+    "govhrapp.duckdb"
+  ),
+  read_only = TRUE
+)
+
 est_data <- dplyr::tbl(
   govhrapp_con,
   "est"

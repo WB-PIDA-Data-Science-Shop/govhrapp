@@ -4,17 +4,24 @@
 \alias{compute_coverage}
 \title{Compute coverage of non-missing values in a dataset.}
 \usage{
-compute_coverage(.data, group_var = NULL, aggregate = FALSE)
+compute_coverage(
+  .data,
+  group = NULL,
+  include_ref_date = FALSE,
+  aggregate = FALSE
+)
 }
 \arguments{
 \item{.data}{A data frame.}
 
-\item{group_var}{A character string specifying the column name to group by. If NULL, coverage is computed for the entire data set.}
+\item{group}{A character string specifying the column name to group by. If NULL, coverage is computed for the entire data set.}
 
-\item{aggregate}{A logical value indicating whether to aggregate coverage values by the \code{group_var}.}
+\item{include_ref_date}{A logical value indicating whether to include the \code{ref_date} column in the grouping.}
+
+\item{aggregate}{A logical value indicating whether to aggregate coverage values by the \code{group}.}
 }
 \value{
-A data frame with coverage values for each column, optionally grouped by the specified \code{group_var}.
+A data frame with coverage values for each column, optionally grouped by the specified \code{group}.
 }
 \description{
 Compute coverage of non-missing values in a dataset.
