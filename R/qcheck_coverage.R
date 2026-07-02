@@ -45,9 +45,8 @@ coverage_ui <- function(id, est_data, personnel_data, contract_data) {
         !!!value_boxes
       )
     ),
-
-    htmltools::div(style = "height: 6px;"), # padding
-
+    
+    # 2. coverage by module
     bslib::navset_underline(
       bslib::nav_panel(
         title = "Establishment",

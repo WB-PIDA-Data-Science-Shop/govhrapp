@@ -77,7 +77,7 @@ build_govhrdb <- function(force = FALSE) {
       "personnel_id",
       "gender",
       "educat7",
-      "status"
+      "employment_status"
     )))
 
   workforce_data <- personnel_clean

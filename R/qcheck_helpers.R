@@ -25,7 +25,7 @@ ui_filter_controls <- function(.data, id) {
   list(
     shiny::sliderInput(
       shiny::NS(id, "date_range"),
-      "Select year range:",
+      "Select date range:",
       min = min(.data[["ref_date"]], na.rm = TRUE),
       max = max(.data[["ref_date"]], na.rm = TRUE),
       value = c(
@@ -55,7 +55,6 @@ ui_filter_controls <- function(.data, id) {
     )
   )
 }
-
 
 #' Coverage Panel UI
 #' 
