@@ -16,6 +16,61 @@ compute_global_coverage <- function(data, digits = 2) {
     round(digits)
 }
 
+compute_global_consistency <- function(data, digits = 2) {
+  record_consistency <- compute_record_consistency(data, digits)
+  value_consistency <- compute_value_consistency(data, digits)
+    
+  global_consistency <- mean(c(record_consistency, value_consistency), na.rm = TRUE)
+
+  global_consistency |>
+    round(digits)
+}
+
+#' Compute the proportion of consistent records in a data frame.
+#' 
+#' @param data A data frame.
+#' @param id_col A character string specifying the name of the column that uniquely identifies records (e.g., "personnel_id" or "contract_id").
+#' @param group_cols A character vector specifying the names of the columns to group by. Default is NULL, which means no grouping.
+#' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
+#' 
+#' @return A data frame with the proportion of consistent records in the data frame, optionally by group.
+compute_record_consistency <- function(data, id_col, group_cols = NULL, digits = 2) {
+  if (!any(class(data) %in% c("duckplyr_df", "tbl_duckdb_connection"))) {
+    data <- data |>
+      duckplyr::as_duckplyr_tibble()
+  }
+
+  group_cols_with_ref_date <- unique(
+      c("ref_date", group_cols)
+    )
+
+  # compute the number of unique records based on the specified ID column
+  record_consistency <- data |>
+    dplyr::group_by(
+      dplyr::across(
+        dplyr::all_of(group_cols_with_ref_date)
+      )
+    ) |> 
+    govhr::fastcount(
+      .data[[id_col]]
+    ) |>
+    dplyr::mutate(
+      consistent_record = if_else(.data[["n"]] == 1, 1, 0)
+    )
+  
+  record_consistency |> 
+    dplyr::group_by(
+      dplyr::across(
+        dplyr::all_of(group_cols)
+      )
+    ) |> 
+    dplyr::summarise(
+      consistency_record = 100 * sum(.data[["consistent_record"]]) / n() |> 
+        round(digits),
+      .groups = "drop"
+    )
+}
+
 ui_filter_controls <- function(.data, id) {
   group_choices <- identify_group_choices(.data)
 

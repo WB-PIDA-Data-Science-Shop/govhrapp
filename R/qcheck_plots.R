@@ -43,9 +43,6 @@ plot_coverage_trend <- function(data, group, toggle_growth = FALSE) {
 #'
 #' @param data A data frame. Typically the contract, personnel, or
 #'   establishment dataset for the active module.
-#' @param group Character string. Grouping variable inherited from the
-#'   `coverage_group` UI input. Must not be `"ref_date"` (validate in the
-#'   calling server before invoking this function).
 #'
 #' @return A ggplot2 object.
 #'
