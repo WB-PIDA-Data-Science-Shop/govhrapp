@@ -66,7 +66,7 @@ coverage_panel_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
-      title = "Controls",
+      title = span("Filter", bsicons::bs_icon("filter")),
       width = "300px",
       !!!ui_filter_controls(.data, id),
       shinyWidgets::materialSwitch(
