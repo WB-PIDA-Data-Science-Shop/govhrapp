@@ -7,6 +7,7 @@
 #' a function to compute the proportion of missing values in a data frame
 #' @param data A data frame.
 #' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
+#' 
 #' @return A numeric value representing the proportion of missing values in the data frame.
 compute_global_coverage <- function(data, digits = 2) {
   coverage <- 100 * mean(!is.na(data))
@@ -148,14 +149,11 @@ coverage_panel_ui <- function(id, .data) {
 
 #' Coverage Panel Server
 #'
-#' Encapsulates all server logic for a single coverage panel (filter observer,
-#' filtered-data reactive, and the three plot renders). Designed to be called
-#' once per dataset inside [coverage_server()].
+#' Server logic for individual coverage panels.
 #'
 #' @param id Character string. Sub-module ID matching the one used in
-#'   [coverage_panel_ui()] (without parent namespace — Shiny resolves it
-#'   automatically when called inside [shiny::moduleServer()]).
-#' @param .data Data frame for this panel (est, personnel, or contract).
+#'   [coverage_panel_ui()].
+#' @param .data Data frame for the panel (e.g., establishment, personnel, or contract).
 #'
 #' @return A set of Shiny outputs for the coverage panel.
 coverage_panel_server <- function(id, .data) {

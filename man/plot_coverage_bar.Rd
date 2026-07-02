@@ -4,7 +4,7 @@
 \alias{plot_coverage_bar}
 \title{Plot Coverage by Group (Coloured Bar Chart)}
 \usage{
-plot_coverage_bar(data, group)
+plot_coverage_bar(data)
 }
 \arguments{
 \item{data}{A data frame. Typically the contract, personnel, or

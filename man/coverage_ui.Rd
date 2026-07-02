@@ -4,16 +4,16 @@
 \alias{coverage_ui}
 \title{coverage UI Module}
 \usage{
-coverage_ui(id, est_data, contract_data, personnel_data)
+coverage_ui(id, est_data, personnel_data, contract_data)
 }
 \arguments{
 \item{id}{Character string. The module namespace ID.}
 
 \item{est_data}{Data frame. The establishment-level data.}
 
-\item{contract_data}{Data frame. The contract-level data.}
-
 \item{personnel_data}{Data frame. The personnel-level data.}
+
+\item{contract_data}{Data frame. The contract-level data.}
 }
 \value{
 A Shiny UI object containing coverage analysis cards.

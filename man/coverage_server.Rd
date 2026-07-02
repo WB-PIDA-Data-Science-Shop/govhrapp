@@ -2,18 +2,18 @@
 % Please edit documentation in R/qcheck_coverage.R
 \name{coverage_server}
 \alias{coverage_server}
-\title{coverage Server Module}
+\title{Coverage Server Module}
 \usage{
-coverage_server(id, est_data, contract_data, personnel_data)
+coverage_server(id, est_data, personnel_data, contract_data)
 }
 \arguments{
 \item{id}{Character string. The module namespace ID.}
 
 \item{est_data}{Data frame. The establishment-level data.}
 
-\item{contract_data}{Data frame. The contract-level data.}
-
 \item{personnel_data}{Data frame. The personnel-level data.}
+
+\item{contract_data}{Data frame. The contract-level data.}
 }
 \value{
 None. Called for side effects (renders Shiny outputs).

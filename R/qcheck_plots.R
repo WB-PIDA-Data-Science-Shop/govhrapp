@@ -65,28 +65,30 @@ plot_coverage_bar <- function(data) {
   ) |>
     dplyr::mutate(
       coverage_tier = dplyr::case_when(
-        coverage < 0.5 ~ "Low (<50%)",
-        coverage < 0.8 ~ "Medium (50-79%)",
+        .data[["coverage"]] < 0.5 ~ "Low (<50%)",
+        .data[["coverage"]] < 0.8 ~ "Medium (50-79%)",
         TRUE ~ "High (>=80%)"
       ),
       coverage_tier = factor(
-        coverage_tier,
+        .data[["coverage_tier"]],
         levels = c("Low (<50%)", "Medium (50-79%)", "High (>=80%)")
       )
     )
 
   coverage_data |>
     dplyr::filter(
-      !is.na(coverage)
+      !is.na(
+        .data[["coverage"]]
+      )
     ) |>
     ggplot2::ggplot(
       ggplot2::aes(
-        x = coverage,
+        x = .data[["coverage"]],
         y = stats::reorder(
           stringr::str_wrap(.data[["variable"]], width = 30),
-          coverage
+          .data[["coverage"]]
         ),
-        fill = coverage_tier
+        fill = .data[["coverage_tier"]]
       )
     ) +
     ggplot2::geom_col() +

@@ -4,8 +4,8 @@
 #'
 #' @param id Character string. The module namespace ID.
 #' @param est_data Data frame. The establishment-level data.
-#' @param contract_data Data frame. The contract-level data.
 #' @param personnel_data Data frame. The personnel-level data.
+#' @param contract_data Data frame. The contract-level data.
 #'
 #' @return A Shiny UI object containing coverage analysis cards.
 #'
@@ -71,8 +71,8 @@ coverage_ui <- function(id, est_data, personnel_data, contract_data) {
 #'
 #' @param id Character string. The module namespace ID.
 #' @param est_data Data frame. The establishment-level data.
-#' @param contract_data Data frame. The contract-level data.
 #' @param personnel_data Data frame. The personnel-level data.
+#' @param contract_data Data frame. The contract-level data.
 #'
 #' @return None. Called for side effects (renders Shiny outputs).
 #'
