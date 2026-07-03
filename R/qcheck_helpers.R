@@ -55,16 +55,11 @@ compute_record_consistency <- function(data, id_col, group_cols = NULL, digits =
       consistent_record = if_else(.data[["n"]] == 1, 1, 0)
     )
   
+  # percentage of consistent records, by group
   record_consistency |> 
-    dplyr::group_by(
-      dplyr::across(
-        dplyr::all_of(group_cols)
-      )
-    ) |> 
     dplyr::summarise(
-      consistency_record = 100 * sum(.data[["consistent_record"]]) / n() |> 
-        round(digits),
-      .groups = "drop"
+      consistency_rate = round(100 * sum(consistent_record, na.rm = TRUE) / n(), digits),
+      .by = dplyr::all_of(group_cols)
     )
 }
 
