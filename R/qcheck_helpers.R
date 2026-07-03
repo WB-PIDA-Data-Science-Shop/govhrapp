@@ -46,13 +46,10 @@ compute_record_consistency <- function(data, id_col, group_cols = NULL, digits =
 
   # compute the number of unique records based on the specified ID column
   record_consistency <- data |>
-    dplyr::group_by(
-      dplyr::across(
-        dplyr::all_of(group_cols_with_ref_date)
+    dplyr::count(
+      across(
+        dplyr::all_of(c(id_col, group_cols_with_ref_date))
       )
-    ) |> 
-    govhr::fastcount(
-      .data[[id_col]]
     ) |>
     dplyr::mutate(
       consistent_record = if_else(.data[["n"]] == 1, 1, 0)
