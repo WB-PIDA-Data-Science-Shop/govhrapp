@@ -33,6 +33,9 @@ compute_global_coverage <- function(data, digits = 2) {
 #' @param group_cols A character vector specifying the names of the columns to group by. Default is NULL, which means no grouping.
 #' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
 #' 
+#' @import dplyr
+#' @importFrom duckplyr as_duckplyr_tibble
+#' 
 #' @return A data frame with the proportion of consistent records in the data frame, optionally by group.
 compute_record_consistency <- function(data, id_col, group_cols = NULL, digits = 2) {
   if (!any(class(data) %in% c("duckplyr_df", "tbl_duckdb_connection"))) {
