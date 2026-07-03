@@ -9,10 +9,6 @@ plot_coverage_bar(data)
 \arguments{
 \item{data}{A data frame. Typically the contract, personnel, or
 establishment dataset for the active module.}
-
-\item{group}{Character string. Grouping variable inherited from the
-\code{coverage_group} UI input. Must not be \code{"ref_date"} (validate in the
-calling server before invoking this function).}
 }
 \value{
 A ggplot2 object.

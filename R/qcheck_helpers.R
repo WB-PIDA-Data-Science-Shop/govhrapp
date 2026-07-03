@@ -16,15 +16,15 @@ compute_global_coverage <- function(data, digits = 2) {
     round(digits)
 }
 
-compute_global_consistency <- function(data, digits = 2) {
-  record_consistency <- compute_record_consistency(data, digits)
-  value_consistency <- compute_value_consistency(data, digits)
+# compute_global_consistency <- function(data, digits = 2) {
+#   record_consistency <- compute_record_consistency(data, digits)
+#   value_consistency <- compute_value_consistency(data, digits)
     
-  global_consistency <- mean(c(record_consistency, value_consistency), na.rm = TRUE)
+#   global_consistency <- mean(c(record_consistency, value_consistency), na.rm = TRUE)
 
-  global_consistency |>
-    round(digits)
-}
+#   global_consistency |>
+#     round(digits)
+# }
 
 #' Compute the proportion of consistent records in a data frame.
 #' 
