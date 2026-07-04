@@ -7,7 +7,7 @@
 #' a function to compute the proportion of missing values in a data frame
 #' @param data A data frame.
 #' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
-#' 
+#'
 #' @return A numeric value representing the proportion of missing values in the data frame.
 compute_global_coverage <- function(data, digits = 2) {
   coverage <- 100 * mean(!is.na(data))
@@ -19,7 +19,7 @@ compute_global_coverage <- function(data, digits = 2) {
 # compute_global_consistency <- function(data, digits = 2) {
 #   record_consistency <- compute_record_consistency(data, digits)
 #   value_consistency <- compute_value_consistency(data, digits)
-    
+
 #   global_consistency <- mean(c(record_consistency, value_consistency), na.rm = TRUE)
 
 #   global_consistency |>
@@ -27,25 +27,30 @@ compute_global_coverage <- function(data, digits = 2) {
 # }
 
 #' Compute the proportion of consistent records in a data frame.
-#' 
+#'
 #' @param data A data frame.
 #' @param id_col A character string specifying the name of the column that uniquely identifies records (e.g., "personnel_id" or "contract_id").
 #' @param group_cols A character vector specifying the names of the columns to group by. Default is NULL, which means no grouping.
 #' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
-#' 
+#'
 #' @import dplyr
 #' @importFrom duckplyr as_duckplyr_tibble
-#' 
+#'
 #' @return A data frame with the proportion of consistent records in the data frame, optionally by group.
-compute_record_consistency <- function(data, id_col, group_cols = NULL, digits = 2) {
+compute_record_consistency <- function(
+  data,
+  id_col,
+  group_cols = NULL,
+  digits = 2
+) {
   if (!any(class(data) %in% c("duckplyr_df", "tbl_duckdb_connection"))) {
     data <- data |>
       duckplyr::as_duckplyr_tibble()
   }
 
   group_cols_with_ref_date <- unique(
-      c("ref_date", group_cols)
-    )
+    c("ref_date", group_cols)
+  )
 
   # compute the number of unique records based on the specified ID column
   record_consistency <- data |>
@@ -57,49 +62,67 @@ compute_record_consistency <- function(data, id_col, group_cols = NULL, digits =
     dplyr::mutate(
       consistent_record = if_else(.data[["n"]] == 1, 1, 0)
     )
-  
+
   # percentage of consistent records, by group
-  record_consistency |> 
+  record_consistency |>
     dplyr::summarise(
-      record_consistency = round(100 * sum(consistent_record, na.rm = TRUE) / n(), digits),
+      record_consistency = round(
+        100 * sum(.data[["consistent_record"]], na.rm = TRUE) / n(),
+        digits
+      ),
       .by = dplyr::all_of(group_cols)
     )
 }
 
 #' Compute the proportion of consistent values in a data frame.
-#' 
+#'
 #' @param data A data frame.
 #' @param id_col A character string specifying the name of the column that uniquely identifies records.
 #' @param group_cols A character vector specifying the names of the columns to group by. Default is no grouping.
 #' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
-#' 
+#'
 #' @import dplyr
 #' @importFrom duckplyr as_duckplyr_tibble
-#' 
+#'
 #' @return A data frame with the proportion of consistent values in the data frame, optionally by group.
-compute_value_consistency <- function(data, id_col, group_cols = NULL, digits = 2) {
+compute_value_consistency <- function(
+  data,
+  id_col,
+  group_cols = NULL,
+  digits = 2
+) {
   if (!any(class(data) %in% c("duckplyr_df", "tbl_duckdb_connection"))) {
     data <- data |>
       duckplyr::as_duckplyr_tibble()
   }
 
   group_cols_with_ref_date <- unique(
-      c("ref_date", group_cols)
-    )
+    c("ref_date", group_cols)
+  )
 
   # compute the number of unique records based on the specified ID column
   value_consistency <- data |>
     dplyr::summarise(
-      consistent_value = if_else(n_distinct(dplyr::across(-dplyr::all_of(c(id_col, group_cols_with_ref_date)))) == 1, 1, 0),
+      consistent_value = if_else(
+        n_distinct(dplyr::across(
+          -dplyr::all_of(c(id_col, group_cols_with_ref_date))
+        )) ==
+          1,
+        1,
+        0
+      ),
       .by = dplyr::all_of(
         c(id_col, group_cols_with_ref_date)
       )
     )
-  
+
   # percentage of consistent values, by group
-  value_consistency |> 
+  value_consistency |>
     dplyr::summarise(
-      value_consistency = round(100 * sum(consistent_value, na.rm = TRUE) / n(), digits),
+      value_consistency = round(
+        100 * sum(.data[["consistent_value"]], na.rm = TRUE) / n(),
+        digits
+      ),
       .by = dplyr::all_of(group_cols)
     )
 }
@@ -145,10 +168,10 @@ ui_filter_controls <- function(.data, id) {
 }
 
 #' Coverage Panel UI
-#' 
+#'
 #' @param id Character string. The module namespace ID.
 #' @param .data Data frame. The data to be used in the coverage panel.
-#' 
+#'
 #' @return A Shiny UI object representing the coverage panel.
 coverage_panel_ui <- function(id, .data) {
   bslib::layout_sidebar(
