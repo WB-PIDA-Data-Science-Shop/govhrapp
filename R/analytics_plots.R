@@ -25,8 +25,7 @@ compute_trend_summary <- function(data, group, measure_col = NULL) {
 
   if (is.null(measure_col)) {
     data |>
-      dplyr::group_by(dplyr::across(dplyr::all_of(groups))) |>
-      dplyr::summarise(value = dplyr::n(), .groups = "drop")
+      dplyr::summarise(value = dplyr::n(), .by = dplyr::all_of(groups))
   } else {
     data |>
       govhr::compute_fastsummary(cols = measure_col, fns = "sum", groups = groups)
@@ -46,7 +45,7 @@ compute_trend_summary <- function(data, group, measure_col = NULL) {
 #'
 #' @return The input data frame with `value` rescaled to a baseline index.
 #'
-#' @importFrom dplyr arrange mutate group_by across all_of ungroup first
+#' @importFrom dplyr arrange mutate across all_of ungroup first
 #' @export
 apply_baseline_index <- function(data, group) {
   if (group == "ref_date") {
@@ -57,12 +56,11 @@ apply_baseline_index <- function(data, group) {
       )
   } else {
     data |>
-      dplyr::group_by(dplyr::across(dplyr::all_of(group))) |>
       dplyr::arrange(.data[["ref_date"]]) |>
       dplyr::mutate(
-        value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100
-      ) |>
-      dplyr::ungroup()
+        value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100,
+        .by = dplyr::all_of(group)
+      )
   }
 }
 
@@ -88,14 +86,14 @@ apply_baseline_index <- function(data, group) {
 #' @export
 compute_cross_section_summary <- function(data, group, measure_col = NULL) {
   data_latest <- data |>
-    dplyr::group_by(dplyr::across(dplyr::all_of(group))) |>
-    dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]])) |>
-    dplyr::ungroup()
+    dplyr::filter(
+      .data[["ref_date"]] == max(.data[["ref_date"]]),
+      .by = dplyr::all_of(group)
+    )
 
   if (is.null(measure_col)) {
     data_latest |>
-      dplyr::group_by(dplyr::across(dplyr::all_of(group))) |>
-      dplyr::summarise(value = dplyr::n(), .groups = "drop")
+      dplyr::summarise(value = dplyr::n(), .by = dplyr::all_of(group))
   } else {
     data_latest |>
       govhr::compute_fastsummary(cols = measure_col, fns = "sum", groups = group)
@@ -124,17 +122,15 @@ compute_cross_section_summary <- function(data, group, measure_col = NULL) {
 #' @export
 compute_growth_summary <- function(data, group, measure_col = NULL) {
   endpoints <- data |>
-    dplyr::group_by(dplyr::across(dplyr::all_of(group))) |>
     dplyr::filter(
-      .data[["ref_date"]] %in% c(max(.data[["ref_date"]]), min(.data[["ref_date"]]))
+      .data[["ref_date"]] %in% c(max(.data[["ref_date"]]), min(.data[["ref_date"]])),
+      .by = dplyr::all_of(group)
     ) |>
-    dplyr::ungroup() |> 
     dplyr::arrange(.data[["ref_date"]])
 
   summarized <- if (is.null(measure_col)) {
     endpoints |>
-      dplyr::group_by(dplyr::across(dplyr::all_of(c("ref_date", group)))) |>
-      dplyr::summarise(value = dplyr::n(), .groups = "drop")
+      dplyr::summarise(value = dplyr::n(), .by = dplyr::all_of(c("ref_date", group)))
   } else {
     endpoints |>
       govhr::compute_fastsummary(
@@ -146,13 +142,12 @@ compute_growth_summary <- function(data, group, measure_col = NULL) {
 
   summarized |>
     dplyr::filter(!is.na(.data[[group]])) |>
-    dplyr::group_by(dplyr::across(dplyr::all_of(group))) |>
     dplyr::summarise(
       growth_rate = round(
         dplyr::last(.data[["value"]]) / dplyr::first(.data[["value"]]) - 1,
         3
       ) * 100,
-      .groups = "drop"
+      .by = dplyr::all_of(group)
     ) |>
     dplyr::filter(!is.na(.data[["growth_rate"]]))
 }
@@ -184,7 +179,6 @@ compute_growth_summary <- function(data, group, measure_col = NULL) {
 #' @export
 plot_trend <- function(data, group, toggle_growth = FALSE, y_col = "value", y_label = "Value") {
   plot <- data |>
-    dplyr::ungroup() |>
     ggplot2::ggplot(
       ggplot2::aes(x = .data[["ref_date"]], y = .data[[y_col]])
     ) +
@@ -350,14 +344,14 @@ plot_segment <- function(.data, col, group) {
   
   # Calculate summary statistics using .data[[]]
   summary_df <- df |>
-    dplyr::filter(!is.na(.data[[col]]), !is.na(.data[[group]])) |>
-    dplyr::group_by(.data[[group]]) |>
     dplyr::summarise(
       xmin = min(.data[[col]], na.rm = TRUE),
       xmax = max(.data[[col]], na.rm = TRUE),
       mean = mean(.data[[col]], na.rm = TRUE),
-      .groups = "drop"
+      .by = .data[[group]]
     ) |>
+    # drop if any components are missing for a group
+    na.omit() |>
     dplyr::mutate(
       xmin = ifelse(is.infinite(.data[["xmin"]]), NA_real_, .data[["xmin"]]),
       xmax = ifelse(is.infinite(.data[["xmax"]]), NA_real_, .data[["xmax"]])

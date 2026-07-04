@@ -110,7 +110,7 @@ plot_coverage_bar <- function(data) {
 #' @param group Character string. Grouping variable.
 #'
 #' @importFrom plotly plot_ly
-#' @importFrom dplyr across everything group_by summarise
+#' @importFrom dplyr across everything summarise
 #' @importFrom tidyr pivot_longer
 #' @importFrom scales label_percent
 #'

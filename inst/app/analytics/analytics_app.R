@@ -19,6 +19,9 @@ wagebill_data <- dplyr::tbl(
   govhrapp_con,
   "contract"
 ) |> 
+  mutate(
+    country_code = "BRA"
+  ) |> 
   duckplyr::as_duckdb_tibble()
 
 run_govhrapp(workforce_data, wagebill_data)

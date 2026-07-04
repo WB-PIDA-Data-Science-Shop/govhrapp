@@ -17,12 +17,11 @@ identify_group_choices <- function(.data){
             !.data[["variable_id"]] %in%
               c("ref_date", "contract_id", "personnel_id")
         ) |>
-        dplyr::group_by(.data[["module"]]) |>
         dplyr::summarise(
           choices = list(
             purrr::set_names(.data[["variable_id"]], .data[["variable_name"]])
           ),
-          .groups = "drop"
+          .by = .data[["module"]]
         ) |>
         dplyr::pull(.data[["choices"]], name = .data[["module"]])
     )

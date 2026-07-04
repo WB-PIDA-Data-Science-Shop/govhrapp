@@ -88,14 +88,15 @@ generate_wagebill_report <- function(wagebill_summary_data,
     max_filtered_date <- max(wagebill_filtered_data$ref_date, na.rm = TRUE)
     
     wagebill_annual |>
-      dplyr::group_by(dplyr::across(dplyr::all_of(wagebill_group))) |>
       govhr::complete_dates(
         id_col = wagebill_group,
         start_date = max_filtered_date - lubridate::years(1),
-        end_date = max_filtered_date
+        end_date = max_filtered_date,
+        .by = dplyr::all_of(wagebill_group)
       ) |>
       dplyr::mutate(
-        growth_rate = round(.data[["value"]] / dplyr::lag(.data[["value"]]) - 1, 3) * 100
+        growth_rate = round(.data[["value"]] / dplyr::lag(.data[["value"]]) - 1, 3) * 100,
+        .by = dplyr::all_of(wagebill_group)
       ) |>
       dplyr::filter(
         .data[["ref_date"]] == max_filtered_date &
@@ -223,8 +224,7 @@ generate_workforce_report <- function(workforce_summary_data,
 
   plot2_static <- if (workforce_group != "ref_date") {
     workforce_filtered_data |>
-      dplyr::group_by(dplyr::across(dplyr::all_of(workforce_group))) |>
-      dplyr::filter(year == max(year)) |>
+      dplyr::filter(year == max(year), .by = dplyr::all_of(workforce_group)) |>
       govhr::fastcount(.data[[workforce_group]], name = "value") |>
       dplyr::filter(
         !is.na(.data[["value"]]) &
@@ -251,9 +251,9 @@ generate_workforce_report <- function(workforce_summary_data,
 
   plot3_static <- if (workforce_group != "ref_date") {
     workforce_filtered_data |>
-      dplyr::group_by(dplyr::across(dplyr::all_of(workforce_group))) |>
       dplyr::filter(
-        .data[["ref_date"]] %in% c(max(.data[["ref_date"]]), min(.data[["ref_date"]]))
+        .data[["ref_date"]] %in% c(max(.data[["ref_date"]]), min(.data[["ref_date"]])),
+        .by = dplyr::all_of(workforce_group)
       ) |>
       govhr::fastcount(
         .data[["ref_date"]],
@@ -261,13 +261,12 @@ generate_workforce_report <- function(workforce_summary_data,
         name = "value"
       ) |>
       dplyr::filter(!is.na(.data[[workforce_group]])) |>
-      dplyr::group_by(dplyr::across(dplyr::all_of(workforce_group))) |>
       dplyr::summarise(
         growth_rate = round(
           dplyr::last(.data[["value"]]) / dplyr::first(.data[["value"]]) - 1,
           3
         ) * 100,
-        .groups = "drop"
+        .by = dplyr::all_of(workforce_group)
       ) |>
       dplyr::filter(!is.na(.data[["growth_rate"]])) |>
       ggplot2::ggplot(
@@ -314,10 +313,9 @@ generate_workforce_report <- function(workforce_summary_data,
           workforce_filtered_data,
           by = c("personnel_id", "ref_date")
         ) |>
-        dplyr::group_by(dplyr::across(dplyr::all_of(group_cols))) |>
         dplyr::summarise(
           indicator = mean(!is.na(.data[["type_event"]])),
-          .groups = "drop"
+          .by = dplyr::all_of(group_cols)
         )
     } else {
       hire_data <- workforce_filtered_data |>
@@ -332,8 +330,7 @@ generate_workforce_report <- function(workforce_summary_data,
           workforce_filtered_data,
           by = c("personnel_id", "ref_date")
         ) |>
-        dplyr::group_by(dplyr::across(dplyr::all_of(group_cols))) |>
-        dplyr::summarise(hires = dplyr::n(), .groups = "drop")
+        dplyr::summarise(hires = dplyr::n(), .by = dplyr::all_of(group_cols))
 
       fire_data <- workforce_filtered_data |>
         govhr::detect_personnel_event(
@@ -347,8 +344,7 @@ generate_workforce_report <- function(workforce_summary_data,
           workforce_filtered_data,
           by = c("personnel_id", "ref_date")
         ) |>
-        dplyr::group_by(dplyr::across(dplyr::all_of(group_cols))) |>
-        dplyr::summarise(fires = dplyr::n(), .groups = "drop")
+        dplyr::summarise(fires = dplyr::n(), .by = dplyr::all_of(group_cols))
 
       movement_data <- hire_data |>
         dplyr::left_join(fire_data, by = group_cols) |>

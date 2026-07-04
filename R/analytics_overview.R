@@ -166,10 +166,9 @@ overview_server <- function(id, workforce_data, wagebill_data) {
             TRUE                  ~ NA_real_
           )
         ) |>
-        dplyr::group_by(.data[["ref_date"]]) |>
         dplyr::summarise(
           value = sum(.data[["total_compensation"]], na.rm = TRUE),
-          .groups = "drop"
+          .by = .data[["ref_date"]]
         )
     })
 

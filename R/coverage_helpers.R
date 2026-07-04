@@ -21,16 +21,13 @@ compute_coverage <- function(.data, group = NULL, include_ref_date = FALSE, aggr
   }
 
   coverage_data <- .data |>
-    dplyr::group_by(
-      dplyr::across(dplyr::all_of(group))
-    ) |>
     dplyr::summarise(
       dplyr::across(
         dplyr::everything(),
         ~ sum(!is.na(.x)) / dplyr::n()
       ),
-      .groups = "drop"
-    ) |> 
+      .by = dplyr::all_of(group)
+    ) |>
     tidyr::pivot_longer(
         cols = -c(dplyr::all_of(group)),
         names_to = "variable",
@@ -39,15 +36,12 @@ compute_coverage <- function(.data, group = NULL, include_ref_date = FALSE, aggr
     
   if (aggregate) {
     coverage_data <- coverage_data |>
-      dplyr::group_by(
-        dplyr::across(dplyr::all_of(group))
-      ) |>
       dplyr::summarise(
         coverage = mean(
           .data[["coverage"]],
           na.rm = TRUE
         ),
-        .groups = "drop"
+        .by = dplyr::all_of(group)
       )
   }
 
