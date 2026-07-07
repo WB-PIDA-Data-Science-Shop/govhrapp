@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.6.1",
+    "Version": "4.5.3",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -170,7 +170,8 @@
       "Description": "Provides color schemes for maps (and other graphics) designed by Cynthia Brewer as described at http://colorbrewer2.org.",
       "License": "Apache License 2.0",
       "NeedsCompilation": "no",
-      "Repository": "CRAN"
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
     },
     "Rcpp": {
       "Package": "Rcpp",
@@ -233,7 +234,8 @@
       "NeedsCompilation": "yes",
       "Author": "Dirk Eddelbuettel [aut, cre] (<https://orcid.org/0000-0001-6419-907X>), Mark Gillard [aut] (Author of 'toml++' header library)",
       "Maintainer": "Dirk Eddelbuettel <edd@debian.org>",
-      "Repository": "CRAN"
+      "Repository": "https://packagemanager.posit.co/cran/latest",
+      "Encoding": "UTF-8"
     },
     "S7": {
       "Package": "S7",
@@ -410,7 +412,8 @@
       "NeedsCompilation": "no",
       "Author": "Hadley Wickham [aut, cre]",
       "Maintainer": "Hadley Wickham <hadley@rstudio.com>",
-      "Repository": "CRAN"
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
     },
     "backports": {
       "Package": "backports",
@@ -496,7 +499,8 @@
       "NeedsCompilation": "yes",
       "Author": "Steve Dutky [aut] (S original; then (after MM's port) revised and modified), Martin Maechler [cre, aut] (Initial R port; tweaks, <https://orcid.org/0000-0002-8685-9910>)",
       "Maintainer": "Martin Maechler <maechler@stat.math.ethz.ch>",
-      "Repository": "CRAN"
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
     },
     "brio": {
       "Package": "brio",
@@ -2674,7 +2678,8 @@
         "stats",
         "graphics"
       ],
-      "Repository": "CRAN"
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
     },
     "later": {
       "Package": "later",
@@ -3383,7 +3388,8 @@
       ],
       "Collate": "'adjective.R' 'adverb.R' 'exclamation.R' 'verb.R' 'rpackage.R' 'package.R'",
       "NeedsCompilation": "no",
-      "Repository": "CRAN"
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
     },
     "processx": {
       "Package": "processx",
