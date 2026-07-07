@@ -1,11 +1,5 @@
 pkgload::load_all(".")
 
-qc_obj <- govhr::compute_qualitycontrol(
-  contract_dt  = govhr::bra_hrmis_contract,
-  personnel_dt = govhr::bra_hrmis_personnel,
-  est_dt       = govhr::bra_hrmis_est
-)
-
 govhrapp_con <- DBI::dbConnect(
   duckdb::duckdb(),
   dbdir = fs::path(
@@ -33,4 +27,8 @@ contract_data <- dplyr::tbl(
 ) |> 
   duckplyr::as_duckdb_tibble()
 
-run_qcheckapp(qc_obj)
+run_govhrapp_qcheck(
+  est_data = est_data,
+  personnel_data = personnel_data,
+  contract_data = contract_data
+)
