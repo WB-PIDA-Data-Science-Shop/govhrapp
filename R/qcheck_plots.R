@@ -31,6 +31,35 @@ plot_coverage_trend <- function(data, group, toggle_growth = FALSE) {
   )
 }
 
+plot_consistency_trend <- function(data, id_col, group, value_col, type_plot, toggle_growth = FALSE) {
+  # plot both the record and value level consistencies
+  if(type_plot == "record") {
+    consistency_data <- compute_record_consistency(
+    data,
+    id_col = id_col,
+    group = group,
+    include_ref_date = TRUE,
+    aggregate = TRUE
+  )} else {
+    consistency_data <- compute_value_consistency(
+      data,
+      id_col = id_col,
+      value_col = value_col,
+      group_cols = group,
+      include_ref_date = TRUE,
+      aggregate = TRUE
+    )
+  }
+
+  plot_trend(
+    consistency_data,
+    y_col = "consistency",
+    group = group,
+    toggle_growth = toggle_growth,
+    y_label = "Consistency"
+  )
+}
+
 #' Plot Coverage by Group (Coloured Bar Chart)
 #'
 #' Computes per-group coverage using [compute_coverage()] (without

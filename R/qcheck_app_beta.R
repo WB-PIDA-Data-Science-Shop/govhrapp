@@ -105,11 +105,20 @@ run_govhrapp_qcheck <- function(est_data, personnel_data, contract_data, ...) {
 
       # content
       coverage_ui("coverage", est_data, personnel_data, contract_data)
+    ),
+
+    bslib::nav_panel(
+      "Consistency",
+      icon = shiny::icon("check"),
+
+      # content
+      consistency_ui("consistency", est_data, personnel_data, contract_data)
     )
   )
 
   server <- function(input, output, session) {
     coverage_server("coverage", est_data, personnel_data, contract_data)
+    consistency_server("consistency", est_data, personnel_data, contract_data)
   }
 
   shiny::shinyApp(ui, server, ...)

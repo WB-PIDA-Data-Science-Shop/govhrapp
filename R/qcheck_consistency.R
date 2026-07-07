@@ -44,23 +44,23 @@ consistency_ui <- function(id, est_data, personnel_data, contract_data) {
         fill = FALSE,
         !!!value_boxes
       )
-    )
+    ),
     
-    # # 2. coverage by module
-    # bslib::navset_underline(
-    #   bslib::nav_panel(
-    #     title = "Establishment",
-    #     coverage_panel_ui(NS(id, "est"), est_data)
-    #   ),
-    #   bslib::nav_panel(
-    #     title = "Personnel",
-    #     coverage_panel_ui(NS(id, "personnel"), personnel_data)
-    #   ),
-    #   bslib::nav_panel(
-    #     title = "Contract",
-    #     coverage_panel_ui(NS(id, "contract"), contract_data)
-    #   )
-    # )
+    # # 2. consistency by module
+    bslib::navset_underline(
+      bslib::nav_panel(
+        title = "Establishment",
+        consistency_panel_ui(NS(id, "est"), est_data)
+      )
+      # bslib::nav_panel(
+      #   title = "Personnel",
+      #   consistency_panel_ui(NS(id, "personnel"), personnel_data)
+      # ),
+      # bslib::nav_panel(
+      #   title = "Contract",
+      #   consistency_panel_ui(NS(id, "contract"), contract_data)
+      # )
+    )
   )
 }
 
@@ -107,7 +107,7 @@ consistency_server <- function(id, est_data, personnel_data, contract_data) {
     )
 
     # # per-dataset panel sub-modules
-    # consistency_panel_server("est",       est_data)
+    consistency_panel_server("est", est_data)
     # consistency_panel_server("personnel", personnel_data)
     # consistency_panel_server("contract",  contract_data)
   })

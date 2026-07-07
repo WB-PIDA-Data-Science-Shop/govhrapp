@@ -450,3 +450,140 @@ coverage_panel_server <- function(id, .data) {
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })
 }
+
+consistency_panel_ui <- function(id, .data) {
+  bslib::layout_sidebar(
+    fillable = FALSE,
+    sidebar = bslib::sidebar(
+      title = span("Filter", bsicons::bs_icon("filter")),
+      width = "300px",
+      !!!ui_filter_controls(.data, id),
+      shinyWidgets::materialSwitch(
+        shiny::NS(id, "toggle_growth"),
+        label = "Switch to baseline index",
+        value = FALSE
+      ),
+      shiny::actionButton(
+        shiny::NS(id, "apply_btn"),
+        "Apply selection",
+        icon = shiny::icon("play")
+      )
+    ),
+
+    # plot 1. consistency over time
+    bslib::card(
+      full_screen = TRUE,
+      fillable = FALSE,
+      bslib::card_header(
+        "Consistency over time",
+        bslib::tooltip(
+          bsicons::bs_icon("info-circle"),
+          "Consistency, by year. Choosing a group will add new consistencies, by group."
+        )
+      ),
+      layout_sidebar(
+        sidebar = sidebar(
+          title = "Group breakdown:",
+          position = "right",
+          shiny::selectInput(
+            shiny::NS(id, "consistency_group"),
+            "Group by",
+            choices = identify_group_choices(.data),
+            selected = "All"
+          )
+        ),
+        plotly::plotlyOutput(
+          shiny::NS(id, "consistency_panel"),
+          height = "350px"
+        )
+      )
+    )
+  )
+}
+
+consistency_panel_server <- function(id, .data) {
+  shiny::moduleServer(id, function(input, output, session) {
+    # update subgroup_filter choices whenever the group column changes
+    shiny::observe({
+      variable <- input$group_filter
+
+      if (is.null(variable) || variable == "none") {
+        shinyWidgets::updatePickerInput(
+          session,
+          "subgroup_filter",
+          choices = NULL,
+          selected = character(0)
+        )
+      } else {
+        filter_vals <- sort(
+          as.character(
+            unique(
+              stats::na.omit(.data[[variable]])
+            )
+          )
+        )
+
+        shinyWidgets::updatePickerInput(
+          session,
+          "subgroup_filter",
+          choices = filter_vals,
+          selected = filter_vals
+        )
+      }
+    })
+
+    data_filtered <- shiny::reactive({
+      data <- .data
+
+      if (
+        !is.null(input$group_filter) &&
+          input$group_filter != "none" &&
+          length(input$subgroup_filter) > 0
+      ) {
+        data <- data |>
+          dplyr::filter(
+            .data[[input$group_filter]] %in% input$subgroup_filter
+          )
+      }
+
+      data |>
+        dplyr::filter(
+          .data[["ref_date"]] >= input$date_range[1],
+          .data[["ref_date"]] <= input$date_range[2]
+        )
+    })
+
+    # plot 1. consistency over time
+    output$consistency_panel <- plotly::renderPlotly({
+      id_col <- switch(
+        id,
+        "est" = "est_id",
+        "personnel" = "personnel_id",
+        "contract" = "contract_id"
+      )
+
+      plot_consistency_trend(
+        data_filtered(),
+        id_col = id_col,
+        group = input$consistency_group,
+        value_col = input$value_col,
+        toggle_growth = input$toggle_growth
+      )
+    })
+
+  #   # plot 2. consistency by variable
+  #   output$consistency_by_variable <- plotly::renderPlotly({
+  #     plot_consistency_bar(data_filtered())
+  #   }) |>
+  #     shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+  #   # plot 3. consistency heatmap by group
+  #   output$consistency_heatmap <- plotly::renderPlotly({
+  #     plot_consistency_heatmap(
+  #       data_filtered(),
+  #       group = input$group_filter
+  #     )
+  #   }) |>
+  #     shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+  })
+}
