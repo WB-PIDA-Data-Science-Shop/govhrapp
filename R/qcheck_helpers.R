@@ -16,15 +16,125 @@ compute_global_coverage <- function(data, digits = 2) {
     round(digits)
 }
 
-# compute_global_consistency <- function(data, digits = 2) {
-#   record_consistency <- compute_record_consistency(data, digits)
-#   value_consistency <- compute_value_consistency(data, digits)
+#' Compute the proportion of consistent records and values in a data frame.
+#'
+#' @param data A data frame.
+#' @param id_col A character string specifying the name of the column that uniquely identifies records.
+#' @param value_cols A character vector specifying the name(s) of columns whose values
+#'   are to be checked for consistency. Value consistency is computed separately for
+#'   each column and averaged across columns before being combined with record consistency.
+#' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
+#' 
+#' @import dplyr
+#' @importFrom duckplyr as_duckplyr_tibble
+#' @importFrom purrr map_dbl
+#'
+#' @return A numeric value representing the proportion of consistent records and values in the data frame.
+#' @details Consistency is defined as the proportion of records and values that are consistent
+#'   across the dataset. A record is considered consistent if it has a unique identifier and all
+#'   its associated values are consistent. A value is considered consistent if it does not
+#'   contradict other values for the same record.
+compute_global_consistency <- function(data, id_col, value_cols, digits = 2) {
+  # don't round intermediate results, to avoid compounding rounding error in the average
+  record_consistency <- compute_record_consistency(
+    data,
+    id_col,
+    digits = 10
+  ) |>
+    dplyr::pull(.data[["record_consistency"]])
 
-#   global_consistency <- mean(c(record_consistency, value_consistency), na.rm = TRUE)
+  value_consistency <- purrr::map_dbl(
+    value_cols,
+    \(value_col) {
+      compute_value_consistency(
+        data,
+        id_col,
+        value_col,
+        digits = 10
+      ) |>
+        dplyr::pull(.data[["value_consistency"]])
+    }
+  ) |>
+    mean(na.rm = TRUE)
 
-#   global_consistency |>
-#     round(digits)
-# }
+  global_consistency <- mean(
+    c(record_consistency, value_consistency),
+    na.rm = TRUE
+  )
+
+  global_consistency |>
+    round(digits)
+}
+
+#' Render a Data Coverage Value Box
+#'
+#' @param .data Data frame. A dataframe to compute the coverage on.
+#' @param title String. Value box title.
+#' @param icon String. Icon name. Defaults to `"table"`.
+#'
+#' @return A [shiny::renderUI()] producing a [bslib::value_box()] themed
+#'   `"danger"` (<50%), `"warning"` (50–79%), or `"success"` (≥80%).
+#'
+#' @importFrom shiny renderUI
+#' @importFrom bslib value_box
+#' @importFrom dplyr case_when
+#'
+#' @details Coverage denotes the total number of non-missing records in a dataset, expressed as a percentage of the total records. For example, if a dataset has 10 rows and 10 columns, i.e., 100 records, and 10 of them are available, the coverage would be 10 percent.
+#' @export
+render_coverage_box <- function(.data, title, icon = "table") {
+  shiny::renderUI({
+    value_coverage <- compute_global_coverage(.data)
+
+    theme <- dplyr::case_when(
+      value_coverage < 50                         ~ "danger",
+      value_coverage >= 50 & value_coverage < 80 ~ "warning",
+      TRUE                                        ~ "success"
+    )
+
+    bslib::value_box(
+      title = title,
+      value = value_coverage,
+      icon  = icon,
+      theme = theme
+    )
+  })
+}
+
+#' Render a Data Consistency Value Box
+#'
+#' @param .data Data frame. A dataframe to compute the consistency on.
+#' @param title String. Value box title.
+#' @param id_col String. The name of the column that uniquely identifies records (e.g., "personnel_id" or "contract_id").
+#' @param value_cols Character vector. The names of the columns whose values are to be checked for consistency.
+#' @param icon String. Icon name. Defaults to `"table"`.
+#'
+#' @return A [shiny::renderUI()] producing a [bslib::value_box()] themed
+#'   `"danger"` (<50%), `"warning"` (50–79%), or `"success"` (≥80%).
+#'
+#' @importFrom shiny renderUI
+#' @importFrom bslib value_box
+#' @importFrom dplyr case_when
+#'
+#' @details Consistency denotes the proportion of records and values that are consistent across the dataset. A record is considered consistent if it has a unique identifier and all its associated values are consistent. A value is considered consistent if it does not contradict other values for the same record.
+#' @export
+render_consistency_box <- function(.data, id_col, value_cols, title, icon = "table") {
+  shiny::renderUI({
+    consistency <- compute_global_consistency(.data, id_col, value_cols)
+
+    theme <- dplyr::case_when(
+      consistency < 50                         ~ "danger",
+      consistency >= 50 & consistency < 80 ~ "warning",
+      TRUE                                        ~ "success"
+    )
+
+    bslib::value_box(
+      title = title,
+      value = consistency,
+      icon  = icon,
+      theme = theme
+    )
+  })
+}
 
 #' Compute the proportion of consistent records in a data frame.
 #'
@@ -78,6 +188,7 @@ compute_record_consistency <- function(
 #'
 #' @param data A data frame.
 #' @param id_col A character string specifying the name of the column that uniquely identifies records.
+#' @param value_col A character string specifying the name of the column whose values are to be checked for consistency.
 #' @param group_cols A character vector specifying the names of the columns to group by. Default is no grouping.
 #' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
 #'
@@ -88,6 +199,7 @@ compute_record_consistency <- function(
 compute_value_consistency <- function(
   data,
   id_col,
+  value_col,
   group_cols = NULL,
   digits = 2
 ) {
@@ -96,23 +208,18 @@ compute_value_consistency <- function(
       duckplyr::as_duckplyr_tibble()
   }
 
-  group_cols_with_ref_date <- unique(
-    c("ref_date", group_cols)
-  )
-
-  # compute the number of unique records based on the specified ID column
+  # compute the number of unique values based on the specified ID column and grouping
   value_consistency <- data |>
     dplyr::summarise(
       consistent_value = if_else(
-        n_distinct(dplyr::across(
-          -dplyr::all_of(c(id_col, group_cols_with_ref_date))
-        )) ==
-          1,
+        n_distinct(
+          .data[[value_col]]
+        ) == 1,
         1,
         0
       ),
       .by = dplyr::all_of(
-        c(id_col, group_cols_with_ref_date)
+        c(id_col, group_cols)
       )
     )
 

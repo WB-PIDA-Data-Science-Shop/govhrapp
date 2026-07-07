@@ -4,12 +4,20 @@
 \alias{compute_value_consistency}
 \title{Compute the proportion of consistent values in a data frame.}
 \usage{
-compute_value_consistency(data, id_col, group_cols = NULL, digits = 2)
+compute_value_consistency(
+  data,
+  id_col,
+  value_col,
+  group_cols = NULL,
+  digits = 2
+)
 }
 \arguments{
 \item{data}{A data frame.}
 
 \item{id_col}{A character string specifying the name of the column that uniquely identifies records.}
+
+\item{value_col}{A character string specifying the name of the column whose values are to be checked for consistency.}
 
 \item{group_cols}{A character vector specifying the names of the columns to group by. Default is no grouping.}
 

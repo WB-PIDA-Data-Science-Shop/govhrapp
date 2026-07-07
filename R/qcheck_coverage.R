@@ -86,11 +86,13 @@ coverage_server <- function(id, est_data, personnel_data, contract_data) {
       "Establishments",
       "building"
     )
+    
     output$coverage_personnel <- render_coverage_box(
       personnel_data,
       "Personnel",
       "users"
     )
+
     output$coverage_contract <- render_coverage_box(
       contract_data,
       "Contracts",
