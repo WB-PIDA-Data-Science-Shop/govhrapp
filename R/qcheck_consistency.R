@@ -34,7 +34,7 @@ consistency_ui <- function(id, est_data, personnel_data, contract_data) {
     # 1. value boxes for coverage metrics
     bslib::card(
       bslib::card_header(
-        "Data Coverage",
+        "Data consistency",
         bslib::tooltip(
             bsicons::bs_icon("info-circle"),
             "Consistency, by module. Computed as the global average of consistency, at the record and value levels, in each module."
@@ -51,15 +51,15 @@ consistency_ui <- function(id, est_data, personnel_data, contract_data) {
       bslib::nav_panel(
         title = "Establishment",
         consistency_panel_ui(NS(id, "est"), est_data)
+      ),
+      bslib::nav_panel(
+        title = "Personnel",
+        consistency_panel_ui(NS(id, "personnel"), personnel_data)
+      ),
+      bslib::nav_panel(
+        title = "Contract",
+        consistency_panel_ui(NS(id, "contract"), contract_data)
       )
-      # bslib::nav_panel(
-      #   title = "Personnel",
-      #   consistency_panel_ui(NS(id, "personnel"), personnel_data)
-      # ),
-      # bslib::nav_panel(
-      #   title = "Contract",
-      #   consistency_panel_ui(NS(id, "contract"), contract_data)
-      # )
     )
   )
 }
@@ -106,10 +106,10 @@ consistency_server <- function(id, est_data, personnel_data, contract_data) {
       "file-contract"
     )
 
-    # # per-dataset panel sub-modules
+    # per-dataset panel sub-modules
     consistency_panel_server("est", est_data)
-    # consistency_panel_server("personnel", personnel_data)
-    # consistency_panel_server("contract",  contract_data)
+    consistency_panel_server("personnel", personnel_data)
+    consistency_panel_server("contract",  contract_data)
   })
 }
 

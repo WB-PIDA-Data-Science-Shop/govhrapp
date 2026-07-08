@@ -121,6 +121,18 @@ render_consistency_box <- function(.data, id_col, value_cols, title, icon = "tab
   shiny::renderUI({
     consistency <- compute_global_consistency(.data, id_col, value_cols)
 
+    consistency_record <- compute_record_consistency(.data, id_col) |>
+      dplyr::pull(.data[["record_consistency"]])
+    
+    consistency_value <- purrr::map_dbl(
+      value_cols,
+      \(value_col) {
+        compute_value_consistency(.data, id_col, value_col) |>
+          dplyr::pull(.data[["value_consistency"]])
+      }
+    ) |>
+      mean(na.rm = TRUE)
+
     theme <- dplyr::case_when(
       consistency < 50                         ~ "danger",
       consistency >= 50 & consistency < 80 ~ "warning",
@@ -129,9 +141,11 @@ render_consistency_box <- function(.data, id_col, value_cols, title, icon = "tab
 
     bslib::value_box(
       title = title,
-      value = consistency,
+      value = paste0(consistency, "%"),
       icon  = icon,
-      theme = theme
+      theme = theme,
+      p(paste0("Record consistency: ", consistency_record, "%")),
+      p(paste0("Value consistency: ", consistency_value, "%"))
     )
   })
 }
@@ -464,6 +478,16 @@ consistency_panel_ui <- function(id, .data) {
         ),
         selected = "record"
       ),
+      # conditionally show the value column selection only when "Value" plot type is selected
+      shiny::conditionalPanel(
+        condition = sprintf("input['%s'] === 'value'", shiny::NS(id, "type_plot")),
+        shiny::selectInput(
+          shiny::NS(id, "value_col"),
+          "Select value column:",
+          choices = identify_group_choices(.data),
+          selected = identify_group_choices(.data)[1]
+        )
+      ),
       shinyWidgets::materialSwitch(
         shiny::NS(id, "toggle_growth"),
         label = "Switch to baseline index",
@@ -576,7 +600,8 @@ consistency_panel_server <- function(id, .data) {
         value_col = input$value_col,
         toggle_growth = input$toggle_growth
       )
-    })
+    }) |>
+        shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
   #   # plot 2. consistency by variable
   #   output$consistency_by_variable <- plotly::renderPlotly({

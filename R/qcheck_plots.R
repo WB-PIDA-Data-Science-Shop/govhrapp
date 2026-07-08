@@ -42,6 +42,7 @@ plot_coverage_trend <- function(data, group, toggle_growth = FALSE) {
 #'
 #' @return A ggplot2 object.
 #'
+#' @importFrom dplyr collect
 #' @export
 plot_consistency_trend <- function(
   data,
@@ -51,12 +52,20 @@ plot_consistency_trend <- function(
   type_plot,
   toggle_growth = FALSE
 ) {
+  # add ref_date to the group if not already included
+  group_with_ref_date <- unique(
+    c(
+      group,
+      "ref_date"
+    )
+  )
+
   # plot both the record and value level consistencies
   if (type_plot == "record") {
     consistency_data <- compute_record_consistency(
       data,
       id_col = id_col,
-      group_cols = group
+      group_cols = group_with_ref_date
     )
 
     consistency_col <- "record_consistency"
@@ -65,14 +74,14 @@ plot_consistency_trend <- function(
       data,
       id_col = id_col,
       value_col = value_col,
-      group_cols = group
+      group_cols = group_with_ref_date
     )
 
     consistency_col <- "value_consistency"
   }
 
   plot_trend(
-    consistency_data,
+    dplyr::collect(consistency_data),
     y_col = consistency_col,
     group = group,
     toggle_growth = toggle_growth,
