@@ -111,9 +111,11 @@ render_coverage_box <- function(.data, title, icon = "table") {
 #' @return A [shiny::renderUI()] producing a [bslib::value_box()] themed
 #'   `"danger"` (<50%), `"warning"` (50–79%), or `"success"` (≥80%).
 #'
-#' @importFrom shiny renderUI
+#' @importFrom shiny renderUI p
 #' @importFrom bslib value_box
 #' @importFrom dplyr case_when
+#' @importFrom purrr map_dbl
+#' @importFrom dplyr pull
 #'
 #' @details Consistency denotes the proportion of records and values that are consistent across the dataset. A record is considered consistent if it has a unique identifier and all its associated values are consistent. A value is considered consistent if it does not contradict other values for the same record.
 #' @export
@@ -251,9 +253,6 @@ compute_value_consistency <- function(
 ui_filter_controls <- function(.data, id) {
   group_choices <- identify_group_choices(.data)
 
-  # filter choices: optional groups from module structure, with a "None" entry on top
-  filter_choices <- c(list("None" = "none"), group_choices[-1])
-
   list(
     shiny::dateRangeInput(
       shiny::NS(id, "date_range"),
@@ -266,7 +265,7 @@ ui_filter_controls <- function(.data, id) {
     shiny::selectInput(
       shiny::NS(id, "group_filter"),
       "Select group:",
-      choices = filter_choices
+      choices = group_choices
     ),
     shinyWidgets::pickerInput(
       shiny::NS(id, "subgroup_filter"),
@@ -315,27 +314,11 @@ coverage_panel_ui <- function(id, .data) {
       full_screen = TRUE,
       fillable = FALSE,
       bslib::card_header(
-        "Coverage over time",
-        bslib::tooltip(
-          bsicons::bs_icon("info-circle"),
-          "Coverage, by year. Choosing a group will add new coverages, by group."
-        )
+        "Coverage over time"
       ),
-      layout_sidebar(
-        sidebar = sidebar(
-          title = "Group breakdown:",
-          position = "right",
-          shiny::selectInput(
-            shiny::NS(id, "coverage_group"),
-            "Group by",
-            choices = identify_group_choices(.data),
-            selected = "All"
-          )
-        ),
-        plotly::plotlyOutput(
+      plotly::plotlyOutput(
           shiny::NS(id, "coverage_panel"),
           height = "350px"
-        )
       )
     ),
 
@@ -419,9 +402,7 @@ coverage_panel_server <- function(id, .data) {
       data <- .data
 
       if (
-        !is.null(input$group_filter) &&
-          input$group_filter != "none" &&
-          length(input$subgroup_filter) > 0
+        input$group_filter != "ref_date"
       ) {
         data <- data |>
           dplyr::filter(
@@ -440,10 +421,11 @@ coverage_panel_server <- function(id, .data) {
     output$coverage_panel <- plotly::renderPlotly({
       plot_coverage_trend(
         data_filtered(),
-        group = input$coverage_group,
+        group = input$group_filter,
         toggle_growth = input$toggle_growth
       )
-    })
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
     # plot 2. coverage by variable
     output$coverage_by_variable <- plotly::renderPlotly({
@@ -462,16 +444,30 @@ coverage_panel_server <- function(id, .data) {
   })
 }
 
+#' Consistency Panel UI
+#' 
+#' @param id Character string. The module namespace ID.
+#' @param .data Data frame. The data to be used in the consistency panel.
+#' 
+#' @import shiny
+#' @importFrom bslib layout_sidebar sidebar card card_header tooltip
+#' @importFrom bsicons bs_icon
+#' @importFrom shinyWidgets materialSwitch
+#' 
+#' @return A Shiny UI object representing the consistency panel.
 consistency_panel_ui <- function(id, .data) {
-  bslib::layout_sidebar(
-    fillable = FALSE,
-    sidebar = bslib::sidebar(
-      title = span("Filter", bsicons::bs_icon("filter")),
-      width = "300px",
-      !!!ui_filter_controls(.data, id),
+  accordion_controls <- bslib::accordion(
+    accordion_panel(
+      "Filters",
+      icon = bsicons::bs_icon("filter"),
+      !!!ui_filter_controls(.data, id)
+    ),
+    accordion_panel(
+      "Additional controls",
+      icon = bsicons::bs_icon("bar-chart"),
       shiny::selectInput(
         shiny::NS(id, "type_plot"),
-        "Select plot type:",
+        "Select type of consistency:",
         choices = c(
           "Record" = "record",
           "Value"  = "value"
@@ -492,7 +488,16 @@ consistency_panel_ui <- function(id, .data) {
         shiny::NS(id, "toggle_growth"),
         label = "Switch to baseline index",
         value = FALSE
-      ),
+      )
+    )
+  )
+  
+  bslib::layout_sidebar(
+    fillable = FALSE,
+    sidebar = bslib::sidebar(
+      title = span("Controls", bsicons::bs_icon("sliders")),
+      width = "300px",
+      accordion_controls,
       shiny::actionButton(
         shiny::NS(id, "apply_btn"),
         "Apply selection",
@@ -511,21 +516,26 @@ consistency_panel_ui <- function(id, .data) {
           "Consistency, by year. Choosing a group will add new consistencies, by group."
         )
       ),
-      layout_sidebar(
-        sidebar = sidebar(
-          title = "Group breakdown:",
-          position = "right",
-          shiny::selectInput(
-            shiny::NS(id, "consistency_group"),
-            "Group by",
-            choices = identify_group_choices(.data),
-            selected = "All"
-          )
-        ),
-        plotly::plotlyOutput(
+      plotly::plotlyOutput(
           shiny::NS(id, "consistency_panel"),
           height = "350px"
+      )
+    ),
+
+    # plot 2. heatmap consistency by group
+    bslib::card(
+      full_screen = TRUE,
+      fillable = FALSE,
+      bslib::card_header(
+        "Consistency heatmap by group",
+        bslib::tooltip(
+          bsicons::bs_icon("info-circle"),
+          "Consistency, by variable and group."
         )
+      ),
+      plotly::plotlyOutput(
+        shiny::NS(id, "consistency_heatmap"),
+        height = "400px"
       )
     )
   )
@@ -566,9 +576,7 @@ consistency_panel_server <- function(id, .data) {
       data <- .data
 
       if (
-        !is.null(input$group_filter) &&
-          input$group_filter != "none" &&
-          length(input$subgroup_filter) > 0
+        input$group_filter != "ref_date"
       ) {
         data <- data |>
           dplyr::filter(
@@ -596,26 +604,28 @@ consistency_panel_server <- function(id, .data) {
         data_filtered(),
         id_col = id_col,
         type_plot = input$type_plot,
-        group = input$consistency_group,
+        group = input$group_filter,
         value_col = input$value_col,
         toggle_growth = input$toggle_growth
       )
     }) |>
         shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+    
+    # plot 2. heatmap consistency by group
+    output$consistency_heatmap <- plotly::renderPlotly({
+      id_col <- switch(
+        id,
+        "est" = "est_id",
+        "personnel" = "personnel_id",
+        "contract" = "contract_id"
+      )
 
-  #   # plot 2. consistency by variable
-  #   output$consistency_by_variable <- plotly::renderPlotly({
-  #     plot_consistency_bar(data_filtered())
-  #   }) |>
-  #     shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
-
-  #   # plot 3. consistency heatmap by group
-  #   output$consistency_heatmap <- plotly::renderPlotly({
-  #     plot_consistency_heatmap(
-  #       data_filtered(),
-  #       group = input$group_filter
-  #     )
-  #   }) |>
-  #     shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+      plot_consistency_heatmap(
+        data_filtered(),
+        id_col = id_col,
+        group = input$group_filter
+      )
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })
 }

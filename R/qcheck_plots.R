@@ -212,3 +212,54 @@ plot_coverage_heatmap <- function(data, group = NULL) {
       yaxis = list(title = "Variable")
     )
 }
+
+#' Plot Consistency Heatmap by Group
+#' 
+#' @param data A data frame.
+#' @param id_col Character string. The column name of the unique identifier for each record.
+#' @param group Character string. The column name of the grouping variable (e.g., "ref_date").
+#' 
+#' @return A plotly heatmap object representing consistency values by group and variable.
+#' 
+plot_consistency_heatmap <- function(data, id_col, group) {
+  value_cols <- setdiff(names(data), c(id_col, group))
+
+  consistency_data <- purrr::map_dfr(
+    value_cols,
+    ~ compute_value_consistency(
+      data,
+      id_col = id_col,
+      value_col = .x,
+      group_cols = group
+    ) |>
+      dplyr::mutate(variable = .x)
+  )
+  
+  plotly::plot_ly(
+    data = consistency_data,
+    x = ~ .data[[group]],
+    y = ~variable,
+    z = ~value_consistency,
+    type = "heatmap",
+    colorscale = list(c(0, "#d32f2f"), c(0.5, "#f9a825"), c(1, "#388e3c")),
+    zmin = 0,
+    zmax = 1,
+    xgap = 2,
+    ygap = 2,
+    hovertemplate = paste0(
+      "Group: %{x}<br>",
+      "Variable: %{y}<br>",
+      "Consistency: %{z:.0%}",
+      "<extra></extra>"
+    ),
+    colorbar = list(
+      title = "Consistency",
+      tickformat = ".0%"
+    )
+  ) |>
+    plotly::layout(
+      xaxis = list(title = "Group"),
+      yaxis = list(title = "Variable")
+    )
+}
+
