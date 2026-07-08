@@ -91,13 +91,16 @@ validation_ui <- function(id) {
 #'
 #' @param id Character string. The module namespace ID.
 #' @param qc_obj A quality control object from \code{govhr::compute_qualitycontrol()}.
+#' @param est_data Data frame. The establishment-level data.
+#' @param personnel_data Data frame. The personnel-level data.
+#' @param contract_data Data frame. The contract-level data.
 #'
 #' @return None. Called for side effects (renders Shiny outputs).
 #'
 #' @importFrom shiny moduleServer renderText observeEvent updateSelectInput downloadHandler req
 #' @importFrom gt render_gt gt fmt_number fmt_markdown cols_align tab_style cell_fill opt_table_outline opt_row_striping
 #' @importFrom writexl write_xlsx
-#' @importFrom govhr validate_data contract_rules personnel_rules
+#' @importFrom govhr validate_data
 #'
 #' @keywords internal
 validation_server <- function(id, est_data, personnel_data, contract_data) {
