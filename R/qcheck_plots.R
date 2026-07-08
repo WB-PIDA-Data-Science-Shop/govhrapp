@@ -37,7 +37,7 @@ plot_consistency_trend <- function(data, id_col, group, value_col, type_plot, to
     consistency_data <- compute_record_consistency(
     data,
     id_col = id_col,
-    group = group,
+    group_cols = group,
     include_ref_date = TRUE,
     aggregate = TRUE
   )} else {
@@ -46,7 +46,6 @@ plot_consistency_trend <- function(data, id_col, group, value_col, type_plot, to
       id_col = id_col,
       value_col = value_col,
       group_cols = group,
-      include_ref_date = TRUE,
       aggregate = TRUE
     )
   }
