@@ -458,6 +458,15 @@ consistency_panel_ui <- function(id, .data) {
       title = span("Filter", bsicons::bs_icon("filter")),
       width = "300px",
       !!!ui_filter_controls(.data, id),
+      shiny::selectInput(
+        shiny::NS(id, "type_plot"),
+        "Select plot type:",
+        choices = c(
+          "Record" = "record",
+          "Value"  = "value"
+        ),
+        selected = "record"
+      ),
       shinyWidgets::materialSwitch(
         shiny::NS(id, "toggle_growth"),
         label = "Switch to baseline index",
@@ -565,6 +574,7 @@ consistency_panel_server <- function(id, .data) {
       plot_consistency_trend(
         data_filtered(),
         id_col = id_col,
+        type_plot = input$type_plot,
         group = input$consistency_group,
         value_col = input$value_col,
         toggle_growth = input$toggle_growth

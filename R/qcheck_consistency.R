@@ -119,6 +119,10 @@ run_consistency_app <- function(
   contract_data,
   ...
 ) {
+  theme = bslib::bs_theme(
+    bootswatch = "litera"
+  )
+
   ui <- consistency_ui("test", est_data, personnel_data, contract_data)
 
   server <- function(input, output, session) {
