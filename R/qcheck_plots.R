@@ -31,6 +31,18 @@ plot_coverage_trend <- function(data, group, toggle_growth = FALSE) {
   )
 }
 
+#' Plot Consistency Over Time
+#'
+#' @param data A data frame.
+#' @param id_col Character string. The column name of the unique identifier for each record.
+#' @param group Character string. The column name of the grouping variable (e.g., "ref_date").
+#' @param value_col Character string. The column name of the value to be checked for consistency.
+#' @param type_plot Character string. The type of consistency plot ("record" or "value").
+#' @param toggle_growth Logical. When `TRUE` the y-axis switches to a baseline-index view (first period = 100). Defaults to `FALSE`.
+#'
+#' @return A ggplot2 object.
+#'
+#' @export
 plot_consistency_trend <- function(
   data,
   id_col,
@@ -46,6 +58,8 @@ plot_consistency_trend <- function(
       id_col = id_col,
       group_cols = group
     )
+
+    consistency_col <- "record_consistency"
   } else {
     consistency_data <- compute_value_consistency(
       data,
@@ -53,11 +67,13 @@ plot_consistency_trend <- function(
       value_col = value_col,
       group_cols = group
     )
+
+    consistency_col <- "value_consistency"
   }
 
   plot_trend(
     consistency_data,
-    y_col = "consistency",
+    y_col = consistency_col,
     group = group,
     toggle_growth = toggle_growth,
     y_label = "Consistency"

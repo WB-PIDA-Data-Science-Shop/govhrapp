@@ -241,16 +241,13 @@ ui_filter_controls <- function(.data, id) {
   filter_choices <- c(list("None" = "none"), group_choices[-1])
 
   list(
-    shiny::sliderInput(
+    shiny::dateRangeInput(
       shiny::NS(id, "date_range"),
       "Select date range:",
+      start = min(.data[["ref_date"]], na.rm = TRUE),
+      end = max(.data[["ref_date"]], na.rm = TRUE),
       min = min(.data[["ref_date"]], na.rm = TRUE),
-      max = max(.data[["ref_date"]], na.rm = TRUE),
-      value = c(
-        min(.data[["ref_date"]], na.rm = TRUE),
-        max(.data[["ref_date"]], na.rm = TRUE)
-      ),
-      timeFormat = "%Y-%m-%d"
+      max = max(.data[["ref_date"]], na.rm = TRUE)
     ),
     shiny::selectInput(
       shiny::NS(id, "group_filter"),
