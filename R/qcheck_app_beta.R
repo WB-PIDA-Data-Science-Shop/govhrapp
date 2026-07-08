@@ -113,12 +113,21 @@ run_govhrapp_qcheck <- function(est_data, personnel_data, contract_data, ...) {
 
       # content
       consistency_ui("consistency", est_data, personnel_data, contract_data)
+    ),
+
+    bslib::nav_panel(
+      "Validation",
+      icon = shiny::icon("file-contract"),
+
+      # content
+      validation_ui("validation")
     )
   )
 
   server <- function(input, output, session) {
     coverage_server("coverage", est_data, personnel_data, contract_data)
     consistency_server("consistency", est_data, personnel_data, contract_data)
+    validation_server("validation", est_data, personnel_data, contract_data)
   }
 
   shiny::shinyApp(ui, server, ...)
