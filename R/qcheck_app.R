@@ -1,31 +1,49 @@
-#' Run the Quality Assessment Shiny Application
+#' Run the govhr Shiny Dashboard Application
 #'
-#' Launches an interactive Shiny dashboard for govhr data visualization and analysis.
+#' Launches an interactive Shiny dashboard for govhr data quality check.
 #'
-#' @param qc_obj A quality control object created by \code{govhr::compute_qualitycontrol()}.
+#' @param est_data Data frame with establishment attributes.
+#' @param personnel_data Data frame with personnel attributes.
+#' @param contract_data Data frame with contract attributes.
+#' @param personnel_validation List. The personnel validation results, including reports and violations.
+#' @param contract_validation List. The contract validation results, including reports and violations.
 #' @param ... Additional arguments passed to \code{\link[shiny]{shinyApp}}.
 #'
 #' @return A Shiny app object.
 #'
 #' @examples
 #' \dontrun{
-#' qc_obj <- govhr::compute_qualitycontrol(
-#'   contract_dt  = govhr::bra_hrmis_contract,
-#'   personnel_dt = govhr::bra_hrmis_personnel,
-#'   est_dt       = govhr::bra_hrmis_est
-#' )
-#' run_qcheckapp(qc_obj)
+#' run_govhrapp_qcheck(est_data, personnel_data, contract_data)
 #' }
 #'
-#' @importFrom shiny shinyApp addResourcePath icon tags
-#' @importFrom bslib page_navbar bs_theme bs_add_rules nav_panel nav_spacer nav_menu nav_item navbar_options font_google
+#' @importFrom shiny shinyApp addResourcePath
+#' @importFrom bslib page_navbar nav_panel nav_spacer bs_theme bs_add_rules navbar_options font_google
+#' @importFrom ggplot2 theme_set theme_minimal theme element_text update_geom_defaults
 #' @importFrom thematic thematic_shiny
+#' @importFrom lubridate year
+#' @importFrom scales label_number cut_short_scale
 #' @export
-run_qcheckapp <- function(qc_obj, ...) {
-  
+run_govhrapp_qcheck <- function(est_data, personnel_data, contract_data, personnel_validation, contract_validation, ...) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", system.file("www", package = "govhrapp"))
-  thematic::thematic_shiny(font = "auto")
+
+  # ensure ggplot2 and plotly inherit bslib themes
+  ggplot2::theme_set(
+    ggplot2::theme_minimal(base_size = 14) +
+      ggplot2::theme(
+        axis.text = ggplot2::element_text(size = 10.5)
+      )
+  )
+
+  thematic::thematic_shiny(
+    font = "auto",
+    accent = "#C34729",
+    sequential = "#C34729"
+  )
+
+  ggplot2::update_geom_defaults("point", list(colour = "#C34729"))
+  ggplot2::update_geom_defaults("line",  list(colour = "#C34729"))
+  ggplot2::update_geom_defaults("col",   list(fill   = "#C34729"))
 
   ui <- bslib::page_navbar(
     fillable = FALSE,
@@ -47,6 +65,9 @@ run_qcheckapp <- function(qc_obj, ...) {
     ),
 
     padding = "20px",
+
+    # custom CSS
+    # shiny::tags$head(shiny::includeCSS("www/styles.css")),
 
     # panel 1: home
     bslib::nav_panel(
@@ -79,61 +100,36 @@ run_qcheckapp <- function(qc_obj, ...) {
       )
     ),
     
-    # panel 2: Data Basics
+    # panel 2: coverage
     bslib::nav_panel(
-      "Data Basics",
-      icon = shiny::icon("database"),
-      databasics_ui("databasics")
+      "Coverage",
+      icon = shiny::icon("building"),
+
+      # content
+      coverage_ui("coverage", est_data, personnel_data, contract_data)
     ),
-    
-    # panel 3: Missingness
+
     bslib::nav_panel(
-      "Missingness",
-      icon = shiny::icon("magnifying-glass-chart"),
-      missingness_ui("missingness")
+      "Consistency",
+      icon = shiny::icon("check"),
+
+      # content
+      consistency_ui("consistency", est_data, personnel_data, contract_data)
     ),
-    
-    # panel 4: Validation Rules
+
     bslib::nav_panel(
       "Validation",
-      icon = shiny::icon("circle-check"),
+      icon = shiny::icon("file-contract"),
+
+      # content
       validation_ui("validation")
-    ),
-    
-    # panel 5: Volatility
-    bslib::nav_panel(
-      "Volatility",
-      icon = shiny::icon("chart-line"),
-      volatility_ui("volatility")
-    ),
-    
-    # GitHub code links
-    bslib::nav_menu(
-      title = "Code",
-      icon = shiny::icon("github"),
-      bslib::nav_item(
-        shiny::tags$a(
-          "govhr dashboard",
-          href = "https://github.com/WB-PIDA-Data-Science-Shop/govhrapp",
-          target = "_blank"
-        )
-      ),
-      bslib::nav_item(
-        shiny::tags$a(
-          "govhr",
-          href = "https://github.com/WB-PIDA-Data-Science-Shop/govhr",
-          target = "_blank"
-        )
-      )
     )
+  )
 
- )
-
-  server <- function(input, output, session){
-    databasics_server("databasics",  qc_obj)
-    missingness_server("missingness", qc_obj)
-    validation_server("validation",  qc_obj)
-    volatility_server("volatility",  qc_obj)
+  server <- function(input, output, session) {
+    coverage_server("coverage", est_data, personnel_data, contract_data)
+    consistency_server("consistency", est_data, personnel_data, contract_data)
+    validation_server("validation", personnel_validation, contract_validation)
   }
 
   shiny::shinyApp(ui, server, ...)
