@@ -247,7 +247,7 @@ run_validation_app <- function(
   ui <- validation_ui("test")
 
   server <- function(input, output, session) {
-    validation_server("test", est_data, personnel_data, contract_data)
+    validation_server("test", personnel_data, contract_data)
   }
 
   shiny::shinyApp(ui, server, ...)
