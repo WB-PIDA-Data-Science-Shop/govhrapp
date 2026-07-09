@@ -10,8 +10,8 @@ deploy_govhrapp(suite, type = c("dev", "prod"))
 \item{suite}{Character string specifying which app suite to deploy.
 Must be one of:
 \describe{
-\item{\code{"quality"}}{Deploys the quality control dashboard.
-Uses the \code{govhrapp_quality_guid} environment variable.}
+\item{\code{"qcheck"}}{Deploys the qcheck control dashboard.
+Uses the \code{govhrapp_qcheck_guid} environment variable.}
 \item{\code{"analytics"}}{Deploys the analytics dashboard.
 Uses the \code{govhrapp_analytics_guid} environment variable.}
 }}
@@ -30,7 +30,7 @@ application GUIDs from environment variables.
 This function requires environment variables to be set with the Posit Connect
 application GUIDs:
 \itemize{
-\item \code{govhrapp_quality_guid} - GUID for the quality suite
+\item \code{govhrapp_qcheck_guid} - GUID for the qcheck suite
 \item \code{govhrapp_analytics_guid} - GUID for the analytics suite
 }
 
@@ -45,8 +45,8 @@ Sys.setenv(govhrapp_analytics_guid = "your-guid-here")
 # Deploy the analytics suite
 deploy_govhrapp("analytics")
 
-# Deploy the quality suite
-deploy_govhrapp("quality")
+# Deploy the qcheck suite
+deploy_govhrapp("qcheck")
 }
 
 }

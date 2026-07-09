@@ -35,10 +35,13 @@ consistency_ui <- function(id, est_data, personnel_data, contract_data) {
     bslib::card(
       bslib::card_header(
         "Data consistency",
-        bslib::tooltip(
-            bsicons::bs_icon("info-circle"),
-            "Consistency, by module. Computed as the global average of consistency, at the record and value levels, in each module."
-        )
+        bslib::popover(
+            bsicons::bs_icon("info-circle-fill"),
+            "Computed as the global average of consistency, at the record and value levels, in each module.",
+            title = "Consistency by module",
+            placement = "left"
+        ),
+        class = "d-flex justify-content-between"
       ),
       layout_column_wrap(
         fill = FALSE,
@@ -95,7 +98,7 @@ consistency_server <- function(id, est_data, personnel_data, contract_data) {
       id_col = "personnel_id",
       value_cols = c("birth_date"),
       "Personnel",
-      "users"
+      "people-fill"
     )
 
     output$consistency_contract <- render_consistency_box(
@@ -103,7 +106,7 @@ consistency_server <- function(id, est_data, personnel_data, contract_data) {
       id_col = "contract_id",
       value_cols = c("start_date", "contract_type"),
       "Contracts",
-      "file-contract"
+      "file-text-fill"
     )
 
     # per-dataset panel sub-modules

@@ -35,10 +35,13 @@ coverage_ui <- function(id, est_data, personnel_data, contract_data) {
     bslib::card(
       bslib::card_header(
         "Data Coverage",
-        bslib::tooltip(
-            bsicons::bs_icon("info-circle"),
-            "Coverage, by module. Computed as the global average of coverage across all variables in each module."
-        )
+        bslib::popover(
+            bsicons::bs_icon("info-circle-fill"),
+            "Coverage is computed as the average of the proportion of complete values for each variable in the module. For example, if a module has 2 variables and 50 percent of values are missing for each, the global coverage is 50%.",
+            title = "Coverage by module",
+            placement = "left"
+        ),
+        class = "d-flex justify-content-between"
       ),
       layout_column_wrap(
         fill = FALSE,
@@ -87,16 +90,16 @@ coverage_server <- function(id, est_data, personnel_data, contract_data) {
       "building"
     )
     
-    output$coverage_personnel <- render_coverage_box(
-      personnel_data,
-      "Personnel",
-      "users"
-    )
-
     output$coverage_contract <- render_coverage_box(
       contract_data,
       "Contracts",
-      "file-contract"
+      "file-text-fill"
+    )
+    
+    output$coverage_personnel <- render_coverage_box(
+      personnel_data,
+      "Personnel",
+      "people-fill"
     )
 
     # per-dataset panel sub-modules

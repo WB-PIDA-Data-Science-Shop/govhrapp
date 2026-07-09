@@ -7,9 +7,10 @@
 #'
 #' @return A Shiny UI object containing validation rule cards.
 #'
-#' @importFrom shiny NS tagList textOutput icon selectInput downloadButton p tags
+#' @importFrom shiny NS tagList textOutput selectInput downloadButton p tags
 #' @importFrom bslib layout_columns card card_header card_body value_box
 #' @importFrom gt gt_output
+#' @importFrom bsicons bs_icon
 #'
 #' @keywords internal
 validation_ui <- function(id) {
@@ -20,17 +21,11 @@ validation_ui <- function(id) {
     # Summary value boxes
     bslib::layout_columns(
       col_widths = c(6, 6),
-      bslib::value_box(
-        title    = "Contract Rules Pass Rate",
-        value    = shiny::textOutput(ns("contract_pass_rate")),
-        showcase = shiny::icon("file-contract"),
-        theme    = "primary"
+      uiOutput(
+        ns("validation_personnel")
       ),
-      bslib::value_box(
-        title    = "Personnel Rules Pass Rate",
-        value    = shiny::textOutput(ns("personnel_pass_rate")),
-        showcase = shiny::icon("users"),
-        theme    = "primary"
+      uiOutput(
+        ns("validation_contract")
       )
     ),
 
@@ -108,21 +103,18 @@ validation_server <- function(id, personnel_validation, contract_validation) {
     personnel_report    <- personnel_validation$report
     personnel_violation <- personnel_validation$violations
 
-    # Contract overall pass rate (weighted across all rules)
-    output$contract_pass_rate <- shiny::renderText({
-      df <- contract_report
-      total_passes  <- sum(df$Passes,          na.rm = TRUE)
-      total_records <- sum(df$`Total Records`, na.rm = TRUE)
-      paste0(round(total_passes / total_records * 100, 1), "%")
-    })
+    # value boxes
+    output$validation_personnel <- render_validation_box(
+      personnel_report,
+      "Personnel Validation Rate",
+      "people-fill"
+    )
 
-    # Personnel overall pass rate (exclude errored rules)
-    output$personnel_pass_rate <- shiny::renderText({
-      df <- personnel_report[!personnel_report$Errors, ]
-      total_passes  <- sum(df$Passes,          na.rm = TRUE)
-      total_records <- sum(df$`Total Records`, na.rm = TRUE)
-      paste0(round(total_passes / total_records * 100, 1), "%")
-    })
+    output$validation_contract <- render_validation_box(
+      contract_report,
+      "Contract Validation Rate",
+      "file-text-fill"
+    )
 
     # Helper: non-clickable badge HTML
     make_badge <- function(pass_rate, is_error) {

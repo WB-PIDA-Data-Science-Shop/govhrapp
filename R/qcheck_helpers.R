@@ -78,6 +78,7 @@ compute_global_consistency <- function(data, id_col, value_cols, digits = 2) {
 #' @importFrom shiny renderUI
 #' @importFrom bslib value_box
 #' @importFrom dplyr case_when
+#' @importFrom bsicons bs_icon
 #'
 #' @details Coverage denotes the total number of non-missing records in a dataset, expressed as a percentage of the total records. For example, if a dataset has 10 rows and 10 columns, i.e., 100 records, and 10 of them are available, the coverage would be 10 percent.
 #' @export
@@ -93,8 +94,8 @@ render_coverage_box <- function(.data, title, icon = "table") {
 
     bslib::value_box(
       title = title,
-      value = value_coverage,
-      icon  = icon,
+      value = paste(value_coverage, "%"),
+      showcase  = bsicons::bs_icon(icon),
       theme = theme
     )
   })
@@ -113,6 +114,7 @@ render_coverage_box <- function(.data, title, icon = "table") {
 #'
 #' @importFrom shiny renderUI p
 #' @importFrom bslib value_box
+#' @importFrom bsicons bs_icon
 #' @importFrom dplyr case_when
 #' @importFrom purrr map_dbl
 #' @importFrom dplyr pull
@@ -144,11 +146,49 @@ render_consistency_box <- function(.data, id_col, value_cols, title, icon = "tab
     bslib::value_box(
       title = title,
       value = paste0(consistency, "%"),
-      icon  = icon,
+      showcase  = bsicons::bs_icon(icon),
       theme = theme,
       p(paste0("Record consistency: ", consistency_record, "%")),
       p(paste0("Value consistency: ", consistency_value, "%"))
     )
+  })
+}
+
+#' Render a Data Validation Value Box
+#' 
+#' @param validation_data Data frame. A dataframe containing the validation results, including the number of passes and total records.
+#' @param title String. Value box title.
+#' @param icon String. Icon name. Defaults to `"table"`.
+#' 
+#' @return A [shiny::renderUI()] producing a [bslib::value_box()] themed
+#'   `"danger"` (<50%), `"warning"` (50–79%), or `"success"` (≥80%).
+#'
+#' @importFrom shiny renderUI
+#' @importFrom bslib value_box
+#' @importFrom bsicons bs_icon
+#' @importFrom dplyr case_when
+#'
+#' @export
+render_validation_box <- function(validation_data, title, icon = "table") {
+  shiny::renderUI({
+    df <- validation_data
+    total_passes  <- sum(df$Passes,          na.rm = TRUE)
+    total_records <- sum(df$`Total Records`, na.rm = TRUE)
+    
+    pass_rate <- round(total_passes / total_records * 100, 1)
+
+    theme <- dplyr::case_when(
+      pass_rate < 50                         ~ "danger",
+      pass_rate >= 50 & pass_rate < 80 ~ "warning",
+      TRUE                                        ~ "success"
+    )
+    
+    bslib::value_box(
+      title    = title,
+      value    = paste0(pass_rate, "%"),
+      showcase = bsicons::bs_icon(icon),
+      theme    = theme
+    )  
   })
 }
 
@@ -294,7 +334,7 @@ coverage_panel_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
-      title = span("Filter", bsicons::bs_icon("filter")),
+      title = span("Controls", bsicons::bs_icon("sliders")),
       width = "300px",
       !!!ui_filter_controls(.data, id),
       shinyWidgets::materialSwitch(
@@ -314,7 +354,13 @@ coverage_panel_ui <- function(id, .data) {
       full_screen = TRUE,
       fillable = FALSE,
       bslib::card_header(
-        "Coverage over time"
+        "Coverage over time",
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          title = "Coverage over time",
+          "Computed as the average proportion of non-missing values for all variables over time."
+        ),
+        class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(
           shiny::NS(id, "coverage_panel"),
@@ -328,10 +374,12 @@ coverage_panel_ui <- function(id, .data) {
       fillable = FALSE,
       bslib::card_header(
         "Coverage by variable",
-        bslib::tooltip(
-          bsicons::bs_icon("info-circle"),
-          "Coverage, by variable."
-        )
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          title = "Coverage by variable",
+          "Computed as the proportion of non-missing values for each variable."
+        ),
+        class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(
         shiny::NS(id, "coverage_by_variable"),
@@ -345,10 +393,13 @@ coverage_panel_ui <- function(id, .data) {
       fillable = FALSE,
       bslib::card_header(
         "Coverage heatmap by group",
-        bslib::tooltip(
-          bsicons::bs_icon("info-circle"),
-          "Coverage, by variable and group."
-        )
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Coverage, by variable and group.",
+          title = "Coverage heatmap by group",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(
         shiny::NS(id, "coverage_heatmap"),
@@ -511,10 +562,13 @@ consistency_panel_ui <- function(id, .data) {
       fillable = FALSE,
       bslib::card_header(
         "Consistency over time",
-        bslib::tooltip(
-          bsicons::bs_icon("info-circle"),
-          "Consistency, by year. Choosing a group will add new consistencies, by group."
-        )
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Computed as the global average of consistency, at the record level, in each module.",
+          title = "Consistency over time",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(
           shiny::NS(id, "consistency_panel"),
@@ -528,10 +582,13 @@ consistency_panel_ui <- function(id, .data) {
       fillable = FALSE,
       bslib::card_header(
         "Consistency heatmap by group",
-        bslib::tooltip(
-          bsicons::bs_icon("info-circle"),
-          "Consistency, by variable and group."
-        )
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Computed as the global average of consistency, at the value level, in each module, by variable and group.",
+          title = "Consistency heatmap by group",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(
         shiny::NS(id, "consistency_heatmap"),
