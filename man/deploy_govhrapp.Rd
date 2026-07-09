@@ -4,7 +4,7 @@
 \alias{deploy_govhrapp}
 \title{Deploy govhrapp to Posit Connect}
 \usage{
-deploy_govhrapp(suite)
+deploy_govhrapp(suite, type = c("dev", "prod"))
 }
 \arguments{
 \item{suite}{Character string specifying which app suite to deploy.
@@ -15,6 +15,8 @@ Uses the \code{govhrapp_quality_guid} environment variable.}
 \item{\code{"analytics"}}{Deploys the analytics dashboard.
 Uses the \code{govhrapp_analytics_guid} environment variable.}
 }}
+
+\item{type}{Character string specifying the deployment type ("dev" or "prod").}
 }
 \value{
 Invisibly returns the deployment information from

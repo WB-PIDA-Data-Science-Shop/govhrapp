@@ -4,14 +4,25 @@
 \alias{run_govhrapp_qcheck}
 \title{Run the govhr Shiny Dashboard Application}
 \usage{
-run_govhrapp_qcheck(est_data, personnel_data, contract_data, ...)
+run_govhrapp_qcheck(
+  est_data,
+  personnel_data,
+  contract_data,
+  personnel_validation,
+  contract_validation,
+  ...
+)
 }
 \arguments{
 \item{est_data}{Data frame with establishment attributes.}
 
-\item{personnel_data}{Data frame with workforce/personnel attributes (headcount).}
+\item{personnel_data}{Data frame with personnel attributes.}
 
-\item{contract_data}{Data frame with contract/salary attributes (wage bill).}
+\item{contract_data}{Data frame with contract attributes.}
+
+\item{personnel_validation}{List. The personnel validation results, including reports and violations.}
+
+\item{contract_validation}{List. The contract validation results, including reports and violations.}
 
 \item{...}{Additional arguments passed to \code{\link[shiny]{shinyApp}}.}
 }

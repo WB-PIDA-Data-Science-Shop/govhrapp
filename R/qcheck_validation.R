@@ -90,10 +90,8 @@ validation_ui <- function(id) {
 #' for contract and personnel validation rules.
 #'
 #' @param id Character string. The module namespace ID.
-#' @param qc_obj A quality control object from \code{govhr::compute_qualitycontrol()}.
-#' @param est_data Data frame. The establishment-level data.
-#' @param personnel_data Data frame. The personnel-level data.
-#' @param contract_data Data frame. The contract-level data.
+#' @param personnel_validation List. The personnel validation results, including reports and violations.
+#' @param contract_validation List. The contract validation results, including reports and violations.
 #'
 #' @return None. Called for side effects (renders Shiny outputs).
 #'
@@ -103,19 +101,8 @@ validation_ui <- function(id) {
 #' @importFrom govhr validate_data
 #'
 #' @keywords internal
-validation_server <- function(id, est_data, personnel_data, contract_data) {
+validation_server <- function(id, personnel_validation, contract_validation) {
   shiny::moduleServer(id, function(input, output, session) {
-
-    contract_validation <- govhr::validate_data(
-      contract_data |> dplyr::collect(),
-      govhr::contract_rules
-    )
-
-    personnel_validation <- govhr::validate_data(
-      personnel_data,
-      govhr::personnel_rules
-    )
-    
     contract_report     <- contract_validation$report
     contract_violation  <- contract_validation$violations
     personnel_report    <- personnel_validation$report

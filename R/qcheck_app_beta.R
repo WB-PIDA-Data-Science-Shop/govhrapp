@@ -3,8 +3,10 @@
 #' Launches an interactive Shiny dashboard for govhr data quality check.
 #'
 #' @param est_data Data frame with establishment attributes.
-#' @param personnel_data Data frame with workforce/personnel attributes (headcount).
-#' @param contract_data Data frame with contract/salary attributes (wage bill).
+#' @param personnel_data Data frame with personnel attributes.
+#' @param contract_data Data frame with contract attributes.
+#' @param personnel_validation List. The personnel validation results, including reports and violations.
+#' @param contract_validation List. The contract validation results, including reports and violations.
 #' @param ... Additional arguments passed to \code{\link[shiny]{shinyApp}}.
 #'
 #' @return A Shiny app object.
@@ -21,7 +23,7 @@
 #' @importFrom lubridate year
 #' @importFrom scales label_number cut_short_scale
 #' @export
-run_govhrapp_qcheck <- function(est_data, personnel_data, contract_data, ...) {
+run_govhrapp_qcheck <- function(est_data, personnel_data, contract_data, personnel_validation, contract_validation, ...) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", system.file("www", package = "govhrapp"))
 
@@ -127,7 +129,7 @@ run_govhrapp_qcheck <- function(est_data, personnel_data, contract_data, ...) {
   server <- function(input, output, session) {
     coverage_server("coverage", est_data, personnel_data, contract_data)
     consistency_server("consistency", est_data, personnel_data, contract_data)
-    validation_server("validation", est_data, personnel_data, contract_data)
+    validation_server("validation", personnel_validation, contract_validation)
   }
 
   shiny::shinyApp(ui, server, ...)

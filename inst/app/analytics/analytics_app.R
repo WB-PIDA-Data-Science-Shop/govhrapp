@@ -11,13 +11,13 @@ govhrapp_con <- DBI::dbConnect(
 
 workforce_data <- dplyr::tbl(
   govhrapp_con,
-  "personnel"
+  "workforce"
 ) |> 
   duckplyr::as_duckdb_tibble()
 
 wagebill_data <- dplyr::tbl(
   govhrapp_con,
-  "contract"
+  "wagebill"
 ) |> 
   mutate(
     country_code = "BRA"

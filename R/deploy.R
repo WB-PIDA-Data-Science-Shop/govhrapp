@@ -11,6 +11,7 @@
 #'     \item{\code{"analytics"}}{Deploys the analytics dashboard.
 #'       Uses the \code{govhrapp_analytics_guid} environment variable.}
 #'   }
+#' @param type Character string specifying the deployment type ("dev" or "prod").
 #'
 #' @return Invisibly returns the deployment information from
 #'   \code{\link[rsconnect]{deployApp}}.
@@ -40,14 +41,21 @@
 #'
 #' @importFrom rsconnect deployApp
 #' @export
-deploy_govhrapp <- function(suite){
-  
+deploy_govhrapp <- function(suite, type = c("dev", "prod")) {
+  type <- match.arg(type)
+
+  suite <- match.arg(suite, choices = c("quality", "analytics"))
+
+  suite_type <- paste0(suite, "_", type)
+
   # Get the app ID from environment variable
   app_id = switch(
-    suite,
-    quality = Sys.getenv("govhrapp_quality_guid"),
-    analytics = Sys.getenv("govhrapp_analytics_guid"),
-    stop("suite must be either 'quality' or 'analytics'")
+    suite_type,
+    quality_dev = Sys.getenv("govhrapp_quality_dev_guid"),
+    quality_prod = Sys.getenv("govhrapp_quality_prod_guid"),
+    analytics_dev = Sys.getenv("govhrapp_analytics_dev_guid"),
+    analytics_prod = Sys.getenv("govhrapp_analytics_prod_guid"),
+    stop("suite must be either 'quality' or 'analytics' and type, 'prod' or 'dev'.")
   )
   
   # Get the app file to deploy
