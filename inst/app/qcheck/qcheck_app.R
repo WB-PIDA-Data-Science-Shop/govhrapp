@@ -1,4 +1,5 @@
 pkgload::load_all(".")
+library(dbplyr)
 
 govhrapp_con <- DBI::dbConnect(
   duckdb::duckdb(),

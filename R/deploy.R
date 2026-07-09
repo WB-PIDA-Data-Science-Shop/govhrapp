@@ -64,21 +64,6 @@ deploy_govhrapp <- function(suite, type = c("dev", "prod")) {
     quality = "inst/app/qcheck/qcheck_app.R",
     analytics = "inst/app/analytics/analytics_app.R"
   )
-
-  # Bundle
-  app_files = switch(
-    suite,
-    quality = c(
-      list.files("R", pattern = "qcheck_.*\\.R$", full.names = TRUE),
-      list.files("inst", full.names = TRUE)
-    ),
-    analytics = c(
-      list.files("R", pattern = "analytics_.*\\.R$", full.names = TRUE),
-      "R/helper.R",
-      "R/global.R",
-      list.files("inst", full.names = TRUE)
-    )
-  )
   
   # Check if app file exists
   if (!file.exists(app_primary_doc)) {
@@ -87,10 +72,10 @@ deploy_govhrapp <- function(suite, type = c("dev", "prod")) {
   
   # Deploy the app
   rsconnect::deployApp(
-    appDir = ".",
-    appId = app_id,
+    appDir        = ".",
+    appId         = app_id,
     appPrimaryDoc = app_primary_doc,
-    server = "internal-server",
-    forceUpdate = TRUE
+    server        = "internal-server",
+    forceUpdate   = TRUE
   )
 }
