@@ -103,7 +103,7 @@ run_govhrapp_qcheck <- function(est_data, personnel_data, contract_data, personn
     # panel 2: coverage
     bslib::nav_panel(
       "Coverage",
-      icon = shiny::icon("building"),
+      icon = shiny::icon("shield-fill-check"),
 
       # content
       coverage_ui("coverage", est_data, personnel_data, contract_data)
@@ -111,7 +111,7 @@ run_govhrapp_qcheck <- function(est_data, personnel_data, contract_data, personn
 
     bslib::nav_panel(
       "Consistency",
-      icon = shiny::icon("check"),
+      icon = shiny::icon("circle-square"),
 
       # content
       consistency_ui("consistency", est_data, personnel_data, contract_data)
@@ -119,7 +119,7 @@ run_govhrapp_qcheck <- function(est_data, personnel_data, contract_data, personn
 
     bslib::nav_panel(
       "Validation",
-      icon = shiny::icon("file-contract"),
+      icon = shiny::icon("patch-check-fill"),
 
       # content
       validation_ui("validation")
