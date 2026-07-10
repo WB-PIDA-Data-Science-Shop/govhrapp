@@ -1,0 +1,1 @@
+Here you can check for compliance with validation rules. Each rule is evaluated against data records and compliance is calculated as the pass rate, that is, the share of records that comply with a given rule.

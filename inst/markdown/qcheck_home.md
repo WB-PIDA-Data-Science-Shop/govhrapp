@@ -9,10 +9,10 @@ Across the world, public sectors employ over [400 million workers](https://www.w
 **Quality Check** comprises the following modules:
 
 ##### 1. Coverage
-This module checks the coverage of the dataset, ensuring that records are complete and identifying any missing data patterns. This helps identify potential data gaps.
+This module checks the coverage of the dataset, ensuring that records are complete. This helps identify potential data gaps.
 
 ##### 2. Uniqueness
-This module checks for duplicate records in the dataset, ensuring that each entity is uniquely represented. This helps identify potential data entry errors or inconsistencies that could affect analysis and reporting.
+This module checks for duplicate records and inconsistent values in the dataset, ensuring that each record is consistently represented. This helps identify potential data entry errors.
 
 ##### 3.Validity
-Rule-based quality checks applied separately to the Contract and Personnel modules. Each rule is evaluated against all records and summarised with a pass rate, pass/fail counts, and a status badge (Pass = 100%, Warning ≥ 80%, Fail < 80%). Rules that cannot be evaluated due to missing variables are flagged as errors. Summary indicators at the top of the tab show the overall weighted pass rate for each module.
+This module checks for compliance with validation rules. Each rule is evaluated against data records and compliance is calculated as the pass rate, that is, the share of records that comply with a given rule.

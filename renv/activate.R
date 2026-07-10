@@ -1179,7 +1179,7 @@ local({
     type <- desc$Type
     if (!is.null(type))
       return(tolower(type))
-  
+
     package <- desc$Package
     if (!is.null(package))
       return("package")
