@@ -24,7 +24,7 @@ compute_coverage <- function(.data, group = NULL, include_ref_date = FALSE, aggr
     dplyr::summarise(
       dplyr::across(
         dplyr::everything(),
-        ~ sum(!is.na(.x)) / dplyr::n()
+        ~ (sum(!is.na(.x)) / dplyr::n()) * 100
       ),
       .by = dplyr::all_of(group)
     ) |>

@@ -120,8 +120,8 @@ plot_coverage_bar <- function(data) {
   ) |>
     dplyr::mutate(
       coverage_tier = dplyr::case_when(
-        .data[["coverage"]] < 0.5 ~ "Low (<50%)",
-        .data[["coverage"]] < 0.8 ~ "Medium (50-79%)",
+        .data[["coverage"]] < 50 ~ "Low (<50%)",
+        .data[["coverage"]] < 80 ~ "Medium (50-79%)",
         TRUE ~ "High (>=80%)"
       ),
       coverage_tier = factor(
@@ -149,7 +149,7 @@ plot_coverage_bar <- function(data) {
     ggplot2::geom_col() +
     ggplot2::scale_x_continuous(
       labels = scales::label_percent(),
-      limits = c(0, 1)
+      limits = c(0, 100)
     ) +
     ggplot2::scale_fill_manual(
       values = c(

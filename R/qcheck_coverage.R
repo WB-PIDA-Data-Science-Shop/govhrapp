@@ -33,10 +33,17 @@ coverage_ui <- function(id, est_data, personnel_data, contract_data) {
 
     # 0. module description
     bslib::card(
-      bslib::card_title("Coverage"),
-      bslib::card_body(
-        shiny::markdown(
-          readLines(system.file("markdown/qcheck_coverage.md", package = "govhrapp"))
+      bslib::layout_columns(
+        col_widths = c(4,8),
+        bslib::card_title(
+          span("Coverage", style = "color: #002244; font-weight: bold;"), 
+          class = "text-center m-auto display-5"
+        ),
+        bslib::card_body(
+          shiny::markdown(
+            readLines(system.file("markdown/qcheck_coverage.md", package = "govhrapp"))
+          ),
+          class = "fs-6"
         )
       )
     ),

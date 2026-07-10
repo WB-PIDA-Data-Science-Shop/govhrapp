@@ -16,7 +16,25 @@
 validation_ui <- function(id) {
   ns <- shiny::NS(id)
 
+
   shiny::tagList(
+
+    # 0. module description
+    bslib::card(
+      bslib::layout_columns(
+        col_widths = c(4,8),
+        bslib::card_title(
+          span("Validation", style = "color: #002244; font-weight: bold;"), 
+          class = "text-center m-auto display-5"
+        ),
+        bslib::card_body(
+          shiny::markdown(
+            readLines(system.file("markdown/qcheck_validation.md", package = "govhrapp"))
+          ),
+          class = "fs-6"
+        )
+      )
+    ),
 
     # Summary value boxes
     bslib::layout_columns(
