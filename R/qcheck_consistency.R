@@ -104,7 +104,7 @@ consistency_server <- function(id, est_data, personnel_data, contract_data) {
     output$consistency_contract <- render_consistency_box(
       contract_data,
       id_col = "contract_id",
-      value_cols = c("start_date", "contract_type"),
+      value_cols = c("contract_type"),
       "Contracts",
       "file-text-fill"
     )
