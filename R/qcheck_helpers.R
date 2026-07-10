@@ -26,7 +26,6 @@ compute_global_coverage <- function(data, digits = 2) {
 #' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
 #' 
 #' @import dplyr
-#' @importFrom duckplyr as_duckplyr_tibble
 #' @importFrom purrr map_dbl
 #'
 #' @return A numeric value representing the proportion of consistent records and values in the data frame.
@@ -200,7 +199,6 @@ render_validation_box <- function(validation_data, title, icon = "table") {
 #' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
 #'
 #' @import dplyr
-#' @importFrom duckplyr as_duckplyr_tibble
 #'
 #' @return A data frame with the proportion of consistent records in the data frame, optionally by group.
 compute_record_consistency <- function(
@@ -209,35 +207,36 @@ compute_record_consistency <- function(
   group_cols = NULL,
   digits = 2
 ) {
-  if (!any(class(data) %in% c("duckplyr_df", "tbl_duckdb_connection"))) {
-    data <- data |>
-      duckplyr::as_duckplyr_tibble()
-  }
+  if (!is.null(group_cols)) group_cols <- as.character(unlist(group_cols))
 
-  group_cols_with_ref_date <- unique(
-    c("ref_date", group_cols)
-  )
+  group_cols_with_ref_date <- unique(c("ref_date", group_cols))
 
-  # compute the number of unique records based on the specified ID column
-  record_consistency <- data |>
-    dplyr::count(
-      across(
-        dplyr::all_of(c(id_col, group_cols_with_ref_date))
-      )
-    ) |>
-    dplyr::mutate(
-      consistent_record = if_else(.data[["n"]] == 1, 1, 0)
-    )
+  dt <- data.table::as.data.table(data)
+
+  # count records per id_col + group_cols_with_ref_date combination
+  count_cols <- c(id_col, group_cols_with_ref_date)
+  record_consistency <- dt[
+    ,
+    .(n = .N),
+    by = count_cols
+  ]
+  record_consistency[, consistent_record := data.table::fifelse(n == 1, 1, 0)]
 
   # percentage of consistent records, by group
-  record_consistency |>
-    dplyr::summarise(
-      record_consistency = round(
-        100 * sum(.data[["consistent_record"]], na.rm = TRUE) / n(),
-        digits
-      ),
-      .by = dplyr::all_of(group_cols)
-    )
+  if (is.null(group_cols)) {
+    result <- record_consistency[
+      ,
+      .(record_consistency = round(100 * sum(consistent_record, na.rm = TRUE) / .N, digits))
+    ]
+  } else {
+    result <- record_consistency[
+      ,
+      .(record_consistency = round(100 * sum(consistent_record, na.rm = TRUE) / .N, digits)),
+      by = group_cols
+    ]
+  }
+
+  tibble::as_tibble(result)
 }
 
 #' Compute the proportion of consistent values in a data frame.
@@ -249,9 +248,10 @@ compute_record_consistency <- function(
 #' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
 #'
 #' @import dplyr
-#' @importFrom duckplyr as_duckplyr_tibble
+#' @importFrom data.table as.data.table
 #'
 #' @return A data frame with the proportion of consistent values in the data frame, optionally by group.
+
 compute_value_consistency <- function(
   data,
   id_col,
@@ -259,35 +259,33 @@ compute_value_consistency <- function(
   group_cols = NULL,
   digits = 2
 ) {
-  if (!any(class(data) %in% c("duckplyr_df", "tbl_duckdb_connection"))) {
-    data <- data |>
-      duckplyr::as_duckplyr_tibble()
-  }
+  if (!is.null(group_cols)) group_cols <- as.character(unlist(group_cols))
 
-  # compute the number of unique values based on the specified ID column and grouping
-  value_consistency <- data |>
-    dplyr::summarise(
-      consistent_value = if_else(
-        n_distinct(
-          .data[[value_col]]
-        ) == 1,
-        1,
-        0
-      ),
-      .by = dplyr::all_of(
-        c(id_col, group_cols)
-      )
-    )
+  dt <- data.table::as.data.table(data)
+  by_cols <- c(id_col, group_cols)
+
+  # number of unique values per id_col + group_cols
+  value_consistency <- dt[
+    ,
+    .(consistent_value = data.table::fifelse(data.table::uniqueN(get(value_col)) == 1, 1, 0)),
+    by = by_cols
+  ]
 
   # percentage of consistent values, by group
-  value_consistency |>
-    dplyr::summarise(
-      value_consistency = round(
-        100 * sum(.data[["consistent_value"]], na.rm = TRUE) / n(),
-        digits
-      ),
-      .by = dplyr::all_of(group_cols)
-    )
+  if (is.null(group_cols)) {
+    result <- value_consistency[
+      ,
+      .(value_consistency = round(100 * sum(consistent_value, na.rm = TRUE) / .N, digits))
+    ]
+  } else {
+    result <- value_consistency[
+      ,
+      .(value_consistency = round(100 * sum(consistent_value, na.rm = TRUE) / .N, digits)),
+      by = group_cols
+    ]
+  }
+
+  tibble::as_tibble(result)
 }
 
 ui_filter_controls <- function(.data, id) {

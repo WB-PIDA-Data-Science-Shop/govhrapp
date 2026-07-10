@@ -1,33 +1,11 @@
 pkgload::load_all(".")
-library(dbplyr)
-
-govhrapp_con <- DBI::dbConnect(
-  duckdb::duckdb(),
-  dbdir = fs::path(
-    system.file("db", package = "govhrapp"),
-    "govhrapp.duckdb"
-  ),
-  read_only = TRUE
-)
 
 # micro data
-est_data <- dplyr::tbl(
-  govhrapp_con,
-  "est"
-) |> 
-  duckplyr::as_duckdb_tibble()
+est_data <- govhr::bra_hrmis_est
 
-personnel_data <- dplyr::tbl(
-  govhrapp_con,
-  "personnel"
-) |> 
-  duckplyr::as_duckdb_tibble()
+personnel_data <- govhr::bra_hrmis_personnel
 
-contract_data <- dplyr::tbl(
-  govhrapp_con,
-  "contract"
-) |> 
-  duckplyr::as_duckdb_tibble()
+contract_data <- govhr::bra_hrmis_contract
 
 # validation data
 contract_validation <- govhr::validate_data(

@@ -1,27 +1,25 @@
 pkgload::load_all(".")
 
-govhrapp_con <- DBI::dbConnect(
-  duckdb::duckdb(),
-  dbdir = fs::path(
-    system.file("db", package = "govhrapp"),
-    "govhrapp.duckdb"
-  ),
-  read_only = TRUE
-)
+workforce_data <- govhr::bra_hrmis_personnel |>
+  dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |>
+  dplyr::distinct(
+    .data[["ref_date"]],
+    .data[["personnel_id"]],
+    .keep_all = TRUE
+  ) |>
+  dplyr::select(dplyr::all_of(c(
+    "ref_date",
+    "personnel_id",
+    "gender",
+    "educat7",
+    "employment_status"
+  )))
 
-workforce_data <- dplyr::tbl(
-  govhrapp_con,
-  "workforce"
-) |> 
-  duckplyr::as_duckdb_tibble()
-
-wagebill_data <- dplyr::tbl(
-  govhrapp_con,
-  "wagebill"
-) |> 
-  mutate(
-    country_code = "BRA"
-  ) |> 
-  duckplyr::as_duckdb_tibble()
+wagebill_data <- govhr::bra_hrmis_contract |>
+  dplyr::filter(lubridate::year(.data[["ref_date"]]) <= 2017) |>
+  dplyr::left_join(
+    workforce_data,
+    by = c("ref_date", "personnel_id")
+  )
 
 run_govhrapp(workforce_data, wagebill_data)

@@ -148,7 +148,7 @@ plot_coverage_bar <- function(data) {
     ) +
     ggplot2::geom_col() +
     ggplot2::scale_x_continuous(
-      labels = scales::label_percent(),
+      labels = scales::label_percent(scale = 1),
       limits = c(0, 100)
     ) +
     ggplot2::scale_fill_manual(
