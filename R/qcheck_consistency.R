@@ -20,10 +20,10 @@ consistency_ui <- function(id, est_data, personnel_data, contract_data) {
       NS(id, "consistency_est")
     ),
     uiOutput(
-      NS(id, "consistency_contract")
+      NS(id, "consistency_personnel")
     ),
     uiOutput(
-      NS(id, "consistency_personnel")
+      NS(id, "consistency_contract")
     )
   )
 
@@ -34,7 +34,7 @@ consistency_ui <- function(id, est_data, personnel_data, contract_data) {
     # 1. value boxes for coverage metrics
     bslib::card(
       bslib::card_header(
-        "Data consistency",
+        "Consistency: Overview",
         bslib::popover(
             bsicons::bs_icon("info-circle-fill"),
             "Computed as the global average of consistency, at the record and value levels, in each module.",

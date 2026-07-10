@@ -1,4 +1,3 @@
-
 #' Validation Rules UI Module
 #'
 #' UI components for the Validation Rules section of the quality control dashboard.
@@ -16,16 +15,27 @@
 validation_ui <- function(id) {
   ns <- shiny::NS(id)
 
-
   shiny::tagList(
-    # Summary value boxes
-    bslib::layout_columns(
-      col_widths = c(6, 6),
-      uiOutput(
-        ns("validation_personnel")
+    bslib::card(
+      bslib::card_header(
+        "Validation: Overview",
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Validation rules are applied to the personnel and contract datasets to identify potential data quality issues. The pass rate indicates the percentage of records that meet the validation criteria.",
+          title = "Validation Rules Overview",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
       ),
-      uiOutput(
-        ns("validation_contract")
+      # Summary value boxes
+      bslib::layout_columns(
+        col_widths = c(6, 6),
+        uiOutput(
+          ns("validation_personnel")
+        ),
+        uiOutput(
+          ns("validation_contract")
+        )
       )
     ),
 
@@ -41,8 +51,8 @@ validation_ui <- function(id) {
             col_widths = c(8, 4),
             shiny::selectInput(
               ns("contract_rule_select"),
-              label    = "Download violations for rule:",
-              choices  = NULL
+              label = "Download violations for rule:",
+              choices = NULL
             ),
             shiny::tags$div(
               style = "padding-top: 1.7em;",
@@ -65,12 +75,15 @@ validation_ui <- function(id) {
             col_widths = c(8, 4),
             shiny::selectInput(
               ns("personnel_rule_select"),
-              label    = "Download violations for rule:",
-              choices  = NULL
+              label = "Download violations for rule:",
+              choices = NULL
             ),
             shiny::tags$div(
               style = "padding-top: 1.7em;",
-              shiny::downloadButton(ns("personnel_download"), "Download (.xlsx)")
+              shiny::downloadButton(
+                ns("personnel_download"),
+                "Download (.xlsx)"
+              )
             )
           )
         )
@@ -98,9 +111,9 @@ validation_ui <- function(id) {
 #' @keywords internal
 validation_server <- function(id, personnel_validation, contract_validation) {
   shiny::moduleServer(id, function(input, output, session) {
-    contract_report     <- contract_validation$report
-    contract_violation  <- contract_validation$violations
-    personnel_report    <- personnel_validation$report
+    contract_report <- contract_validation$report
+    contract_violation <- contract_validation$violations
+    personnel_report <- personnel_validation$report
     personnel_violation <- personnel_validation$violations
 
     # value boxes
@@ -119,70 +132,92 @@ validation_server <- function(id, personnel_validation, contract_validation) {
     # Helper: non-clickable badge HTML
     make_badge <- function(pass_rate, is_error) {
       if (is_error) {
-        return("<span style='background:#9e9e9e;color:white;padding:2px 8px;border-radius:4px;'>Does Not Apply</span>")
+        return(
+          "<span style='background:#9e9e9e;color:white;padding:2px 8px;border-radius:4px;'>Does Not Apply</span>"
+        )
       }
       if (pass_rate >= 100) {
-        return("<span style='background:#4caf50;color:white;padding:2px 8px;border-radius:4px;'>PASS</span>")
+        return(
+          "<span style='background:#4caf50;color:white;padding:2px 8px;border-radius:4px;'>PASS</span>"
+        )
       }
       if (pass_rate >= 80) {
-        return("<span style='background:#ff9800;color:white;padding:2px 8px;border-radius:4px;'>WARNING</span>")
+        return(
+          "<span style='background:#ff9800;color:white;padding:2px 8px;border-radius:4px;'>WARNING</span>"
+        )
       }
       "<span style='background:#f44336;color:white;padding:2px 8px;border-radius:4px;'>FAIL</span>"
     }
 
     # Helper: build styled gt validation table
     make_validation_table <- function(df) {
-      df$Status <- mapply(make_badge, pass_rate = df$`Pass Rate`, is_error = df$Errors)
+      df$Status <- mapply(
+        make_badge,
+        pass_rate = df$`Pass Rate`,
+        is_error = df$Errors
+      )
 
       df |>
         gt::gt() |>
         gt::fmt_markdown(columns = Status) |>
         gt::fmt_number(
-          columns  = c(`Total Records`, Passes, Fails),
+          columns = c(`Total Records`, Passes, Fails),
           decimals = 0,
           use_seps = TRUE
         ) |>
         gt::fmt_number(
-          columns  = `Pass Rate`,
+          columns = `Pass Rate`,
           decimals = 1,
-          suffix   = "%"
+          suffix = "%"
         ) |>
         gt::cols_align(
-          align   = "center",
+          align = "center",
           columns = c(`Total Records`, Passes, Fails, `Pass Rate`, Status)
         ) |>
         gt::tab_style(
-          style     = gt::cell_fill(color = "#fff3cd"),
-          locations = gt::cells_body(rows = `Pass Rate` < 100 & `Pass Rate` >= 80 & !Errors)
+          style = gt::cell_fill(color = "#fff3cd"),
+          locations = gt::cells_body(
+            rows = `Pass Rate` < 100 & `Pass Rate` >= 80 & !Errors
+          )
         ) |>
         gt::tab_style(
-          style     = gt::cell_fill(color = "#fce4e4"),
+          style = gt::cell_fill(color = "#fce4e4"),
           locations = gt::cells_body(rows = `Pass Rate` < 80 & !Errors)
         ) |>
         gt::opt_table_outline() |>
         gt::opt_row_striping(row_striping = FALSE)
     }
 
-    output$contract_table <- gt::render_gt(make_validation_table(contract_report))
-    output$personnel_table <- gt::render_gt(make_validation_table(personnel_report))
+    output$contract_table <- gt::render_gt(make_validation_table(
+      contract_report
+    ))
+    output$personnel_table <- gt::render_gt(make_validation_table(
+      personnel_report
+    ))
 
     # Populate selectInputs with only rules that have violations
     failing_rules <- function(report) {
-      report$Rule[!is.na(report$`Pass Rate`) & report$`Pass Rate` < 100 & !report$Errors]
+      report$Rule[
+        !is.na(report$`Pass Rate`) & report$`Pass Rate` < 100 & !report$Errors
+      ]
     }
 
     shiny::observe({
       rules <- failing_rules(contract_report)
-      shiny::updateSelectInput(session, "contract_rule_select",
-        choices  = if (length(rules) > 0) rules else c("No failing rules" = ""),
+      shiny::updateSelectInput(
+        session,
+        "contract_rule_select",
+        choices = if (length(rules) > 0) rules else c("No failing rules" = ""),
         selected = if (length(rules) > 0) rules[1] else ""
       )
     })
 
     shiny::observe({
       rules <- failing_rules(personnel_report)
-      shiny::updateSelectInput(session, "personnel_rule_select",
-        choices  = if (length(rules) > 0) rules else c("No failing rules" = ""),
+      shiny::updateSelectInput(
+        session,
+        "personnel_rule_select",
+        choices = if (length(rules) > 0) rules else c("No failing rules" = ""),
         selected = if (length(rules) > 0) rules[1] else ""
       )
     })
@@ -201,11 +236,14 @@ validation_server <- function(id, personnel_validation, contract_validation) {
 
     output$contract_download <- shiny::downloadHandler(
       filename = function() {
-        paste0(to_filename(shiny::req(input$contract_rule_select)), "_violations.xlsx")
+        paste0(
+          to_filename(shiny::req(input$contract_rule_select)),
+          "_violations.xlsx"
+        )
       },
       content = function(file) {
         rule <- shiny::req(input$contract_rule_select)
-        dt   <- contract_violation[[rule]]
+        dt <- contract_violation[[rule]]
         shiny::req(!is.null(dt), nrow(dt) > 0)
         writexl::write_xlsx(sanitise_df(dt), file)
       }
@@ -213,16 +251,18 @@ validation_server <- function(id, personnel_validation, contract_validation) {
 
     output$personnel_download <- shiny::downloadHandler(
       filename = function() {
-        paste0(to_filename(shiny::req(input$personnel_rule_select)), "_violations.xlsx")
+        paste0(
+          to_filename(shiny::req(input$personnel_rule_select)),
+          "_violations.xlsx"
+        )
       },
       content = function(file) {
         rule <- shiny::req(input$personnel_rule_select)
-        dt   <- personnel_violation[[rule]]
+        dt <- personnel_violation[[rule]]
         shiny::req(!is.null(dt), nrow(dt) > 0)
         writexl::write_xlsx(sanitise_df(dt), file)
       }
     )
-
   })
 }
 
@@ -232,7 +272,7 @@ run_validation_app <- function(
   contract_data,
   ...
 ) {
-  theme = bslib::bs_theme(
+  theme <- bslib::bs_theme(
     bootswatch = "litera"
   )
 

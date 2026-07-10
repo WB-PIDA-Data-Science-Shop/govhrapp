@@ -34,7 +34,7 @@ coverage_ui <- function(id, est_data, personnel_data, contract_data) {
     # 1. value boxes for coverage metrics
     bslib::card(
       bslib::card_header(
-        "Key Metrics",
+        "Coverage: Overview",
         bslib::popover(
             bsicons::bs_icon("info-circle-fill"),
             "Coverage is computed as the average of the proportion of complete values for each variable in the module. For example, if a module has 2 variables and 50 percent of values are missing for each, the global coverage is 50%.",

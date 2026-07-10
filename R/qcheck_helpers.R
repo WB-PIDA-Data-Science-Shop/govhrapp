@@ -262,11 +262,10 @@ compute_record_consistency <- function(
 #' @param group_cols A character vector specifying the names of the columns to group by. Default is no grouping.
 #' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
 #'
-#' @import dplyr
 #' @importFrom data.table as.data.table
+#' @importFrom tibble as_tibble
 #'
 #' @return A data frame with the proportion of consistent values in the data frame, optionally by group.
-
 compute_value_consistency <- function(
   data,
   id_col,
@@ -278,42 +277,17 @@ compute_value_consistency <- function(
     group_cols <- as.character(unlist(group_cols))
   }
 
-  dt <- data.table::as.data.table(data)
   by_cols <- c(id_col, group_cols)
 
-  # number of unique values per id_col + group_cols
-  value_consistency <- dt[,
-    .(
-      consistent_value = data.table::fifelse(
-        data.table::uniqueN(get(value_col)) == 1,
-        1,
-        0
-      )
-    ),
-    by = by_cols
-  ]
+  dt <- data.table::as.data.table(data)[, c(by_cols, value_col), with = FALSE]
 
-  # percentage of consistent values, by group
-  if (is.null(group_cols)) {
-    result <- value_consistency[,
-      .(
-        value_consistency = round(
-          100 * sum(consistent_value, na.rm = TRUE) / .N,
-          digits
-        )
-      )
-    ]
-  } else {
-    result <- value_consistency[,
-      .(
-        value_consistency = round(
-          100 * sum(consistent_value, na.rm = TRUE) / .N,
-          digits
-        )
-      ),
-      by = group_cols
-    ]
-  }
+  value_consistency <- unique(dt, by = c(by_cols, value_col))[, .N, by = by_cols]
+
+  # percentage of ids with exactly 1 distinct value, by group
+  result <- value_consistency[,
+    .(value_consistency = round(100 * mean(N == 1), digits)),
+    by = group_cols
+  ]
 
   tibble::as_tibble(result)
 }
