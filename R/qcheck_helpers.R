@@ -24,7 +24,7 @@ compute_global_coverage <- function(data, digits = 2) {
 #'   are to be checked for consistency. Value consistency is computed separately for
 #'   each column and averaged across columns before being combined with record consistency.
 #' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
-#' 
+#'
 #' @import dplyr
 #' @importFrom purrr map_dbl
 #'
@@ -86,15 +86,15 @@ render_coverage_box <- function(.data, title, icon = "table") {
     value_coverage <- compute_global_coverage(.data)
 
     theme <- dplyr::case_when(
-      value_coverage < 50                         ~ "danger",
+      value_coverage < 50 ~ "danger",
       value_coverage >= 50 & value_coverage < 80 ~ "warning",
-      TRUE                                        ~ "success"
+      TRUE ~ "success"
     )
 
     bslib::value_box(
       title = title,
       value = paste(value_coverage, "%"),
-      showcase  = bsicons::bs_icon(icon),
+      showcase = bsicons::bs_icon(icon),
       theme = theme
     )
   })
@@ -120,13 +120,19 @@ render_coverage_box <- function(.data, title, icon = "table") {
 #'
 #' @details Consistency denotes the proportion of records and values that are consistent across the dataset. A record is considered consistent if it has a unique identifier and all its associated values are consistent. A value is considered consistent if it does not contradict other values for the same record.
 #' @export
-render_consistency_box <- function(.data, id_col, value_cols, title, icon = "table") {
+render_consistency_box <- function(
+  .data,
+  id_col,
+  value_cols,
+  title,
+  icon = "table"
+) {
   shiny::renderUI({
     consistency <- compute_global_consistency(.data, id_col, value_cols)
 
     consistency_record <- compute_record_consistency(.data, id_col) |>
       dplyr::pull(.data[["record_consistency"]])
-    
+
     consistency_value <- purrr::map_dbl(
       value_cols,
       \(value_col) {
@@ -137,15 +143,15 @@ render_consistency_box <- function(.data, id_col, value_cols, title, icon = "tab
       mean(na.rm = TRUE)
 
     theme <- dplyr::case_when(
-      consistency < 50                         ~ "danger",
+      consistency < 50 ~ "danger",
       consistency >= 50 & consistency < 80 ~ "warning",
-      TRUE                                        ~ "success"
+      TRUE ~ "success"
     )
 
     bslib::value_box(
       title = title,
       value = paste0(consistency, "%"),
-      showcase  = bsicons::bs_icon(icon),
+      showcase = bsicons::bs_icon(icon),
       theme = theme,
       p(paste0("Record consistency: ", consistency_record, "%")),
       p(paste0("Value consistency: ", consistency_value, "%"))
@@ -154,11 +160,11 @@ render_consistency_box <- function(.data, id_col, value_cols, title, icon = "tab
 }
 
 #' Render a Data Validation Value Box
-#' 
+#'
 #' @param validation_data Data frame. A dataframe containing the validation results, including the number of passes and total records.
 #' @param title String. Value box title.
 #' @param icon String. Icon name. Defaults to `"table"`.
-#' 
+#'
 #' @return A [shiny::renderUI()] producing a [bslib::value_box()] themed
 #'   `"danger"` (<50%), `"warning"` (50–79%), or `"success"` (≥80%).
 #'
@@ -171,23 +177,23 @@ render_consistency_box <- function(.data, id_col, value_cols, title, icon = "tab
 render_validation_box <- function(validation_data, title, icon = "table") {
   shiny::renderUI({
     df <- validation_data
-    total_passes  <- sum(df$Passes,          na.rm = TRUE)
+    total_passes <- sum(df$Passes, na.rm = TRUE)
     total_records <- sum(df$`Total Records`, na.rm = TRUE)
-    
+
     pass_rate <- round(total_passes / total_records * 100, 1)
 
     theme <- dplyr::case_when(
-      pass_rate < 50                         ~ "danger",
+      pass_rate < 50 ~ "danger",
       pass_rate >= 50 & pass_rate < 80 ~ "warning",
-      TRUE                                        ~ "success"
+      TRUE ~ "success"
     )
-    
+
     bslib::value_box(
-      title    = title,
-      value    = paste0(pass_rate, "%"),
+      title = title,
+      value = paste0(pass_rate, "%"),
       showcase = bsicons::bs_icon(icon),
-      theme    = theme
-    )  
+      theme = theme
+    )
   })
 }
 
@@ -207,7 +213,9 @@ compute_record_consistency <- function(
   group_cols = NULL,
   digits = 2
 ) {
-  if (!is.null(group_cols)) group_cols <- as.character(unlist(group_cols))
+  if (!is.null(group_cols)) {
+    group_cols <- as.character(unlist(group_cols))
+  }
 
   group_cols_with_ref_date <- unique(c("ref_date", group_cols))
 
@@ -215,8 +223,7 @@ compute_record_consistency <- function(
 
   # count records per id_col + group_cols_with_ref_date combination
   count_cols <- c(id_col, group_cols_with_ref_date)
-  record_consistency <- dt[
-    ,
+  record_consistency <- dt[,
     .(n = .N),
     by = count_cols
   ]
@@ -224,14 +231,22 @@ compute_record_consistency <- function(
 
   # percentage of consistent records, by group
   if (is.null(group_cols)) {
-    result <- record_consistency[
-      ,
-      .(record_consistency = round(100 * sum(consistent_record, na.rm = TRUE) / .N, digits))
+    result <- record_consistency[,
+      .(
+        record_consistency = round(
+          100 * sum(consistent_record, na.rm = TRUE) / .N,
+          digits
+        )
+      )
     ]
   } else {
-    result <- record_consistency[
-      ,
-      .(record_consistency = round(100 * sum(consistent_record, na.rm = TRUE) / .N, digits)),
+    result <- record_consistency[,
+      .(
+        record_consistency = round(
+          100 * sum(consistent_record, na.rm = TRUE) / .N,
+          digits
+        )
+      ),
       by = group_cols
     ]
   }
@@ -259,28 +274,43 @@ compute_value_consistency <- function(
   group_cols = NULL,
   digits = 2
 ) {
-  if (!is.null(group_cols)) group_cols <- as.character(unlist(group_cols))
+  if (!is.null(group_cols)) {
+    group_cols <- as.character(unlist(group_cols))
+  }
 
   dt <- data.table::as.data.table(data)
   by_cols <- c(id_col, group_cols)
 
   # number of unique values per id_col + group_cols
-  value_consistency <- dt[
-    ,
-    .(consistent_value = data.table::fifelse(data.table::uniqueN(get(value_col)) == 1, 1, 0)),
+  value_consistency <- dt[,
+    .(
+      consistent_value = data.table::fifelse(
+        data.table::uniqueN(get(value_col)) == 1,
+        1,
+        0
+      )
+    ),
     by = by_cols
   ]
 
   # percentage of consistent values, by group
   if (is.null(group_cols)) {
-    result <- value_consistency[
-      ,
-      .(value_consistency = round(100 * sum(consistent_value, na.rm = TRUE) / .N, digits))
+    result <- value_consistency[,
+      .(
+        value_consistency = round(
+          100 * sum(consistent_value, na.rm = TRUE) / .N,
+          digits
+        )
+      )
     ]
   } else {
-    result <- value_consistency[
-      ,
-      .(value_consistency = round(100 * sum(consistent_value, na.rm = TRUE) / .N, digits)),
+    result <- value_consistency[,
+      .(
+        value_consistency = round(
+          100 * sum(consistent_value, na.rm = TRUE) / .N,
+          digits
+        )
+      ),
       by = group_cols
     ]
   }
@@ -361,8 +391,8 @@ coverage_panel_ui <- function(id, .data) {
         class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(
-          shiny::NS(id, "coverage_panel"),
-          height = "350px"
+        shiny::NS(id, "coverage_panel"),
+        height = "350px"
       )
     ),
 
@@ -450,9 +480,7 @@ coverage_panel_server <- function(id, .data) {
     data_filtered <- shiny::reactive({
       data <- .data
 
-      if (
-        input$group_filter != "ref_date"
-      ) {
+      if (input$group_filter != "ref_date") {
         data <- data |>
           dplyr::filter(
             .data[[input$group_filter]] %in% input$subgroup_filter
@@ -494,15 +522,15 @@ coverage_panel_server <- function(id, .data) {
 }
 
 #' Consistency Panel UI
-#' 
+#'
 #' @param id Character string. The module namespace ID.
 #' @param .data Data frame. The data to be used in the consistency panel.
-#' 
+#'
 #' @import shiny
 #' @importFrom bslib layout_sidebar sidebar card card_header tooltip
 #' @importFrom bsicons bs_icon
 #' @importFrom shinyWidgets materialSwitch
-#' 
+#'
 #' @return A Shiny UI object representing the consistency panel.
 consistency_panel_ui <- function(id, .data) {
   accordion_controls <- bslib::accordion(
@@ -519,13 +547,16 @@ consistency_panel_ui <- function(id, .data) {
         "Select type of consistency:",
         choices = c(
           "Record" = "record",
-          "Value"  = "value"
+          "Value" = "value"
         ),
         selected = "record"
       ),
       # conditionally show the value column selection only when "Value" plot type is selected
       shiny::conditionalPanel(
-        condition = sprintf("input['%s'] === 'value'", shiny::NS(id, "type_plot")),
+        condition = sprintf(
+          "input['%s'] === 'value'",
+          shiny::NS(id, "type_plot")
+        ),
         shiny::selectInput(
           shiny::NS(id, "value_col"),
           "Select value column:",
@@ -540,7 +571,7 @@ consistency_panel_ui <- function(id, .data) {
       )
     )
   )
-  
+
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
@@ -569,8 +600,8 @@ consistency_panel_ui <- function(id, .data) {
         class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(
-          shiny::NS(id, "consistency_panel"),
-          height = "350px"
+        shiny::NS(id, "consistency_panel"),
+        height = "350px"
       )
     ),
 
@@ -630,9 +661,7 @@ consistency_panel_server <- function(id, .data) {
     data_filtered <- shiny::reactive({
       data <- .data
 
-      if (
-        input$group_filter != "ref_date"
-      ) {
+      if (input$group_filter != "ref_date") {
         data <- data |>
           dplyr::filter(
             .data[[input$group_filter]] %in% input$subgroup_filter
@@ -664,8 +693,8 @@ consistency_panel_server <- function(id, .data) {
         toggle_growth = input$toggle_growth
       )
     }) |>
-        shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
-    
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
     # plot 2. heatmap consistency by group
     output$consistency_heatmap <- plotly::renderPlotly({
       id_col <- switch(

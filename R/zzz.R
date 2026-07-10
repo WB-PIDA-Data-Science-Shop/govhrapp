@@ -55,6 +55,11 @@ utils::globalVariables(c(
   # data.table and dplyr symbols
   ".N",
   ".data",
+  ".SD",
   # some functions
-  "nav_menu"
+  "nav_menu",
+  # function-specific symbols
+  "coverage",
+  "consistent_record",
+  "consistent_value"
 ))

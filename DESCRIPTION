@@ -12,7 +12,6 @@ Roxygen: list(markdown = TRUE)
 Suggests:
     knitr,
     pkgload,
-    quarto,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Imports: 

@@ -214,13 +214,13 @@ plot_coverage_heatmap <- function(data, group = NULL) {
 }
 
 #' Plot Consistency Heatmap by Group
-#' 
+#'
 #' @param data A data frame.
 #' @param id_col Character string. The column name of the unique identifier for each record.
 #' @param group Character string. The column name of the grouping variable (e.g., "ref_date").
-#' 
+#'
 #' @return A plotly heatmap object representing consistency values by group and variable.
-#' 
+#'
 plot_consistency_heatmap <- function(data, id_col, group) {
   value_cols <- setdiff(names(data), c(id_col, group))
 
@@ -234,7 +234,7 @@ plot_consistency_heatmap <- function(data, id_col, group) {
     ) |>
       dplyr::mutate(variable = .x)
   )
-  
+
   plotly::plot_ly(
     data = consistency_data,
     x = ~ .data[[group]],
@@ -262,4 +262,3 @@ plot_consistency_heatmap <- function(data, id_col, group) {
       yaxis = list(title = "Variable")
     )
 }
-
