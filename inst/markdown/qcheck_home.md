@@ -12,7 +12,7 @@ Across the world, public sectors employ over [400 million workers](https://www.w
 This module checks the coverage of the dataset, ensuring that records are complete. This helps identify potential data gaps.
 
 ##### 2. Uniqueness
-This module checks for duplicate records and inconsistent values in the dataset, ensuring that each record is consistently represented. This helps identify potential data entry errors.
+This module checks for duplicate records and inconsistent values in the dataset, ensuring that each record is consistently [text](vscode-file://vscode-app/c%3A/Users/wb438023/AppData/Local/Programs/Positron/resources/app/out/vs/code/electron-browser/workbench/workbench.html)represented. This helps identify potential data entry errors.
 
 ##### 3.Validity
 This module checks for compliance with validation rules. Each rule is evaluated against data records and compliance is calculated as the pass rate, that is, the share of records that comply with a given rule.
