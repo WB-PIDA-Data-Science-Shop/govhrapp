@@ -60,28 +60,18 @@ plot_consistency_trend <- function(
     )
   )
 
-  # plot both the record and value level consistencies
-  if (type_plot == "record") {
-    consistency_data <- compute_record_consistency(
-      data,
-      id_col = id_col,
-      group_cols = group_with_ref_date
+  consistency_col <- switch(
+    type_plot,
+    record = "record_consistency",
+    value = "value_consistency",
+    stop(
+      "Invalid type_plot argument. Must be 'record' or 'value'.",
+      call. = FALSE
     )
-
-    consistency_col <- "record_consistency"
-  } else {
-    consistency_data <- compute_value_consistency(
-      data,
-      id_col = id_col,
-      value_col = value_col,
-      group_cols = group_with_ref_date
-    )
-
-    consistency_col <- "value_consistency"
-  }
+  )
 
   plot_trend(
-    dplyr::collect(consistency_data),
+    data,
     y_col = consistency_col,
     group = group,
     toggle_growth = toggle_growth,

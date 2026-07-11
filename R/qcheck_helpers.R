@@ -281,7 +281,10 @@ compute_value_consistency <- function(
 
   dt <- data.table::as.data.table(data)[, c(by_cols, value_col), with = FALSE]
 
-  value_consistency <- unique(dt, by = c(by_cols, value_col))[, .N, by = by_cols]
+  value_consistency <- unique(dt, by = c(by_cols, value_col))[,
+    .N,
+    by = by_cols
+  ]
 
   # percentage of ids with exactly 1 distinct value, by group
   result <- value_consistency[,
@@ -601,6 +604,17 @@ consistency_panel_ui <- function(id, .data) {
   )
 }
 
+#' Consistency Panel Server
+#'
+#' @param id Character string. Sub-module ID.
+#' @param .data A dataframe. Input dataset for the sub-module.
+#'
+#' @import shiny
+#' @importFrom plotly renderPlotly
+#' @importFrom shinyWidgets updatePickerInput pickerOptions
+#' @importFrom dplyr filter
+#'
+#' @return A set of Shiny outputs for the consistency panel.
 consistency_panel_server <- function(id, .data) {
   shiny::moduleServer(id, function(input, output, session) {
     # update subgroup_filter choices whenever the group column changes
@@ -658,8 +672,31 @@ consistency_panel_server <- function(id, .data) {
         "contract" = "contract_id"
       )
 
+      # compute and cache the appropriate data for selected plot type
+      data_consistency_panel <- shiny::reactive({
+        if (input$type_plot == "record") {
+          compute_record_consistency(
+            data_filtered(),
+            id_col = id_col,
+            group_cols = input$group_filter
+          )
+        } else {
+          compute_value_consistency(
+            data_filtered(),
+            id_col = id_col,
+            value_col = input$value_col,
+            group_cols = input$group_filter
+          )
+        }
+      }) |>
+        shiny::bindCache(
+          input$type_plot,
+          input$group_filter,
+          input$value_col
+        )
+
       plot_consistency_trend(
-        data_filtered(),
+        data_consistency_panel(),
         id_col = id_col,
         type_plot = input$type_plot,
         group = input$group_filter,
