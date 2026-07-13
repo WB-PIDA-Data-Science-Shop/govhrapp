@@ -295,6 +295,15 @@ compute_value_consistency <- function(
   tibble::as_tibble(result)
 }
 
+#' Generate UI controls to filter data.
+#' 
+#' @param .data Data frame. The data to be filtered.
+#' @param id Character string. The module namespace ID.
+#'
+#' @import shiny
+#' @importFrom shinyWidgets pickerInput pickerOptions
+#'  
+#' @return A list of Shiny UI elements for filtering the data.
 ui_filter_controls <- function(.data, id) {
   group_choices <- identify_group_choices(.data)
 

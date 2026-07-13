@@ -6,7 +6,7 @@
 #'
 #' @param .data A dataset containing a column named \code{ref_date} with date values.
 #'
-#' @return A single character scalar: \code{"year"}, \code{"quarter"}, 
+#' @return A single character scalar: \code{"year"}, \code{"quarter"},
 #'   \code{"month"}, \code{"week"}, or \code{"day"}.
 #'
 #' @export
@@ -16,21 +16,29 @@
 #' data <- data.frame(
 #'  ref_date = seq(as.Date("2020-01-01"), as.Date("2020-12-01"), by = "months")
 #' )
-#' 
+#'
 #' guess_date_frequency(data)
 #' #> [1] "month"
 #' @importFrom stats median
 guess_date_frequency <- function(.data) {
-  ref_date <- .data[["ref_date"]] |> 
-    unique() |> 
+  ref_date <- .data[["ref_date"]] |>
+    unique() |>
     sort()
 
   median_days <- median(diff(as.Date(ref_date)), na.rm = TRUE)
-  
-  if (median_days >= 360) return("year")
-  if (median_days >= 80)  return("quarter")
-  if (median_days >= 27)  return("month")
-  if (median_days >= 6)   return("week")
+
+  if (median_days >= 360) {
+    return("year")
+  }
+  if (median_days >= 80) {
+    return("quarter")
+  }
+  if (median_days >= 27) {
+    return("month")
+  }
+  if (median_days >= 6) {
+    return("week")
+  }
   return("day")
 }
 
@@ -53,7 +61,7 @@ guess_date_frequency <- function(.data) {
 #' "personnel_id" = c(1, 2),
 #' "gross_salary_lcu" = c(1000, 1500)
 #' )
-#' 
+#'
 #' choices <- build_wagebill_group_choices(example_data)
 #'
 #' @export
@@ -65,7 +73,10 @@ build_wagebill_group_choices <- function(data) {
       !.data[["variable_id"]] %in% c("ref_date", "contract_id", "personnel_id")
     ) |>
     dplyr::summarise(
-      choices = list(purrr::set_names(.data[["variable_id"]], .data[["variable_name"]])),
+      choices = list(purrr::set_names(
+        .data[["variable_id"]],
+        .data[["variable_name"]]
+      )),
       .by = "module"
     ) |>
     dplyr::pull(.data[["choices"]], name = .data[["module"]])
@@ -73,4 +84,93 @@ build_wagebill_group_choices <- function(data) {
   c(list("All" = "ref_date"), module_choices)
 }
 
+generate_movement_data <- function(.data, movement_type, measurement_type, group_cols) {
+  min_date <- min(.data[["ref_date"]]) |>
+    as.character()
+  max_date <- max(.data[["ref_date"]]) |>
+    as.character()
 
+  agg_fun <- switch(
+    measurement_type,
+    count = sum,
+    rate = mean,
+    stop("Invalid measurement_type. Must be 'count' or 'rate'.")
+  )
+
+  # extract frequency of reference dates for movements
+  freq_ref_date <- .data |>
+    guess_date_frequency()
+
+  if (movement_type %in% c("hire", "fire")) {
+    movement_data <- .data |>
+      govhr::detect_personnel_event(
+        event_type = movement_type,
+        id_col = "personnel_id",
+        start_date = min_date,
+        end_date = max_date,
+        status_col = "employment_status",
+        freq = freq_ref_date
+      ) |>
+      dplyr::right_join(
+        .data,
+        by = c("personnel_id", "ref_date")
+      ) |>
+      summarise(
+        indicator = agg_fun(!is.na(.data[["type_event"]])),
+        .by = dplyr::all_of(
+          unique(c("ref_date", group_cols))
+        )
+      )
+  } else {
+    hire_data <- .data |>
+      govhr::detect_personnel_event(
+        event_type = "hire",
+        id_col = "personnel_id",
+        start_date = min_date,
+        end_date = max_date,
+        status_col = "employment_status",
+        freq = freq_ref_date
+      ) |>
+      dplyr::left_join(
+        .data,
+        by = c("personnel_id", "ref_date")
+      ) |>
+      summarise(
+        hires = n(),
+        .by = dplyr::all_of(
+          unique(c("ref_date", group_cols))
+        )
+      )
+
+    fire_data <- .data |>
+      govhr::detect_personnel_event(
+        event_type = "fire",
+        id_col = "personnel_id",
+        start_date = min_date,
+        end_date = max_date,
+        status_col = "employment_status",
+        freq = freq_ref_date
+      ) |>
+      dplyr::left_join(
+        .data,
+        by = c("personnel_id", "ref_date")
+      ) |>
+      summarise(
+        fires = n(),
+        .by = dplyr::all_of(
+          unique(c("ref_date", group_cols))
+        )
+      )
+
+    movement_data <- hire_data |>
+      left_join(
+        fire_data,
+        by = unique(c("ref_date", group_cols))
+      ) |>
+      mutate(
+        indicator = .data[["hires"]] / .data[["fires"]]
+      )
+  }
+
+  movement_data
+}
