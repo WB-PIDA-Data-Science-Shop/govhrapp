@@ -6,11 +6,12 @@
 #' @param suite Character string specifying which app suite to deploy.
 #'   Must be one of:
 #'   \describe{
-#'     \item{\code{"quality"}}{Deploys the quality control dashboard.
-#'       Uses the \code{govhrapp_quality_guid} environment variable.}
+#'     \item{\code{"qcheck"}}{Deploys the qcheck control dashboard.
+#'       Uses the \code{govhrapp_qcheck_guid} environment variable.}
 #'     \item{\code{"analytics"}}{Deploys the analytics dashboard.
 #'       Uses the \code{govhrapp_analytics_guid} environment variable.}
 #'   }
+#' @param type Character string specifying the deployment type ("dev" or "prod").
 #'
 #' @return Invisibly returns the deployment information from
 #'   \code{\link[rsconnect]{deployApp}}.
@@ -19,7 +20,7 @@
 #' This function requires environment variables to be set with the Posit Connect
 #' application GUIDs:
 #' \itemize{
-#'   \item \code{govhrapp_quality_guid} - GUID for the quality suite
+#'   \item \code{govhrapp_qcheck_guid} - GUID for the qcheck suite
 #'   \item \code{govhrapp_analytics_guid} - GUID for the analytics suite
 #' }
 #'
@@ -34,42 +35,34 @@
 #' # Deploy the analytics suite
 #' deploy_govhrapp("analytics")
 #'
-#' # Deploy the quality suite
-#' deploy_govhrapp("quality")
+#' # Deploy the qcheck suite
+#' deploy_govhrapp("qcheck")
 #' }
 #'
 #' @importFrom rsconnect deployApp
 #' @export
-deploy_govhrapp <- function(suite){
-  
+deploy_govhrapp <- function(suite, type = c("dev", "prod")) {
+  type <- match.arg(type)
+
+  suite <- match.arg(suite, choices = c("qcheck", "analytics"))
+
+  suite_type <- paste0(suite, "_", type)
+
   # Get the app ID from environment variable
   app_id = switch(
-    suite,
-    quality = Sys.getenv("govhrapp_quality_guid"),
-    analytics = Sys.getenv("govhrapp_analytics_guid"),
-    stop("suite must be either 'quality' or 'analytics'")
+    suite_type,
+    qcheck_dev = Sys.getenv("govhrapp_qcheck_dev_guid"),
+    qcheck_prod = Sys.getenv("govhrapp_qcheck_prod_guid"),
+    analytics_dev = Sys.getenv("govhrapp_analytics_dev_guid"),
+    analytics_prod = Sys.getenv("govhrapp_analytics_prod_guid"),
+    stop("suite must be either 'qcheck' or 'analytics' and type, 'prod' or 'dev'.")
   )
   
   # Get the app file to deploy
   app_primary_doc = switch(
     suite,
-    quality = "inst/app/qcheck/qcheck_app.R",
+    qcheck = "inst/app/qcheck/qcheck_app.R",
     analytics = "inst/app/analytics/analytics_app.R"
-  )
-
-  # Bundle
-  app_files = switch(
-    suite,
-    quality = c(
-      list.files("R", pattern = "qcheck_.*\\.R$", full.names = TRUE),
-      list.files("inst", full.names = TRUE)
-    ),
-    analytics = c(
-      list.files("R", pattern = "analytics_.*\\.R$", full.names = TRUE),
-      "R/helper.R",
-      "R/global.R",
-      list.files("inst", full.names = TRUE)
-    )
   )
   
   # Check if app file exists
@@ -79,12 +72,10 @@ deploy_govhrapp <- function(suite){
   
   # Deploy the app
   rsconnect::deployApp(
-    appDir = ".",
-    appId = app_id,
+    appDir        = ".",
+    appId         = app_id,
     appPrimaryDoc = app_primary_doc,
-    # appFiles = app_files,
-    server = "internal-server",
-    dependencyResolution = "library",
-    forceUpdate = TRUE
+    server        = "internal-server",
+    forceUpdate   = TRUE
   )
 }

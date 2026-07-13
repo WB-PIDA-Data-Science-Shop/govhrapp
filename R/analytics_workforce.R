@@ -28,12 +28,11 @@ workforce_ui <- function(id, workforce_data) {
         !.data[["variable_id"]] %in%
           c("ref_date", "contract_id", "personnel_id")
       ) |>
-      dplyr::group_by(.data[["module"]]) |>
       dplyr::summarise(
         choices = list(
           purrr::set_names(.data[["variable_id"]], .data[["variable_name"]])
         ),
-        .groups = "drop"
+        .by = .data[["module"]]
       ) |>
       dplyr::pull(.data[["choices"]], name = .data[["module"]])
   )
@@ -240,7 +239,7 @@ workforce_ui <- function(id, workforce_data) {
 #' @importFrom shiny moduleServer reactive validate need bindEvent downloadHandler withProgress incProgress renderUI selectizeInput actionButton
 #' @importFrom shinyWidgets pickerInput pickerOptions
 #' @importFrom plotly renderPlotly ggplotly
-#' @importFrom dplyr filter mutate group_by ungroup summarise across all_of n_distinct right_join
+#' @importFrom dplyr filter mutate ungroup summarise across all_of n_distinct right_join
 #' @importFrom lubridate year years ymd
 #' @importFrom govhr detect_personnel_event
 #' @importFrom grDevices colorRampPalette
@@ -253,26 +252,8 @@ workforce_server <- function(id, workforce_data) {
     # choice of cols
     available_cols <- names(workforce_data)
 
-    workforce_group_choices <- c(
-      list("All" = "ref_date"),
-      govhr::dictionary |>
-        dplyr::filter(
-          .data[["variable_id"]] %in%
-            available_cols &
-            .data[["variable_class"]] == "character" &
-            !.data[["variable_id"]] %in%
-              c("ref_date", "contract_id", "personnel_id")
-        ) |>
-        dplyr::group_by(.data[["module"]]) |>
-        dplyr::summarise(
-          choices = list(
-            purrr::set_names(.data[["variable_id"]], .data[["variable_name"]])
-          ),
-          .groups = "drop"
-        ) |>
-        dplyr::pull(.data[["choices"]], name = .data[["module"]])
-    )
-
+    workforce_group_choices <- identify_group_choices(workforce_data)
+    
     # update filter values
     shiny::observe({
       variable <- input$workforce_filter_variable
@@ -468,15 +449,11 @@ workforce_server <- function(id, workforce_data) {
             workforce_group_filtered(),
             by = c("personnel_id", "ref_date")
           ) |>
-          dplyr::group_by(
-            across(
-              all_of(
-                unique(c("ref_date", input$workforce_group))
-              )
-            )
-          ) |>
           summarise(
-            indicator = mean(!is.na(.data[["type_event"]]))
+            indicator = mean(!is.na(.data[["type_event"]])),
+            .by = dplyr::all_of(
+                unique(c("ref_date", input$workforce_group))
+            )
           )
       } else {
         hire_data <- workforce_group_filtered() |>
@@ -491,15 +468,11 @@ workforce_server <- function(id, workforce_data) {
             workforce_group_filtered(),
             by = c("personnel_id", "ref_date")
           ) |>
-          dplyr::group_by(
-            across(
-              all_of(
+          summarise(
+            hires = n(),
+            .by = dplyr::all_of(
                 unique(c("ref_date", input$workforce_group))
               )
-            )
-          ) |>
-          summarise(
-            hires = n()
           )
 
         fire_data <- workforce_group_filtered() |>
@@ -514,15 +487,11 @@ workforce_server <- function(id, workforce_data) {
             workforce_group_filtered(),
             by = c("personnel_id", "ref_date")
           ) |>
-          dplyr::group_by(
-            across(
-              all_of(
-                unique(c("ref_date", input$workforce_group))
-              )
-            )
-          ) |>
           summarise(
-            fires = n()
+            fires = n(),
+            .by = all_of(
+                unique(c("ref_date", input$workforce_group))
+            )
           )
 
         movement_data <- hire_data |>

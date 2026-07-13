@@ -43,7 +43,6 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   ggplot2::update_geom_defaults("col",   list(fill   = "#C34729"))
 
   ui <- bslib::page_navbar(
-    # title = "govhr dashboard",
     fillable = FALSE,
 
     navbar_options = navbar_options(

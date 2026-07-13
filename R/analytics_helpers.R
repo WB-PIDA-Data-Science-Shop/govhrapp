@@ -72,3 +72,5 @@ build_wagebill_group_choices <- function(data) {
 
   c(list("All" = "ref_date"), module_choices)
 }
+
+

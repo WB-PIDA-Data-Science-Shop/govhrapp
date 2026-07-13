@@ -27,26 +27,8 @@ wagebill_ui <- function(id, wagebill_data) {
   ) |>
     purrr::keep(\(x) x %in% available_cols)
 
-  wagebill_group_choices <- c(
-    list("All" = "ref_date"),
-    govhr::dictionary |>
-      dplyr::filter(
-        .data[["variable_id"]] %in%
-          available_cols &
-          .data[["variable_class"]] == "character" &
-          !.data[["variable_id"]] %in%
-            c("ref_date", "contract_id", "personnel_id")
-      ) |>
-      dplyr::group_by(.data[["module"]]) |>
-      dplyr::summarise(
-        choices = list(
-          purrr::set_names(.data[["variable_id"]], .data[["variable_name"]])
-        ),
-        .groups = "drop"
-      ) |>
-      dplyr::pull(.data[["choices"]], name = .data[["module"]])
-  )
-
+  wagebill_group_choices <- identify_group_choices(wagebill_data)
+  
   # filter choices: optgroups from module structure, with a "None" entry on top
   filter_choices <- c(list("None" = "none"), wagebill_group_choices[-1])
 
@@ -70,7 +52,7 @@ wagebill_ui <- function(id, wagebill_data) {
     ),
     shiny::selectInput(
       shiny::NS(id, "wagebill_filter_variable"),
-      "Filter by:",
+      "Select group:",
       choices = filter_choices
     ),
     shinyWidgets::pickerInput(
@@ -100,7 +82,6 @@ wagebill_ui <- function(id, wagebill_data) {
       "Group:",
       choices = wagebill_group_choices
     ),
-    shiny::uiOutput(shiny::NS(id, "group_filter_ui")),
     shinyWidgets::materialSwitch(
       shiny::NS(id, "toggle_growth"),
       label = "Switch to baseline index",
@@ -277,7 +258,7 @@ wagebill_ui <- function(id, wagebill_data) {
 #' @importFrom shiny moduleServer reactive validate need bindEvent downloadHandler withProgress incProgress renderUI uiOutput
 #' @importFrom shinyWidgets pickerInput
 #' @importFrom plotly renderPlotly ggplotly plot_ly layout animation_opts animation_slider
-#' @importFrom dplyr filter mutate arrange group_by ungroup across all_of first last pull left_join summarise n_distinct
+#' @importFrom dplyr filter mutate arrange ungroup across all_of first last pull left_join summarise n_distinct
 #' @importFrom lubridate year years
 #' @importFrom govhr compute_fastsummary complete_dates convert_constant_ppp
 #' @importFrom ggplot2 ggplot aes geom_point geom_line geom_col geom_hline geom_vline scale_y_continuous scale_x_continuous scale_y_discrete scale_color_manual guide_axis labs xlab ylab
@@ -302,12 +283,11 @@ wagebill_server <- function(id, wagebill_data) {
             !.data[["variable_id"]] %in%
               c("ref_date", "contract_id", "personnel_id")
         ) |>
-        dplyr::group_by(.data[["module"]]) |>
         dplyr::summarise(
           choices = list(
             purrr::set_names(.data[["variable_id"]], .data[["variable_name"]])
           ),
-          .groups = "drop"
+          .by = .data[["module"]]
         ) |>
         dplyr::pull(.data[["choices"]], name = .data[["module"]])
     )
@@ -465,14 +445,10 @@ wagebill_server <- function(id, wagebill_data) {
       )
 
       dispersion_data <- wagebill_filtered() |>
-        group_by(
-          across(
-            all_of(input$wagebill_group)
-          )
-        ) |>
         # only present latest reference date
         dplyr::filter(
-          ref_date == max(ref_date)
+          ref_date == max(ref_date),
+          .by = all_of(input$wagebill_group)
         )
 
       # dynamic height

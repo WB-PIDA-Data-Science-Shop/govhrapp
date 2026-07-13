@@ -1,9 +1,27 @@
 pkgload::load_all(".")
 
-qc_obj <- govhr::compute_qualitycontrol(
-  contract_dt  = govhr::bra_hrmis_contract,
-  personnel_dt = govhr::bra_hrmis_personnel,
-  est_dt       = govhr::bra_hrmis_est
+# micro data
+est_data <- govhr::bra_hrmis_est
+
+personnel_data <- govhr::bra_hrmis_personnel
+
+contract_data <- govhr::bra_hrmis_contract
+
+# validation data
+contract_validation <- govhr::validate_data(
+  contract_data,
+  govhr::contract_rules
 )
 
-run_qcheckapp(qc_obj)
+personnel_validation <- govhr::validate_data(
+  personnel_data,
+  govhr::personnel_rules
+)
+
+run_govhrapp_qcheck(
+  est_data = est_data,
+  personnel_data = personnel_data,
+  contract_data = contract_data,
+  contract_validation = contract_validation,
+  personnel_validation = personnel_validation
+)
