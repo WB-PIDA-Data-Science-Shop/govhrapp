@@ -1,4 +1,4 @@
-hiring_panel_ui <- function(id, .data) {
+flows_panel_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     theme = bslib::bs_theme(bootswatch = "litera"),
@@ -33,7 +33,7 @@ hiring_panel_ui <- function(id, .data) {
       plotly::plotlyOutput(shiny::NS(id, "hiring_plot"))
     ),
 
-    # plot 2. demographic characteristics of hires vs. general pop.
+    # table 2. demographic characteristics of hires vs. general pop.
     bslib::card(
       bslib::card_header(
         "Profile of new hires",
@@ -44,12 +44,12 @@ hiring_panel_ui <- function(id, .data) {
           placement = "left"
         )
       ),
-      plotly::plotlyOutput(shiny::NS(id, "hiring_profile"))
+      gt::gt_output(shiny::NS(id, "hiring_profile"))
     )
   )
 }
   
-hiring_panel_server <- function(id, .data) {
+flows_panel_server <- function(id, .data, movement_type) {
   moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
 
@@ -68,25 +68,64 @@ hiring_panel_server <- function(id, .data) {
         )
     }) 
 
+    # plot 1. hiring counts/rates over time
     output$hiring_plot <- renderPlotly({
       movement_data <- generate_movement_data(
         .data = data_filtered(),
-        movement_type = "hire",
+        movement_type = movement_type,
         measurement_type = input$measurement_type,
         group_cols = input$group_filter
       )
 
       plot_movement(
         movement_data,
-        movement_type = "hire",
+        movement_type = movement_type,
         group_cols = input$group_filter
       )
+    }) |>
+      bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # plot 2. demographic characteristics of hires vs. general pop.
+    output$hiring_profile <- gt::render_gt({
+      profile_data <- classify_personnel_event(
+        .data = data_filtered(),
+        id_col = "personnel_id",
+        event_type = movement_type,
+        start_date = min(data_filtered()[["ref_date"]]),
+        end_date = max(data_filtered()[["ref_date"]]),
+        status_col = "employment_status",
+        freq = guess_date_frequency(data_filtered())
+      )
+
+      profile_data |> 
+        gtsummary::tbl_summary(
+          by = "type_event",
+          include = -c("personnel_id", "ref_date"),
+          label = list(
+            "gender" = "Gender",
+            "educat7" = "Education Level",
+            "employment_status" = "Employment Status",
+            "age" = "Age"
+          ),
+          missing = "no"
+        ) |>
+        gtsummary::modify_header(
+          label = "**Characteristics**",
+          stat_1 = paste0("**", stringr::str_to_title(movement_type), "**"),
+          stat_2 = "**General Population**"
+        ) |>
+        gtsummary::as_gt() |>
+        gt::tab_options(
+          table.font.size = "medium",
+          table.font.names = "Lato",
+          heading.title.font.size = "large"
+        )
     }) |>
       bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })
 }
 
-run_hiring_app <- function(
+run_flows_app <- function(
   workforce_data,
   ...
 ) {
@@ -94,10 +133,10 @@ run_hiring_app <- function(
     bootswatch = "litera"
   )
 
-  ui <- hiring_panel_ui("test", workforce_data)
+  ui <- flows_panel_ui("test", workforce_data)
 
   server <- function(input, output, session) {
-    hiring_panel_server("test", workforce_data)
+    flows_panel_server("test", workforce_data, movement_type = "hire")
   }
 
   shiny::shinyApp(ui, server, ...)

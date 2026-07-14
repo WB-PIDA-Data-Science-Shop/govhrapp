@@ -174,3 +174,43 @@ generate_movement_data <- function(.data, movement_type, measurement_type, group
 
   movement_data
 }
+
+#' Classify Personnel Events
+#' 
+#' This function classifies the personnel module into three types of events: hires, fires, or stays.
+#' 
+#' @param .data A data frame containing personnel data.
+#' @param id_col The name of the column representing personnel IDs.
+#' @param event_type The type of event to classify (e.g., "hire", "fire").
+#' @param start_date The start date for the classification period.
+#' @param end_date The end date for the classification period.
+#' @param status_col The name of the column representing employment status.
+#' @param freq The frequency of the reference dates (default is "year").
+#' 
+#' @importFrom data.table setDT fcase copy
+#' @importFrom govhr detect_personnel_event
+#' 
+#' @return A data frame with an additional column indicating the type of event for each personnel record.
+classify_personnel_event <- function(.data, id_col, event_type, start_date, end_date, status_col, freq = "year") {
+  personnel_event <- .data |>
+    govhr::detect_personnel_event(
+      event_type = event_type,
+      id_col = id_col,
+      start_date = start_date,
+      end_date = end_date,
+      status_col = status_col
+    ) 
+
+  .data <- data.table::copy(setDT(.data))
+  personnel_event <- data.table::setDT(personnel_event)
+  
+  .data[personnel_event, on = c(id_col, "ref_date"), type_event := i.type_event]
+
+  .data[, type_event := fcase(
+    type_event == "hire", "hired",
+    type_event == "fire", "fired",
+    default = "stayed"
+  )]
+
+  .data[]
+}
