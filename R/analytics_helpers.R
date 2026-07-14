@@ -84,6 +84,31 @@ build_wagebill_group_choices <- function(data) {
   c(list("All" = "ref_date"), module_choices)
 }
 
+#' Function to generate movement data for hires, fires, or turnover
+#' 
+#' @param .data A data frame containing personnel data..
+#' @param movement_type A character string indicating the type of movement: "hire", "fire", or "turnover".
+#' @param measurement_type A character string indicating the measurement type: "count" or "rate". Ignored for turnover, which is a ratio.
+#' @param group_cols A character string indicating the grouping column, or "ref_date" for no grouping.
+#' 
+#' @return A data frame containing the aggregated movement data.
+#' 
+#' @importFrom dplyr filter summarise mutate all_of left_join right_join
+#' @importFrom govhr detect_personnel_event
+#' @importFrom stats median
+#' 
+#' @export
+#' 
+#' @examples
+#' example_data <- data.frame(
+#'   personnel_id = c(1, 2, 3, 4),
+#'   ref_date = as.Date(c("2020-01-01", "2020-01-01", "2020-02-01", "2020-02-01")),
+#'   employment_status = c("employed", "employed", "terminated", "employed")
+#' )
+#' 
+#' generate_movement_data(example_data, movement_type = "hire", measurement_type = "count", group_cols = "ref_date")
+#' 
+#' @export
 generate_movement_data <- function(.data, movement_type, measurement_type, group_cols) {
   min_date <- min(.data[["ref_date"]]) |>
     as.character()
@@ -103,7 +128,7 @@ generate_movement_data <- function(.data, movement_type, measurement_type, group
 
   if (movement_type %in% c("hire", "fire")) {
     movement_data <- .data |>
-      govhr::detect_personnel_event(
+      classify_personnel_event(
         event_type = movement_type,
         id_col = "personnel_id",
         start_date = min_date,
@@ -111,17 +136,13 @@ generate_movement_data <- function(.data, movement_type, measurement_type, group
         status_col = "employment_status",
         freq = freq_ref_date
       ) |>
-      dplyr::right_join(
-        .data,
-        by = c("personnel_id", "ref_date")
-      ) |>
       summarise(
-        indicator = agg_fun(!is.na(.data[["type_event"]])),
+        indicator = agg_fun(.data[["type_event"]] == movement_type),
         .by = dplyr::all_of(
           unique(c("ref_date", group_cols))
         )
       )
-  } else {
+  } else if (movement_type == "turnover") {
     hire_data <- .data |>
       govhr::detect_personnel_event(
         event_type = "hire",
@@ -188,6 +209,7 @@ generate_movement_data <- function(.data, movement_type, measurement_type, group
 #' @param freq The frequency of the reference dates (default is "year").
 #' 
 #' @importFrom data.table setDT fcase copy
+#' @importFrom lubridate ymd
 #' @importFrom govhr detect_personnel_event
 #' 
 #' @return A data frame with an additional column indicating the type of event for each personnel record.
@@ -199,7 +221,7 @@ classify_personnel_event <- function(.data, id_col, event_type, start_date, end_
       start_date = start_date,
       end_date = end_date,
       status_col = status_col
-    ) 
+    )
 
   .data <- data.table::copy(setDT(.data))
   personnel_event <- data.table::setDT(personnel_event)
@@ -207,10 +229,89 @@ classify_personnel_event <- function(.data, id_col, event_type, start_date, end_
   .data[personnel_event, on = c(id_col, "ref_date"), type_event := i.type_event]
 
   .data[, type_event := fcase(
-    type_event == "hire", "hired",
-    type_event == "fire", "fired",
+    type_event == "hire", "hire",
+    type_event == "fire", "fire",
     default = "stayed"
   )]
 
+  # exclude minimum ref_date when movement_type is hire
+  # and exclude maximum ref_date when movement_type is fire
+  if (event_type == "hire") {
+    .data <- .data[ref_date > lubridate::ymd(start_date)]
+  } else if (event_type == "fire") {
+    .data <- .data[ref_date < lubridate::ymd(end_date)]
+  }
+
   .data[]
+}
+
+#' Render Movement Value Box
+#' 
+#' @param .data A data frame containing personnel data.
+#' @param type_movement A character string indicating the type of movement: "hire", "fire", or "turnover".
+#' 
+#' @return A Shiny UI output for the movement value box.
+#' 
+#' @importFrom shiny renderUI
+#' @importFrom bslib value_box
+#' @importFrom bsicons bs_icon
+render_movement_box <- function(.data, type_movement) {
+  movement_count <- generate_movement_data(
+    .data = .data,
+    movement_type = type_movement,
+    measurement_type = "count",
+    group_cols = "ref_date"
+  )
+
+  movement_rate <- generate_movement_data(
+    .data = .data,
+    movement_type = type_movement,
+    measurement_type = "rate",
+    group_cols = "ref_date"
+  )  
+
+  latest_count <- movement_count |>
+    na.omit() |> 
+    dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]])) |>
+    dplyr::pull(.data[["indicator"]])
+
+  latest_rate <- movement_rate |>
+    na.omit() |> 
+    dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]])) |>
+    dplyr::pull(.data[["indicator"]])
+
+  renderUI({
+  value_box(
+    title = paste0(toupper(substr(type_movement, 1, 1)), substr(type_movement, 2, nchar(type_movement))),
+    value = switch(
+      type_movement,
+      hire = tagList(
+        p(paste("Count:", latest_count)),
+        p(paste("Rate:", round(latest_rate, 3), "%"))
+      ),
+      fire = tagList(
+        p(paste("Count:", latest_count)),
+        p(paste("Rate:", round(latest_rate, 3), "%"))
+      ),
+      turnover = tagList(
+        p(paste("Ratio of Hires to Fires:", round(latest_rate, 3)))
+      )
+    ),
+    showcase = switch(
+      type_movement,
+      hire = bsicons::bs_icon("person-plus-fill"),
+      fire = bsicons::bs_icon("person-dash-fill"),
+      turnover = bsicons::bs_icon("arrow-repeat")
+    ),
+    bslib::popover(
+      bsicons::bs_icon("info-circle-fill"),
+      switch(
+        type_movement,
+        hire = "Number of personnel hired in the most recent reference period.",
+        fire = "Number of personnel fired in the most recent reference period.",
+        turnover = "Ratio of hires to fires in the most recent reference period."
+      )
+    )
+  )
+})
 }

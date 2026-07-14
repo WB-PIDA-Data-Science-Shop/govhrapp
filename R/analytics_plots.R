@@ -425,7 +425,22 @@ plot_segment <- function(.data, col, group) {
     ggplot2::labs(x = col, y = group)
 }
 
-plot_movement <- function(.data, movement_type, group_cols) {
+#' Plot Personnel Movement Over Time
+#' 
+#' @param .data A data frame containing the movement data with columns `ref_date`, `indicator`, and optionally a grouping column.
+#' @param movement_type A character string indicating the type of movement: "hire", "fire", or "turnover".
+#' @param measurement_type A character string indicating the measurement type: "count" or "rate".
+#' @param group_cols A character string indicating the grouping column, or "ref_date" for no grouping.
+#' 
+#' @return A plotly object representing the personnel movement over time.
+#' 
+#' @importFrom ggplot2 ggplot aes geom_point geom_line labs scale_y_continuous
+#' @importFrom dplyr n_distinct
+#' @importFrom grDevices colorRampPalette
+#' @importFrom plotly ggplotly
+#' 
+#' @export
+plot_movement <- function(.data, movement_type, measurement_type, group_cols) {
   plot <- .data |>
     ggplot(
       aes(.data[["ref_date"]], .data[["indicator"]])
@@ -434,7 +449,7 @@ plot_movement <- function(.data, movement_type, group_cols) {
     geom_line() +
     labs(
       x = "Time",
-      y = "Share"
+      y = ifelse(measurement_type == "rate", "Share", "Count")
     )
 
   if (group_cols != "ref_date") {
@@ -451,12 +466,12 @@ plot_movement <- function(.data, movement_type, group_cols) {
       ggplot2::scale_color_manual(values = orange_palette)
   }
 
-  if (movement_type %in% c("hire", "fire")) {
+  if (movement_type %in% c("hire", "fire") & measurement_type == "rate") {
     plot <- plot +
       scale_y_continuous(
         labels = scales::percent_format()
       )
-  } else if (movement_type == "replacement_rate") {
+  } else if (movement_type == "turnover") {
     plot <- plot +
       scale_y_continuous(
         labels = scales::label_number(accuracy = 0.1)

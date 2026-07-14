@@ -61,5 +61,7 @@ utils::globalVariables(c(
   # function-specific symbols
   "coverage",
   "consistent_record",
-  "consistent_value"
+  "consistent_value",
+  "type_event", 
+  "i.type_event"
 ))
