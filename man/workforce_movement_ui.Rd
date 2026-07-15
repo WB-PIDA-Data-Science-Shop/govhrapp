@@ -4,7 +4,11 @@
 \alias{workforce_movement_ui}
 \title{Workforce Movement UI}
 \usage{
-workforce_movement_ui(id, .data, type_movement = c("hire", "fire"))
+workforce_movement_ui(
+  id,
+  .data,
+  type_movement = c("hire", "fire", "turnover", "retirement")
+)
 }
 \arguments{
 \item{id}{A character string specifying the module ID.}

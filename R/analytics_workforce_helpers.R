@@ -13,7 +13,7 @@
 workforce_movement_ui <- function(
   id,
   .data,
-  type_movement = c("hire", "fire")
+  type_movement = c("hire", "fire", "turnover", "retirement")
 ) {
   bslib::layout_sidebar(
     fillable = FALSE,
@@ -94,7 +94,7 @@ workforce_movement_ui <- function(
       plotly::plotlyOutput(shiny::NS(id, sprintf("%s_growth", type_movement)))
     ),
 
-     # table 1. demographic characteristics of hires vs. general pop.
+     # table 1. demographic characteristics of movers vs. general pop.
     if(type_movement %in% c("hire", "fire")){ 
     bslib::card(
       bslib::card_header(
@@ -300,5 +300,65 @@ workforce_movement_server <- function(
       }) |>
         bindEvent(input$apply_btn, ignoreNULL = FALSE)
     }
+  })
+}
+
+workforce_retirement_server <- function(
+  id,
+  .data
+) {
+  shiny::moduleServer(id, function(input, output, session) {
+    data_filtered <- shiny::reactive({
+      data <- .data
+
+      if (input$group_filter != "ref_date") {
+        data <- data |>
+          dplyr::filter(
+            .data[[input$group_filter]] %in% input$subgroup_filter
+          )
+      }
+
+      data |>
+        dplyr::filter(
+          .data[["ref_date"]] >= input$date_range[1],
+          .data[["ref_date"]] <= input$date_range[2]
+        )
+    })
+
+    # plot 1. retirement counts/rates over time
+    output[["retirement_plot"]] <- plotly::renderPlotly({
+      plot_data <- generate_movement_data(
+        .data = data_filtered(),
+        movement_type = "retirement",
+        measurement_type = input$measurement_type,
+        group_cols = input$group_filter
+      )
+
+      plot_movement(
+        plot_data,
+        movement_type = "retirement",
+        measurement_type = input$measurement_type,
+        group_cols = input$group_filter
+      )
+    }) |>
+      bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # plot 2. expected retirements 
+    output[["retirement_expected_plot"]] <- plotly::renderPlotly({
+      plot_data <- generate_movement_data(
+        .data = data_filtered(),
+        movement_type = "retirement",
+        measurement_type = input$measurement_type,
+        group_cols = input$group_filter
+      )
+
+      plot_movement(
+        plot_data,
+        movement_type = "retirement",
+        measurement_type = input$measurement_type,
+        group_cols = input$group_filter
+      )
+    }) |>
+      bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })
 }

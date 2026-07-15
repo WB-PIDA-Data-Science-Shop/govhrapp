@@ -136,7 +136,7 @@ generate_movement_data <- function(
   freq_ref_date <- .data |>
     guess_date_frequency()
 
-  if (movement_type %in% c("hire", "fire")) {
+  if (movement_type %in% c("hire", "fire", "retirement")) {
     movement_data <- .data |>
       classify_personnel_event(
         event_type = movement_type,
@@ -204,65 +204,6 @@ generate_movement_data <- function(
   }
 
   movement_data
-}
-
-#' Classify Personnel Events
-#'
-#' This function classifies the personnel module into three types of events: hires, fires, or stays.
-#'
-#' @param .data A data frame containing personnel data.
-#' @param id_col The name of the column representing personnel IDs.
-#' @param event_type The type of event to classify (e.g., "hire", "fire").
-#' @param start_date The start date for the classification period.
-#' @param end_date The end date for the classification period.
-#' @param status_col The name of the column representing employment status.
-#' @param freq The frequency of the reference dates (default is "year").
-#'
-#' @importFrom data.table setDT fcase copy
-#' @importFrom lubridate ymd
-#' @importFrom govhr detect_personnel_event
-#'
-#' @return A data frame with an additional column indicating the type of event for each personnel record.
-classify_personnel_event <- function(
-  .data,
-  id_col,
-  event_type,
-  start_date,
-  end_date,
-  status_col,
-  freq = "year"
-) {
-  personnel_event <- .data |>
-    govhr::detect_personnel_event(
-      event_type = event_type,
-      id_col = id_col,
-      start_date = start_date,
-      end_date = end_date,
-      status_col = status_col
-    )
-
-  .data <- data.table::copy(setDT(.data))
-  personnel_event <- data.table::setDT(personnel_event)
-
-  .data[personnel_event, on = c(id_col, "ref_date"), type_event := i.type_event]
-
-  .data[,
-    type_event := fcase(
-      type_event == "hire" , "hire" ,
-      type_event == "fire" , "fire" ,
-      default = "stayed"
-    )
-  ]
-
-  # exclude minimum ref_date when movement_type is hire
-  # and exclude maximum ref_date when movement_type is fire
-  if (event_type == "hire") {
-    .data <- .data[ref_date > lubridate::ymd(start_date)]
-  } else if (event_type == "fire") {
-    .data <- .data[ref_date < lubridate::ymd(end_date)]
-  }
-
-  .data[]
 }
 
 #' Render Movement Value Box

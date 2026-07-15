@@ -12,7 +12,8 @@ workforce_data <- govhr::bra_hrmis_personnel |>
     "personnel_id",
     "gender",
     "educat7",
-    "employment_status"
+    "employment_status",
+    "birth_date"
   )))
 
 wagebill_data <- govhr::bra_hrmis_contract |>

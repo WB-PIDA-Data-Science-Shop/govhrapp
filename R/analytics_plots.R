@@ -467,7 +467,7 @@ plot_movement <- function(.data, movement_type, measurement_type, group_cols) {
       ggplot2::scale_color_manual(values = orange_palette)
   }
 
-  if (movement_type %in% c("hire", "fire") & measurement_type == "rate") {
+  if (movement_type %in% c("hire", "fire", "retirement") & measurement_type == "rate") {
     plot <- plot +
       scale_y_continuous(
         labels = scales::percent_format()

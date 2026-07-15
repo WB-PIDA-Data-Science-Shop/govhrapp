@@ -82,6 +82,7 @@ workforce_server_beta <- function(id, .data) {
     workforce_movement_server("hire", .data, movement_type = "hire")
     workforce_movement_server("fire", .data, movement_type = "fire")
     workforce_movement_server("turnover", .data, movement_type = "turnover")
+    workforce_retirement_server("retirement", .data)
   })
 }
 
