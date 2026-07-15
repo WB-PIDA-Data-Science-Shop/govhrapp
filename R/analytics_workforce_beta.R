@@ -1,6 +1,7 @@
 #' Workforce Analytics Module (Beta)
 #' 
-#' @param workforce_data A data frame containing personnel data.
+#' @param id A character string specifying the module ID.
+#' @param .data A data frame containing personnel data.
 #' 
 #' @import shiny
 #' @import bslib

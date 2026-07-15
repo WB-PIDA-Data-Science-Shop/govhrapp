@@ -28,6 +28,11 @@ example_data <- data.frame(
   employment_status = c("employed", "employed", "terminated", "employed")
 )
 
-generate_movement_data(example_data, movement_type = "hire", measurement_type = "count", group_cols = "ref_date")
+generate_movement_data(
+ .data = example_data,
+movement_type = "hire",
+measurement_type = "count",
+group_cols = "ref_date"
+)
 
 }
