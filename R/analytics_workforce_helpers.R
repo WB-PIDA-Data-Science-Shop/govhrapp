@@ -75,8 +75,27 @@ workforce_movement_ui <- function(
     ),
 
     # plot 3. growth rate of counts and rates by group
+    bslib::card(
+      bslib::card_header(
+        sprintf("%ss growth by group", stringr::str_to_title(type_movement)),
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          sprintf(
+            "The growth rate of new %ss and rate (new %ss / total workforce) by group. The growth rate is computed as the percentage change in the number of new %ss divided by the total workforce at the beginning of each period.",
+            type_movement,
+            type_movement,
+            type_movement
+          ),
+          title = sprintf("%ss growth by group", stringr::str_to_title(type_movement)),
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
+      ),
+      plotly::plotlyOutput(shiny::NS(id, sprintf("%s_growth", type_movement)))
+    ),
 
-    # table 1. demographic characteristics of hires vs. general pop.
+     # table 1. demographic characteristics of hires vs. general pop.
+    if(type_movement %in% c("hire", "fire")){ 
     bslib::card(
       bslib::card_header(
         sprintf("Profile of new %ss", type_movement),
@@ -92,6 +111,7 @@ workforce_movement_ui <- function(
       ),
       gt::gt_output(shiny::NS(id, sprintf("%s_profile", type_movement)))
     )
+    }
   )
 }
 
@@ -216,19 +236,28 @@ workforce_movement_server <- function(
     # plot 3. growth rate by group
     output[[sprintf("%s_growth", movement_type)]] <- plotly::renderPlotly({
       validate(
-        need(input$workforce_group != "ref_date", "Please select a group.")
+        need(input$group_filter != "ref_date", "Please select a group.")
       )
 
-      change_data <- compute_growth_summary(
-        data_filtered(),
+      turnover_data <- generate_movement_data(
+        .data = data_filtered(),
+        movement_type = movement_type,
+        measurement_type = input$measurement_type,
+        group_cols = input$group_filter
+      ) |> 
+        na.omit()
+
+      growth_data <- compute_growth_summary(
+        turnover_data,
+        measure_col = "indicator",
         group = input$group_filter
       )
 
-      n_groups <- nrow(change_data)
+      n_groups <- nrow(growth_data)
       plot_height <- max(350, n_groups * 35 + 100)
 
       plotly::ggplotly(
-        plot_bar_growth(change_data, group = input$group_filter),
+        plot_bar_growth(growth_data, group = input$group_filter),
         height = plot_height
       )
     }) |>
