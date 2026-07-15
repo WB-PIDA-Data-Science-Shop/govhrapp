@@ -63,5 +63,6 @@ utils::globalVariables(c(
   "consistent_record",
   "consistent_value",
   "type_event", 
-  "i.type_event"
+  "i.type_event",
+  "retirement_date"
 ))

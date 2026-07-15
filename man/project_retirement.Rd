@@ -8,6 +8,7 @@ project_retirement(
   workforce_data,
   threshold_age = 60,
   birth_col = "birth_date",
+  group_cols = NULL,
   simplify_retirement_date = TRUE
 )
 }
@@ -17,6 +18,8 @@ project_retirement(
 \item{threshold_age}{The age at which personnel are considered eligible for retirement (default is 60).}
 
 \item{birth_col}{The name of the column representing birth dates (default is "birth_date").}
+
+\item{group_cols}{A character vector of column names to group the data by when counting eligible retirees (default is NULL, meaning no grouping).}
 
 \item{simplify_retirement_date}{A logical value indicating whether to simplify the retirement date to the end of the year (default is TRUE).}
 }

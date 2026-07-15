@@ -62,6 +62,11 @@ workforce_ui_beta <- function(id, .data) {
       bslib::nav_panel(
         title = "Turnover",
         workforce_movement_ui(NS(id, "turnover"), .data, type_movement = "turnover")
+      ),
+      # sub-panel 4: retirement
+      bslib::nav_panel(
+        title = "Retirement",
+        workforce_retirement_ui(NS(id, "retirement"), .data)
       )
     )
   )
