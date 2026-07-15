@@ -1,3 +1,15 @@
+#' Workforce Movement UI
+#'
+#' @param id A character string specifying the module ID.
+#' @param .data A data frame containing personnel data.
+#' @param type_movement A character string specifying the type of movement: "hire" or "fire".
+#'
+#' @import shiny
+#' @import bslib
+#' @importFrom plotly plotlyOutput
+#' @importFrom gt gt_output
+#'
+#' @return A Shiny UI function for the workforce movement module.
 workforce_movement_ui <- function(
   id,
   .data,
@@ -42,7 +54,29 @@ workforce_movement_ui <- function(
       plotly::plotlyOutput(shiny::NS(id, sprintf("%s_plot", type_movement)))
     ),
 
-    # table 2. demographic characteristics of hires vs. general pop.
+    # plot 2. counts and rates by group
+    bslib::card(
+      bslib::card_header(
+        sprintf("%ss by group", stringr::str_to_title(type_movement)),
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          sprintf(
+            "The number of new %ss and rate (new %ss / total workforce) by group. The rate is computed as the number of new %ss divided by the total workforce at the beginning of each period.",
+            type_movement,
+            type_movement,
+            type_movement
+          ),
+          title = sprintf("%ss by group", stringr::str_to_title(type_movement)),
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
+      ),
+      plotly::plotlyOutput(shiny::NS(id, sprintf("%s_cross_section", type_movement)))
+    ),
+
+    # plot 3. growth rate of counts and rates by group
+
+    # table 1. demographic characteristics of hires vs. general pop.
     bslib::card(
       bslib::card_header(
         sprintf("Profile of new %ss", type_movement),
@@ -81,6 +115,35 @@ workforce_movement_server <- function(
   movement_type = c("hire", "fire", "turnover")
 ) {
   shiny::moduleServer(id, function(input, output, session) {
+    # update subgroup_filter choices whenever the group column changes
+    shiny::observe({
+      variable <- input$group_filter
+
+      if (is.null(variable) || variable == "none") {
+        shinyWidgets::updatePickerInput(
+          session,
+          "subgroup_filter",
+          choices = NULL,
+          selected = character(0)
+        )
+      } else {
+        filter_vals <- sort(
+          as.character(
+            unique(
+              stats::na.omit(.data[[variable]])
+            )
+          )
+        )
+
+        shinyWidgets::updatePickerInput(
+          session,
+          "subgroup_filter",
+          choices = filter_vals,
+          selected = filter_vals
+        )
+      }
+    })
+
     movement_type <- match.arg(movement_type, choices = c("hire", "fire", "turnover"))
 
     data_filtered <- shiny::reactive({
@@ -118,8 +181,60 @@ workforce_movement_server <- function(
     }) |>
       bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
+    # plot 2. counts/rates by group
+    output[[sprintf("%s_cross_section", movement_type)]] <- plotly::renderPlotly({
+      validate(
+        need(input$group_filter != "ref_date", "Please select a group.")
+      )
+
+      cross_section_data <- generate_movement_data(
+        .data = data_filtered(),
+        movement_type = movement_type,
+        measurement_type = input$measurement_type,
+        group_cols = input$group_filter
+      ) |>
+        dplyr::filter(
+          .data[["ref_date"]] == max(.data[["ref_date"]])
+        )
+
+      n_groups <- nrow(cross_section_data)
+      plot_height <- max(350, n_groups * 35 + 100)
+
+      plotly::ggplotly(
+        plot_bar_total(
+          cross_section_data,
+          group = input$group_filter,
+          x_col = "indicator",
+          x_label = stringr::str_to_title(movement_type)
+        ),
+        height = plot_height
+      )
+    }) |>
+      bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # plot 3. growth rate by group
+    output[[sprintf("%s_growth", movement_type)]] <- plotly::renderPlotly({
+      validate(
+        need(input$workforce_group != "ref_date", "Please select a group.")
+      )
+
+      change_data <- compute_growth_summary(
+        data_filtered(),
+        group = input$group_filter
+      )
+
+      n_groups <- nrow(change_data)
+      plot_height <- max(350, n_groups * 35 + 100)
+
+      plotly::ggplotly(
+        plot_bar_growth(change_data, group = input$group_filter),
+        height = plot_height
+      )
+    }) |>
+      bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # table 1. demographic characteristics of hires vs. general pop.
     if (movement_type %in% c("hire", "fire")) {
-      # table 2. demographic characteristics of hires vs. general pop.
       output[[sprintf("%s_profile", movement_type)]] <- gt::render_gt({
         profile_data <- classify_personnel_event(
           .data = data_filtered(),
@@ -140,11 +255,6 @@ workforce_movement_server <- function(
               "educat7" = "Education Level",
               "employment_status" = "Employment Status",
               "age" = "Age"
-            )
-          ) |>
-          gtsummary::modify_spanning_header(
-            update = list(
-              label ~ "**Population**"
             )
           ) |>
           # label hires and fires as "New Hires" and "New Fires" and

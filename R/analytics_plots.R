@@ -89,6 +89,7 @@ apply_baseline_index <- function(data, group) {
 #' @importFrom govhr compute_fastsummary
 #' @export
 compute_cross_section_summary <- function(data, group, measure_col = NULL) {
+  # only consider latest reference date
   data_latest <- data |>
     dplyr::filter(
       .data[["ref_date"]] == max(.data[["ref_date"]]),
