@@ -22,7 +22,7 @@ workforce_movement_ui <- function(
       )
     ),
 
-    # plot 1. hiring counts/rates over time
+    # plot 1. counts and rates over time
     bslib::card(
       bslib::card_header(
         sprintf("%ss over time", stringr::str_to_title(type_movement)),
