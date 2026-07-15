@@ -193,6 +193,7 @@ workforce_movement_server <- function(
         measurement_type = input$measurement_type,
         group_cols = input$group_filter
       ) |>
+        na.omit() |>
         dplyr::filter(
           .data[["ref_date"]] == max(.data[["ref_date"]])
         )
