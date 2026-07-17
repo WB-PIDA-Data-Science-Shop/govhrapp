@@ -39,6 +39,7 @@ classify_personnel_event <- function(
     personnel_event <- govhr::detect_retirement(.data)
   }
 
+  # aggregate first and then join?
   .data <- data.table::copy(setDT(.data))
   personnel_event <- data.table::setDT(personnel_event)
 
@@ -80,9 +81,12 @@ project_retirement <- function(
   threshold_age = 60, 
   birth_col = "birth_date",
   group_cols = NULL,
-  simplify_retirement_date = TRUE
+  simplify_retirement_date = TRUE,
+  cutoff_date = 10 # cut-off for future retirement projections (in years)
 ) {
   workforce_data_dt <- as.data.table(workforce_data)
+
+  # future extension: incorporate threshold_tenure
 
   # extract last record for each personnel_id
   # this raises an issue for time-variant columns such as education
@@ -104,7 +108,7 @@ project_retirement <- function(
     ))]
   }
 
-  # count number of staff eligible for retirement at each reference date
+  # count number of staff eligible for retirement at each retirement date
   if (is.null(group_cols) || identical(group_cols, "ref_date")) {
     projected_retirement_data <- workforce_data_dt[, .(indicator = .N), by = retirement_date][
       order(retirement_date)

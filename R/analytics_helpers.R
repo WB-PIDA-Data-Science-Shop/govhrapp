@@ -84,35 +84,19 @@ build_wagebill_group_choices <- function(data) {
   c(list("All" = "ref_date"), module_choices)
 }
 
-#' Function to generate movement data for hires, fires, or turnover
+#' Function to generate movement data for hires, fires, retirement, or turnover
 #'
-#' @param .data A data frame containing personnel data..
-#' @param movement_type A character string indicating the type of movement: "hire", "fire", or "turnover".
+#' @param .data A data frame containing personnel data.
+#' @param movement_type A character string indicating the type of movement: "hire", "fire", "retirement", or "turnover".
 #' @param measurement_type A character string indicating the measurement type: "count" or "rate". Ignored for turnover, which is a ratio.
 #' @param group_cols A character string indicating the grouping column, or "ref_date" for no grouping.
 #'
-#' @return A data frame containing the aggregated movement data.
+#' @return A data.table containing the aggregated movement data.
 #'
-#' @importFrom dplyr filter summarise mutate all_of left_join right_join
+#' @importFrom data.table as.data.table setDT
 #' @importFrom govhr detect_personnel_event
-#' @importFrom stats median
 #'
-#' @export
-#'
-#' @examples
-#' example_data <- data.frame(
-#'   personnel_id = c(1, 2, 3, 4),
-#'   ref_date = as.Date(c("2020-01-01", "2020-01-01", "2020-02-01", "2020-02-01")),
-#'   employment_status = c("employed", "employed", "terminated", "employed")
-#' )
-#'
-#' generate_movement_data(
-#'  .data = example_data,
-#' movement_type = "hire",
-#' measurement_type = "count",
-#' group_cols = "ref_date"
-#' )
-#'
+#' @details The function generates movement data based on the specified movement type and measurement type. For hires, fires, and retirements, it calculates either the count or rate of events. For turnover, it calculates the ratio of hires to separations (including retirements). The data is grouped by the specified columns.
 #' @export
 generate_movement_data <- function(
   .data,
@@ -120,90 +104,79 @@ generate_movement_data <- function(
   measurement_type,
   group_cols
 ) {
-  min_date <- min(.data[["ref_date"]]) |>
-    as.character()
-  max_date <- max(.data[["ref_date"]]) |>
-    as.character()
+  dt <- as.data.table(.data)
 
-  agg_fun <- switch(
-    measurement_type,
-    count = sum,
-    rate = mean,
+  min_date <- as.character(min(dt[["ref_date"]]))
+  max_date <- as.character(max(dt[["ref_date"]]))
+
+  if (!measurement_type %in% c("count", "rate")) {
     stop("Invalid measurement_type. Must be 'count' or 'rate'.")
-  )
-
-  # extract frequency of reference dates for movements
-  freq_ref_date <- .data |>
-    guess_date_frequency()
-
-  if (movement_type %in% c("hire", "fire", "retirement")) {
-    movement_data <- .data |>
-      classify_personnel_event(
-        event_type = movement_type,
-        id_col = "personnel_id",
-        start_date = min_date,
-        end_date = max_date,
-        status_col = "employment_status",
-        freq = freq_ref_date
-      ) |>
-      summarise(
-        indicator = agg_fun(.data[["type_event"]] == movement_type),
-        .by = dplyr::all_of(
-          unique(c("ref_date", group_cols))
-        )
-      )
-  } else if (movement_type == "turnover") {
-    hire_data <- .data |>
-      govhr::detect_personnel_event(
-        event_type = "hire",
-        id_col = "personnel_id",
-        start_date = min_date,
-        end_date = max_date,
-        status_col = "employment_status",
-        freq = freq_ref_date
-      ) |>
-      dplyr::left_join(
-        .data,
-        by = c("personnel_id", "ref_date")
-      ) |>
-      summarise(
-        hires = n(),
-        .by = dplyr::all_of(
-          unique(c("ref_date", group_cols))
-        )
-      )
-
-    fire_data <- .data |>
-      govhr::detect_personnel_event(
-        event_type = "fire",
-        id_col = "personnel_id",
-        start_date = min_date,
-        end_date = max_date,
-        status_col = "employment_status",
-        freq = freq_ref_date
-      ) |>
-      dplyr::left_join(
-        .data,
-        by = c("personnel_id", "ref_date")
-      ) |>
-      summarise(
-        fires = n(),
-        .by = dplyr::all_of(
-          unique(c("ref_date", group_cols))
-        )
-      )
-
-    movement_data <- hire_data |>
-      left_join(
-        fire_data,
-        by = unique(c("ref_date", group_cols))
-      ) |>
-      mutate(
-        indicator = .data[["hires"]] / .data[["fires"]]
-      )
   }
 
-  movement_data
+  freq_ref_date <- guess_date_frequency(dt)
+  by_cols <- unique(c("ref_date", group_cols))
+
+  if (movement_type %in% c("hire", "fire", "retirement")) {
+    movement_dt <- classify_personnel_event(
+      dt,
+      event_type = movement_type,
+      id_col = "personnel_id",
+      start_date = min_date,
+      end_date = max_date,
+      status_col = "employment_status",
+      freq = freq_ref_date
+    )
+    setDT(movement_dt)
+    
+    movement_data <- if (measurement_type == "count") {
+      movement_dt[, .(indicator = sum(type_event == movement_type)), by = by_cols]
+    } else {
+      movement_dt[, .(indicator = mean(type_event == movement_type)), by = by_cols]
+    }
+
+  } else if (movement_type == "turnover") {
+    hire_dt <- govhr::detect_personnel_event(
+      dt,
+      event_type = "hire",
+      id_col = "personnel_id",
+      start_date = min_date,
+      end_date = max_date,
+      status_col = "employment_status",
+      freq = freq_ref_date
+    )
+
+    setDT(hire_dt)
+    
+    hire_data <- dt[hire_dt, on = c("personnel_id", "ref_date")][
+      , .(hires = .N), by = by_cols
+    ]
+
+    fire_dt <- govhr::detect_personnel_event(
+      dt,
+      event_type = "fire",
+      id_col = "personnel_id",
+      start_date = min_date,
+      end_date = max_date,
+      status_col = "employment_status",
+      freq = freq_ref_date
+    )
+
+    retirement_dt <- govhr::detect_retirement(dt)
+
+    # combine fired and retired personnel for turnover calculation
+    separations_dt <- rbind(fire_dt, retirement_dt)
+    setDT(separations_dt)
+    separations_dt <- dt[separations_dt, on = c("personnel_id", "ref_date")][
+      , .(separations = .N), by = by_cols
+    ]
+
+    movement_data <- merge(hire_data, separations_dt, by = by_cols, all = TRUE)
+    movement_data[, indicator := hires / separations]
+
+    movement_data <- movement_data[!is.na(indicator)]
+  }
+
+  movement_data[]
 }
 
 #' Render Movement Value Box
@@ -245,35 +218,45 @@ render_movement_box <- function(.data, type_movement) {
     value_box(
       title = paste0(
         toupper(substr(type_movement, 1, 1)),
-        substr(type_movement, 2, nchar(type_movement))
+        substr(type_movement, 2, nchar(type_movement)),
+        " (", format(max(.data[["ref_date"]]), "%b %Y"), ")"
       ),
+      theme = value_box_theme(bg = "#C34729", fg = "#ffffff"),
+      class = "border",
+      max_height = "150px",
       value = switch(
         type_movement,
         hire = tagList(
-          p(paste("Count:", latest_count)),
-          p(paste("Rate:", round(latest_rate, 3), "%"))
+          h3(paste("Count:", latest_count)),
+          h3(paste("Rate:", round(latest_rate, 3), "%"))
         ),
         fire = tagList(
-          p(paste("Count:", latest_count)),
-          p(paste("Rate:", round(latest_rate, 3), "%"))
+          h3(paste("Count:", latest_count)),
+          h3(paste("Rate:", round(latest_rate, 3), "%"))
+        ),
+        retirement = tagList(
+          h3(paste("Count:", latest_count)),
+          h3(paste("Rate:", round(latest_rate, 3), "%"))
         ),
         turnover = tagList(
-          p(paste("Ratio of Hires to Fires:", round(latest_rate, 3)))
+          h3(paste("Ratio of Hires to Exits:", round(latest_rate, 3)))
         )
       ),
       showcase = switch(
         type_movement,
         hire = bsicons::bs_icon("person-plus-fill"),
         fire = bsicons::bs_icon("person-dash-fill"),
+        retirement = bsicons::bs_icon("person-badge-fill"),
         turnover = bsicons::bs_icon("arrow-repeat")
       ),
       bslib::popover(
         bsicons::bs_icon("info-circle-fill"),
         switch(
           type_movement,
-          hire = "Number of personnel hired in the most recent reference period.",
-          fire = "Number of personnel fired in the most recent reference period.",
-          turnover = "Ratio of hires to fires in the most recent reference period."
+          hire = "Number and share of personnel hired in the most recent reference period.",
+          fire = "Number and share of personnel separated (voluntary and involuntary) in the most recent reference period.",
+          retirement = "Number and share of personnel retired in the most recent reference period.",
+          turnover = "Ratio of hires to separations (including retirements) in the most recent reference period."
         )
       )
     )

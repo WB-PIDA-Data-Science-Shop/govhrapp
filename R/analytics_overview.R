@@ -27,13 +27,15 @@ overview_ui <- function(id, workforce_data, wagebill_data) {
         title = shiny::uiOutput(ns("vb_date_label")),
         value = shiny::uiOutput(ns("vb_headcount")),
         showcase = bsicons::bs_icon("people-fill"),
-        theme = bslib::value_box_theme(bg = "#C34729", fg = "#FFFFFF")
+        theme = bslib::value_box_theme(bg = "#C34729", fg = "#FFFFFF"),
+        max_height = "150px"
       ),
       bslib::value_box(
         title = shiny::uiOutput(ns("vb_wagebill_label")),
         value = shiny::uiOutput(ns("vb_wagebill")),
         showcase = bsicons::bs_icon("cash-stack"),
-        theme = bslib::value_box_theme(bg = "#004181", fg = "#FFFFFF")
+        theme = bslib::value_box_theme(bg = "#004181", fg = "#FFFFFF"),
+        max_height = "150px"
       )
     ),
     

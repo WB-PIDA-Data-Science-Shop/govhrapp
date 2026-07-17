@@ -18,6 +18,9 @@ workforce_ui_beta <- function(id, .data) {
         NS(id, "movement_fire")
       ),
       uiOutput(
+        NS(id, "movement_retirement")
+      ),
+      uiOutput(
         NS(id, "movement_turnover")
       )
     )
@@ -78,9 +81,8 @@ workforce_server_beta <- function(id, .data) {
 
     # 1. value boxes for workforce movement metrics
     output$movement_hire <- render_movement_box(.data, type_movement = "hire")
-
     output$movement_fire <- render_movement_box(.data, type_movement = "fire")
-
+    output$movement_retirement <- render_movement_box(.data, type_movement = "retirement")
     output$movement_turnover <- render_movement_box(.data, type_movement = "turnover")
 
     # 2. panel servers

@@ -2,37 +2,25 @@
 % Please edit documentation in R/analytics_helpers.R
 \name{generate_movement_data}
 \alias{generate_movement_data}
-\title{Function to generate movement data for hires, fires, or turnover}
+\title{Function to generate movement data for hires, fires, retirement, or turnover}
 \usage{
 generate_movement_data(.data, movement_type, measurement_type, group_cols)
 }
 \arguments{
-\item{.data}{A data frame containing personnel data..}
+\item{.data}{A data frame containing personnel data.}
 
-\item{movement_type}{A character string indicating the type of movement: "hire", "fire", or "turnover".}
+\item{movement_type}{A character string indicating the type of movement: "hire", "fire", "retirement", or "turnover".}
 
 \item{measurement_type}{A character string indicating the measurement type: "count" or "rate". Ignored for turnover, which is a ratio.}
 
 \item{group_cols}{A character string indicating the grouping column, or "ref_date" for no grouping.}
 }
 \value{
-A data frame containing the aggregated movement data.
+A data.table containing the aggregated movement data.
 }
 \description{
-Function to generate movement data for hires, fires, or turnover
+Function to generate movement data for hires, fires, retirement, or turnover
 }
-\examples{
-example_data <- data.frame(
-  personnel_id = c(1, 2, 3, 4),
-  ref_date = as.Date(c("2020-01-01", "2020-01-01", "2020-02-01", "2020-02-01")),
-  employment_status = c("employed", "employed", "terminated", "employed")
-)
-
-generate_movement_data(
- .data = example_data,
-movement_type = "hire",
-measurement_type = "count",
-group_cols = "ref_date"
-)
-
+\details{
+The function generates movement data based on the specified movement type and measurement type. For hires, fires, and retirements, it calculates either the count or rate of events. For turnover, it calculates the ratio of hires to separations (including retirements). The data is grouped by the specified columns.
 }

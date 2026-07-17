@@ -15,6 +15,8 @@ workforce_movement_ui <- function(
   .data,
   type_movement = c("hire", "fire", "turnover", "retirement")
 ) {
+  # move profile table right under movements over time
+  # organize the outputs into two buckets: high-level and deep-dive
   bslib::layout_sidebar(
     fillable = FALSE,
     theme = bslib::bs_theme(bootswatch = "litera"),
@@ -36,6 +38,7 @@ workforce_movement_ui <- function(
 
     # plot 1. counts and rates over time
     bslib::card(
+      full_screen = TRUE,
       bslib::card_header(
         sprintf("%ss over time", stringr::str_to_title(type_movement)),
         bslib::popover(
@@ -54,8 +57,28 @@ workforce_movement_ui <- function(
       plotly::plotlyOutput(shiny::NS(id, sprintf("%s_plot", type_movement)))
     ),
 
+    # table 1. demographic characteristics of movers vs. general pop.
+    if(type_movement %in% c("hire", "fire")){ 
+    bslib::card(
+      bslib::card_header(
+        sprintf("Profile of new %ss", type_movement),
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          sprintf(
+            "Compare the characteristics of new %ss against the general population, selecting which attributes to compare them with.",
+            type_movement
+          ),
+          title = sprintf("Profile of new %ss", type_movement),
+          placement = "left"
+        )
+      ),
+      gt::gt_output(shiny::NS(id, sprintf("%s_profile", type_movement)))
+    )
+    },
+
     # plot 2. counts and rates by group
     bslib::card(
+      full_screen = TRUE,
       bslib::card_header(
         sprintf("%ss by group", stringr::str_to_title(type_movement)),
         bslib::popover(
@@ -76,6 +99,7 @@ workforce_movement_ui <- function(
 
     # plot 3. growth rate of counts and rates by group
     bslib::card(
+      full_screen = TRUE,
       bslib::card_header(
         sprintf("%ss growth by group", stringr::str_to_title(type_movement)),
         bslib::popover(
@@ -92,26 +116,7 @@ workforce_movement_ui <- function(
         class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(shiny::NS(id, sprintf("%s_growth", type_movement)))
-    ),
-
-     # table 1. demographic characteristics of movers vs. general pop.
-    if(type_movement %in% c("hire", "fire")){ 
-    bslib::card(
-      bslib::card_header(
-        sprintf("Profile of new %ss", type_movement),
-        bslib::popover(
-          bsicons::bs_icon("info-circle-fill"),
-          sprintf(
-            "Compare the characteristics of new %ss against the general population, selecting which attributes to compare them with.",
-            type_movement
-          ),
-          title = sprintf("Profile of new %ss", type_movement),
-          placement = "left"
-        )
-      ),
-      gt::gt_output(shiny::NS(id, sprintf("%s_profile", type_movement)))
     )
-    }
   )
 }
 
@@ -263,7 +268,7 @@ workforce_movement_server <- function(
     }) |>
       bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
-    # table 1. demographic characteristics of hires vs. general pop.
+    # table 1. demographic characteristics of movers vs. general pop.
     if (movement_type %in% c("hire", "fire")) {
       output[[sprintf("%s_profile", movement_type)]] <- gt::render_gt({
         profile_data <- classify_personnel_event(
@@ -274,7 +279,10 @@ workforce_movement_server <- function(
           end_date = max(data_filtered()[["ref_date"]]),
           status_col = "employment_status",
           freq = guess_date_frequency(data_filtered())
-        )
+        ) |>
+          # modify personnel data to include age and exclude birth_date
+          dplyr::mutate(age = as.numeric(difftime(Sys.Date(), birth_date, units = "days")) / 365.25) |>
+          dplyr::select(-all_of("birth_date"))
 
         profile_data |>
           gtsummary::tbl_summary(
@@ -351,11 +359,11 @@ workforce_retirement_ui <- function(
     # plot 2. projected retirements 
     bslib::card(
       bslib::card_header(
-        "Projected Retirements",
+        "Projected retirements",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
           "The projected number of retirements and rate (projected retirements / total workforce) based on the selected retirement threshold age.",
-          title = "Projected Retirements",
+          title = "Projected retirements",
           placement = "left"
         ),
         class = "d-flex justify-content-between"

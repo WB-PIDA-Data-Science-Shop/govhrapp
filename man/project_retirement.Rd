@@ -9,7 +9,8 @@ project_retirement(
   threshold_age = 60,
   birth_col = "birth_date",
   group_cols = NULL,
-  simplify_retirement_date = TRUE
+  simplify_retirement_date = TRUE,
+  cutoff_date = 10
 )
 }
 \arguments{
