@@ -23,6 +23,8 @@ project_retirement(
 \item{group_cols}{A character vector of column names to group the data by when counting eligible retirees (default is NULL, meaning no grouping).}
 
 \item{simplify_retirement_date}{A logical value indicating whether to simplify the retirement date to the end of the year (default is TRUE).}
+
+\item{cutoff_date}{A numeric value indicating the cut-off for future retirement projections in years (default is 10).}
 }
 \value{
 A data frame with projected retirement dates and counts of staff eligible for retirement at each reference date.

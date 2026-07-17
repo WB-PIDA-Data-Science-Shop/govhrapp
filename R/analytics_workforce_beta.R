@@ -43,6 +43,7 @@ workforce_ui_beta <- function(id, .data) {
       ),
       bslib::card_body(
         layout_column_wrap(
+          width = 1/2,
           fill = FALSE,
           !!!value_boxes
         )
@@ -51,22 +52,27 @@ workforce_ui_beta <- function(id, .data) {
 
     # 2. panel for workforce movement
     bslib::navset_underline(
-      # sub-panel 1: hiring
+      # sub-panel 1: overview
+      bslib::nav_panel(
+        title = "Overview",
+        workforce_overview_ui(NS(id, "overview"), .data)
+      ),
+      # sub-panel 2: hiring
       bslib::nav_panel(
         title = "Hire",
         workforce_movement_ui(NS(id, "hire"), .data, type_movement = "hire")
       ),
-      # sub-panel 2: firing
+      # sub-panel 3: firing
       bslib::nav_panel(
         title = "Fire",
         workforce_movement_ui(NS(id, "fire"), .data, type_movement = "fire")
       ),
-      # sub-panel 3: retirement
+      # sub-panel 4: retirement
       bslib::nav_panel(
         title = "Retirement",
         workforce_retirement_ui(NS(id, "retirement"), .data)
       ),
-      # sub-panel 4: turnover
+      # sub-panel 5: turnover
       bslib::nav_panel(
         title = "Turnover",
         workforce_movement_ui(
@@ -96,6 +102,7 @@ workforce_server_beta <- function(id, .data) {
     )
 
     # 2. panel servers
+    workforce_overview_server("overview", .data)
     workforce_movement_server("hire", .data, movement_type = "hire")
     workforce_movement_server("fire", .data, movement_type = "fire")
     workforce_retirement_server("retirement", .data)

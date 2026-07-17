@@ -227,19 +227,20 @@ render_movement_box <- function(.data, type_movement) {
       value = switch(
         type_movement,
         hire = tagList(
-          h3(paste("Count:", latest_count)),
-          h3(paste("Rate:", round(latest_rate, 3), "%"))
+          h5(paste("Count:", latest_count)),
+          h5(paste("Rate:", round(latest_rate, 3), "%"))
         ),
         fire = tagList(
-          h3(paste("Count:", latest_count)),
-          h3(paste("Rate:", round(latest_rate, 3), "%"))
+          h5(paste("Count:", latest_count)),
+          h5(paste("Rate:", round(latest_rate, 3), "%"))
         ),
         retirement = tagList(
-          h3(paste("Count:", latest_count)),
-          h3(paste("Rate:", round(latest_rate, 3), "%"))
+          h5(paste("Count:", latest_count)),
+          h5(paste("Rate:", round(latest_rate, 3), "%"))
         ),
         turnover = tagList(
-          h3(paste("Ratio of Hires to Exits:", round(latest_rate, 3)))
+          h5("Ratio of Hires"),
+          h5(paste("to Exits:", round(latest_rate, 3)))
         )
       ),
       showcase = switch(

@@ -72,6 +72,7 @@ classify_personnel_event <- function(
 #' @param birth_col The name of the column representing birth dates (default is "birth_date").
 #' @param group_cols A character vector of column names to group the data by when counting eligible retirees (default is NULL, meaning no grouping).
 #' @param simplify_retirement_date A logical value indicating whether to simplify the retirement date to the end of the year (default is TRUE).
+#' @param cutoff_date A numeric value indicating the cut-off for future retirement projections in years (default is 10).
 #' 
 #' @return A data frame with projected retirement dates and counts of staff eligible for retirement at each reference date.
 #' 
@@ -82,7 +83,7 @@ project_retirement <- function(
   birth_col = "birth_date",
   group_cols = NULL,
   simplify_retirement_date = TRUE,
-  cutoff_date = 10 # cut-off for future retirement projections (in years)
+  cutoff_date = 10
 ) {
   workforce_data_dt <- as.data.table(workforce_data)
 
@@ -118,6 +119,9 @@ project_retirement <- function(
       order(retirement_date)
     ]
   }
+
+  # cut-off date
+  projected_retirement_data <- projected_retirement_data[retirement_date <= (max(workforce_data[["ref_date"]]) + lubridate::years(cutoff_date))]
 
   projected_retirement_data[]
 }
