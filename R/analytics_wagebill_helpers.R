@@ -90,9 +90,9 @@ wagebill_overview_ui <- function(id, .data) {
 wagebill_overview_server <- function(id, .data) {
   shiny::moduleServer(id, function(input, output, session) {
     # choice of cols
-    wagebill_group_choices <- identify_group_choices(wagebill_data)
+    wagebill_group_choices <- identify_group_choices(.data)
 
-    update_group_filter_controls(wagebill_data, input, session)
+    update_group_filter_controls(.data, input, session)
 
     wagebill_filtered <- shiny::reactive({
       data <- .data
