@@ -21,6 +21,9 @@ wagebill_data <- govhr::bra_hrmis_contract |>
   dplyr::left_join(
     workforce_data,
     by = c("ref_date", "personnel_id")
+  ) |>
+  mutate(
+    country_code = "BRA"
   )
 
 run_govhrapp(workforce_data, wagebill_data)
