@@ -499,3 +499,31 @@ plot_movement <- function(.data, movement_type, measurement_type, group_cols) {
 
   plotly::ggplotly(plot)
 }
+
+plot_wage_distribution <- function(.data, group_cols, measure_col) {
+  plot <- .data |>
+    ggplot2::ggplot(
+      ggplot2::aes(x = .data[[measure_col]], y = .data[[group_cols]])
+    ) +
+    ggplot2::geom_boxplot() +
+    ggplot2::labs(
+      x = measure_col,
+      y = group_cols
+    )
+
+  if (group_cols != "ref_date") {
+    n_groups <- dplyr::n_distinct(
+      .data[[group_cols]],
+      na.rm = TRUE
+    )
+    orange_palette <- grDevices::colorRampPalette(c("#C34729", "#F5C6A0"))(n_groups)
+    plot <- plot +
+      ggplot2::aes(
+        color = .data[[group_cols]],
+        group = .data[[group_cols]]
+      ) +
+      ggplot2::scale_color_manual(values = orange_palette)
+  }
+
+  plotly::ggplotly(plot)
+}

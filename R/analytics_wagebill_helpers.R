@@ -232,3 +232,57 @@ wagebill_overview_server <- function(id, .data) {
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })
 }
+
+wagebill_equity_server <- function(id, .data) {
+  shiny::moduleServer(id, function(input, output, session) {
+    # choice of cols
+    wagebill_group_choices <- identify_group_choices(.data)
+
+    update_group_filter_controls(.data, input, session)
+
+    wagebill_filtered <- shiny::reactive({
+      data <- .data
+
+      if (input$group_filter != "ref_date") {
+        data <- data |>
+          dplyr::filter(
+            .data[[input$group_filter]] %in% input$subgroup_filter
+          )
+      }
+
+      data |>
+        dplyr::filter(
+          .data[["ref_date"]] >= input$date_range[1],
+          .data[["ref_date"]] <= input$date_range[2]
+        )
+    })
+  })
+
+  # plot 1. wage distribution by decile
+  output$wagebill_distribution <- plotly::renderPlotly({
+    shiny::validate(
+      shiny::need(
+        input$group_filter != "ref_date",
+        "Please select a group."
+      )
+    )
+
+    wagebill_distribution <- compute_wage_distribution(
+      wagebill_filtered(),
+      group = input$group_filter,
+      measure_col = input$wagebill_measure
+    )
+
+    n_groups <- nrow(wagebill_distribution)
+    plot_height <- max(350, n_groups * 35 + 100)
+
+    plotly::ggplotly(
+      plot_wage_distribution(
+        wagebill_distribution,
+        group = input$group_filter
+      ),
+      height = plot_height
+    )
+  }) |>
+    shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+}

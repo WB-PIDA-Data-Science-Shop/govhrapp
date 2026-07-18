@@ -125,3 +125,19 @@ project_retirement <- function(
 
   projected_retirement_data[]
 }
+
+#' @importFrom data.table as.data.table setorderv
+#' @importFrom dplyr ntile
+compute_wage_decile <- function(.data, group_cols = NULL, measure_col) {
+  dt <- data.table::as.data.table(.data)
+  by_cols <- c(group_cols, "ref_date")
+
+  dt[, decile := dplyr::ntile(get(measure_col), 10), by = by_cols]
+
+  out <- dt[!is.na(decile), .(
+      median_value = stats::median(get(measure_col), na.rm = TRUE),
+      mean_value   = mean(get(measure_col), na.rm = TRUE)
+    ), keyby = c(by_cols, "decile")]
+
+  out[]
+}
