@@ -500,25 +500,77 @@ plot_movement <- function(.data, movement_type, measurement_type, group_cols) {
   plotly::ggplotly(plot)
 }
 
-plot_wage_distribution <- function(.data, group_cols, measure_col) {
+plot_decile <- function(.data, group_cols){
   plot <- .data |>
     ggplot2::ggplot(
-      ggplot2::aes(x = .data[[measure_col]], y = .data[[group_cols]])
+      ggplot2::aes(x = .data[["decile"]], y = .data[["median_value"]])
     ) +
-    ggplot2::geom_boxplot() +
+    ggplot2::geom_col(
+      fill = "#C34729"
+    ) +
     ggplot2::labs(
-      x = measure_col,
-      y = group_cols
+      x = "Decile",
+      y = "Median by Decile"
+    ) +
+    ggplot2::scale_x_continuous(
+      breaks = 1:10,
+      labels = 1:10
     )
 
   if (group_cols != "ref_date") {
+    plot <- plot +
+      facet_wrap(
+        ggplot2::vars(.data[[group_cols]]),
+        scales = "fixed"
+      )
+  }
+
+  # if group are present, facet the plot by group
+  if (group_cols != "ref_date") {
+    plot <- plot +
+      ggplot2::facet_wrap(
+        ggplot2::vars(.data[[group_cols]]),
+        labeller = ggplot2::label_wrap_gen(width = 20)
+      )
+  }
+
+  plotly::ggplotly(plot)
+}
+
+plot_compression_ratio <- function(.data, group_cols){
+  group_cols <- if (is.null(group_cols)) "ref_date" else group_cols
+
+  # plot as a line range between percentile_10 and percentile_90, with a point at percentile_50
+  # and the y-axis is the group_cols, and the x-axis is the percentile values
+  plot <- .data |>
+    ggplot2::ggplot(
+      ggplot2::aes(
+        x = .data[["percentile_50"]],
+        y = .data[[group_cols]],
+        xmin = .data[["percentile_10"]],
+        xmax = .data[["percentile_90"]]
+      )
+    ) +
+    ggplot2::geom_point(
+      size = 3,
+      color = "#C34729"
+    ) +
+    ggplot2::geom_linerange(
+      color = "#C34729"
+    ) +
+    ggplot2::labs(
+      x = "Wage Compression Ratio (10th to 90th Percentile)",
+      y = ""
+    )
+  
+    if (group_cols != "ref_date") {
     n_groups <- dplyr::n_distinct(
       .data[[group_cols]],
       na.rm = TRUE
     )
-    orange_palette <- grDevices::colorRampPalette(c("#C34729", "#F5C6A0"))(n_groups)
+    orange_palette <- colorRampPalette(c("#C34729", "#F5C6A0"))(n_groups)
     plot <- plot +
-      ggplot2::aes(
+      aes(
         color = .data[[group_cols]],
         group = .data[[group_cols]]
       ) +

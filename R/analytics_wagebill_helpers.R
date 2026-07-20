@@ -1,9 +1,10 @@
-identify_wagebill_choices <- function(.data){
+identify_wagebill_choices <- function(.data) {
   available_cols <- names(.data)
 
   wagebill_choices <- govhr::dictionary |>
     dplyr::filter(
-      .data[["variable_id"]] %in% available_cols &
+      .data[["variable_id"]] %in%
+        available_cols &
         stringr::str_detect(.data[["variable_id"]], "salary|allowance")
     ) |>
     dplyr::summarise(
@@ -233,6 +234,57 @@ wagebill_overview_server <- function(id, .data) {
   })
 }
 
+wagebill_equity_ui <- function(id, .data) {
+  bslib::layout_sidebar(
+    fillable = FALSE,
+    sidebar = bslib::sidebar(
+      title = span("Controls", bsicons::bs_icon("sliders")),
+      width = "300px",
+      !!!ui_filter_controls(.data, id),
+      shiny::selectInput(
+        shiny::NS(id, "wagebill_measure"),
+        "Type of Wage:",
+        choices = identify_wagebill_choices(.data)
+      ),
+      shiny::actionButton(
+        shiny::NS(id, "apply_btn"),
+        "Apply selection",
+        icon = shiny::icon("play")
+      )
+    ),
+    # plot 1. wage distribution by decile
+    bslib::card(
+      full_screen = TRUE,
+      bslib::card_header(
+        "Wage Distribution by Decile",
+        bslib::tooltip(
+          bsicons::bs_icon("info-circle"),
+          "Wage distribution by decile. Choosing a group will add new trend lines, by group."
+        )
+      ),
+      plotly::plotlyOutput(
+        shiny::NS(id, "wagebill_distribution"),
+        height = "350px"
+      )
+    ),
+    # plot 2. compression ratio
+    bslib::card(
+      full_screen = TRUE,
+      bslib::card_header(
+        "Wage Compression Ratio (10th to 90th Percentile)",
+        bslib::tooltip(
+          bsicons::bs_icon("info-circle"),
+          "Wage compression ratio between the 10th and 90th percentile. Choosing a group will add new trend lines, by group."
+        )
+      ),
+      plotly::plotlyOutput(
+        shiny::NS(id, "wagebill_compression_ratio"),
+        height = "350px"
+      )
+    )
+  )
+}
+
 wagebill_equity_server <- function(id, .data) {
   shiny::moduleServer(id, function(input, output, session) {
     # choice of cols
@@ -256,33 +308,54 @@ wagebill_equity_server <- function(id, .data) {
           .data[["ref_date"]] <= input$date_range[2]
         )
     })
-  })
 
-  # plot 1. wage distribution by decile
-  output$wagebill_distribution <- plotly::renderPlotly({
-    shiny::validate(
-      shiny::need(
-        input$group_filter != "ref_date",
-        "Please select a group."
+    # plot 1. wage distribution by decile
+    output$wagebill_distribution <- plotly::renderPlotly({
+      # filter latest ref_date
+      latest_ref_date <- max(wagebill_filtered()[["ref_date"]])
+      wagebill_filtered_latest <- wagebill_filtered() |>
+        dplyr::filter(.data[["ref_date"]] == latest_ref_date)
+
+      wagebill_distribution <- compute_decile(
+        wagebill_filtered_latest,
+        group = input$group_filter,
+        measure_col = input$wagebill_measure,
+        latest_measure = TRUE
       )
-    )
 
-    wagebill_distribution <- compute_wage_distribution(
-      wagebill_filtered(),
-      group = input$group_filter,
-      measure_col = input$wagebill_measure
-    )
+      n_groups <- nrow(wagebill_distribution)
+      plot_height <- max(350, n_groups * 35 + 100)
 
-    n_groups <- nrow(wagebill_distribution)
-    plot_height <- max(350, n_groups * 35 + 100)
+      plotly::ggplotly(
+        plot_decile(
+          wagebill_distribution,
+          group = input$group_filter
+        ),
+        height = plot_height
+      )
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
-    plotly::ggplotly(
-      plot_wage_distribution(
-        wagebill_distribution,
-        group = input$group_filter
-      ),
-      height = plot_height
-    )
-  }) |>
-    shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+    # plot 2. wage range between 10th and 90th percentile
+    output$wagebill_compression_ratio <- plotly::renderPlotly({
+      wagebill_compression_ratio <- compute_compression_ratio(
+        wagebill_filtered(),
+        group = input$group_filter,
+        measure_col = input$wagebill_measure,
+        latest_measure = TRUE
+      )
+
+      n_groups <- nrow(wagebill_compression_ratio)
+      plot_height <- max(350, n_groups * 35 + 100)
+
+      plotly::ggplotly(
+        plot_compression_ratio(
+          wagebill_compression_ratio,
+          group = input$group_filter
+        ),
+        height = plot_height
+      )
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+  })
 }

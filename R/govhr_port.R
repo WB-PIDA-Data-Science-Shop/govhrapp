@@ -126,11 +126,31 @@ project_retirement <- function(
   projected_retirement_data[]
 }
 
+#' Function to compute deciles of a measure column within groups and reference dates.
+#' 
+#' @param .data A data frame containing the data to be processed.
+#' @param group_cols A character vector of column names to group the data by.
+#' @param measure_col The name of the column for which deciles will be computed.
+#' @param latest_measure A logical value indicating whether to return only the measures for the latest reference date's deciles (default is FALSE).
+#' 
+#' @return A data frame containing the deciles, median values, and mean values for the specified measure column within the specified groups and reference dates.
+#' 
 #' @importFrom data.table as.data.table setorderv
 #' @importFrom dplyr ntile
-compute_wage_decile <- function(.data, group_cols = NULL, measure_col) {
+#' 
+#' @export
+compute_decile <- function(.data, group_cols = NULL, measure_col, latest_measure = FALSE) {
   dt <- data.table::as.data.table(.data)
-  by_cols <- c(group_cols, "ref_date")
+
+  by_cols <- if (latest_measure) {
+    group_cols
+  } else {
+    c(group_cols, "ref_date")
+  }
+
+  if (latest_measure) {
+    dt <- dt[ref_date == max(ref_date)]
+  }
 
   dt[, decile := dplyr::ntile(get(measure_col), 10), by = by_cols]
 
@@ -138,6 +158,28 @@ compute_wage_decile <- function(.data, group_cols = NULL, measure_col) {
       median_value = stats::median(get(measure_col), na.rm = TRUE),
       mean_value   = mean(get(measure_col), na.rm = TRUE)
     ), keyby = c(by_cols, "decile")]
+
+  data.table::setorderv(out, c(by_cols, "decile"))
+
+  out[]
+}
+
+compute_compression_ratio <- function(.data, group_cols = NULL, measure_col, latest_measure = FALSE) {
+  dt <- data.table::as.data.table(.data)
+
+  by_cols <- c(group_cols, "ref_date")
+
+  out <- dt[!is.na(get(measure_col)), .(
+      percentile_90 = collapse::fquantile(get(measure_col), probs = 0.9, na.rm = TRUE),
+      percentile_50 = collapse::fquantile(get(measure_col), probs = 0.5, na.rm = TRUE),
+      percentile_10 = collapse::fquantile(get(measure_col), probs = 0.1, na.rm = TRUE)
+    ), keyby = by_cols]
+
+  if (latest_measure && group_cols != "ref_date") {
+    out <- out[ref_date == max(ref_date)]
+  }
+
+  data.table::setorderv(out, by_cols)
 
   out[]
 }

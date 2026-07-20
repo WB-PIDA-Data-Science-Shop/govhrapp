@@ -60,9 +60,16 @@ wagebill_ui_beta <- function(id, wagebill_data) {
       open = FALSE
     ),
     bslib::navset_underline(
+      # sub-panel 1: overview
       bslib::nav_panel(
         title = "Overview",
-        wagebill_overview_ui(NS(id, "overview"), wagebill_data),
+        wagebill_overview_ui(NS(id, "overview"), wagebill_data)
+      ),
+      # sub-panel 2: equity
+      bslib::nav_panel(
+        title = "Equity",
+        wagebill_equity_ui(NS(id, "equity"), wagebill_data)
+      )
       # ),
       # bslib::nav_panel(
       #   title = "Fiscal Sustainability",
@@ -103,7 +110,6 @@ wagebill_ui_beta <- function(id, wagebill_data) {
       #       min_height = "450px"
       #     )
         # )
-      )
     ),
     col_widths = c(12, 12, 12)
   )
@@ -133,6 +139,7 @@ wagebill_ui_beta <- function(id, wagebill_data) {
 wagebill_server_beta <- function(id, wagebill_data) {
   shiny::moduleServer(id, function(input, output, session) {
     wagebill_overview_server("overview", wagebill_data)
+    wagebill_equity_server("equity", wagebill_data)
     # # choice of cols
     # wagebill_group_choices <- identify_group_choices(wagebill_data)
 

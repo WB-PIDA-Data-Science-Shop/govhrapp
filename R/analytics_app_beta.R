@@ -108,6 +108,13 @@ run_govhrapp_beta <- function(workforce_data, wagebill_data, ...) {
       workforce_ui_beta("workforce", workforce_data)
     ),
 
+    # panel 4: wage bill
+    bslib::nav_panel(
+      "Wage Bill",
+      icon = shiny::icon("money-bill-trend-up"),
+      wagebill_ui_beta("wagebill", wagebill_data)
+    ),
+
     # panel 5: code
     nav_menu(
       title = "Code",
@@ -132,6 +139,7 @@ run_govhrapp_beta <- function(workforce_data, wagebill_data, ...) {
   server <- function(input, output, session) {
     overview_server("overview", workforce_data, wagebill_data)
     workforce_server_beta("workforce", workforce_data)
+    wagebill_server_beta("wagebill", wagebill_data)
   }
 
   shiny::shinyApp(ui, server, ...)
