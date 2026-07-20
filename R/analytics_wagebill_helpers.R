@@ -359,3 +359,87 @@ wagebill_equity_server <- function(id, .data) {
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })
 }
+
+wagebill_labor_adjustment_ui <- function(id, .data) {
+  bslib::layout_sidebar(
+    fillable = FALSE,
+    sidebar = bslib::sidebar(
+      title = span("Controls", bsicons::bs_icon("sliders")),
+      width = "300px",
+      !!!ui_filter_controls(.data, id),
+      shiny::selectInput(
+        shiny::NS(id, "wagebill_measure"),
+        "Type of Wage:",
+        choices = identify_wagebill_choices(.data)
+      ),
+      shiny::actionButton(
+        shiny::NS(id, "apply_btn"),
+        "Apply selection",
+        icon = shiny::icon("play")
+      )
+    ),
+    # plot 1. labor adjustment costs
+    bslib::card(
+      full_screen = TRUE,
+      bslib::card_header(
+        "Labor Adjustment Costs",
+        bslib::tooltip(
+          bsicons::bs_icon("info-circle"),
+          "Labor adjustment costs over time. Choosing a group will add new trend lines, by group."
+        )
+      ),
+      plotly::plotlyOutput(
+        shiny::NS(id, "wagebill_labor_adjustment"),
+        height = "350px"
+      )
+    )
+  )
+}
+
+wagebill_labor_adjustment_server <- function(id, .data) {
+  shiny::moduleServer(id, function(input, output, session) {
+    # choice of cols
+    wagebill_group_choices <- identify_group_choices(.data)
+
+    update_group_filter_controls(.data, input, session)
+
+    wagebill_filtered <- shiny::reactive({
+      data <- .data
+
+      if (input$group_filter != "ref_date") {
+        data <- data |>
+          dplyr::filter(
+            .data[[input$group_filter]] %in% input$subgroup_filter
+          )
+      }
+
+      data |>
+        dplyr::filter(
+          .data[["ref_date"]] >= input$date_range[1],
+          .data[["ref_date"]] <= input$date_range[2]
+        )
+    })
+
+    # plot 1. labor adjustment costs
+    output$wagebill_labor_adjustment <- plotly::renderPlotly({
+      labor_adjustment_data <- compute_labor_adjustment_costs(
+        wagebill_filtered(),
+        group = input$group_filter,
+        movement_type = c("hire", "fire", "retirement"),
+        measure_col = input$wagebill_measure
+      )
+
+      n_groups <- nrow(labor_adjustment_data)
+      plot_height <- max(350, n_groups * 35 + 100)
+
+      plotly::ggplotly(
+        plot_labor_adjustment_costs(
+          labor_adjustment_data,
+          group = input$group_filter
+        ),
+        height = plot_height
+      )
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+  })
+}

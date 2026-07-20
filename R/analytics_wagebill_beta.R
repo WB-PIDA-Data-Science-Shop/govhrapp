@@ -69,6 +69,11 @@ wagebill_ui_beta <- function(id, wagebill_data) {
       bslib::nav_panel(
         title = "Equity",
         wagebill_equity_ui(NS(id, "equity"), wagebill_data)
+      ),
+      # sub-panel 3: labor adjustment costs
+      bslib::nav_panel(
+        title = "Labor Adjustment Costs",
+        wagebill_labor_adjustment_ui(NS(id, "labor_adjustment"), wagebill_data)
       )
       # ),
       # bslib::nav_panel(
