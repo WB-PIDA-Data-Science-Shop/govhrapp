@@ -38,7 +38,6 @@ classify_personnel_event <- function(
     personnel_event <- govhr::detect_retirement(.data)
   }
 
-  # aggregate first and then join?
   .data <- data.table::copy(setDT(.data))
   personnel_event <- data.table::setDT(personnel_event)
 
