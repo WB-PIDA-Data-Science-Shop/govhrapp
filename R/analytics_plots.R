@@ -580,13 +580,13 @@ plot_compression_ratio <- function(.data, group_cols){
   plotly::ggplotly(plot)
 }
 
-plot_adjustment_cost <- function(.data, group_cols){
+plot_movement_cost <- function(.data, group_cols){
   group_cols <- if (is.null(group_cols)) "ref_date" else group_cols
 
   plot <- .data |>
     ggplot2::ggplot(
       ggplot2::aes(
-        x = .data[["adjustment_cost"]],
+        x = .data[["movement_cost"]],
         y = .data[[group_cols]]
       )
     ) +
@@ -594,7 +594,7 @@ plot_adjustment_cost <- function(.data, group_cols){
       fill = "#C34729"
     ) +
     ggplot2::labs(
-      x = "Adjustment Cost",
+      x = "Movement Cost",
       y = ""
     )
 

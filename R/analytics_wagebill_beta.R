@@ -70,10 +70,10 @@ wagebill_ui_beta <- function(id, wagebill_data) {
         title = "Equity",
         wagebill_equity_ui(NS(id, "equity"), wagebill_data)
       ),
-      # sub-panel 3: adjustment costs
+      # sub-panel 3: movement costs
       bslib::nav_panel(
-        title = "Adjustment Costs",
-        wagebill_adjustment_ui(NS(id, "adjustment"), wagebill_data)
+        title = "Movement Costs",
+        wagebill_movement_ui(NS(id, "movement"), wagebill_data)
       )
       # ),
       # bslib::nav_panel(
@@ -145,7 +145,7 @@ wagebill_server_beta <- function(id, wagebill_data) {
   shiny::moduleServer(id, function(input, output, session) {
     wagebill_overview_server("overview", wagebill_data)
     wagebill_equity_server("equity", wagebill_data)
-    wagebill_adjustment_server("adjustment", wagebill_data)
+    wagebill_movement_server("movement", wagebill_data)
     # # choice of cols
     # wagebill_group_choices <- identify_group_choices(wagebill_data)
 

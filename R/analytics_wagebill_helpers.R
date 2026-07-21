@@ -360,7 +360,7 @@ wagebill_equity_server <- function(id, .data) {
   })
 }
 
-wagebill_adjustment_ui <- function(id, .data) {
+wagebill_movement_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
@@ -378,25 +378,25 @@ wagebill_adjustment_ui <- function(id, .data) {
         icon = shiny::icon("play")
       )
     ),
-    # plot 1. labor adjustment costs
+    # plot 1. labor movement costs
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Labor Adjustment Costs",
+        "Labor Movement Costs",
         bslib::tooltip(
           bsicons::bs_icon("info-circle"),
-          "Labor adjustment costs over time. Choosing a group will add new trend lines, by group."
+          "Labor movement costs over time. Choosing a group will add new trend lines, by group."
         )
       ),
       plotly::plotlyOutput(
-        shiny::NS(id, "wagebill_labor_adjustment"),
+        shiny::NS(id, "wagebill_labor_movement"),
         height = "350px"
       )
     )
   )
 }
 
-wagebill_adjustment_server <- function(id, .data) {
+wagebill_movement_server <- function(id, .data) {
   shiny::moduleServer(id, function(input, output, session) {
     # choice of cols
     wagebill_group_choices <- identify_group_choices(.data)
@@ -420,21 +420,21 @@ wagebill_adjustment_server <- function(id, .data) {
         )
     })
 
-    # plot 1. labor adjustment costs
-    output$wagebill_adjustment <- plotly::renderPlotly({
-      labor_adjustment_data <- compute_adjustment_cost(
+    # plot 1. labor movement costs
+    output$wagebill_movement <- plotly::renderPlotly({
+      labor_movement_data <- compute_movement_cost(
         wagebill_filtered(),
         group = input$group_filter,
         movement_type = c("hire", "fire", "retirement"),
         measure_col = input$wagebill_measure
       )
 
-      n_groups <- nrow(labor_adjustment_data)
+      n_groups <- nrow(labor_movement_data)
       plot_height <- max(350, n_groups * 35 + 100)
 
       plotly::ggplotly(
-        plot_adjustment_cost(
-          labor_adjustment_data,
+        plot_movement_cost(
+          labor_movement_data,
           group = input$group_filter
         ),
         height = plot_height

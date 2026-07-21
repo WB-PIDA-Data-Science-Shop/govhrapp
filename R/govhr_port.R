@@ -227,7 +227,7 @@ compute_compression_ratio <- function(
   out[]
 }
 
-compute_adjustment_cost <- function(
+compute_movement_cost <- function(
   .data,
   id_col = "personnel_id",
   event_type,
@@ -251,7 +251,7 @@ compute_adjustment_cost <- function(
     freq = freq
   )
 
-  # compute adjustment cost
+  # compute movement cost
   by_cols <- c(group_cols, "ref_date")
 
   out <- dt[
@@ -259,7 +259,7 @@ compute_adjustment_cost <- function(
     .(
       movement_type = event_type,
       measurement = measure_col,
-      adjustment_cost = sum(get(measure_col), na.rm = TRUE)
+      movement_cost = sum(get(measure_col), na.rm = TRUE)
     ),
     keyby = by_cols
   ]
