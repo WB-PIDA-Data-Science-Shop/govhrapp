@@ -4,7 +4,7 @@
 \alias{compute_decile}
 \title{Function to compute deciles of a measure column within groups and reference dates.}
 \usage{
-compute_decile(.data, group_cols = NULL, measure_col, latest_value = FALSE)
+compute_decile(.data, group_cols = NULL, measure_col, latest_measure = FALSE)
 }
 \arguments{
 \item{.data}{A data frame containing the data to be processed.}
@@ -13,7 +13,7 @@ compute_decile(.data, group_cols = NULL, measure_col, latest_value = FALSE)
 
 \item{measure_col}{The name of the column for which deciles will be computed.}
 
-\item{latest_value}{A logical value indicating whether to return only the latest reference date's deciles (default is FALSE).}
+\item{latest_measure}{A logical value indicating whether to return only the measures for the latest reference date's deciles (default is FALSE).}
 }
 \value{
 A data frame containing the deciles, median values, and mean values for the specified measure column within the specified groups and reference dates.

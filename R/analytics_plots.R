@@ -579,3 +579,38 @@ plot_compression_ratio <- function(.data, group_cols){
 
   plotly::ggplotly(plot)
 }
+
+plot_adjustment_cost <- function(.data, group_cols){
+  group_cols <- if (is.null(group_cols)) "ref_date" else group_cols
+
+  plot <- .data |>
+    ggplot2::ggplot(
+      ggplot2::aes(
+        x = .data[["adjustment_cost"]],
+        y = .data[[group_cols]]
+      )
+    ) +
+    ggplot2::geom_col(
+      fill = "#C34729"
+    ) +
+    ggplot2::labs(
+      x = "Adjustment Cost",
+      y = ""
+    )
+
+  if (group_cols != "ref_date") {
+    n_groups <- dplyr::n_distinct(
+      .data[[group_cols]],
+      na.rm = TRUE
+    )
+    orange_palette <- colorRampPalette(c("#C34729", "#F5C6A0"))(n_groups)
+    plot <- plot +
+      aes(
+        color = .data[[group_cols]],
+        group = .data[[group_cols]]
+      ) +
+      ggplot2::scale_color_manual(values = orange_palette)
+  }
+
+  plotly::ggplotly(plot)
+}

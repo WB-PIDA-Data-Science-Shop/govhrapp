@@ -360,7 +360,7 @@ wagebill_equity_server <- function(id, .data) {
   })
 }
 
-wagebill_labor_adjustment_ui <- function(id, .data) {
+wagebill_adjustment_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
@@ -396,7 +396,7 @@ wagebill_labor_adjustment_ui <- function(id, .data) {
   )
 }
 
-wagebill_labor_adjustment_server <- function(id, .data) {
+wagebill_adjustment_server <- function(id, .data) {
   shiny::moduleServer(id, function(input, output, session) {
     # choice of cols
     wagebill_group_choices <- identify_group_choices(.data)
@@ -421,8 +421,8 @@ wagebill_labor_adjustment_server <- function(id, .data) {
     })
 
     # plot 1. labor adjustment costs
-    output$wagebill_labor_adjustment <- plotly::renderPlotly({
-      labor_adjustment_data <- compute_labor_adjustment_costs(
+    output$wagebill_adjustment <- plotly::renderPlotly({
+      labor_adjustment_data <- compute_adjustment_cost(
         wagebill_filtered(),
         group = input$group_filter,
         movement_type = c("hire", "fire", "retirement"),
@@ -433,7 +433,7 @@ wagebill_labor_adjustment_server <- function(id, .data) {
       plot_height <- max(350, n_groups * 35 + 100)
 
       plotly::ggplotly(
-        plot_labor_adjustment_costs(
+        plot_adjustment_cost(
           labor_adjustment_data,
           group = input$group_filter
         ),
