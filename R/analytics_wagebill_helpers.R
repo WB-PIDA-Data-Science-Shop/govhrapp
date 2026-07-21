@@ -267,7 +267,22 @@ wagebill_equity_ui <- function(id, .data) {
         height = "350px"
       )
     ),
-    # plot 2. compression ratio
+    # plot 3. wage density
+    bslib::card(
+      full_screen = TRUE,
+      bslib::card_header(
+        "Wage Density",
+        bslib::tooltip(
+          bsicons::bs_icon("info-circle"),
+          "Wage density distribution. Choosing a group will add new trend lines, by group."
+        )
+      ),
+      plotly::plotlyOutput(
+        shiny::NS(id, "wagebill_density"),
+        height = "350px"
+      )
+    ),
+    # plot 3. compression ratio
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
@@ -318,7 +333,7 @@ wagebill_equity_server <- function(id, .data) {
 
       wagebill_distribution <- compute_decile(
         wagebill_filtered_latest,
-        group = input$group_filter,
+        group_cols = input$group_filter,
         measure_col = input$wagebill_measure,
         latest_measure = TRUE
       )
@@ -329,18 +344,33 @@ wagebill_equity_server <- function(id, .data) {
       plotly::ggplotly(
         plot_decile(
           wagebill_distribution,
-          group = input$group_filter
+          group_cols = input$group_filter
         ),
         height = plot_height
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
-    # plot 2. wage range between 10th and 90th percentile
+    # plot 2. wage density
+    output$wagebill_density <- plotly::renderPlotly({
+      wagebill_density <- wagebill_filtered() |>
+        dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]]))
+
+      plotly::ggplotly(
+        plot_density(
+          wagebill_density,
+          group_col = input$group_filter,
+          measure_col = input$wagebill_measure
+        )
+      )
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # plot 3. wage range between 10th and 90th percentile
     output$wagebill_compression_ratio <- plotly::renderPlotly({
       wagebill_compression_ratio <- compute_compression_ratio(
         wagebill_filtered(),
-        group = input$group_filter,
+        group_cols = input$group_filter,
         measure_col = input$wagebill_measure,
         latest_measure = TRUE
       )
@@ -351,7 +381,7 @@ wagebill_equity_server <- function(id, .data) {
       plotly::ggplotly(
         plot_compression_ratio(
           wagebill_compression_ratio,
-          group = input$group_filter
+          group_cols = input$group_filter
         ),
         height = plot_height
       )
@@ -424,9 +454,9 @@ wagebill_movement_server <- function(id, .data) {
     output$wagebill_movement <- plotly::renderPlotly({
       labor_movement_data <- compute_movement_cost(
         wagebill_filtered(),
-        group = input$group_filter,
-        movement_type = c("hire", "fire", "retirement"),
-        measure_col = input$wagebill_measure
+        event_type = c("hire", "fire", "retirement"),
+        measure_col = input$wagebill_measure,
+        group_cols = input$group_filter
       )
 
       n_groups <- nrow(labor_movement_data)
@@ -435,7 +465,7 @@ wagebill_movement_server <- function(id, .data) {
       plotly::ggplotly(
         plot_movement_cost(
           labor_movement_data,
-          group = input$group_filter
+          group_cols = input$group_filter
         ),
         height = plot_height
       )

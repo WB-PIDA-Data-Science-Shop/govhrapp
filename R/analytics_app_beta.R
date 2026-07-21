@@ -41,6 +41,8 @@ run_govhrapp_beta <- function(workforce_data, wagebill_data, ...) {
   ggplot2::update_geom_defaults("point", list(colour = "#C34729"))
   ggplot2::update_geom_defaults("line",  list(colour = "#C34729"))
   ggplot2::update_geom_defaults("col",   list(fill   = "#C34729"))
+  ggplot2::update_geom_defaults("bar",   list(fill   = "#C34729"))
+  ggplot2::update_geom_defaults("density", list(color = "#C34729"))
 
   ui <- bslib::page_navbar(
     fillable = FALSE,

@@ -186,6 +186,17 @@ compute_decile <- function(
   out[]
 }
 
+#' Function to compute the compression ratio
+#' 
+#' @param .data A data frame.
+#' @param group_cols A character vector of column names to group the data by.
+#' @param measure_col The name of the column for which the compression ratio will be computed.
+#' @param latest_measure A logical value indicating whether to return only the measures for the latest reference date.
+#' 
+#' @importFrom data.table as.data.table setorderv
+#' @importFrom collapse fquantile
+#' 
+#' @return A data frame containing the 90th, 50th, and 10th percentiles for the specified measure column within the specified groups and reference dates.
 compute_compression_ratio <- function(
   .data,
   group_cols = NULL,
@@ -227,42 +238,71 @@ compute_compression_ratio <- function(
   out[]
 }
 
+#' Function to compute the total cost associated with personnel movement events.
+#'
+#' @param .data A data frame containing the data to be processed.
+#' @param id_col The name of the column representing personnel IDs (default is "personnel_id").
+#' @param event_type A character vector indicating which movement event(s) to include (e.g., "hire", "fire", "retirement"). Multiple types can be supplied to compute costs for each type.
+#' @param start_date The start date for the classification period. Defaults to the minimum reference date found in `.data`.
+#' @param end_date The end date for the classification period. Defaults to the maximum reference date found in `.data`.
+#' @param status_col The name of the column representing employment status (default is "employment_status").
+#' @param freq The frequency of the reference dates. Defaults to a guess based on `.data`.
+#' @param measure_col The name of the column containing the cost/measure to sum.
+#' @param group_cols A character vector of column names to group the data by.
+#'
+#' @importFrom data.table as.data.table setorderv rbindlist
+#'
+#' @return A data frame containing the movement cost for each requested event type within the specified groups and reference dates.
 compute_movement_cost <- function(
   .data,
   id_col = "personnel_id",
   event_type,
-  start_date,
-  end_date,
+  start_date = NULL,
+  end_date = NULL,
   status_col = "employment_status",
-  freq = "year",
+  freq = NULL,
   measure_col,
   group_cols = NULL
 ) {
   dt <- data.table::as.data.table(.data)
 
-  # classify personnel events
-  dt <- classify_personnel_event(
-    .data = dt,
-    id_col = id_col,
-    event_type = event_type,
-    start_date = start_date,
-    end_date = end_date,
-    status_col = status_col,
-    freq = freq
-  )
+  if (is.null(start_date)) {
+    start_date <- as.character(min(dt[["ref_date"]]))
+  }
+  if (is.null(end_date)) {
+    end_date <- as.character(max(dt[["ref_date"]]))
+  }
+  if (is.null(freq)) {
+    freq <- guess_date_frequency(dt)
+  }
 
-  # compute movement cost
   by_cols <- c(group_cols, "ref_date")
 
-  out <- dt[
-    type_event == event_type,
-    .(
-      movement_type = event_type,
-      measurement = measure_col,
-      movement_cost = sum(get(measure_col), na.rm = TRUE)
-    ),
-    keyby = by_cols
-  ]
+  out <- data.table::rbindlist(
+    lapply(event_type, function(type) {
+      # classify personnel events
+      classified <- classify_personnel_event(
+        .data = dt,
+        id_col = id_col,
+        event_type = type,
+        start_date = start_date,
+        end_date = end_date,
+        status_col = status_col,
+        freq = freq
+      )
+
+      # compute movement cost
+      classified[
+        type_event == type,
+        .(
+          movement_type = type,
+          measurement = measure_col,
+          movement_cost = sum(get(measure_col), na.rm = TRUE)
+        ),
+        keyby = by_cols
+      ]
+    })
+  )
 
   data.table::setorderv(out, "ref_date")
 

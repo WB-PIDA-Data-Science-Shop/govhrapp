@@ -67,5 +67,6 @@ utils::globalVariables(c(
   "retirement_date",
   "hires",
   "separations",
-  "birth_date"
+  "birth_date",
+  "decile"
 ))

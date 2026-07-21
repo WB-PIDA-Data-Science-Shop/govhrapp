@@ -536,6 +536,49 @@ plot_decile <- function(.data, group_cols){
 
   plotly::ggplotly(plot)
 }
+#' Plot Density as Percentage Share
+#'
+#' @param .data A data frame.
+#' @param group_col The column name to group by.
+#' @param measure_col The column name of the numeric variable to plot.
+#'
+#' @importFrom ggplot2 ggplot aes geom_density scale_y_continuous labs theme_minimal
+#' @importFrom plotly ggplotly
+#' @importFrom grDevices colorRampPalette
+#' 
+#' @return A plotly object.
+plot_density <- function(.data, group_col, measure_col) {
+  plot <- .data |> 
+    ggplot2::ggplot(ggplot2::aes(x = .data[[measure_col]]))
+  
+  plot <- plot + 
+    ggplot2::geom_density(
+      ggplot2::aes(
+        y = after_stat(count) / sum(after_stat(count))
+      )
+    ) +
+    ggplot2::scale_y_continuous(labels = scales::label_percent()) +
+    ggplot2::labs(
+      x = "",
+      y = "Percentage Share"
+    )
+
+  # apply grouping and custom color palette if group_col is provided
+  if (group_col != "ref_date") {
+    n_groups <- dplyr::n_distinct(.data[[group_col]], na.rm = TRUE)
+    
+    orange_palette <- grDevices::colorRampPalette(c("#C34729", "#F5C6A0"))(n_groups)
+    
+    plot <- plot + 
+      ggplot2::aes(
+        color = .data[[group_col]], 
+        group = .data[[group_col]]
+      ) + 
+      ggplot2::scale_color_manual(values = orange_palette)
+  }
+  
+  plotly::ggplotly(plot)
+}
 
 plot_compression_ratio <- function(.data, group_cols){
   group_cols <- if (is.null(group_cols)) "ref_date" else group_cols
