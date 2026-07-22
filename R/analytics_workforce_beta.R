@@ -29,10 +29,32 @@ workforce_ui_beta <- function(id, .data) {
     fillable = FALSE,
     col_widths = 12,
 
+    bslib::card(
+      bslib::card_header("Workforce: Overview"),
+      bslib::card_body(
+        shiny::markdown(
+          readLines(system.file("markdown/workforce.md", package = "govhrapp"))
+        )
+      )
+    ),
+    bslib::accordion(
+      bslib::accordion_panel(
+        title = "Guidance Questions",
+        icon = shiny::icon("question-circle"),
+        shiny::markdown(
+          readLines(system.file(
+            "markdown/workforce_questions.md",
+            package = "govhrapp"
+          ))
+        )
+      ),
+      open = FALSE
+    ),
+
     # 1. value boxes for coverage metrics
     bslib::card(
       bslib::card_header(
-        "Workforce: Overview",
+        "Workforce: Key Metrics",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
           "Computed as the most recent count or share of hires and fires. For turnover, it is the ratio of hires to fires in the most recent reference period.",

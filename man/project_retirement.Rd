@@ -5,22 +5,25 @@
 \title{Project Retirement Dates}
 \usage{
 project_retirement(
-  workforce_data,
+  .data,
   threshold_age = 60,
   birth_col = "birth_date",
   group_cols = NULL,
+  measure_col = NULL,
   simplify_retirement_date = TRUE,
   cutoff_date = 10
 )
 }
 \arguments{
-\item{workforce_data}{A data frame containing personnel data with birth dates and reference dates.}
+\item{.data}{A data frame, either the workforce or wage bill data.}
 
 \item{threshold_age}{The age at which personnel are considered eligible for retirement (default is 60).}
 
 \item{birth_col}{The name of the column representing birth dates (default is "birth_date").}
 
 \item{group_cols}{A character vector of column names to group the data by when counting eligible retirees (default is NULL, meaning no grouping).}
+
+\item{measure_col}{The name of the column representing the measure to be projected (default is NULL, meaning no measure column).}
 
 \item{simplify_retirement_date}{A logical value indicating whether to simplify the retirement date to the end of the year (default is TRUE).}
 

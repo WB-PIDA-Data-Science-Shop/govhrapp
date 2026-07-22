@@ -65,10 +65,11 @@ classify_personnel_event <- function(
 
 #' Project Retirement Dates
 #' @details The function takes a data frame containing personnel data with birth dates and reference dates, calculates the projected retirement date for each staff member based on the specified threshold age, and counts the number of staff eligible for retirement at each reference date.
-#' @param workforce_data A data frame containing personnel data with birth dates and reference dates.
+#' @param .data A data frame, either the workforce or wage bill data.
 #' @param threshold_age The age at which personnel are considered eligible for retirement (default is 60).
 #' @param birth_col The name of the column representing birth dates (default is "birth_date").
 #' @param group_cols A character vector of column names to group the data by when counting eligible retirees (default is NULL, meaning no grouping).
+#' @param measure_col The name of the column representing the measure to be projected (default is NULL, meaning no measure column).
 #' @param simplify_retirement_date A logical value indicating whether to simplify the retirement date to the end of the year (default is TRUE).
 #' @param cutoff_date A numeric value indicating the cut-off for future retirement projections in years (default is 10).
 #'
@@ -76,23 +77,24 @@ classify_personnel_event <- function(
 #'
 #' @importFrom data.table as.data.table
 project_retirement <- function(
-  workforce_data,
+  .data,
   threshold_age = 60,
   birth_col = "birth_date",
   group_cols = NULL,
+  measure_col = NULL,
   simplify_retirement_date = TRUE,
   cutoff_date = 10
 ) {
-  workforce_data_dt <- as.data.table(workforce_data)
+  data_dt <- as.data.table(.data)
 
   # future extension: incorporate threshold_tenure
 
   # extract last record for each personnel_id
   # this raises an issue for time-variant columns such as education
-  workforce_data_dt <- workforce_data_dt[, .SD[.N], by = "personnel_id"]
+  data_dt <- data_dt[, .SD[.N], by = "personnel_id"]
 
   # project retirement date for each staff member based on threshold_age
-  workforce_data_dt[,
+  data_dt[,
     retirement_date := as.Date(paste0(
       as.integer(format(get(birth_col), "%Y")) + threshold_age,
       format(get(birth_col), "-%m-%d")
@@ -100,12 +102,12 @@ project_retirement <- function(
   ]
 
   # retain only projected retirements after last reference date in the data
-  workforce_data_dt <- workforce_data_dt[
-    retirement_date > max(workforce_data[["ref_date"]])
+  data_dt <- data_dt[
+    retirement_date > max(.data[["ref_date"]])
   ]
 
   if (simplify_retirement_date) {
-    workforce_data_dt[,
+    data_dt[,
       retirement_date := as.Date(paste0(
         as.integer(format(retirement_date, "%Y")),
         "-12-31"
@@ -114,15 +116,15 @@ project_retirement <- function(
   }
 
   # count number of staff eligible for retirement at each retirement date
-  if (is.null(group_cols) || identical(group_cols, "ref_date")) {
-    projected_retirement_data <- workforce_data_dt[,
+  if (is.null(group_cols) || group_cols == "ref_date") {
+    projected_retirement_data <- data_dt[,
       .(indicator = .N),
       by = retirement_date
     ][
       order(retirement_date)
     ]
   } else {
-    projected_retirement_data <- workforce_data_dt[,
+    projected_retirement_data <- data_dt[,
       .(indicator = .N),
       by = c("retirement_date", group_cols)
     ][
@@ -130,10 +132,24 @@ project_retirement <- function(
     ]
   }
 
+  if (!is.null(measure_col)) {
+    projected_cost_dt <- data_dt[,
+      .(projected_cost = sum(get(measure_col), na.rm = TRUE)),
+      by = retirement_date
+    ]
+
+    # join projected cost to projected retirement data
+    projected_retirement_data <- merge(
+      projected_retirement_data,
+      projected_cost_dt,
+      by = "retirement_date"
+    )
+  }
+
   # cut-off date
   projected_retirement_data <- projected_retirement_data[
     retirement_date <=
-      (max(workforce_data[["ref_date"]]) + lubridate::years(cutoff_date))
+      (max(.data[["ref_date"]]) + lubridate::years(cutoff_date))
   ]
 
   projected_retirement_data[]

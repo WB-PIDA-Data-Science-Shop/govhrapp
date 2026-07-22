@@ -676,6 +676,16 @@ wagebill_movement_server <- function(id, .data) {
   })
 }
 
+#' Wagebill retirement UI module.
+#' 
+#' @param id A character string specifying the module ID.
+#' @param .data A data frame containing wagebill data.
+#' 
+#' @import bslib
+#' @import shiny
+#' @importFrom plotly plotlyOutput
+#' 
+#' @return A Shiny module UI function for the wagebill retirement module.
 wagebill_retirement_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
@@ -683,6 +693,13 @@ wagebill_retirement_ui <- function(id, .data) {
       title = span("Controls", bsicons::bs_icon("sliders")),
       width = "300px",
       !!!ui_filter_controls(.data, id),
+      shiny::numericInput(
+        shiny::NS(id, "threshold_age"),
+        label = "Select retirement threshold age:",
+        value = 60,
+        min = 50,
+        max = 70
+      ),
       shiny::selectInput(
         shiny::NS(id, "wagebill_measure"),
         "Type of Wage:",
@@ -728,6 +745,16 @@ wagebill_retirement_ui <- function(id, .data) {
   )
 }
 
+#' Server for the wagebill retirement module.
+#' 
+#' @param id A character string specifying the module ID.
+#' @param .data A data frame containing wagebill data.
+#' 
+#' @import shiny
+#' @importFrom plotly renderPlotly ggplotly
+#' @importFrom dplyr filter
+#' 
+#' @return A Shiny module server function for the wagebill retirement module.
 wagebill_retirement_server <- function(id, .data) {
   shiny::moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
@@ -771,16 +798,17 @@ wagebill_retirement_server <- function(id, .data) {
 
     # plot 2. projected retirement costs
     output$wagebill_retirement_projection <- plotly::renderPlotly({
-      retirement_projection_data <- compute_retirement_projection(
+      retirement_projection_data <- project_retirement(
         wagebill_filtered(),
-        group_cols = input$group_filter
+        group_cols = input$group_filter,
+        measure_col = input$wagebill_measure
       )
 
       plotly::ggplotly(
         plot_trend(
           retirement_projection_data,
           group = input$group_filter,
-          y_col = "projected_retirement_cost",
+          y_col = "projected_cost",
           y_label = "Projected Retirement Costs"
         )
       )
