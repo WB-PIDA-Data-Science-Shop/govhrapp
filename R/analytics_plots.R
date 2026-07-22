@@ -542,8 +542,6 @@ plot_decile <- function(.data, group_cols){
 #' @param .data A data frame.
 #' @param plot_type A character string indicating the type of plot: "histogram" or "cumulative".
 #' @param group_col The column name to group by.
-#' @param measure_col The column name of the numeric variable to plot.
-#' @param annotate_percentile Logical. If `TRUE`, annotate the 10th, 50th, and 90th percentiles on the cumulative plot.
 #'
 #' @importFrom ggplot2 ggplot aes geom_density scale_y_continuous labs theme_minimal
 #' @importFrom plotly ggplotly

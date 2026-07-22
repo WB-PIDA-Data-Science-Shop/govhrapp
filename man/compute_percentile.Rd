@@ -15,13 +15,13 @@ compute_percentile(
 \arguments{
 \item{.data}{A data frame.}
 
+\item{group_col}{A character vector of column names to group the data by.}
+
 \item{measure_col}{The name of the column for which the percentile values will be computed.}
 
+\item{binwidth}{The width of the bins for grouping the measure values (default is 1).}
+
 \item{latest_measure}{A logical value indicating whether to return only the measures for the latest reference date.}
-
-\item{group_cols}{A character vector of column names to group the data by.}
-
-\item{percentile_step}{A numeric value indicating the step size for percentiles (default is 0.01, corresponding to 1\% increments).}
 }
 \value{
 A data frame containing the 90th, 50th, and 10th percentiles for the specified measure column within the specified groups and reference dates.

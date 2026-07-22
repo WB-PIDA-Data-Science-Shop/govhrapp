@@ -12,10 +12,6 @@ plot_histogram(.data, plot_type = "histogram", group_col = NULL)
 \item{plot_type}{A character string indicating the type of plot: "histogram" or "cumulative".}
 
 \item{group_col}{The column name to group by.}
-
-\item{measure_col}{The column name of the numeric variable to plot.}
-
-\item{annotate_percentile}{Logical. If \code{TRUE}, annotate the 10th, 50th, and 90th percentiles on the cumulative plot.}
 }
 \value{
 A plotly object.

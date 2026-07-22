@@ -187,15 +187,15 @@ compute_decile <- function(
 }
 
 #' Function to compute the compression ratio
-#' 
+#'
 #' @param .data A data frame.
 #' @param group_cols A character vector of column names to group the data by.
 #' @param measure_col The name of the column for which the compression ratio will be computed.
 #' @param latest_measure A logical value indicating whether to return only the measures for the latest reference date.
-#' 
+#'
 #' @importFrom data.table as.data.table setorderv
 #' @importFrom collapse fquantile
-#' 
+#'
 #' @return A data frame containing the 90th, 50th, and 10th percentiles for the specified measure column within the specified groups and reference dates.
 compute_compression_ratio <- function(
   .data,
@@ -308,7 +308,7 @@ compute_movement_cost <- function(
 
   data.table::setorderv(out, "ref_date")
 
-  if(latest_measure){
+  if (latest_measure) {
     latest_ref_date <- max(out[["ref_date"]])
 
     out <- out[ref_date == latest_ref_date]
@@ -318,16 +318,16 @@ compute_movement_cost <- function(
 }
 
 #' Function to compute the percentile values
-#' 
+#'
 #' @param .data A data frame.
-#' @param group_cols A character vector of column names to group the data by.
+#' @param group_col A character vector of column names to group the data by.
 #' @param measure_col The name of the column for which the percentile values will be computed.
-#' @param percentile_step A numeric value indicating the step size for percentiles (default is 0.01, corresponding to 1% increments).
+#' @param binwidth The width of the bins for grouping the measure values (default is 1).
 #' @param latest_measure A logical value indicating whether to return only the measures for the latest reference date.
-#' 
+#'
 #' @importFrom data.table as.data.table setorderv
 #' @importFrom collapse fquantile
-#' 
+#'
 #' @return A data frame containing the 90th, 50th, and 10th percentiles for the specified measure column within the specified groups and reference dates.
 compute_percentile <- function(
   .data,
@@ -356,7 +356,7 @@ compute_percentile <- function(
       unique(dt[[group_col]]),
       all_bins,
       sorted = FALSE
-    ) |> 
+    ) |>
       data.table::setnames(c(group_col, "bin"))
   }
 
@@ -365,10 +365,13 @@ compute_percentile <- function(
 
   data.table::setorderv(binned, c(group_col, "bin"))
 
-  binned[,
-    `:=`(
-      pct     = count / sum(count),
-      cum_pct = cumsum(count) / sum(count)
+  binned <- binned[,
+    c(
+      .SD,
+      list(
+        pct = count / sum(count),
+        cum_pct = cumsum(count) / sum(count)
+      )
     ),
     by = group_col
   ]
