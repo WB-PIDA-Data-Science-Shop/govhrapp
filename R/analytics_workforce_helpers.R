@@ -522,6 +522,16 @@ workforce_movement_server <- function(
   })
 }
 
+#' Workforce Retirement UI
+#' 
+#' @param id A character string specifying the module ID.
+#' @param .data A data frame containing personnel data.
+#' 
+#' @import shiny
+#' @import bslib
+#' @importFrom plotly plotlyOutput
+#' 
+#' @return A Shiny UI function for the workforce retirement module.
 workforce_retirement_ui <- function(
   id,
   .data
@@ -584,6 +594,17 @@ workforce_retirement_ui <- function(
   )
 }
 
+#' Workforce Retirement Server
+#' 
+#' @param id A character string specifying the module ID.
+#' @param .data A data frame containing personnel data.
+#' 
+#' @import shiny
+#' @import bslib
+#' @importFrom plotly renderPlotly
+#' @importFrom dplyr filter rename
+#' 
+#' @return A Shiny server function for the workforce retirement module.
 workforce_retirement_server <- function(
   id,
   .data
