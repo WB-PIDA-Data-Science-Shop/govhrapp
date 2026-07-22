@@ -10,6 +10,7 @@ project_retirement(
   birth_col = "birth_date",
   group_cols = NULL,
   measure_col = NULL,
+  retirement_coefficient = 0.6,
   simplify_retirement_date = TRUE,
   cutoff_date = 10
 )
@@ -24,6 +25,8 @@ project_retirement(
 \item{group_cols}{A character vector of column names to group the data by when counting eligible retirees (default is NULL, meaning no grouping).}
 
 \item{measure_col}{The name of the column representing the measure to be projected (default is NULL, meaning no measure column).}
+
+\item{retirement_coefficient}{A numeric value indicating the coefficient to apply to the projected retirement cost (default is 0.6).}
 
 \item{simplify_retirement_date}{A logical value indicating whether to simplify the retirement date to the end of the year (default is TRUE).}
 

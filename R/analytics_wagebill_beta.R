@@ -23,6 +23,16 @@ wagebill_ui_beta <- function(id, wagebill_data) {
     "Public revenue" = "prevenue_lcu"
   )
 
+  # value boxes for total wage bill and pension liabilities
+  value_boxes <- list(
+    uiOutput(
+      NS(id, "total_wagebill")
+    ),
+    uiOutput(
+      NS(id, "total_pension_liabilities")
+    )
+  )
+
   accordion_controls <- bslib::accordion(
     accordion_panel(
       "Filters",
@@ -59,6 +69,30 @@ wagebill_ui_beta <- function(id, wagebill_data) {
       ),
       open = FALSE
     ),
+
+    # value boxes
+     bslib::card(
+      bslib::card_header(
+        "Wagebill: Key Metrics",
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Computed as the most recent wagebill (active workers) and pension liability (pensioners).",
+          title = "Wagebill Overview",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
+      ),
+      bslib::card_body(
+        layout_column_wrap(
+          width = 1/2,
+          fill = FALSE,
+          !!!value_boxes
+        )
+      )
+    ),
+
+
+    # panels
     bslib::navset_underline(
       # sub-panel 1: overview
       bslib::nav_panel(
@@ -108,6 +142,11 @@ wagebill_ui_beta <- function(id, wagebill_data) {
 #' @export
 wagebill_server_beta <- function(id, wagebill_data) {
   shiny::moduleServer(id, function(input, output, session) {
+    # 1. value boxes for wage bill key metrics
+    output$total_wagebill <- render_wagebill_box(wagebill_data, type_measure = "total_wagebill")
+    output$total_pension_liabilities <- render_wagebill_box(wagebill_data, type_measure = "total_pension_liabilities")
+
+    # 2. panels for wage bill server
     wagebill_overview_server("overview", wagebill_data)
     wagebill_equity_server("equity", wagebill_data)
     wagebill_movement_server("movement", wagebill_data)

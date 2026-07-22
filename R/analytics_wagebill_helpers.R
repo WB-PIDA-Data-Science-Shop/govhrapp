@@ -780,7 +780,7 @@ wagebill_retirement_server <- function(id, .data) {
     output$wagebill_retirement <- plotly::renderPlotly({
       retirement_data <- compute_movement_cost(
         wagebill_filtered(),
-        evemt_type = "retirement",
+        event_type = "retirement",
         measure_col = input$wagebill_measure,
         group_cols = input$group_filter
       )
@@ -789,7 +789,7 @@ wagebill_retirement_server <- function(id, .data) {
         plot_trend(
           retirement_data,
           group = input$group_filter,
-          y_col = "retirement_cost",
+          y_col = "movement_cost",
           y_label = "Retirement Costs"
         )
       )
@@ -802,17 +802,64 @@ wagebill_retirement_server <- function(id, .data) {
         wagebill_filtered(),
         group_cols = input$group_filter,
         measure_col = input$wagebill_measure
-      )
+      ) |>
+        rename(
+          ref_date = retirement_date
+        )
 
       plotly::ggplotly(
         plot_trend(
           retirement_projection_data,
-          group = input$group_filter,
           y_col = "projected_cost",
           y_label = "Projected Retirement Costs"
         )
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+  })
+}
+
+render_wagebill_box <- function(wagebill_data, type_measure) {
+  measure_col <- "gross_salary_lcu"
+
+  if (type_measure == "total_wagebill") {
+    label <- "Total Wage Bill"
+
+    total_value <- govhr::compute_fastsummary(
+      wagebill_data |>
+        dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]]) & .data[["employment_status"]] == "active"),
+      cols = measure_col,
+      groups = "ref_date",
+      fns = "sum"
+    ) |>
+      dplyr::pull(.data[["value"]])
+  } else if (type_measure == "total_pension_liabilities") {
+    label <- "Total Pension Liabilities"
+
+    total_value <- govhr::compute_fastsummary(
+      wagebill_data |>
+        dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]]) & .data[["employment_status"]] == "pensioner"),
+      cols = measure_col,
+      groups = "ref_date",
+      fns = "sum"
+    ) |>
+      dplyr::pull(.data[["value"]])
+  } else {
+    stop("Invalid type_measure. Must be 'total_wagebill' or 'total_pension_liabilities'.")
+  }
+
+  shiny::renderUI({
+    value_box(
+      title = paste0(label, "(", max(wagebill_data[["ref_date"]]), ")"),
+      value = scales::comma(total_value, accuracy = 1),
+      showcase = switch(
+        type_measure,
+        "total_wagebill" = bsicons::bs_icon("currency-dollar"),
+        "total_pension_liabilities" = bsicons::bs_icon("piggy-bank-fill")
+      ),
+      theme = value_box_theme(bg = "#C34729", fg = "#ffffff"),
+      class = "border",
+      max_height = "150px"
+    )
   })
 }

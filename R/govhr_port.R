@@ -70,6 +70,7 @@ classify_personnel_event <- function(
 #' @param birth_col The name of the column representing birth dates (default is "birth_date").
 #' @param group_cols A character vector of column names to group the data by when counting eligible retirees (default is NULL, meaning no grouping).
 #' @param measure_col The name of the column representing the measure to be projected (default is NULL, meaning no measure column).
+#' @param retirement_coefficient A numeric value indicating the coefficient to apply to the projected retirement cost (default is 0.6).
 #' @param simplify_retirement_date A logical value indicating whether to simplify the retirement date to the end of the year (default is TRUE).
 #' @param cutoff_date A numeric value indicating the cut-off for future retirement projections in years (default is 10).
 #'
@@ -82,6 +83,7 @@ project_retirement <- function(
   birth_col = "birth_date",
   group_cols = NULL,
   measure_col = NULL,
+  retirement_coefficient = 0.6,
   simplify_retirement_date = TRUE,
   cutoff_date = 10
 ) {
@@ -134,7 +136,7 @@ project_retirement <- function(
 
   if (!is.null(measure_col)) {
     projected_cost_dt <- data_dt[,
-      .(projected_cost = sum(get(measure_col), na.rm = TRUE)),
+      .(projected_cost = sum(get(measure_col), na.rm = TRUE) * retirement_coefficient),
       by = retirement_date
     ]
 
