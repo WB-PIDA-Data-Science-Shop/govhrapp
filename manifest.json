@@ -3337,7 +3337,7 @@
     "man/run_wagebillapp.Rd": {
       "checksum": "edc0453163f18a13166d3b28add2067c"
     },
-    "man/run_workforceapp.Rd": {
+    "man/run_workforce_app.Rd": {
       "checksum": "36b1a14f60383daeb598a42e34631b7b"
     },
     "man/wagebill_server.Rd": {

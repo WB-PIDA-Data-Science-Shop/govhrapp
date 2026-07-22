@@ -20,7 +20,7 @@
 #' @importFrom lubridate year
 #' @importFrom scales label_number cut_short_scale
 #' @export
-run_govhrapp_beta <- function(workforce_data, wagebill_data, ...) {
+run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", system.file("www", package = "govhrapp"))
 
@@ -107,14 +107,14 @@ run_govhrapp_beta <- function(workforce_data, wagebill_data, ...) {
     bslib::nav_panel(
       "Workforce",
       icon = shiny::icon("person-walking"),
-      workforce_ui_beta("workforce", workforce_data)
+      workforce_ui("workforce", workforce_data)
     ),
 
     # panel 4: wage bill
     bslib::nav_panel(
       "Wage Bill",
       icon = shiny::icon("money-bill-trend-up"),
-      wagebill_ui_beta("wagebill", wagebill_data)
+      wagebill_ui("wagebill", wagebill_data)
     ),
 
     # panel 5: code
@@ -140,8 +140,8 @@ run_govhrapp_beta <- function(workforce_data, wagebill_data, ...) {
 
   server <- function(input, output, session) {
     overview_server("overview", workforce_data, wagebill_data)
-    workforce_server_beta("workforce", workforce_data)
-    wagebill_server_beta("wagebill", wagebill_data)
+    workforce_server("workforce", workforce_data)
+    wagebill_server("wagebill", wagebill_data)
   }
 
   shiny::shinyApp(ui, server, ...)
