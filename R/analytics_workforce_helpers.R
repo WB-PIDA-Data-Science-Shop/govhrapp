@@ -648,7 +648,7 @@ workforce_retirement_server <- function(
     # plot 2. projected retirements
     output[["retirement_expected_plot"]] <- plotly::renderPlotly({
       plot_data <- project_retirement(
-        workforce_data = data_filtered(),
+        .data = data_filtered(),
         threshold_age = input$threshold_age,
         birth_col = "birth_date",
         group_cols = input$group_filter,
