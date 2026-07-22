@@ -503,7 +503,7 @@ plot_movement <- function(.data, movement_type, measurement_type, group_cols) {
 plot_decile <- function(.data, group_cols){
   plot <- .data |>
     ggplot2::ggplot(
-      ggplot2::aes(x = .data[["decile"]], y = .data[["median_value"]])
+      ggplot2::aes(x = .data[["decile"]], y = .data[["mean_value"]])
     ) +
     ggplot2::geom_col(
       fill = "#C34729"
@@ -536,47 +536,43 @@ plot_decile <- function(.data, group_cols){
 
   plotly::ggplotly(plot)
 }
+
 #' Plot Density as Percentage Share
 #'
 #' @param .data A data frame.
+#' @param plot_type A character string indicating the type of plot: "histogram" or "cumulative".
 #' @param group_col The column name to group by.
 #' @param measure_col The column name of the numeric variable to plot.
+#' @param annotate_percentile Logical. If `TRUE`, annotate the 10th, 50th, and 90th percentiles on the cumulative plot.
 #'
 #' @importFrom ggplot2 ggplot aes geom_density scale_y_continuous labs theme_minimal
 #' @importFrom plotly ggplotly
 #' @importFrom grDevices colorRampPalette
 #' 
 #' @return A plotly object.
-plot_density <- function(.data, group_col, measure_col) {
-  plot <- .data |> 
-    ggplot2::ggplot(ggplot2::aes(x = .data[[measure_col]]))
-  
-  plot <- plot + 
-    ggplot2::geom_density(
-      ggplot2::aes(
-        y = after_stat(count) / sum(after_stat(count))
-      )
-    ) +
-    ggplot2::scale_y_continuous(labels = scales::label_percent()) +
-    ggplot2::labs(
-      x = "",
-      y = "Percentage Share"
-    )
+plot_histogram <- function(.data, plot_type = "histogram", group_col = NULL) {
+  plot_type <- match.arg(plot_type, c("histogram", "cumulative"))
 
-  # apply grouping and custom color palette if group_col is provided
-  if (group_col != "ref_date") {
-    n_groups <- dplyr::n_distinct(.data[[group_col]], na.rm = TRUE)
-    
-    orange_palette <- grDevices::colorRampPalette(c("#C34729", "#F5C6A0"))(n_groups)
-    
-    plot <- plot + 
-      ggplot2::aes(
-        color = .data[[group_col]], 
-        group = .data[[group_col]]
-      ) + 
-      ggplot2::scale_color_manual(values = orange_palette)
+  y_var <- switch(
+    plot_type,
+    histogram = "pct",
+    cumulative = "cum_pct"
+  )
+
+  plot <- .data |> 
+    ggplot2::ggplot(ggplot2::aes(x = bin, y = .data[[y_var]])) +
+    ggplot2::geom_col() +
+    ggplot2::scale_y_continuous(labels = scales::label_percent()) +
+    ggplot2::labs(x = "", y = "Percentage Share")
+
+  if (!is.null(group_col)) {
+    plot <- plot +
+      ggplot2::facet_wrap(
+        ggplot2::vars(.data[[group_col]]),
+        labeller = ggplot2::label_wrap_gen(width = 20)
+      )
   }
-  
+
   plotly::ggplotly(plot)
 }
 

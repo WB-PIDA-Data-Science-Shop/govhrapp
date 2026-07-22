@@ -252,33 +252,48 @@ wagebill_equity_ui <- function(id, .data) {
         icon = shiny::icon("play")
       )
     ),
-    # plot 1. wage distribution by decile
+    # plot 1. wage distribution
+    bslib::card(
+  full_screen = TRUE,
+  bslib::card_header(
+    "Wage Distribution",
+    bslib::popover(
+      bsicons::bs_icon("info-circle"),
+      "Wage density distribution. Choosing a group will add new trend lines, by group.",
+      placement = "left"
+    ),
+    bslib::popover(
+      bsicons::bs_icon("gear"),
+      shiny::radioButtons(
+        inputId = shiny::NS(id, "plot_type"),
+        label = "Plot type",
+        choices = c("Histogram" = "histogram", "Cumulative" = "cumulative"),
+        selected = "histogram"
+      ),
+      title = "Chart options",
+      placement = "left"
+    ),
+    class = "d-flex justify-content-between"
+    ),
+    plotly::plotlyOutput(
+      shiny::NS(id, "wagebill_density"),
+      height = "350px"
+    )
+  ),
+    # plot 2. wage by decile
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Wage Distribution by Decile",
-        bslib::tooltip(
+        "Wage by Decile",
+        bslib::popover(
           bsicons::bs_icon("info-circle"),
-          "Wage distribution by decile. Choosing a group will add new trend lines, by group."
-        )
+          "Wage distribution by decile. Choosing a group will add new trend lines, by group.",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(
         shiny::NS(id, "wagebill_distribution"),
-        height = "350px"
-      )
-    ),
-    # plot 3. wage density
-    bslib::card(
-      full_screen = TRUE,
-      bslib::card_header(
-        "Wage Density",
-        bslib::tooltip(
-          bsicons::bs_icon("info-circle"),
-          "Wage density distribution. Choosing a group will add new trend lines, by group."
-        )
-      ),
-      plotly::plotlyOutput(
-        shiny::NS(id, "wagebill_density"),
         height = "350px"
       )
     ),
@@ -287,10 +302,12 @@ wagebill_equity_ui <- function(id, .data) {
       full_screen = TRUE,
       bslib::card_header(
         "Wage Compression Ratio (10th to 90th Percentile)",
-        bslib::tooltip(
+        bslib::popover(
           bsicons::bs_icon("info-circle"),
-          "Wage compression ratio between the 10th and 90th percentile. Choosing a group will add new trend lines, by group."
-        )
+          "Wage compression ratio between the 10th and 90th percentile. Choosing a group will add new trend lines, by group.",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(
         shiny::NS(id, "wagebill_compression_ratio"),
@@ -324,7 +341,27 @@ wagebill_equity_server <- function(id, .data) {
         )
     })
 
-    # plot 1. wage distribution by decile
+        # plot 1. wage density
+    output$wagebill_density <- plotly::renderPlotly({
+      wagebill_density <- wagebill_filtered() |>
+        dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]])) |> 
+        compute_percentile(
+          group_col = input$group_filter,
+          binwidth = 100,
+          measure_col = input$wagebill_measure
+        )
+
+      plotly::ggplotly(
+        plot_histogram(
+          wagebill_density,
+          plot_type = input$plot_type,
+          group_col = input$group_filter
+        )
+      )
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # plot 2. wage by decile
     output$wagebill_distribution <- plotly::renderPlotly({
       # filter latest ref_date
       latest_ref_date <- max(wagebill_filtered()[["ref_date"]])
@@ -347,21 +384,6 @@ wagebill_equity_server <- function(id, .data) {
           group_cols = input$group_filter
         ),
         height = plot_height
-      )
-    }) |>
-      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
-
-    # plot 2. wage density
-    output$wagebill_density <- plotly::renderPlotly({
-      wagebill_density <- wagebill_filtered() |>
-        dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]]))
-
-      plotly::ggplotly(
-        plot_density(
-          wagebill_density,
-          group_col = input$group_filter,
-          measure_col = input$wagebill_measure
-        )
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)

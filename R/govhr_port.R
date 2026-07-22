@@ -308,3 +308,62 @@ compute_movement_cost <- function(
 
   out[]
 }
+
+#' Function to compute the percentile values
+#' 
+#' @param .data A data frame.
+#' @param group_cols A character vector of column names to group the data by.
+#' @param measure_col The name of the column for which the percentile values will be computed.
+#' @param percentile_step A numeric value indicating the step size for percentiles (default is 0.01, corresponding to 1% increments).
+#' @param latest_measure A logical value indicating whether to return only the measures for the latest reference date.
+#' 
+#' @importFrom data.table as.data.table setorderv
+#' @importFrom collapse fquantile
+#' 
+#' @return A data frame containing the 90th, 50th, and 10th percentiles for the specified measure column within the specified groups and reference dates.
+compute_percentile <- function(
+  .data,
+  group_col = NULL,
+  measure_col,
+  binwidth = 1,
+  latest_measure = FALSE
+) {
+  if (latest_measure) {
+    .data <- .data[.data[["ref_date"]] == max(.data[["ref_date"]]), ]
+  }
+
+  dt <- data.table::as.data.table(.data)
+  dt[, bin := floor(get(measure_col) / binwidth) * binwidth]
+  dt <- dt[!is.na(bin)]
+
+  binned <- dt[, .(count = .N), by = c(group_col, "bin")]
+
+  # full grid of every bin in range, crossed with every group present
+  all_bins <- seq(min(dt$bin), max(dt$bin), by = binwidth)
+
+  full_grid <- if (is.null(group_col)) {
+    data.table::data.table(bin = all_bins)
+  } else {
+    data.table::CJ(
+      unique(dt[[group_col]]),
+      all_bins,
+      sorted = FALSE
+    ) |> 
+      data.table::setnames(c(group_col, "bin"))
+  }
+
+  binned <- merge(full_grid, binned, by = c(group_col, "bin"), all.x = TRUE)
+  binned[is.na(count), count := 0L]
+
+  data.table::setorderv(binned, c(group_col, "bin"))
+
+  binned[,
+    `:=`(
+      pct     = count / sum(count),
+      cum_pct = cumsum(count) / sum(count)
+    ),
+    by = group_col
+  ]
+
+  binned[]
+}
