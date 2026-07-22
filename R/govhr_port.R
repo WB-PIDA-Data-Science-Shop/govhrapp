@@ -249,6 +249,7 @@ compute_compression_ratio <- function(
 #' @param freq The frequency of the reference dates. Defaults to a guess based on `.data`.
 #' @param measure_col The name of the column containing the cost/measure to sum.
 #' @param group_cols A character vector of column names to group the data by.
+#' @param latest_measure A logical value indicating whether to return only the measures for the latest reference date.
 #'
 #' @importFrom data.table as.data.table setorderv rbindlist
 #'
@@ -262,7 +263,8 @@ compute_movement_cost <- function(
   status_col = "employment_status",
   freq = NULL,
   measure_col,
-  group_cols = NULL
+  group_cols = NULL,
+  latest_measure = FALSE
 ) {
   dt <- data.table::as.data.table(.data)
 
@@ -305,6 +307,12 @@ compute_movement_cost <- function(
   )
 
   data.table::setorderv(out, "ref_date")
+
+  if(latest_measure){
+    latest_ref_date <- max(out[["ref_date"]])
+
+    out <- out[ref_date == latest_ref_date]
+  }
 
   out[]
 }

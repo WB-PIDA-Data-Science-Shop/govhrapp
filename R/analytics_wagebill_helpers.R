@@ -1,3 +1,10 @@
+#' Function to identify available wagebill measure choices from the data and dictionary
+#' @param .data A data frame containing wagebill data.
+#' 
+#' @import dplyr
+#' @importFrom purrr set_names
+#' 
+#' @return A named list of wagebill measure choices, where each element corresponds to a module and contains a named vector of variable IDs and their corresponding variable names.
 identify_wagebill_choices <- function(.data) {
   available_cols <- names(.data)
 
@@ -18,6 +25,17 @@ identify_wagebill_choices <- function(.data) {
   wagebill_choices
 }
 
+#' Function to identify available grouping choices based on the columns present in the data.
+#' 
+#' @param id A character string specifying the module ID.
+#' @param .data A data frame containing wagebill data.
+#'
+#' @import shiny
+#' @importFrom bslib layout_column_wrap card card_header card_body
+#' @importFrom shinyWidgets pickerInput
+#' @importFrom plotly renderPlotly
+#' 
+#' @return A list of UI elements for filtering and grouping wagebill data.
 wagebill_overview_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
@@ -88,6 +106,15 @@ wagebill_overview_ui <- function(id, .data) {
   )
 }
 
+#' Function to create the server logic for the wagebill overview module.
+#' 
+#' @param id A character string specifying the module ID.
+#' @param .data A data frame containing wagebill data.
+#' 
+#' @import shiny
+#' @importFrom plotly renderPlotly
+#' 
+#' @return A Shiny module server function for the wagebill overview module.
 wagebill_overview_server <- function(id, .data) {
   shiny::moduleServer(id, function(input, output, session) {
     # choice of cols
@@ -234,6 +261,17 @@ wagebill_overview_server <- function(id, .data) {
   })
 }
 
+#' Function to create the UI for the wagebill equity module.
+#' 
+#' @param id A character string specifying the module ID.
+#' @param .data A data frame containing wagebill data.
+#' 
+#' @import bslib
+#' @import shiny
+#' @importFrom plotly plotlyOutput
+#' @importFrom bsicons bs_icon
+#' 
+#' @return A Shiny module UI function for the wagebill equity module.
 wagebill_equity_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
@@ -254,32 +292,32 @@ wagebill_equity_ui <- function(id, .data) {
     ),
     # plot 1. wage distribution
     bslib::card(
-  full_screen = TRUE,
-  bslib::card_header(
-    "Wage Distribution",
-    bslib::popover(
-      bsicons::bs_icon("info-circle"),
-      "Wage density distribution. Choosing a group will add new trend lines, by group.",
-      placement = "left"
-    ),
-    bslib::popover(
-      bsicons::bs_icon("gear"),
-      shiny::radioButtons(
-        inputId = shiny::NS(id, "plot_type"),
-        label = "Plot type",
-        choices = c("Histogram" = "histogram", "Cumulative" = "cumulative"),
-        selected = "histogram"
+      full_screen = TRUE,
+      bslib::card_header(
+        "Wage Distribution",
+        bslib::popover(
+          bsicons::bs_icon("info-circle"),
+          "Wage density distribution. Choosing a group will add new trend lines, by group.",
+          placement = "left"
+        ),
+        bslib::popover(
+          bsicons::bs_icon("gear"),
+          shiny::radioButtons(
+            inputId = shiny::NS(id, "plot_type"),
+            label = "Plot type",
+            choices = c("Histogram" = "histogram", "Cumulative" = "cumulative"),
+            selected = "histogram"
+          ),
+          title = "Chart options",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
       ),
-      title = "Chart options",
-      placement = "left"
+      plotly::plotlyOutput(
+        shiny::NS(id, "wagebill_density"),
+        height = "350px"
+      )
     ),
-    class = "d-flex justify-content-between"
-    ),
-    plotly::plotlyOutput(
-      shiny::NS(id, "wagebill_density"),
-      height = "350px"
-    )
-  ),
     # plot 2. wage by decile
     bslib::card(
       full_screen = TRUE,
@@ -317,6 +355,16 @@ wagebill_equity_ui <- function(id, .data) {
   )
 }
 
+#' Function to create the server logic for the wagebill equity module.
+#' 
+#' @param id A character string specifying the module ID.
+#' @param .data A data frame containing wagebill data.
+#' 
+#' @import shiny
+#' @importFrom plotly renderPlotly
+#' @importFrom dplyr filter
+#' 
+#' @return A Shiny module server function for the wagebill equity module.
 wagebill_equity_server <- function(id, .data) {
   shiny::moduleServer(id, function(input, output, session) {
     # choice of cols
@@ -341,10 +389,10 @@ wagebill_equity_server <- function(id, .data) {
         )
     })
 
-        # plot 1. wage density
+    # plot 1. wage density
     output$wagebill_density <- plotly::renderPlotly({
       wagebill_density <- wagebill_filtered() |>
-        dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]])) |> 
+        dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]])) |>
         compute_percentile(
           group_col = input$group_filter,
           binwidth = 100,
@@ -412,6 +460,17 @@ wagebill_equity_server <- function(id, .data) {
   })
 }
 
+#' Function to create the UI for the wagebill movement module.
+#' 
+#' @param id A character string specifying the module ID.
+#' @param .data A data frame containing wagebill data.
+#' 
+#' @import bslib
+#' @import shiny
+#' @importFrom plotly plotlyOutput
+#' @importFrom bsicons bs_icon
+#' 
+#' @return A Shiny module UI function for the wagebill movement module.
 wagebill_movement_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
@@ -420,9 +479,20 @@ wagebill_movement_ui <- function(id, .data) {
       width = "300px",
       !!!ui_filter_controls(.data, id),
       shiny::selectInput(
+        shiny::NS(id, "event_type"),
+        "Type of Movement:",
+        choices = c("Hire" = "hire", "Fire" = "fire"),
+        selected = "hire"
+      ),
+      shiny::selectInput(
         shiny::NS(id, "wagebill_measure"),
         "Type of Wage:",
         choices = identify_wagebill_choices(.data)
+      ),
+      shinyWidgets::materialSwitch(
+        shiny::NS(id, "toggle_growth"),
+        label = "Switch to baseline index",
+        value = FALSE
       ),
       shiny::actionButton(
         shiny::NS(id, "apply_btn"),
@@ -441,13 +511,53 @@ wagebill_movement_ui <- function(id, .data) {
         )
       ),
       plotly::plotlyOutput(
-        shiny::NS(id, "wagebill_labor_movement"),
+        shiny::NS(id, "wagebill_movement"),
+        height = "350px"
+      )
+    ),
+    # plot 2. labor movement costs by group
+    bslib::card(
+      full_screen = TRUE,
+      bslib::card_header(
+        "Labor Movement Costs by Group",
+        bslib::tooltip(
+          bsicons::bs_icon("info-circle"),
+          "Labor movement costs by group. Choosing a group will add new trend lines, by group."
+        )
+      ),
+      plotly::plotlyOutput(
+        shiny::NS(id, "wagebill_movement_by_group"),
+        height = "350px"
+      )
+    ),
+    # plot 3. growth in labor movement costs by group
+    bslib::card(
+      full_screen = TRUE,
+      bslib::card_header(
+        "Growth in Labor Movement Costs by Group",
+        bslib::tooltip(
+          bsicons::bs_icon("info-circle"),
+          "Growth in labor movement costs by group. Choosing a group will add new trend lines, by group."
+        )
+      ),
+      plotly::plotlyOutput(
+        shiny::NS(id, "wagebill_movement_growth"),
         height = "350px"
       )
     )
   )
 }
 
+#' Function to create the server logic for the wagebill movement module.
+#' 
+#' @param id A character string specifying the module ID.
+#' @param .data A data frame containing wagebill data.
+#' 
+#' @import shiny
+#' @importFrom plotly renderPlotly ggplotly
+#' @importFrom dplyr filter
+#' 
+#' @return A Shiny module server function for the wagebill movement module.
 wagebill_movement_server <- function(id, .data) {
   shiny::moduleServer(id, function(input, output, session) {
     # choice of cols
@@ -476,7 +586,35 @@ wagebill_movement_server <- function(id, .data) {
     output$wagebill_movement <- plotly::renderPlotly({
       labor_movement_data <- compute_movement_cost(
         wagebill_filtered(),
-        event_type = c("hire", "fire", "retirement"),
+        event_type = input$event_type,
+        measure_col = input$wagebill_measure,
+        group_cols = input$group_filter
+      )
+
+      plotly::ggplotly(
+        plot_trend(
+          labor_movement_data,
+          group = input$group_filter,
+          toggle_growth = input$toggle_growth,
+          y_col = "movement_cost",
+          y_label = "Movement Costs"
+        )
+      )
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # plot 2. labor movement costs by group
+    output$wagebill_movement_by_group <- plotly::renderPlotly({
+      validate(
+        shiny::need(
+          input$group_filter != "ref_date",
+          "Please select a group."
+        )
+      )
+
+      labor_movement_data <- compute_movement_cost(
+        wagebill_filtered(),
+        event_type = input$event_type,
         measure_col = input$wagebill_measure,
         group_cols = input$group_filter
       )
@@ -485,9 +623,51 @@ wagebill_movement_server <- function(id, .data) {
       plot_height <- max(350, n_groups * 35 + 100)
 
       plotly::ggplotly(
-        plot_movement_cost(
+        plot_bar_total(
           labor_movement_data,
-          group_cols = input$group_filter
+          group = input$group_filter,
+          x_col = "movement_cost",
+          x_label = "Movement Costs"
+        ),
+        height = plot_height
+      )
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # plot 3. growth in labor movement costs by group
+    output$wagebill_movement_growth <- plotly::renderPlotly({
+      validate(
+        shiny::need(
+          input$group_filter != "ref_date",
+          "Please select a group."
+        )
+      )
+
+      wagebill_movement_data <- compute_movement_cost(
+        wagebill_filtered(),
+        event_type = input$event_type,
+        measure_col = input$wagebill_measure,
+        group_cols = input$group_filter
+      )
+
+      # compute growth between min and max ref_date for each group
+      wagebill_movement_growth_data <- wagebill_movement_data[
+        ref_date %in% range(ref_date),
+        .(
+          growth_rate = (movement_cost[ref_date == max(ref_date)] -
+            movement_cost[ref_date == min(ref_date)]) /
+            movement_cost[ref_date == min(ref_date)]
+        ),
+        by = c(input$group_filter)
+      ]
+
+      n_groups <- nrow(wagebill_movement_growth_data)
+      plot_height <- max(350, n_groups * 35 + 100)
+
+      plotly::ggplotly(
+        plot_bar_growth(
+          wagebill_movement_growth_data,
+          group = input$group_filter
         ),
         height = plot_height
       )

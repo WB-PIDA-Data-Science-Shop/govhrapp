@@ -13,7 +13,8 @@ compute_movement_cost(
   status_col = "employment_status",
   freq = NULL,
   measure_col,
-  group_cols = NULL
+  group_cols = NULL,
+  latest_measure = FALSE
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ compute_movement_cost(
 \item{measure_col}{The name of the column containing the cost/measure to sum.}
 
 \item{group_cols}{A character vector of column names to group the data by.}
+
+\item{latest_measure}{A logical value indicating whether to return only the measures for the latest reference date.}
 }
 \value{
 A data frame containing the movement cost for each requested event type within the specified groups and reference dates.

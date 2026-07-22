@@ -70,12 +70,16 @@ wagebill_ui_beta <- function(id, wagebill_data) {
         title = "Equity",
         wagebill_equity_ui(NS(id, "equity"), wagebill_data)
       ),
-      # sub-panel 3: movement costs
+      # sub-panel 3: movement
       bslib::nav_panel(
-        title = "Movement Costs",
+        title = "Movement",
         wagebill_movement_ui(NS(id, "movement"), wagebill_data)
       )
-      # ),
+      # # sub-panel 4: retirement
+      # bslib::nav_panel(
+      #   title = "Retirement",
+      #   wagebill_retirement_ui(NS(id, "retirement"), wagebill_data)
+      # )
       # bslib::nav_panel(
       #   title = "Fiscal Sustainability",
       #   bslib::layout_sidebar(
