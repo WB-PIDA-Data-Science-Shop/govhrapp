@@ -4,18 +4,12 @@
 \alias{workforce_movement_server}
 \title{Workforce Movement Server}
 \usage{
-workforce_movement_server(
-  id,
-  .data,
-  movement_type = c("hire", "fire", "turnover")
-)
+workforce_movement_server(id, .data)
 }
 \arguments{
 \item{id}{A character string specifying the module ID.}
 
 \item{.data}{A data frame containing personnel data.}
-
-\item{movement_type}{A character string specifying the type of movement: "hire", "fire", or "turnover".}
 }
 \value{
 A Shiny server function for the workforce movement module.

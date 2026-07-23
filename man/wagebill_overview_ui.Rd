@@ -2,7 +2,7 @@
 % Please edit documentation in R/analytics_wagebill_helpers.R
 \name{wagebill_overview_ui}
 \alias{wagebill_overview_ui}
-\title{Function to identify available grouping choices based on the columns present in the data.}
+\title{Function to create the UI for the wagebill overview module.}
 \usage{
 wagebill_overview_ui(id, .data)
 }
@@ -12,8 +12,8 @@ wagebill_overview_ui(id, .data)
 \item{.data}{A data frame containing wagebill data.}
 }
 \value{
-A list of UI elements for filtering and grouping wagebill data.
+A Shiny module UI function for the wagebill overview module.
 }
 \description{
-Function to identify available grouping choices based on the columns present in the data.
+Function to create the UI for the wagebill overview module.
 }

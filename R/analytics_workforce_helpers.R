@@ -1,3 +1,14 @@
+#' Workforce Overview UI
+#'
+#' @param id A character string specifying the module ID.
+#' @param .data A data frame containing workforce data.
+#'
+#' @import shiny
+#' @import bslib
+#' @importFrom shinyWidgets materialSwitch
+#' @importFrom plotly plotlyOutput
+#'
+#' @return A Shiny UI function for the workforce overview module.
 workforce_overview_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
@@ -37,10 +48,12 @@ workforce_overview_ui <- function(id, .data) {
         fillable = FALSE,
         bslib::card_header(
           "Total by group",
-          bslib::tooltip(
-            bsicons::bs_icon("info-circle"),
-            "Headcount total, by group. Total refers to the latest available year in the selected time frame."
-          )
+          bslib::popover(
+            bsicons::bs_icon("info-circle-fill"),
+            "Headcount total, by group. Total refers to the latest available year in the selected time frame.",
+            placement = "left"
+          ),
+          class = "d-flex justify-content-between"
         ),
         plotly::plotlyOutput(shiny::NS(id, "workforce_cross_section")),
         min_height = "450px"
@@ -50,10 +63,12 @@ workforce_overview_ui <- function(id, .data) {
         fillable = FALSE,
         bslib::card_header(
           "Growth rate by group",
-          bslib::tooltip(
-            bsicons::bs_icon("info-circle"),
-            "Growth rate with respect to first reference date, by group."
-          )
+          bslib::popover(
+            bsicons::bs_icon("info-circle-fill"),
+            "Growth rate with respect to first reference date, by group.",
+            placement = "left"
+          ),
+          class = "d-flex justify-content-between"
         ),
         plotly::plotlyOutput(shiny::NS(id, "workforce_growth")),
         min_height = "450px"
@@ -66,18 +81,15 @@ workforce_overview_ui <- function(id, .data) {
 #'
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing personnel data.
-#' @param type_movement A character string specifying the type of movement: "hire" or "fire".
 #'
 #' @import shiny
 #' @import bslib
 #' @importFrom plotly plotlyOutput
-#' @importFrom gt gt_output
 #'
 #' @return A Shiny UI function for the workforce movement module.
 workforce_movement_ui <- function(
   id,
-  .data,
-  type_movement = c("hire", "fire", "turnover", "retirement")
+  .data
 ) {
   # move profile table right under movements over time
   # organize the outputs into two buckets: high-level and deep-dive
@@ -87,6 +99,11 @@ workforce_movement_ui <- function(
       title = span("Controls", bsicons::bs_icon("sliders")),
       width = "300px",
       !!!ui_filter_controls(.data, id),
+      shiny::selectInput(
+        shiny::NS(id, "movement_type"),
+        label = "Select type of movement:",
+        choices = c("Hire" = "hire", "Fire" = "fire", "Turnover" = "turnover")
+      ),
       shiny::selectInput(
         shiny::NS(id, "measurement_type"),
         label = "Select type of measurement:",
@@ -103,88 +120,56 @@ workforce_movement_ui <- function(
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        sprintf("%ss over time", stringr::str_to_title(type_movement)),
+        "Movements over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          sprintf(
-            "The number of new %ss and rate (new %ss / total workforce) over time. The rate is computed as the number of new %ss divided by the total workforce at the beginning of each period.",
-            type_movement,
-            type_movement,
-            type_movement
-          ),
-          title = sprintf("New %ss over time", type_movement),
+          "Hires and fires are computed as the number of new hires and fires in each period. Turnover is computed as the ratio of hires to fires and retirements. The rate is computed as the number of new hires divided by the total workforce at the beginning of each period.",
+          title = "Movements over time",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
       ),
-      plotly::plotlyOutput(shiny::NS(id, sprintf("%s_plot", type_movement)))
+      plotly::plotlyOutput(shiny::NS(id, "movement_trend"))
     ),
 
     # table 1. demographic characteristics of movers vs. general pop.
-    if (type_movement %in% c("hire", "fire")) {
+    shiny::uiOutput(shiny::NS(id, "movement_profile")),
+
+    bslib::layout_columns(
+      col_widths = c(6, 6),
+      # plot 2. counts/rates by group
       bslib::card(
+        full_screen = TRUE,
+        fillable = FALSE,
         bslib::card_header(
-          sprintf("Profile of new %ss", type_movement),
+          "Counts/rates by group",
           bslib::popover(
             bsicons::bs_icon("info-circle-fill"),
-            sprintf(
-              "Compare the characteristics of new %ss against the general population, selecting which attributes to compare them with.",
-              type_movement
-            ),
-            title = sprintf("Profile of new %ss", type_movement),
+            "Counts and rates by group. The counts and rates are computed for the latest available year in the selected time frame.",
+            title = "Counts/rates by group",
             placement = "left"
-          )
+          ),
+          class = "d-flex justify-content-between"
         ),
-        gt::gt_output(shiny::NS(id, sprintf("%s_profile", type_movement)))
+        plotly::plotlyOutput(shiny::NS(id, "movement_cross_section")),
+        min_height = "450px"
+      ),
+      # plot 3. growth rate by group
+      bslib::card(
+        full_screen = TRUE,
+        fillable = FALSE,
+        bslib::card_header(
+          "Growth rate by group",
+          bslib::popover(
+            bsicons::bs_icon("info-circle-fill"),
+            "Growth rate with respect to first reference date, by group.",
+            placement = "left"
+          ),
+          class = "d-flex justify-content-between"
+        ),
+        plotly::plotlyOutput(shiny::NS(id, "movement_growth")),
+        min_height = "450px"
       )
-    },
-
-    # plot 2. counts and rates by group
-    bslib::card(
-      full_screen = TRUE,
-      bslib::card_header(
-        sprintf("%ss by group", stringr::str_to_title(type_movement)),
-        bslib::popover(
-          bsicons::bs_icon("info-circle-fill"),
-          sprintf(
-            "The number of new %ss and rate (new %ss / total workforce) by group. The rate is computed as the number of new %ss divided by the total workforce at the beginning of each period.",
-            type_movement,
-            type_movement,
-            type_movement
-          ),
-          title = sprintf("%ss by group", stringr::str_to_title(type_movement)),
-          placement = "left"
-        ),
-        class = "d-flex justify-content-between"
-      ),
-      plotly::plotlyOutput(shiny::NS(
-        id,
-        sprintf("%s_cross_section", type_movement)
-      ))
-    ),
-
-    # plot 3. growth rate of counts and rates by group
-    bslib::card(
-      full_screen = TRUE,
-      bslib::card_header(
-        sprintf("%ss growth by group", stringr::str_to_title(type_movement)),
-        bslib::popover(
-          bsicons::bs_icon("info-circle-fill"),
-          sprintf(
-            "The growth rate of new %ss and rate (new %ss / total workforce) by group. The growth rate is computed as the percentage change in the number of new %ss divided by the total workforce at the beginning of each period.",
-            type_movement,
-            type_movement,
-            type_movement
-          ),
-          title = sprintf(
-            "%ss growth by group",
-            stringr::str_to_title(type_movement)
-          ),
-          placement = "left"
-        ),
-        class = "d-flex justify-content-between"
-      ),
-      plotly::plotlyOutput(shiny::NS(id, sprintf("%s_growth", type_movement)))
     )
   )
 }
@@ -326,20 +311,19 @@ workforce_overview_server <- function(id, .data) {
 #'
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing personnel data.
-#' @param movement_type A character string specifying the type of movement: "hire", "fire", or "turnover".
 #'
 #' @import shiny
 #' @import bslib
 #' @importFrom plotly renderPlotly
 #' @importFrom gt render_gt
-#' @importFrom gtsummary tbl_summary modify_spanning_header modify_header as_gt
+#' @importFrom gtsummary tbl_summary modify_header as_gt
+#' @importFrom shinyWidgets updatePickerInput
 #' @importFrom dplyr filter
 #'
 #' @return A Shiny server function for the workforce movement module.
 workforce_movement_server <- function(
   id,
-  .data,
-  movement_type = c("hire", "fire", "turnover")
+  .data
 ) {
   shiny::moduleServer(id, function(input, output, session) {
     # update subgroup_filter choices whenever the group column changes
@@ -371,11 +355,6 @@ workforce_movement_server <- function(
       }
     })
 
-    movement_type <- match.arg(
-      movement_type,
-      choices = c("hire", "fire", "turnover")
-    )
-
     data_filtered <- shiny::reactive({
       data <- .data
 
@@ -394,17 +373,17 @@ workforce_movement_server <- function(
     })
 
     # plot 1. hiring counts/rates over time
-    output[[sprintf("%s_plot", movement_type)]] <- plotly::renderPlotly({
+    output$movement_trend <- plotly::renderPlotly({
       plot_data <- generate_movement_data(
         .data = data_filtered(),
-        movement_type = movement_type,
+        movement_type = input$movement_type,
         measurement_type = input$measurement_type,
         group_cols = input$group_filter
       )
 
       plot_movement(
         plot_data,
-        movement_type = movement_type,
+        movement_type = input$movement_type,
         measurement_type = input$measurement_type,
         group_cols = input$group_filter
       )
@@ -412,17 +391,14 @@ workforce_movement_server <- function(
       bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
     # plot 2. counts/rates by group
-    output[[sprintf(
-      "%s_cross_section",
-      movement_type
-    )]] <- plotly::renderPlotly({
+    output$movement_cross_section <- plotly::renderPlotly({
       validate(
         need(input$group_filter != "ref_date", "Please select a group.")
       )
 
       cross_section_data <- generate_movement_data(
         .data = data_filtered(),
-        movement_type = movement_type,
+        movement_type = input$movement_type,
         measurement_type = input$measurement_type,
         group_cols = input$group_filter
       ) |>
@@ -439,7 +415,7 @@ workforce_movement_server <- function(
           cross_section_data,
           group = input$group_filter,
           x_col = "indicator",
-          x_label = stringr::str_to_title(movement_type)
+          x_label = stringr::str_to_title(input$movement_type)
         ),
         height = plot_height
       )
@@ -447,14 +423,14 @@ workforce_movement_server <- function(
       bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
     # plot 3. growth rate by group
-    output[[sprintf("%s_growth", movement_type)]] <- plotly::renderPlotly({
+    output$movement_growth <- plotly::renderPlotly({
       validate(
         need(input$group_filter != "ref_date", "Please select a group.")
       )
 
       turnover_data <- generate_movement_data(
         .data = data_filtered(),
-        movement_type = movement_type,
+        movement_type = input$movement_type,
         measurement_type = input$measurement_type,
         group_cols = input$group_filter
       ) |>
@@ -477,60 +453,87 @@ workforce_movement_server <- function(
       bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
     # table 1. demographic characteristics of movers vs. general pop.
-    if (movement_type %in% c("hire", "fire")) {
-      output[[sprintf("%s_profile", movement_type)]] <- gt::render_gt({
-        profile_data <- classify_personnel_event(
-          .data = data_filtered(),
-          id_col = "personnel_id",
-          event_type = movement_type,
-          start_date = min(data_filtered()[["ref_date"]]),
-          end_date = max(data_filtered()[["ref_date"]]),
-          status_col = "employment_status",
-          freq = guess_date_frequency(data_filtered())
-        ) |>
-          # modify personnel data to include age and exclude birth_date
-          dplyr::mutate(
-            age = as.numeric(difftime(Sys.Date(), birth_date, units = "days")) /
-              365.25
-          ) |>
-          dplyr::select(-all_of("birth_date"))
+    output$movement_profile <- renderUI({
+      shiny::req(input$movement_type)
 
-        profile_data |>
-          gtsummary::tbl_summary(
-            by = "type_event",
-            include = -c("personnel_id", "ref_date"),
-            label = list(
-              "gender" = "Gender",
-              "educat7" = "Education Level",
-              "employment_status" = "Employment Status",
-              "age" = "Age"
-            )
+      if (!input$movement_type %in% c("hire", "fire")) {
+        return(NULL)
+      }
+
+      bslib::card(
+        bslib::card_header(
+          sprintf(
+            "Demographic characteristics of %ss vs. general population",
+            input$movement_type
+          ),
+          bslib::popover(
+            bsicons::bs_icon("info-circle-fill"),
+            sprintf(
+              "Demographic characteristics of %ss vs. general population. The table shows the distribution of demographic characteristics for the selected movement type compared to the overall workforce.",
+              input$movement_type
+            ),
+            title = "Demographic characteristics",
+            placement = "left"
+          ),
+          class = "d-flex justify-content-between"
+        ),
+        gt::render_gt({
+          profile_data <- classify_personnel_event(
+            .data = data_filtered(),
+            id_col = "personnel_id",
+            event_type = input$movement_type,
+            start_date = min(data_filtered()[["ref_date"]]),
+            end_date = max(data_filtered()[["ref_date"]]),
+            status_col = "employment_status",
+            freq = guess_date_frequency(data_filtered())
           ) |>
-          # label hires and fires as "New Hires" and "New Fires" and
-          # stayed as "General Population"
-          gtsummary::modify_header(
-            update = list(
+            dplyr::mutate(
+              age = as.numeric(difftime(
+                Sys.Date(),
+                birth_date,
+                units = "days"
+              )) /
+                365.25
+            ) |>
+            dplyr::select(-all_of("birth_date"))
+
+          profile_data |>
+            gtsummary::tbl_summary(
+              by = "type_event",
+              include = -c("personnel_id", "ref_date"),
+              label = list(
+                "gender" = "Gender",
+                "educat7" = "Education Level",
+                "employment_status" = "Employment Status",
+                "age" = "Age"
+              )
+            ) |>
+            gtsummary::modify_header(
               label = "**Variable**",
-              stat_1 = sprintf("**New %ss**", movement_type),
+              stat_1 = sprintf(
+                "**New %ss**",
+                stringr::str_to_title(input$movement_type)
+              ),
               stat_2 = "**General Population**"
-            )
-          ) |>
-          gtsummary::as_gt()
-      }) |>
-        bindEvent(input$apply_btn, ignoreNULL = FALSE)
-    }
+            ) |>
+            gtsummary::as_gt()
+        }) |>
+          bindEvent(input$apply_btn, ignoreNULL = FALSE)
+      )
+    }) |>
+      bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })
 }
 
 #' Workforce Retirement UI
-#' 
+#'
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing personnel data.
-#' 
+#'
 #' @import shiny
 #' @import bslib
 #' @importFrom plotly plotlyOutput
-#' 
+#'
 #' @return A Shiny UI function for the workforce retirement module.
 workforce_retirement_ui <- function(
   id,
@@ -595,15 +598,15 @@ workforce_retirement_ui <- function(
 }
 
 #' Workforce Retirement Server
-#' 
+#'
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing personnel data.
-#' 
+#'
 #' @import shiny
 #' @import bslib
 #' @importFrom plotly renderPlotly
 #' @importFrom dplyr filter rename
-#' 
+#'
 #' @return A Shiny server function for the workforce retirement module.
 workforce_retirement_server <- function(
   id,
@@ -665,4 +668,45 @@ workforce_retirement_server <- function(
     }) |>
       bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })
+}
+
+#' Workforce Transition UI
+#'
+#' @param id A character string specifying the module ID.
+#' @param .data A data frame containing workforce data.
+#'
+#' @import shiny
+#' @import bslib
+#' @importFrom plotly plotlyOutput
+#'
+#' @return A Shiny UI function for the workforce transition module.
+workforce_transition_ui <- function(id, .data) {
+  bslib::layout_sidebar(
+    fillable = FALSE,
+    theme = bslib::bs_theme(bootswatch = "litera"),
+    sidebar = bslib::sidebar(
+      title = span("Controls", bsicons::bs_icon("sliders")),
+      width = "300px",
+      !!!ui_filter_controls(.data, id),
+      shiny::actionButton(
+        shiny::NS(id, "apply_btn"),
+        "Apply selection",
+        icon = shiny::icon("play")
+      )
+    ),
+    bslib::card(
+      full_screen = TRUE,
+      bslib::card_header(
+        "Transitions over time",
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "The number of promotions and rate (promotions / total workforce) over time. The rate is computed as the number of promotions divided by the total workforce at the beginning of each period.",
+          title = "Transitions over time",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
+      ),
+      plotly::plotlyOutput(shiny::NS(id, "progression_plot"))
+    )
+  )
 }

@@ -4,18 +4,12 @@
 \alias{workforce_movement_ui}
 \title{Workforce Movement UI}
 \usage{
-workforce_movement_ui(
-  id,
-  .data,
-  type_movement = c("hire", "fire", "turnover", "retirement")
-)
+workforce_movement_ui(id, .data)
 }
 \arguments{
 \item{id}{A character string specifying the module ID.}
 
 \item{.data}{A data frame containing personnel data.}
-
-\item{type_movement}{A character string specifying the type of movement: "hire" or "fire".}
 }
 \value{
 A Shiny UI function for the workforce movement module.

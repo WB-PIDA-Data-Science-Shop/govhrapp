@@ -25,17 +25,18 @@ identify_wagebill_choices <- function(.data) {
   wagebill_choices
 }
 
-#' Function to identify available grouping choices based on the columns present in the data.
+#' Function to create the UI for the wagebill overview module.
 #' 
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing wagebill data.
 #'
 #' @import shiny
-#' @importFrom bslib layout_column_wrap card card_header card_body
-#' @importFrom shinyWidgets pickerInput
-#' @importFrom plotly renderPlotly
+#' @import bslib
+#' @importFrom shinyWidgets materialSwitch
+#' @importFrom plotly plotlyOutput
+#' @importFrom bsicons bs_icon
 #' 
-#' @return A list of UI elements for filtering and grouping wagebill data.
+#' @return A Shiny module UI function for the wagebill overview module.
 wagebill_overview_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
@@ -752,7 +753,7 @@ wagebill_retirement_ui <- function(id, .data) {
 #' 
 #' @import shiny
 #' @importFrom plotly renderPlotly ggplotly
-#' @importFrom dplyr filter
+#' @importFrom dplyr filter rename
 #' 
 #' @return A Shiny module server function for the wagebill retirement module.
 wagebill_retirement_server <- function(id, .data) {
@@ -810,6 +811,7 @@ wagebill_retirement_server <- function(id, .data) {
       plotly::ggplotly(
         plot_trend(
           retirement_projection_data,
+          group = input$group_filter,
           y_col = "projected_cost",
           y_label = "Projected Retirement Costs"
         )
@@ -819,6 +821,18 @@ wagebill_retirement_server <- function(id, .data) {
   })
 }
 
+#' Function to render a wagebill summary value box.
+#'
+#' @param wagebill_data A data frame containing wagebill data.
+#' @param type_measure A character string specifying which measure to display. Must be one of "total_wagebill" or "total_pension_liabilities".
+#'
+#' @import bslib
+#' @importFrom shiny renderUI
+#' @importFrom bsicons bs_icon
+#' @importFrom scales comma
+#' @importFrom dplyr filter pull
+#'
+#' @return A Shiny UI output rendering a value box summarizing the wage bill or pension liabilities total.
 render_wagebill_box <- function(wagebill_data, type_measure) {
   measure_col <- "gross_salary_lcu"
 
