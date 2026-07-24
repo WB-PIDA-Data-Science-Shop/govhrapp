@@ -295,6 +295,15 @@ compute_value_consistency <- function(
   tibble::as_tibble(result)
 }
 
+#' Generate UI controls to filter data.
+#' 
+#' @param .data Data frame. The data to be filtered.
+#' @param id Character string. The module namespace ID.
+#'
+#' @import shiny
+#' @importFrom shinyWidgets pickerInput pickerOptions
+#'  
+#' @return A list of Shiny UI elements for filtering the data.
 ui_filter_controls <- function(.data, id) {
   group_choices <- identify_group_choices(.data)
 
@@ -312,18 +321,27 @@ ui_filter_controls <- function(.data, id) {
       "Select group:",
       choices = group_choices
     ),
-    shinyWidgets::pickerInput(
-      shiny::NS(id, "subgroup_filter"),
-      "Select subgroups:",
-      choices = NULL,
-      multiple = TRUE,
-      options = shinyWidgets::pickerOptions(
-        actionsBox = TRUE,
-        liveSearch = TRUE,
-        selectedTextFormat = "count > 3",
-        countSelectedText = "{0} subgroups selected",
-        noneSelectedText = "No subgroups selected",
-        container = "body"
+    # only show the subgroup filter if a group is selected and it's not "ref_date"
+    shiny::conditionalPanel(
+      condition = sprintf(
+        "input['%s'] !== 'none' && input['%s'] !== 'ref_date'",
+        shiny::NS(id, "group_filter"),
+        shiny::NS(id, "group_filter")
+      ),
+      # subgroup filter: dynamically populated based on the selected group
+      shinyWidgets::pickerInput(
+        shiny::NS(id, "subgroup_filter"),
+        "Select subgroups:",
+        choices = NULL,
+        multiple = TRUE,
+        options = shinyWidgets::pickerOptions(
+          actionsBox = TRUE,
+          liveSearch = TRUE,
+          selectedTextFormat = "count > 3",
+          countSelectedText = "{0} subgroups selected",
+          noneSelectedText = "No subgroups selected",
+          container = "body"
+        )
       )
     )
   )

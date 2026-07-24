@@ -28,7 +28,11 @@ compute_trend_summary <- function(data, group, measure_col = NULL) {
       dplyr::summarise(value = dplyr::n(), .by = dplyr::all_of(groups))
   } else {
     data |>
-      govhr::compute_fastsummary(cols = measure_col, fns = "sum", groups = groups)
+      govhr::compute_fastsummary(
+        cols = measure_col,
+        fns = "sum",
+        groups = groups
+      )
   }
 }
 
@@ -85,6 +89,7 @@ apply_baseline_index <- function(data, group) {
 #' @importFrom govhr compute_fastsummary
 #' @export
 compute_cross_section_summary <- function(data, group, measure_col = NULL) {
+  # only consider latest reference date
   data_latest <- data |>
     dplyr::filter(
       .data[["ref_date"]] == max(.data[["ref_date"]]),
@@ -96,7 +101,11 @@ compute_cross_section_summary <- function(data, group, measure_col = NULL) {
       dplyr::summarise(value = dplyr::n(), .by = dplyr::all_of(group))
   } else {
     data_latest |>
-      govhr::compute_fastsummary(cols = measure_col, fns = "sum", groups = group)
+      govhr::compute_fastsummary(
+        cols = measure_col,
+        fns = "sum",
+        groups = group
+      )
   }
 }
 
@@ -123,14 +132,18 @@ compute_cross_section_summary <- function(data, group, measure_col = NULL) {
 compute_growth_summary <- function(data, group, measure_col = NULL) {
   endpoints <- data |>
     dplyr::filter(
-      .data[["ref_date"]] %in% c(max(.data[["ref_date"]]), min(.data[["ref_date"]])),
+      .data[["ref_date"]] %in%
+        c(max(.data[["ref_date"]]), min(.data[["ref_date"]])),
       .by = dplyr::all_of(group)
     ) |>
     dplyr::arrange(.data[["ref_date"]])
 
   summarized <- if (is.null(measure_col)) {
     endpoints |>
-      dplyr::summarise(value = dplyr::n(), .by = dplyr::all_of(c("ref_date", group)))
+      dplyr::summarise(
+        value = dplyr::n(),
+        .by = dplyr::all_of(c("ref_date", group))
+      )
   } else {
     endpoints |>
       govhr::compute_fastsummary(
@@ -146,7 +159,8 @@ compute_growth_summary <- function(data, group, measure_col = NULL) {
       growth_rate = round(
         dplyr::last(.data[["value"]]) / dplyr::first(.data[["value"]]) - 1,
         3
-      ) * 100,
+      ) *
+        100,
       .by = dplyr::all_of(group)
     ) |>
     dplyr::filter(!is.na(.data[["growth_rate"]]))
@@ -177,7 +191,13 @@ compute_growth_summary <- function(data, group, measure_col = NULL) {
 #' @importFrom grDevices colorRampPalette
 #' @importFrom scales label_number cut_short_scale
 #' @export
-plot_trend <- function(data, group, toggle_growth = FALSE, y_col = "value", y_label = "Value") {
+plot_trend <- function(
+  data,
+  group,
+  toggle_growth = FALSE,
+  y_col = "value",
+  y_label = "Value"
+) {
   plot <- data |>
     ggplot2::ggplot(
       ggplot2::aes(x = .data[["ref_date"]], y = .data[[y_col]])
@@ -188,7 +208,9 @@ plot_trend <- function(data, group, toggle_growth = FALSE, y_col = "value", y_la
 
   if (group != "ref_date") {
     n_groups <- dplyr::n_distinct(data[[group]], na.rm = TRUE)
-    orange_palette <- grDevices::colorRampPalette(c("#C34729", "#F5C6A0"))(n_groups)
+    orange_palette <- grDevices::colorRampPalette(c("#C34729", "#F5C6A0"))(
+      n_groups
+    )
     plot <- plot +
       ggplot2::aes(
         color = .data[[group]],
@@ -337,11 +359,11 @@ plot_bar_growth <- function(data, group) {
 #' @importFrom ggplot2 ggplot aes geom_segment geom_jitter scale_y_discrete labs
 #' @importFrom tibble tibble
 #' @importFrom rlang :=
-#' 
+#'
 #' @export
 plot_segment <- function(.data, col, group) {
   df <- .data
-  
+
   # Calculate summary statistics using .data[[]]
   summary_df <- df |>
     dplyr::summarise(
@@ -357,32 +379,35 @@ plot_segment <- function(.data, col, group) {
       xmax = ifelse(is.infinite(.data[["xmax"]]), NA_real_, .data[["xmax"]])
     ) |>
     tibble::as_tibble()
-  
+
   # Determine group ordering by median
   ordered_levels <- summary_df |>
     dplyr::arrange(dplyr::desc(.data[["mean"]])) |>
     dplyr::pull(.data[[group]]) |>
     as.character()
-  
+
   # Apply factor ordering for plotting
   summary_df[[group]] <- factor(
-    as.character(summary_df[[group]]), 
+    as.character(summary_df[[group]]),
     levels = rev(ordered_levels)
   )
-  
+
   plot_data <- df |>
     dplyr::mutate(
-      !!group := factor(as.character(.data[[group]]), levels = rev(ordered_levels))
+      !!group := factor(
+        as.character(.data[[group]]),
+        levels = rev(ordered_levels)
+      )
     )
-  
+
   # Create the plot using .data[[]]
   ggplot2::ggplot() +
     ggplot2::geom_segment(
       data = summary_df,
       ggplot2::aes(
-        x = .data[["xmin"]], 
-        xend = .data[["xmax"]], 
-        y = .data[[group]], 
+        x = .data[["xmin"]],
+        xend = .data[["xmax"]],
+        y = .data[[group]],
         yend = .data[[group]]
       ),
       color = "grey70",
@@ -399,4 +424,230 @@ plot_segment <- function(.data, col, group) {
     ) +
     ggplot2::scale_y_discrete() +
     ggplot2::labs(x = col, y = group)
+}
+
+#' Plot Personnel Movement Over Time
+#' 
+#' @param .data A data frame containing the movement data with columns `ref_date`, `indicator`, and optionally a grouping column.
+#' @param movement_type A character string indicating the type of movement: "hire", "fire", or "turnover".
+#' @param measurement_type A character string indicating the measurement type: "count" or "rate".
+#' @param group_cols A character string indicating the grouping column, or "ref_date" for no grouping.
+#' 
+#' @return A plotly object representing the personnel movement over time.
+#' 
+#' @importFrom ggplot2 ggplot aes geom_point geom_line labs scale_y_continuous
+#' @importFrom dplyr n_distinct
+#' @importFrom grDevices colorRampPalette
+#' @importFrom plotly ggplotly
+#' 
+#' @export
+plot_movement <- function(.data, movement_type, measurement_type, group_cols) {
+  plot <- .data |>
+    ggplot(
+      aes(.data[["ref_date"]], .data[["indicator"]])
+    ) +
+    geom_point() +
+    geom_line() +
+    labs(
+      x = "Time",
+      y = ifelse(measurement_type == "rate", "Share", "Count")
+    )
+
+  if (group_cols != "ref_date") {
+    n_groups <- dplyr::n_distinct(
+      .data[[group_cols]],
+      na.rm = TRUE
+    )
+    orange_palette <- colorRampPalette(c("#C34729", "#F5C6A0"))(n_groups)
+    plot <- plot +
+      aes(
+        color = .data[[group_cols]],
+        group = .data[[group_cols]]
+      ) +
+      ggplot2::scale_color_manual(values = orange_palette)
+  }
+
+  if (movement_type %in% c("hire", "fire", "retirement") & measurement_type == "rate") {
+    plot <- plot +
+      scale_y_continuous(
+        labels = scales::percent_format()
+      )
+  } else if (movement_type == "turnover") {
+    plot <- plot +
+      scale_y_continuous(
+        labels = scales::label_number(accuracy = 0.1)
+      ) +
+      geom_hline(
+        yintercept = 1,
+        linetype = "dashed",
+        color = "#004181"
+      ) +
+      ggplot2::annotate(
+        "text",
+        x = as.Date(max(.data[["ref_date"]])) -
+          (as.Date(max(.data[["ref_date"]])) -
+            as.Date(min(.data[["ref_date"]]))) *
+            0.05,
+        y = 1.15,
+        label = "Replacement rate = 1",
+        color = "#004181"
+      ) +
+      labs(
+        y = "Replacement rate"
+      )
+  }
+
+  plotly::ggplotly(plot)
+}
+
+plot_decile <- function(.data, group_cols){
+  plot <- .data |>
+    ggplot2::ggplot(
+      ggplot2::aes(x = .data[["decile"]], y = .data[["mean_value"]])
+    ) +
+    ggplot2::geom_col(
+      fill = "#C34729"
+    ) +
+    ggplot2::labs(
+      x = "Decile",
+      y = "Median by Decile"
+    ) +
+    ggplot2::scale_x_continuous(
+      breaks = 1:10,
+      labels = 1:10
+    )
+
+  if (group_cols != "ref_date") {
+    plot <- plot +
+      facet_wrap(
+        ggplot2::vars(.data[[group_cols]]),
+        scales = "fixed"
+      )
+  }
+
+  # if group are present, facet the plot by group
+  if (group_cols != "ref_date") {
+    plot <- plot +
+      ggplot2::facet_wrap(
+        ggplot2::vars(.data[[group_cols]]),
+        labeller = ggplot2::label_wrap_gen(width = 20)
+      )
+  }
+
+  plotly::ggplotly(plot)
+}
+
+#' Plot Density as Percentage Share
+#'
+#' @param .data A data frame.
+#' @param plot_type A character string indicating the type of plot: "histogram" or "cumulative".
+#' @param group_col The column name to group by.
+#'
+#' @importFrom ggplot2 ggplot aes geom_density scale_y_continuous labs theme_minimal
+#' @importFrom plotly ggplotly
+#' @importFrom grDevices colorRampPalette
+#' 
+#' @return A plotly object.
+plot_histogram <- function(.data, plot_type = "histogram", group_col = NULL) {
+  plot_type <- match.arg(plot_type, c("histogram", "cumulative"))
+
+  y_var <- switch(
+    plot_type,
+    histogram = "pct",
+    cumulative = "cum_pct"
+  )
+
+  plot <- .data |> 
+    ggplot2::ggplot(ggplot2::aes(x = bin, y = .data[[y_var]])) +
+    ggplot2::geom_col() +
+    ggplot2::scale_y_continuous(labels = scales::label_percent()) +
+    ggplot2::labs(x = "", y = "Percentage Share")
+
+  if (!is.null(group_col)) {
+    plot <- plot +
+      ggplot2::facet_wrap(
+        ggplot2::vars(.data[[group_col]]),
+        labeller = ggplot2::label_wrap_gen(width = 20)
+      )
+  }
+
+  plotly::ggplotly(plot)
+}
+
+plot_compression_ratio <- function(.data, group_cols){
+  group_cols <- if (is.null(group_cols)) "ref_date" else group_cols
+
+  # plot as a line range between percentile_10 and percentile_90, with a point at percentile_50
+  # and the y-axis is the group_cols, and the x-axis is the percentile values
+  plot <- .data |>
+    ggplot2::ggplot(
+      ggplot2::aes(
+        x = .data[["percentile_50"]],
+        y = .data[[group_cols]],
+        xmin = .data[["percentile_10"]],
+        xmax = .data[["percentile_90"]]
+      )
+    ) +
+    ggplot2::geom_point(
+      size = 3,
+      color = "#C34729"
+    ) +
+    ggplot2::geom_linerange(
+      color = "#C34729"
+    ) +
+    ggplot2::labs(
+      x = "Wage Compression Ratio (10th to 90th Percentile)",
+      y = ""
+    )
+  
+    if (group_cols != "ref_date") {
+    n_groups <- dplyr::n_distinct(
+      .data[[group_cols]],
+      na.rm = TRUE
+    )
+    orange_palette <- colorRampPalette(c("#C34729", "#F5C6A0"))(n_groups)
+    plot <- plot +
+      aes(
+        color = .data[[group_cols]],
+        group = .data[[group_cols]]
+      ) +
+      ggplot2::scale_color_manual(values = orange_palette)
+  }
+
+  plotly::ggplotly(plot)
+}
+
+plot_movement_cost <- function(.data, group_cols){
+  group_cols <- if (is.null(group_cols)) "ref_date" else group_cols
+
+  plot <- .data |>
+    ggplot2::ggplot(
+      ggplot2::aes(
+        x = .data[["movement_cost"]],
+        y = .data[[group_cols]]
+      )
+    ) +
+    ggplot2::geom_col(
+      fill = "#C34729"
+    ) +
+    ggplot2::labs(
+      x = "Movement Cost",
+      y = ""
+    )
+
+  if (group_cols != "ref_date") {
+    n_groups <- dplyr::n_distinct(
+      .data[[group_cols]],
+      na.rm = TRUE
+    )
+    orange_palette <- colorRampPalette(c("#C34729", "#F5C6A0"))(n_groups)
+    plot <- plot +
+      aes(
+        color = .data[[group_cols]],
+        group = .data[[group_cols]]
+      ) +
+      ggplot2::scale_color_manual(values = orange_palette)
+  }
+
+  plotly::ggplotly(plot)
 }

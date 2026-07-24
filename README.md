@@ -11,7 +11,7 @@
 A set of interactive Shiny applications to clean and analyze government human resources personnel data. The package provides two application suites:
 
 - **Quality Control** (`run_govhrapp()`): tools for detecting data quality issues — missingness, volatility, and basic data diagnostics.
-- **Analytics** (`run_wagebillapp()`, `run_workforceapp()`): interactive dashboards for wage bill and workforce headcount analysis.
+- **Analytics** (`run_wagebillapp()`, `run_workforce_app()`): interactive dashboards for wage bill and workforce headcount analysis.
 
 ---
 
@@ -41,7 +41,7 @@ run_govhrapp()
 run_wagebillapp(wagebill_data = your_data)
 
 # Workforce analytics
-run_workforceapp(workforce_data = your_data)
+run_workforce_app(workforce_data = your_data)
 ```
 
 Alternatively, `app.R` at the project root loads and launches `run_govhrapp()` directly and can be used with the RStudio/Positron "Run App" button.
@@ -61,7 +61,7 @@ govhrapp/
 │   ├── analytics_plots.R        # Shared plot helpers (e.g. plot_segment)
 │   ├── analytics_report.R       # Word report generation helpers
 │   ├── analytics_wagebill.R     # Wage bill UI + server module + run_wagebillapp()
-│   ├── analytics_workforce.R    # Workforce UI + server module + run_workforceapp()
+│   ├── analytics_workforce.R    # Workforce UI + server module + run_workforce_app()
 │   ├── data.R                   # Dataset documentation
 │   ├── deploy.R                 # deploy_govhrapp() for Posit Connect
 │   ├── global.R                 # Global options and theme setup

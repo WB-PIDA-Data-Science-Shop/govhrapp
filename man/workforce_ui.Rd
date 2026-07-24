@@ -2,15 +2,18 @@
 % Please edit documentation in R/analytics_workforce.R
 \name{workforce_ui}
 \alias{workforce_ui}
-\title{Workforce UI Module}
+\title{Workforce Analytics Module (Beta)}
 \usage{
-workforce_ui(id, workforce_data)
+workforce_ui(id, .data)
 }
 \arguments{
-\item{id}{Module id.}
+\item{id}{A character string specifying the module ID.}
 
-\item{workforce_data}{Data frame with workforce data.}
+\item{.data}{A data frame containing personnel data.}
+}
+\value{
+A Shiny app object for workforce analytics.
 }
 \description{
-UI for workforce analytics, including overview, controls, and plots.
+Workforce Analytics Module (Beta)
 }

@@ -61,5 +61,14 @@ utils::globalVariables(c(
   # function-specific symbols
   "coverage",
   "consistent_record",
-  "consistent_value"
+  "consistent_value",
+  "type_event", 
+  "i.type_event",
+  "retirement_date",
+  "hires",
+  "separations",
+  "birth_date",
+  "decile",
+  "bin",
+  "movement_cost"
 ))

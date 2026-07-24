@@ -49,7 +49,7 @@ consistency_ui <- function(id, est_data, personnel_data, contract_data) {
       )
     ),
     
-    # # 2. consistency by module
+    # 2. consistency by module
     bslib::navset_underline(
       bslib::nav_panel(
         title = "Establishment",
