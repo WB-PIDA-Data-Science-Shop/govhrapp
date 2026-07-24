@@ -54,10 +54,13 @@ classify_personnel_event <- function(
 
   # exclude minimum ref_date when movement_type is hire
   # and exclude maximum ref_date when movement_type is fire
+  start_ref_date <- lubridate::ymd(start_date)
+  end_ref_date <- lubridate::ymd(end_date)
+
   if (event_type == "hire") {
-    .data <- .data[ref_date > lubridate::ymd(start_date)]
+    .data <- .data[ref_date > start_ref_date]
   } else if (event_type == "fire") {
-    .data <- .data[ref_date < lubridate::ymd(end_date)]
+    .data <- .data[ref_date < end_ref_date]
   }
 
   .data[]
