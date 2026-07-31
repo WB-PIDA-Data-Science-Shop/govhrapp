@@ -17,7 +17,6 @@ Config/testthat/edition: 3
 Imports: 
     bsicons,
     bslib,
-    collapse,
     data.table,
     dplyr,
     ggplot2,
