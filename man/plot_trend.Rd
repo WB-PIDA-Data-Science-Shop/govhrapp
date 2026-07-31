@@ -14,7 +14,7 @@ plot_trend(
 }
 \arguments{
 \item{data}{A data frame with columns \code{ref_date} and \code{value}, as returned by
-\code{\link[=compute_time_trend]{compute_time_trend()}} and optionally \code{\link[=apply_baseline_index]{apply_baseline_index()}}.}
+\code{\link[govhr:compute_time_trend]{govhr::compute_time_trend()}} and optionally \code{\link[govhr:rescale_baseline]{govhr::rescale_baseline()}}.}
 
 \item{group}{Character string naming the grouping column, or \code{"ref_date"} for
 no grouping.}

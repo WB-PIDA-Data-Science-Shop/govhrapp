@@ -8,7 +8,7 @@ plot_bar_growth(data, group)
 }
 \arguments{
 \item{data}{A data frame with the grouping column and a \code{growth_rate} column,
-as returned by \code{\link[=compute_growth_summary]{compute_growth_summary()}}.}
+as returned by \code{\link[govhr:compute_growth]{govhr::compute_growth()}}.}
 
 \item{group}{Character string naming the grouping column.}
 }

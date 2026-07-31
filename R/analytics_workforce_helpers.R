@@ -234,13 +234,13 @@ workforce_overview_server <- function(id, .data) {
     })
 
     workforce_summary <- reactive({
-      out <- compute_time_trend(
+      out <- govhr::compute_time_trend(
         workforce_filtered(),
         group = input$group_filter
       )
 
       if (input$toggle_growth) {
-        out <- apply_baseline_index(out, group = input$group_filter)
+        out <- govhr::rescale_baseline(out, group = input$group_filter)
       }
 
       out
@@ -265,7 +265,7 @@ workforce_overview_server <- function(id, .data) {
         need(input$group_filter != "ref_date", "Please select a group.")
       )
 
-      cross_section_data <- compute_cross_section_summary(
+      cross_section_data <- govhr::compute_cross_section(
         workforce_filtered(),
         group = input$group_filter
       )
@@ -290,7 +290,7 @@ workforce_overview_server <- function(id, .data) {
         need(input$group_filter != "ref_date", "Please select a group.")
       )
 
-      change_data <- compute_growth_summary(
+      change_data <- govhr::compute_growth(
         workforce_filtered(),
         group = input$group_filter
       )
@@ -436,7 +436,7 @@ workforce_movement_server <- function(
       ) |>
         na.omit()
 
-      growth_data <- compute_growth_summary(
+      growth_data <- govhr::compute_growth(
         turnover_data,
         measure_col = "indicator",
         group = input$group_filter
@@ -478,14 +478,14 @@ workforce_movement_server <- function(
           class = "d-flex justify-content-between"
         ),
         gt::render_gt({
-          profile_data <- classify_personnel_event(
+          profile_data <- govhr::classify_personnel_event(
             .data = data_filtered(),
             id_col = "personnel_id",
             event_type = input$movement_type,
             start_date = min(data_filtered()[["ref_date"]]),
             end_date = max(data_filtered()[["ref_date"]]),
             status_col = "employment_status",
-            freq = guess_date_frequency(data_filtered())
+            freq = govhr::guess_date_frequency(data_filtered())
           ) |>
             dplyr::mutate(
               age = as.numeric(difftime(
@@ -650,7 +650,7 @@ workforce_retirement_server <- function(
 
     # plot 2. projected retirements
     output[["retirement_expected_plot"]] <- plotly::renderPlotly({
-      plot_data <- project_retirement(
+      plot_data <- govhr::project_retirement(
         .data = data_filtered(),
         threshold_age = input$threshold_age,
         birth_col = "birth_date",

@@ -296,7 +296,7 @@ generate_workforce_report <- function(workforce_summary_data,
       as.character()
 
     freq_ref_date <- workforce_filtered_data |>
-      guess_date_frequency()
+      govhr::guess_date_frequency()
 
     group_cols <- unique(c("ref_date", workforce_group))
 

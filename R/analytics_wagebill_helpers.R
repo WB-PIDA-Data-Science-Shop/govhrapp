@@ -141,14 +141,14 @@ wagebill_overview_server <- function(id, .data) {
     })
 
     wagebill_summary <- shiny::reactive({
-      out <- compute_time_trend(
+      out <- govhr::compute_time_trend(
         wagebill_filtered(),
         group = input$group_filter,
         measure_col = input$wagebill_measure
       )
 
       if (input$toggle_growth) {
-        out <- apply_baseline_index(out, group = input$group_filter)
+        out <- govhr::rescale_baseline(out, group = input$group_filter)
       }
 
       out
@@ -215,7 +215,7 @@ wagebill_overview_server <- function(id, .data) {
         )
       )
 
-      cross_section_data <- compute_cross_section_summary(
+      cross_section_data <- govhr::compute_cross_section(
         wagebill_filtered(),
         group = input$group_filter,
         measure_col = input$wagebill_measure
@@ -244,7 +244,7 @@ wagebill_overview_server <- function(id, .data) {
         )
       )
 
-      change_data <- compute_growth_summary(
+      change_data <- govhr::compute_growth(
         wagebill_filtered(),
         group = input$group_filter,
         measure_col = input$wagebill_measure
@@ -394,7 +394,7 @@ wagebill_equity_server <- function(id, .data) {
     output$wagebill_density <- plotly::renderPlotly({
       wagebill_density <- wagebill_filtered() |>
         dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]])) |>
-        compute_cumulative(
+        govhr::compute_density(
           group_col = input$group_filter,
           binwidth = 100,
           measure_col = input$wagebill_measure
@@ -417,7 +417,7 @@ wagebill_equity_server <- function(id, .data) {
       wagebill_filtered_latest <- wagebill_filtered() |>
         dplyr::filter(.data[["ref_date"]] == latest_ref_date)
 
-      wagebill_distribution <- compute_decile(
+      wagebill_distribution <- govhr::compute_quantile(
         wagebill_filtered_latest,
         group_cols = input$group_filter,
         measure_col = input$wagebill_measure,
@@ -439,7 +439,7 @@ wagebill_equity_server <- function(id, .data) {
 
     # plot 3. wage range between 10th and 90th percentile
     output$wagebill_compression_ratio <- plotly::renderPlotly({
-      wagebill_compression_ratio <- compute_compression_ratio(
+      wagebill_compression_ratio <- govhr::compute_compression_ratio(
         wagebill_filtered(),
         group_cols = input$group_filter,
         measure_col = input$wagebill_measure,
@@ -585,7 +585,7 @@ wagebill_movement_server <- function(id, .data) {
 
     # plot 1. labor movement costs
     output$wagebill_movement <- plotly::renderPlotly({
-      labor_movement_data <- compute_movement_cost(
+      labor_movement_data <- govhr::compute_movement_cost(
         wagebill_filtered(),
         event_type = input$event_type,
         measure_col = input$wagebill_measure,
@@ -613,7 +613,7 @@ wagebill_movement_server <- function(id, .data) {
         )
       )
 
-      labor_movement_data <- compute_movement_cost(
+      labor_movement_data <- govhr::compute_movement_cost(
         wagebill_filtered(),
         event_type = input$event_type,
         measure_col = input$wagebill_measure,
@@ -644,7 +644,7 @@ wagebill_movement_server <- function(id, .data) {
         )
       )
 
-      wagebill_movement_data <- compute_movement_cost(
+      wagebill_movement_data <- govhr::compute_movement_cost(
         wagebill_filtered(),
         event_type = input$event_type,
         measure_col = input$wagebill_measure,
@@ -779,7 +779,7 @@ wagebill_retirement_server <- function(id, .data) {
 
     # plot 1. retirement costs
     output$wagebill_retirement <- plotly::renderPlotly({
-      retirement_data <- compute_movement_cost(
+      retirement_data <- govhr::compute_movement_cost(
         wagebill_filtered(),
         event_type = "retirement",
         measure_col = input$wagebill_measure,
@@ -799,8 +799,9 @@ wagebill_retirement_server <- function(id, .data) {
 
     # plot 2. projected retirement costs
     output$wagebill_retirement_projection <- plotly::renderPlotly({
-      retirement_projection_data <- project_retirement(
+      retirement_projection_data <- govhr::project_retirement(
         wagebill_filtered(),
+        threshold_age = input$threshold_age,
         group_cols = input$group_filter,
         measure_col = input$wagebill_measure
       ) |>

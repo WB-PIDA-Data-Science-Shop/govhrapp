@@ -69,11 +69,11 @@ generate_movement_data <- function(
     stop("Invalid measurement_type. Must be 'count' or 'rate'.")
   }
 
-  freq_ref_date <- guess_date_frequency(dt)
+  freq_ref_date <- govhr::guess_date_frequency(dt)
   by_cols <- unique(c("ref_date", group_cols))
 
   if (movement_type %in% c("hire", "fire", "retirement")) {
-    movement_dt <- classify_personnel_event(
+    movement_dt <- govhr::classify_personnel_event(
       dt,
       event_type = movement_type,
       id_col = "personnel_id",

@@ -8,7 +8,7 @@ plot_bar_total(data, group, x_col = "value", x_label = "Value")
 }
 \arguments{
 \item{data}{A data frame with the grouping column and a \code{value} column, as
-returned by \code{\link[=compute_cross_section_summary]{compute_cross_section_summary()}}.}
+returned by \code{\link[govhr:compute_cross_section]{govhr::compute_cross_section()}}.}
 
 \item{group}{Character string naming the grouping column.}
 

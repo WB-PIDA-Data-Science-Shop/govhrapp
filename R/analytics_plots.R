@@ -7,7 +7,7 @@
 #' otherwise raw values are shown with short-scale labels.
 #'
 #' @param data A data frame with columns `ref_date` and `value`, as returned by
-#'   [compute_time_trend()] and optionally [apply_baseline_index()].
+#'   [govhr::compute_time_trend()] and optionally [govhr::rescale_baseline()].
 #' @param group Character string naming the grouping column, or `"ref_date"` for
 #'   no grouping.
 #' @param toggle_growth Logical. If `TRUE`, format the y-axis as a baseline
@@ -77,7 +77,7 @@ plot_trend <- function(
 #' `guide_axis(n.dodge = 2)` to prevent overlapping labels.
 #'
 #' @param data A data frame with the grouping column and a `value` column, as
-#'   returned by [compute_cross_section_summary()].
+#'   returned by [govhr::compute_cross_section()].
 #' @param group Character string naming the grouping column.
 #' @param x_col Character string of the column to plot on the x-axis. Default `"value"`.
 #' @param x_label Character string for the x-axis label. Default `"Value"`.
@@ -120,7 +120,7 @@ plot_bar_total <- function(data, group, x_col = "value", x_label = "Value") {
 #' `guide_axis(n.dodge = 2)`.
 #'
 #' @param data A data frame with the grouping column and a `growth_rate` column,
-#'   as returned by [compute_growth_summary()].
+#'   as returned by [govhr::compute_growth()].
 #' @param group Character string naming the grouping column.
 #'
 #' @return A ggplot2 object.
@@ -416,8 +416,8 @@ plot_compression_ratio <- function(.data, group_cols){
       ggplot2::aes(
         x = .data[["percentile_50"]],
         y = .data[[group_cols]],
-        xmin = .data[["percentile_10"]],
-        xmax = .data[["percentile_90"]]
+        xmin = .data[["percentile_lower"]],
+        xmax = .data[["percentile_upper"]]
       )
     ) +
     ggplot2::geom_point(
