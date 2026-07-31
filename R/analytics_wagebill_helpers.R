@@ -141,7 +141,7 @@ wagebill_overview_server <- function(id, .data) {
     })
 
     wagebill_summary <- shiny::reactive({
-      out <- compute_trend_summary(
+      out <- compute_time_trend(
         wagebill_filtered(),
         group = input$group_filter,
         measure_col = input$wagebill_measure
@@ -394,7 +394,7 @@ wagebill_equity_server <- function(id, .data) {
     output$wagebill_density <- plotly::renderPlotly({
       wagebill_density <- wagebill_filtered() |>
         dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]])) |>
-        compute_percentile(
+        compute_cumulative(
           group_col = input$group_filter,
           binwidth = 100,
           measure_col = input$wagebill_measure

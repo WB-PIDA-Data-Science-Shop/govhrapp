@@ -7,6 +7,7 @@
 compute_compression_ratio(
   .data,
   group_cols = NULL,
+  percentiles = c(0.9, 0.5, 0.1),
   measure_col,
   latest_measure = FALSE
 )
@@ -15,6 +16,8 @@ compute_compression_ratio(
 \item{.data}{A data frame.}
 
 \item{group_cols}{A character vector of column names to group the data by.}
+
+\item{percentiles}{A numeric vector of length 3 indicating the upper, middle, and lower percentiles to compute (default is c(0.9, 0.5, 0.1)).}
 
 \item{measure_col}{The name of the column for which the compression ratio will be computed.}
 

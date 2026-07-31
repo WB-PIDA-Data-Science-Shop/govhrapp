@@ -234,7 +234,7 @@ workforce_overview_server <- function(id, .data) {
     })
 
     workforce_summary <- reactive({
-      out <- compute_trend_summary(
+      out <- compute_time_trend(
         workforce_filtered(),
         group = input$group_filter
       )

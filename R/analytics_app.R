@@ -1,6 +1,6 @@
 #' Run the govhr Shiny Dashboard Application
 #'
-#' Launches an interactive Shiny dashboard for govhr data visualization and analysis.
+#' Launches an interactive Shiny dashboard for govhr data visualization and analysis. This is the standard analytics suite.
 #'
 #' @param workforce_data Data frame with workforce/personnel attributes (headcount).
 #' @param wagebill_data Data frame with contract/salary attributes (wage bill).

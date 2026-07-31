@@ -8,17 +8,17 @@ test_data <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# ---- compute_trend_summary ---------------------------------------------------
+# ---- compute_time_trend ---------------------------------------------------
 
-test_that("compute_trend_summary counts rows when measure_col is NULL", {
-  result <- compute_trend_summary(test_data, group = "ref_date")
+test_that("compute_time_trend counts rows when measure_col is NULL", {
+  result <- compute_time_trend(test_data, group = "ref_date")
   expect_equal(names(result), c("ref_date", "value"))
   expect_equal(nrow(result), 3L)
   expect_true(all(result$value == 2))
 })
 
-test_that("compute_trend_summary sums measure_col when supplied", {
-  result <- compute_trend_summary(test_data, group = "group", measure_col = "salary")
+test_that("compute_time_trend sums measure_col when supplied", {
+  result <- compute_time_trend(test_data, group = "group", measure_col = "salary")
   expect_setequal(names(result), c("ref_date", "indicator", "group", "value"))
   expect_equal(result$value[result$group == "A" & result$ref_date == as.Date("2020-01-01")], 100)
 })
@@ -26,13 +26,13 @@ test_that("compute_trend_summary sums measure_col when supplied", {
 # ---- apply_baseline_index ----------------------------------------------------
 
 test_that("apply_baseline_index sets first period to 100 when ungrouped", {
-  summary <- compute_trend_summary(test_data, group = "ref_date")
+  summary <- compute_time_trend(test_data, group = "ref_date")
   result <- apply_baseline_index(summary, group = "ref_date")
   expect_equal(result$value[result$ref_date == min(result$ref_date)], 100)
 })
 
 test_that("apply_baseline_index rescales independently per group", {
-  summary <- compute_trend_summary(test_data, group = "group", measure_col = "salary")
+  summary <- compute_time_trend(test_data, group = "group", measure_col = "salary")
   result <- apply_baseline_index(summary, group = "group")
   first_vals <- result |>
     dplyr::group_by(group) |>
@@ -71,12 +71,12 @@ test_that("compute_growth_summary computes correct pct change with measure_col",
 # ---- plot_trend --------------------------------------------------------------
 
 test_that("plot_trend returns a ggplot object", {
-  summary <- compute_trend_summary(test_data, group = "ref_date")
+  summary <- compute_time_trend(test_data, group = "ref_date")
   expect_s3_class(plot_trend(summary, group = "ref_date"), "ggplot")
 })
 
 test_that("plot_trend toggle_growth adds a hline layer", {
-  summary <- compute_trend_summary(test_data, group = "ref_date")
+  summary <- compute_time_trend(test_data, group = "ref_date")
   p <- plot_trend(summary, group = "ref_date", toggle_growth = TRUE)
   layer_geoms <- sapply(p$layers, \(l) class(l$geom)[1])
   expect_true("GeomHline" %in% layer_geoms)

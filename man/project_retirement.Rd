@@ -39,5 +39,5 @@ A data frame with projected retirement dates and counts of staff eligible for re
 Project Retirement Dates
 }
 \details{
-The function takes a data frame containing personnel data with birth dates and reference dates, calculates the projected retirement date for each staff member based on the specified threshold age, and counts the number of staff eligible for retirement at each reference date.
+The function takes a data frame containing personnel data with birth dates and reference dates. It only considers the last reference date in the data. It then calculates the projected retirement date for each staff member based on the specified threshold age, and counts the number of staff eligible for retirement at each future reference date.
 }

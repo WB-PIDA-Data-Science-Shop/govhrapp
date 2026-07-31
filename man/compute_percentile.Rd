@@ -2,7 +2,7 @@
 % Please edit documentation in R/govhr_port.R
 \name{compute_percentile}
 \alias{compute_percentile}
-\title{Function to compute the percentile values}
+\title{Function to compute the cumulative distribution function}
 \usage{
 compute_percentile(
   .data,
@@ -24,8 +24,8 @@ compute_percentile(
 \item{latest_measure}{A logical value indicating whether to return only the measures for the latest reference date.}
 }
 \value{
-A data frame containing the 90th, 50th, and 10th percentiles for the specified measure column within the specified groups and reference dates.
+A data frame with the cumulative distribution function.
 }
 \description{
-Function to compute the percentile values
+Function to compute the cumulative distribution function
 }
