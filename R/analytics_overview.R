@@ -138,8 +138,8 @@ overview_server <- function(id, workforce_data, wagebill_data) {
         scales::label_number(
           scale_cut = scales::cut_short_scale()
         )(total),
-        bslib::tooltip(
-          bsicons::bs_icon("info-circle", style = "font-size: 0.75em; margin-left: 4px;"),
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill", style = "font-size: 0.75em; margin-left: 4px;"),
           "Sum of base salary and allowances in local currency units (LCU)."
         )
       )
@@ -195,10 +195,12 @@ overview_server <- function(id, workforce_data, wagebill_data) {
           full_screen = TRUE,
           bslib::card_header(
             "Integrated: Headcount and Wage Bill",
-            bslib::tooltip(
-              bsicons::bs_icon("info-circle"),
-              "Both series are indexed to 100 for the earliest reference date."
-            )
+            bslib::popover(
+              bsicons::bs_icon("info-circle-fill"),
+              "Both series are indexed to 100 for the earliest reference date.",
+              placement = "left"
+            ),
+            class = "d-flex justify-content-between"
           ),
           bslib::card_body(
             plotly::plotlyOutput(session$ns("plot_integrated"), height = "420px")
