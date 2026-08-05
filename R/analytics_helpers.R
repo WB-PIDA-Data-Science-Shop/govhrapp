@@ -94,15 +94,16 @@ build_wagebill_group_choices <- function(data) {
 #' @importFrom shiny renderUI
 #' @importFrom bslib value_box
 #' @importFrom bsicons bs_icon
+#' @importFrom govhr generate_movement_data
 render_movement_box <- function(.data, type_movement) {
-  movement_count <- generate_movement_data(
+  movement_count <- govhr::generate_movement_data(
     .data = .data,
     movement_type = type_movement,
     measurement_type = "count",
     group_cols = "ref_date"
   )
 
-  movement_rate <- generate_movement_data(
+  movement_rate <- govhr::generate_movement_data(
     .data = .data,
     movement_type = type_movement,
     measurement_type = "rate",

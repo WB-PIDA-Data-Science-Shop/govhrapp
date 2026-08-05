@@ -589,8 +589,8 @@ plot_compression_ratio <- function(.data, group_cols){
       ggplot2::aes(
         x = .data[["percentile_50"]],
         y = .data[[group_cols]],
-        xmin = .data[["percentile_10"]],
-        xmax = .data[["percentile_90"]]
+        xmin = .data[["percentile_lower"]],
+        xmax = .data[["percentile_upper"]]
       )
     ) +
     ggplot2::geom_point(

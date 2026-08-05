@@ -79,7 +79,7 @@ workforce_retirement_ui <- function(
 #' @import bslib
 #' @importFrom plotly renderPlotly
 #' @importFrom dplyr filter rename
-#' @importFrom govhr classify_personnel_event project_retirement
+#' @importFrom govhr classify_personnel_event project_retirement generate_movement_data
 #'
 #' @return A Shiny server function for the workforce retirement module.
 workforce_retirement_server <- function(
@@ -106,7 +106,7 @@ workforce_retirement_server <- function(
 
     # plot 1. retirement counts/rates over time
     output[["retirement_plot"]] <- plotly::renderPlotly({
-      plot_data <- generate_movement_data(
+      plot_data <- govhr::generate_movement_data(
         .data = data_filtered(),
         movement_type = "retirement",
         measurement_type = input$measurement_type,

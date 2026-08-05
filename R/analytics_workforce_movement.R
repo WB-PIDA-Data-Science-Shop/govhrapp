@@ -107,6 +107,7 @@ workforce_movement_ui <- function(
 #' @importFrom gtsummary tbl_summary modify_header as_gt
 #' @importFrom shinyWidgets updatePickerInput
 #' @importFrom dplyr filter
+#' @importFrom govhr generate_movement_data classify_personnel_event
 #'
 #' @return A Shiny server function for the workforce movement module.
 workforce_movement_server <- function(
@@ -162,7 +163,7 @@ workforce_movement_server <- function(
 
     # plot 1. hiring counts/rates over time
     output$movement_trend <- plotly::renderPlotly({
-      plot_data <- generate_movement_data(
+      plot_data <- govhr::generate_movement_data(
         .data = data_filtered(),
         movement_type = input$movement_type,
         measurement_type = input$measurement_type,
@@ -184,7 +185,7 @@ workforce_movement_server <- function(
         need(input$group_filter != "ref_date", "Please select a group.")
       )
 
-      cross_section_data <- generate_movement_data(
+      cross_section_data <- govhr::generate_movement_data(
         .data = data_filtered(),
         movement_type = input$movement_type,
         measurement_type = input$measurement_type,
@@ -216,7 +217,7 @@ workforce_movement_server <- function(
         need(input$group_filter != "ref_date", "Please select a group.")
       )
 
-      turnover_data <- generate_movement_data(
+      turnover_data <- govhr::generate_movement_data(
         .data = data_filtered(),
         movement_type = input$movement_type,
         measurement_type = input$measurement_type,
