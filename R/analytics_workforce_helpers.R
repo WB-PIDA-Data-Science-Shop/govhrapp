@@ -31,10 +31,12 @@ workforce_overview_ui <- function(id, .data) {
       full_screen = TRUE,
       bslib::card_header(
         "Headcount",
-        bslib::tooltip(
-          bsicons::bs_icon("info-circle"),
-          "Headcount trends over time. Choosing a group will add new trend lines, by group."
-        )
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Headcount trends over time. Choosing a group will add new trend lines, by group.",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(
         shiny::NS(id, "workforce_panel"),

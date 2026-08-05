@@ -17,15 +17,20 @@
 #'
 #' @return A data frame with columns `ref_date`, optionally `group`, and `value`.
 #'
-#' @importFrom dplyr group_by across all_of summarise n
-#' @importFrom govhr compute_fastsummary
+#' @importFrom dplyr group_by across all_of
+#' @importFrom govhr compute_fastsummary fastcount
 #' @export
 compute_trend_summary <- function(data, group, measure_col = NULL) {
   groups <- if (group == "ref_date") "ref_date" else c("ref_date", group)
 
   if (is.null(measure_col)) {
     data |>
-      dplyr::summarise(value = dplyr::n(), .by = dplyr::all_of(groups))
+      govhr::fastcount(
+        dplyr::across(
+          dplyr::all_of(groups)
+        ),
+        name = "value"
+      )
   } else {
     data |>
       govhr::compute_fastsummary(

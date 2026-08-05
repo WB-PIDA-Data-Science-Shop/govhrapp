@@ -138,15 +138,15 @@ overview_server <- function(id, workforce_data, wagebill_data) {
         scales::label_number(
           scale_cut = scales::cut_short_scale()
         )(total),
-        bslib::tooltip(
-          bsicons::bs_icon("info-circle", style = "font-size: 0.75em; margin-left: 4px;"),
-          "Sum of base salary and allowances in local currency units (LCU)."
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill", style = "font-size: 0.75em; margin-left: 4px;"),
+          "Sum of base salary and allowances in local currency units (LCU).",
+          placement = "left"
         )
       )
     })
 
     # headcount panel
-
     heacount_panel <- reactive({
       workforce_data |>
         govhr::fastcount(.data[["ref_date"]], name = "value")
@@ -154,23 +154,11 @@ overview_server <- function(id, workforce_data, wagebill_data) {
 
     # plot 1. wage bill
     # Total compensation = base_salary_lcu + allowance_lcu
-
     wagebill_panel <- reactive({
-      has_base  <- "base_salary_lcu" %in% names(wagebill_data)
-      has_allow <- "allowance_lcu"   %in% names(wagebill_data)
-
       wagebill_data |>
-        dplyr::mutate(
-          total_compensation = dplyr::case_when(
-            has_base  & has_allow ~ .data[["base_salary_lcu"]] + .data[["allowance_lcu"]],
-            has_base              ~ .data[["base_salary_lcu"]],
-            has_allow             ~ .data[["allowance_lcu"]],
-            TRUE                  ~ NA_real_
-          )
-        ) |>
-        dplyr::summarise(
-          value = sum(.data[["total_compensation"]], na.rm = TRUE),
-          .by = .data[["ref_date"]]
+        compute_trend_summary(
+          group = "ref_date",
+          measure_col = "gross_salary_lcu"
         )
     })
 
@@ -195,10 +183,12 @@ overview_server <- function(id, workforce_data, wagebill_data) {
           full_screen = TRUE,
           bslib::card_header(
             "Integrated: Headcount and Wage Bill",
-            bslib::tooltip(
-              bsicons::bs_icon("info-circle"),
-              "Both series are indexed to 100 for the earliest reference date."
-            )
+            bslib::popover(
+              bsicons::bs_icon("info-circle-fill"),
+              "Both series are indexed to 100 for the earliest reference date.",
+              placement = "left"
+            ),
+            class = "d-flex justify-content-between"
           ),
           bslib::card_body(
             plotly::plotlyOutput(session$ns("plot_integrated"), height = "420px")

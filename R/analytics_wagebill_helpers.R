@@ -65,10 +65,12 @@ wagebill_overview_ui <- function(id, .data) {
       full_screen = TRUE,
       bslib::card_header(
         "Wage Bill Time Trends",
-        bslib::tooltip(
-          bsicons::bs_icon("info-circle"),
-          "Wage bill trends over time. Choosing a group will add new trend lines, by group."
-        )
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Wage bill trends over time. Choosing a group will add new trend lines, by group.",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(
         shiny::NS(id, "wagebill_panel"),
@@ -82,10 +84,12 @@ wagebill_overview_ui <- function(id, .data) {
         fillable = FALSE,
         bslib::card_header(
           "Total by group",
-          bslib::tooltip(
-            bsicons::bs_icon("info-circle"),
-            "Total amount, by group. Total refers to the latest available year in the selected time frame."
-          )
+          bslib::popover(
+            bsicons::bs_icon("info-circle-fill"),
+            "Total amount, by group. Total refers to the latest available year in the selected time frame.",
+            placement = "left"
+          ),
+          class = "d-flex justify-content-between"
         ),
         plotly::plotlyOutput(shiny::NS(id, "wagebill_cross_section")),
         min_height = "450px"
@@ -95,10 +99,12 @@ wagebill_overview_ui <- function(id, .data) {
         fillable = FALSE,
         bslib::card_header(
           "Growth rate by group",
-          bslib::tooltip(
-            bsicons::bs_icon("info-circle"),
-            "Growth rate with respect to first reference date, by group."
-          )
+          bslib::popover(
+            bsicons::bs_icon("info-circle-fill"),
+            "Growth rate with respect to first reference date, by group.",
+            placement = "left"
+          ),
+          class = "d-flex justify-content-between"
         ),
         plotly::plotlyOutput(shiny::NS(id, "wagebill_change")),
         min_height = "450px"
@@ -297,7 +303,7 @@ wagebill_equity_ui <- function(id, .data) {
       bslib::card_header(
         "Wage Distribution",
         bslib::popover(
-          bsicons::bs_icon("info-circle"),
+          bsicons::bs_icon("info-circle-fill"),
           "Wage density distribution. Choosing a group will add new trend lines, by group.",
           placement = "left"
         ),
@@ -325,7 +331,7 @@ wagebill_equity_ui <- function(id, .data) {
       bslib::card_header(
         "Wage by Decile",
         bslib::popover(
-          bsicons::bs_icon("info-circle"),
+          bsicons::bs_icon("info-circle-fill"),
           "Wage distribution by decile. Choosing a group will add new trend lines, by group.",
           placement = "left"
         ),
@@ -342,7 +348,7 @@ wagebill_equity_ui <- function(id, .data) {
       bslib::card_header(
         "Wage Compression Ratio (10th to 90th Percentile)",
         bslib::popover(
-          bsicons::bs_icon("info-circle"),
+          bsicons::bs_icon("info-circle-fill"),
           "Wage compression ratio between the 10th and 90th percentile. Choosing a group will add new trend lines, by group.",
           placement = "left"
         ),
@@ -506,10 +512,12 @@ wagebill_movement_ui <- function(id, .data) {
       full_screen = TRUE,
       bslib::card_header(
         "Labor Movement Costs",
-        bslib::tooltip(
-          bsicons::bs_icon("info-circle"),
-          "Labor movement costs over time. Choosing a group will add new trend lines, by group."
-        )
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Labor movement costs over time. Choosing a group will add new trend lines, by group.",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(
         shiny::NS(id, "wagebill_movement"),
@@ -521,10 +529,12 @@ wagebill_movement_ui <- function(id, .data) {
       full_screen = TRUE,
       bslib::card_header(
         "Labor Movement Costs by Group",
-        bslib::tooltip(
-          bsicons::bs_icon("info-circle"),
-          "Labor movement costs by group. Choosing a group will add new trend lines, by group."
-        )
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Labor movement costs by group. Choosing a group will add new trend lines, by group.",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(
         shiny::NS(id, "wagebill_movement_by_group"),
@@ -536,10 +546,12 @@ wagebill_movement_ui <- function(id, .data) {
       full_screen = TRUE,
       bslib::card_header(
         "Growth in Labor Movement Costs by Group",
-        bslib::tooltip(
-          bsicons::bs_icon("info-circle"),
-          "Growth in labor movement costs by group. Choosing a group will add new trend lines, by group."
-        )
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Growth in labor movement costs by group. Choosing a group will add new trend lines, by group.",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(
         shiny::NS(id, "wagebill_movement_growth"),
@@ -718,10 +730,12 @@ wagebill_retirement_ui <- function(id, .data) {
       full_screen = TRUE,
       bslib::card_header(
         "Retirement Costs",
-        bslib::tooltip(
-          bsicons::bs_icon("info-circle"),
-          "Retirement costs over time. Choosing a group will add new trend lines, by group."
-        )
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Retirement costs over time. Choosing a group will add new trend lines, by group.",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(
         shiny::NS(id, "wagebill_retirement"),
@@ -733,10 +747,12 @@ wagebill_retirement_ui <- function(id, .data) {
       full_screen = TRUE,
       bslib::card_header(
         "Projected Retirement Costs",
-        bslib::tooltip(
-          bsicons::bs_icon("info-circle"),
-          "Projected retirement costs over time. Choosing a group will add new trend lines, by group."
-        )
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Projected retirement costs over time. Choosing a group will add new trend lines, by group.",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(
         shiny::NS(id, "wagebill_retirement_projection"),
