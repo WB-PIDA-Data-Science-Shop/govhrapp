@@ -1,70 +1,3 @@
-#############################################################################################
-########## SOME FUNCTIONS THAT CUT ACROSS MODULES AND INTERFACES OF THE QCHECK APP ##########
-#############################################################################################
-
-# (Helper functions now live in govhr package or in qcheck_internal_helpers.R)
-
-#' a function to compute the proportion of missing values in a data frame
-#' @param data A data frame.
-#' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
-#'
-#' @return A numeric value representing the proportion of missing values in the data frame.
-compute_global_coverage <- function(data, digits = 2) {
-  coverage <- 100 * mean(!is.na(data))
-
-  coverage |>
-    round(digits)
-}
-
-#' Compute the proportion of consistent records and values in a data frame.
-#'
-#' @param data A data frame.
-#' @param id_col A character string specifying the name of the column that uniquely identifies records.
-#' @param value_cols A character vector specifying the name(s) of columns whose values
-#'   are to be checked for consistency. Value consistency is computed separately for
-#'   each column and averaged across columns before being combined with record consistency.
-#' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
-#'
-#' @import dplyr
-#' @importFrom purrr map_dbl
-#'
-#' @return A numeric value representing the proportion of consistent records and values in the data frame.
-#' @details Consistency is defined as the proportion of records and values that are consistent
-#'   across the dataset. A record is considered consistent if it has a unique identifier and all
-#'   its associated values are consistent. A value is considered consistent if it does not
-#'   contradict other values for the same record.
-compute_global_consistency <- function(data, id_col, value_cols, digits = 2) {
-  # don't round intermediate results, to avoid compounding rounding error in the average
-  record_consistency <- compute_record_consistency(
-    data,
-    id_col,
-    digits = 10
-  ) |>
-    dplyr::pull(.data[["record_consistency"]])
-
-  value_consistency <- purrr::map_dbl(
-    value_cols,
-    \(value_col) {
-      compute_value_consistency(
-        data,
-        id_col,
-        value_col,
-        digits = 10
-      ) |>
-        dplyr::pull(.data[["value_consistency"]])
-    }
-  ) |>
-    mean(na.rm = TRUE)
-
-  global_consistency <- mean(
-    c(record_consistency, value_consistency),
-    na.rm = TRUE
-  )
-
-  global_consistency |>
-    round(digits)
-}
-
 #' Render a Data Coverage Value Box
 #'
 #' @param .data Data frame. A dataframe to compute the coverage on.
@@ -78,12 +11,13 @@ compute_global_consistency <- function(data, id_col, value_cols, digits = 2) {
 #' @importFrom bslib value_box
 #' @importFrom dplyr case_when
 #' @importFrom bsicons bs_icon
+#' @importFrom govhr compute_global_coverage
 #'
 #' @details Coverage denotes the total number of non-missing records in a dataset, expressed as a percentage of the total records. For example, if a dataset has 10 rows and 10 columns, i.e., 100 records, and 10 of them are available, the coverage would be 10 percent.
 #' @export
 render_coverage_box <- function(.data, title, icon = "table") {
   shiny::renderUI({
-    value_coverage <- compute_global_coverage(.data)
+    value_coverage <- govhr::compute_global_coverage(.data)
 
     theme <- dplyr::case_when(
       value_coverage < 50 ~ "danger",
@@ -128,15 +62,15 @@ render_consistency_box <- function(
   icon = "table"
 ) {
   shiny::renderUI({
-    consistency <- compute_global_consistency(.data, id_col, value_cols)
+    consistency <- govhr::compute_global_consistency(.data, id_col, value_cols)
 
-    consistency_record <- compute_record_consistency(.data, id_col) |>
+    consistency_record <- govhr::compute_record_consistency(.data, id_col) |>
       dplyr::pull(.data[["record_consistency"]])
 
     consistency_value <- purrr::map_dbl(
       value_cols,
       \(value_col) {
-        compute_value_consistency(.data, id_col, value_col) |>
+        govhr::compute_value_consistency(.data, id_col, value_col) |>
           dplyr::pull(.data[["value_consistency"]])
       }
     ) |>
@@ -195,104 +129,6 @@ render_validation_box <- function(validation_data, title, icon = "table") {
       theme = theme
     )
   })
-}
-
-#' Compute the proportion of consistent records in a data frame.
-#'
-#' @param data A data frame.
-#' @param id_col A character string specifying the name of the column that uniquely identifies records (e.g., "personnel_id" or "contract_id").
-#' @param group_cols A character vector specifying the names of the columns to group by. Default is NULL, which means no grouping.
-#' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
-#'
-#' @import dplyr
-#'
-#' @return A data frame with the proportion of consistent records in the data frame, optionally by group.
-compute_record_consistency <- function(
-  data,
-  id_col,
-  group_cols = NULL,
-  digits = 2
-) {
-  if (!is.null(group_cols)) {
-    group_cols <- as.character(unlist(group_cols))
-  }
-
-  group_cols_with_ref_date <- unique(c("ref_date", group_cols))
-
-  dt <- data.table::as.data.table(data)
-
-  # count records per id_col + group_cols_with_ref_date combination
-  count_cols <- c(id_col, group_cols_with_ref_date)
-  record_consistency <- dt[,
-    .(n = .N),
-    by = count_cols
-  ]
-  record_consistency[, consistent_record := data.table::fifelse(n == 1, 1, 0)]
-
-  # percentage of consistent records, by group
-  if (is.null(group_cols)) {
-    result <- record_consistency[,
-      .(
-        record_consistency = round(
-          100 * sum(consistent_record, na.rm = TRUE) / .N,
-          digits
-        )
-      )
-    ]
-  } else {
-    result <- record_consistency[,
-      .(
-        record_consistency = round(
-          100 * sum(consistent_record, na.rm = TRUE) / .N,
-          digits
-        )
-      ),
-      by = group_cols
-    ]
-  }
-
-  tibble::as_tibble(result)
-}
-
-#' Compute the proportion of consistent values in a data frame.
-#'
-#' @param data A data frame.
-#' @param id_col A character string specifying the name of the column that uniquely identifies records.
-#' @param value_col A character string specifying the name of the column whose values are to be checked for consistency.
-#' @param group_cols A character vector specifying the names of the columns to group by. Default is no grouping.
-#' @param digits An integer specifying the number of decimal places to round the result to. Default is 2.
-#'
-#' @importFrom data.table as.data.table
-#' @importFrom tibble as_tibble
-#'
-#' @return A data frame with the proportion of consistent values in the data frame, optionally by group.
-compute_value_consistency <- function(
-  data,
-  id_col,
-  value_col,
-  group_cols = NULL,
-  digits = 2
-) {
-  if (!is.null(group_cols)) {
-    group_cols <- as.character(unlist(group_cols))
-  }
-
-  by_cols <- c(id_col, group_cols)
-
-  dt <- data.table::as.data.table(data)[, c(by_cols, value_col), with = FALSE]
-
-  value_consistency <- unique(dt, by = c(by_cols, value_col))[,
-    .N,
-    by = by_cols
-  ]
-
-  # percentage of ids with exactly 1 distinct value, by group
-  result <- value_consistency[,
-    .(value_consistency = round(100 * mean(N == 1), digits)),
-    by = group_cols
-  ]
-
-  tibble::as_tibble(result)
 }
 
 #' Generate UI controls to filter data.
@@ -693,13 +529,13 @@ consistency_panel_server <- function(id, .data) {
       # compute and cache the appropriate data for selected plot type
       data_consistency_panel <- shiny::reactive({
         if (input$type_plot == "record") {
-          compute_record_consistency(
+          govhr::compute_record_consistency(
             data_filtered(),
             id_col = id_col,
             group_cols = input$group_filter
           )
         } else {
-          compute_value_consistency(
+          govhr::compute_value_consistency(
             data_filtered(),
             id_col = id_col,
             value_col = input$value_col,

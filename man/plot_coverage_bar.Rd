@@ -14,7 +14,7 @@ establishment dataset for the active module.}
 A ggplot2 object.
 }
 \description{
-Computes per-group coverage using \code{\link[=compute_coverage]{compute_coverage()}} (without
+Computes per-group coverage using \code{\link[govhr:compute_coverage]{govhr::compute_coverage()}} (without
 \code{ref_date}, not aggregated) and renders a horizontal bar chart coloured
 green-yellow-red according to the same cutpoints used by the value boxes:
 }
