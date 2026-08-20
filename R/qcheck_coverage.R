@@ -20,10 +20,10 @@ coverage_ui <- function(id, est_data, personnel_data, contract_data) {
       NS(id, "coverage_est")
     ),
     uiOutput(
-      NS(id, "coverage_contract")
+      NS(id, "coverage_personnel")
     ),
     uiOutput(
-      NS(id, "coverage_personnel")
+      NS(id, "coverage_contract")
     )
   )
 
