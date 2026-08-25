@@ -171,7 +171,7 @@ consistency_panel_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
-      title = span("Controls", bsicons::bs_icon("sliders")),
+      title = "Controls",
       width = "300px",
       accordion_controls,
       shiny::actionButton(

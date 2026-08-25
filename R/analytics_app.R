@@ -65,9 +65,9 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
     # set theme
     theme = bslib::bs_theme(
       bootswatch = "litera",
-      base_font = font_google("Source Sans Pro", local = FALSE),
+      base_font = font_google("Figtree", local = FALSE),
       code_font = font_google("Source Sans Pro", local = FALSE),
-      heading_font = font_google("Fira Sans", local = FALSE),
+      heading_font = font_google("Libre Baskerville", local = FALSE),
       navbar_bg = "#ffffff"
     ) |>
       bslib::bs_add_rules(
@@ -98,7 +98,7 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
               style = "max-width: 800px; margin: 0 auto; padding: 2rem 3rem;",
               shiny::tags$h3("Welcome to govhr."),
               shiny::markdown(
-                readLines(system.file("markdown/home.md", package = "govhrapp"))
+                readLines(system.file("markdown/analytics_home.md", package = "govhrapp"))
               )
             )
           )

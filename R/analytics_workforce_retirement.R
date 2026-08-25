@@ -16,7 +16,7 @@ workforce_retirement_ui <- function(
     fillable = FALSE,
     theme = bslib::bs_theme(bootswatch = "litera"),
     sidebar = bslib::sidebar(
-      title = span("Controls", bsicons::bs_icon("sliders")),
+      title = "Controls",
       width = "300px",
       !!!ui_filter_controls(.data, id),
       shiny::numericInput(

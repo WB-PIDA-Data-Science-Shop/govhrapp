@@ -18,7 +18,7 @@ workforce_movement_ui <- function(
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
-      title = span("Controls", bsicons::bs_icon("sliders")),
+      title = "Controls",
       width = "300px",
       !!!ui_filter_controls(.data, id),
       shiny::selectInput(
