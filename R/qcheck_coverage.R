@@ -104,9 +104,9 @@ coverage_server <- function(id, est_data, personnel_data, contract_data, cache) 
     )
 
     # per-dataset panel sub-modules
-    coverage_panel_server("est",       est_data,        coverage_by_date$est)
-    coverage_panel_server("personnel", personnel_data,  coverage_by_date$personnel)
-    coverage_panel_server("contract",  contract_data,   coverage_by_date$contract)
+    coverage_panel_server("est",       est_data,        cache = cache$est)
+    coverage_panel_server("personnel", personnel_data,  cache = cache$personnel)
+    coverage_panel_server("contract",  contract_data,   cache = cache$contract)
   })
 }
 

@@ -4,12 +4,14 @@
 \alias{workforce_overview_server}
 \title{Workforce Overview Server}
 \usage{
-workforce_overview_server(id, .data)
+workforce_overview_server(id, .data, cache)
 }
 \arguments{
 \item{id}{A character string specifying the module ID.}
 
 \item{.data}{A data frame containing workforce data.}
+
+\item{cache}{A list containing cached data for performance optimization.}
 }
 \value{
 A Shiny server function for the workforce overview module.

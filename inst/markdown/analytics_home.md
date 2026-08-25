@@ -8,14 +8,18 @@ Across the world, public sectors employ over [400 million workers](https://www.w
 
 **Standard Analytics** comprises the following modules:
 
-💵 **Wage Bill**
-This module provides a set of standard indicators on the wage bill of your government. It helps you analyze the overall size and distribution of public sector compensation, potentially identifying areas to strengthen fiscal sustainability. 
+💵 **Wage Bill Analytics**
+This module provides a set of standard indicators on the wage bill of your government. It helps you analyze the overall size and distribution of public sector compensation, potentially identifying areas to strengthen fiscal sustainability.
 
 * **Overview:** See how the wage bill has evolved over time. Identify groups that are responsible for larger or smaller shares of the total wage bill, as well as how they have changed over time.
-* **Evolution:** An animated graph helps you see how the correlation between group headcount and overall wage bill has changed over time. This helps you identify outliers: groups that have a higher or lower wage bill than expected given their overall headcount.
+* **Equity:** Examine how wages are distributed across the workforce, using histograms and cumulative distributions, to assess dispersion and equity across groups.
+* **Movement:** Assess the cost of hires and fires (labor movement costs), and how these costs evolve over time and vary across groups.
+* **Retirement:** Estimate current and projected pension liabilities, based on a selected retirement threshold age.
+
 
 🚶 **Workforce Analytics**
 This module provides a set of standard indicators on the workforce of your government. It helps you analyze the overall size and distribution of your public sector workers, serving as a data-driven input for workforce planning.
 
-* **Headcount:** See how the workforce headcount has evolved over time. Identify groups that are responsible for larger or smaller shares of the total workforce, as well as how their relative shares have changed over time.
-* **Movements:** Assess the different types of movements of workers across the public sector. For example, what are the hiring and and exit rates: how they vary across groups and over time.
+* **Overview:** See how the workforce headcount has evolved over time. Identify groups that are responsible for larger or smaller shares of the total workforce, as well as how their relative shares have changed over time.
+* **Movement:** Assess the different types of movements of workers across the public sector. For example, what are the hiring and exit rates, and how do they vary across groups and over time, along with the demographic profile of movers.
+* **Retirement:** Track retirements over time and project future retirements and their rates, based on a selected retirement threshold age.
