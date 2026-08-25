@@ -23,7 +23,10 @@
 #' @importFrom lubridate year
 #' @importFrom scales label_number cut_short_scale
 #' @export
-run_govhrapp_qcheck <- function(est_data, personnel_data, contract_data, personnel_validation, contract_validation, ...) {
+run_govhrapp_qcheck <- function(
+  est_data, personnel_data, contract_data, personnel_validation, contract_validation, 
+  ...
+) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", system.file("www", package = "govhrapp"))
 
@@ -44,6 +47,9 @@ run_govhrapp_qcheck <- function(est_data, personnel_data, contract_data, personn
   ggplot2::update_geom_defaults("point", list(colour = "#C34729"))
   ggplot2::update_geom_defaults("line",  list(colour = "#C34729"))
   ggplot2::update_geom_defaults("col",   list(fill   = "#C34729"))
+
+  # compute key metrics for coverage and consistency
+  consistency_metrics <- compute_consistency_metrics(est_data, personnel_data, contract_data)
 
   ui <- bslib::page_navbar(
     fillable = FALSE,

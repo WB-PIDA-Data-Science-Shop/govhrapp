@@ -109,6 +109,175 @@ coverage_server <- function(id, est_data, personnel_data, contract_data) {
   })
 }
 
+#' Coverage Panel UI
+#'
+#' @param id Character string. The module namespace ID.
+#' @param .data Data frame. The data to be used in the coverage panel.
+#'
+#' @return A Shiny UI object representing the coverage panel.
+coverage_panel_ui <- function(id, .data) {
+  bslib::layout_sidebar(
+    fillable = FALSE,
+    sidebar = bslib::sidebar(
+      title = span("Controls", bsicons::bs_icon("sliders")),
+      width = "300px",
+      !!!ui_filter_controls(.data, id),
+      shinyWidgets::materialSwitch(
+        shiny::NS(id, "toggle_growth"),
+        label = "Switch to baseline index",
+        value = FALSE
+      ),
+      shiny::actionButton(
+        shiny::NS(id, "apply_btn"),
+        "Apply selection",
+        icon = shiny::icon("play")
+      )
+    ),
+
+    # plot 1. coverage over time
+    bslib::card(
+      full_screen = TRUE,
+      fillable = FALSE,
+      bslib::card_header(
+        "Coverage over time",
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          title = "Coverage over time",
+          "Computed as the average proportion of non-missing values for all variables over time."
+        ),
+        class = "d-flex justify-content-between"
+      ),
+      plotly::plotlyOutput(
+        shiny::NS(id, "coverage_panel"),
+        height = "350px"
+      )
+    ),
+
+    # plot 2. coverage by variable
+    bslib::card(
+      full_screen = TRUE,
+      fillable = FALSE,
+      bslib::card_header(
+        "Coverage by variable",
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          title = "Coverage by variable",
+          "Computed as the proportion of non-missing values for each variable."
+        ),
+        class = "d-flex justify-content-between"
+      ),
+      plotly::plotlyOutput(
+        shiny::NS(id, "coverage_by_variable"),
+        height = "350px"
+      )
+    ),
+
+    # plot 3. heatmap coverage by group
+    bslib::card(
+      full_screen = TRUE,
+      fillable = FALSE,
+      bslib::card_header(
+        "Coverage heatmap by group",
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Coverage, by variable and group.",
+          title = "Coverage heatmap by group",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
+      ),
+      plotly::plotlyOutput(
+        shiny::NS(id, "coverage_heatmap"),
+        height = "400px"
+      )
+    )
+  )
+}
+
+#' Coverage Panel Server
+#'
+#' Server logic for individual coverage panels.
+#'
+#' @param id Character string. Sub-module ID matching the one used in
+#'   [coverage_panel_ui()].
+#' @param .data Data frame for the panel (e.g., establishment, personnel, or contract).
+#'
+#' @return A set of Shiny outputs for the coverage panel.
+coverage_panel_server <- function(id, .data) {
+  shiny::moduleServer(id, function(input, output, session) {
+    # update subgroup_filter choices whenever the group column changes
+    shiny::observe({
+      variable <- input$group_filter
+
+      if (is.null(variable) || variable == "none") {
+        shinyWidgets::updatePickerInput(
+          session,
+          "subgroup_filter",
+          choices = NULL,
+          selected = character(0)
+        )
+      } else {
+        filter_vals <- sort(
+          as.character(
+            unique(
+              stats::na.omit(.data[[variable]])
+            )
+          )
+        )
+
+        shinyWidgets::updatePickerInput(
+          session,
+          "subgroup_filter",
+          choices = filter_vals,
+          selected = filter_vals
+        )
+      }
+    })
+
+    data_filtered <- shiny::reactive({
+      data <- .data
+
+      if (input$group_filter != "ref_date") {
+        data <- data |>
+          dplyr::filter(
+            .data[[input$group_filter]] %in% input$subgroup_filter
+          )
+      }
+
+      data |>
+        dplyr::filter(
+          .data[["ref_date"]] >= input$date_range[1],
+          .data[["ref_date"]] <= input$date_range[2]
+        )
+    })
+
+    # plot 1. coverage over time
+    output$coverage_panel <- plotly::renderPlotly({
+      plot_coverage_trend(
+        data_filtered(),
+        group = input$group_filter,
+        toggle_growth = input$toggle_growth
+      )
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # plot 2. coverage by variable
+    output$coverage_by_variable <- plotly::renderPlotly({
+      plot_coverage_bar(data_filtered())
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # plot 3. coverage heatmap by group
+    output$coverage_heatmap <- plotly::renderPlotly({
+      plot_coverage_heatmap(
+        data_filtered(),
+        group = input$group_filter
+      )
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+  })
+}
+
 run_coverageapp <- function(
   est_data,
   personnel_data,

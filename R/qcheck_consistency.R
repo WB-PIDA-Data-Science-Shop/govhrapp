@@ -67,7 +67,6 @@ consistency_ui <- function(id, est_data, personnel_data, contract_data) {
   )
 }
 
-
 #' Consistency Server Module
 #'
 #' Server logic for the consistency section, processing and visualizing whether data is consistent.
@@ -113,6 +112,234 @@ consistency_server <- function(id, est_data, personnel_data, contract_data) {
     consistency_panel_server("est", est_data)
     consistency_panel_server("personnel", personnel_data)
     consistency_panel_server("contract",  contract_data)
+  })
+}
+
+
+#' Consistency Panel UI
+#'
+#' @param id Character string. The module namespace ID.
+#' @param .data Data frame. The data to be used in the consistency panel.
+#'
+#' @import shiny
+#' @importFrom bslib layout_sidebar sidebar card card_header tooltip
+#' @importFrom bsicons bs_icon
+#' @importFrom shinyWidgets materialSwitch
+#'
+#' @return A Shiny UI object representing the consistency panel.
+consistency_panel_ui <- function(id, .data) {
+  accordion_controls <- bslib::accordion(
+    accordion_panel(
+      "Filters",
+      icon = bsicons::bs_icon("filter"),
+      !!!ui_filter_controls(.data, id)
+    ),
+    accordion_panel(
+      "Additional controls",
+      icon = bsicons::bs_icon("bar-chart"),
+      shiny::selectInput(
+        shiny::NS(id, "type_plot"),
+        "Select type of consistency:",
+        choices = c(
+          "Record" = "record",
+          "Value" = "value"
+        ),
+        selected = "record"
+      ),
+      # conditionally show the value column selection only when "Value" plot type is selected
+      shiny::conditionalPanel(
+        condition = sprintf(
+          "input['%s'] === 'value'",
+          shiny::NS(id, "type_plot")
+        ),
+        shiny::selectInput(
+          shiny::NS(id, "value_col"),
+          "Select value column:",
+          choices = identify_group_choices(.data),
+          selected = identify_group_choices(.data)[1]
+        )
+      ),
+      shinyWidgets::materialSwitch(
+        shiny::NS(id, "toggle_growth"),
+        label = "Switch to baseline index",
+        value = FALSE
+      )
+    )
+  )
+
+  bslib::layout_sidebar(
+    fillable = FALSE,
+    sidebar = bslib::sidebar(
+      title = span("Controls", bsicons::bs_icon("sliders")),
+      width = "300px",
+      accordion_controls,
+      shiny::actionButton(
+        shiny::NS(id, "apply_btn"),
+        "Apply selection",
+        icon = shiny::icon("play")
+      )
+    ),
+
+    # plot 1. consistency over time
+    bslib::card(
+      full_screen = TRUE,
+      fillable = FALSE,
+      bslib::card_header(
+        "Consistency over time",
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Computed as the global average of consistency, at the record level, in each module.",
+          title = "Consistency over time",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
+      ),
+      plotly::plotlyOutput(
+        shiny::NS(id, "consistency_panel"),
+        height = "350px"
+      )
+    ),
+
+    # plot 2. heatmap consistency by group
+    bslib::card(
+      full_screen = TRUE,
+      fillable = FALSE,
+      bslib::card_header(
+        "Consistency heatmap by group",
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Computed as the global average of consistency, at the value level, in each module, by variable and group.",
+          title = "Consistency heatmap by group",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
+      ),
+      plotly::plotlyOutput(
+        shiny::NS(id, "consistency_heatmap"),
+        height = "400px"
+      )
+    )
+  )
+}
+
+#' Consistency Panel Server
+#'
+#' @param id Character string. Sub-module ID.
+#' @param .data A dataframe. Input dataset for the sub-module.
+#'
+#' @import shiny
+#' @importFrom plotly renderPlotly
+#' @importFrom shinyWidgets updatePickerInput pickerOptions
+#' @importFrom dplyr filter
+#'
+#' @return A set of Shiny outputs for the consistency panel.
+consistency_panel_server <- function(id, .data) {
+  shiny::moduleServer(id, function(input, output, session) {
+    # update subgroup_filter choices whenever the group column changes
+    shiny::observe({
+      variable <- input$group_filter
+
+      if (is.null(variable) || variable == "none") {
+        shinyWidgets::updatePickerInput(
+          session,
+          "subgroup_filter",
+          choices = NULL,
+          selected = character(0)
+        )
+      } else {
+        filter_vals <- sort(
+          as.character(
+            unique(
+              stats::na.omit(.data[[variable]])
+            )
+          )
+        )
+
+        shinyWidgets::updatePickerInput(
+          session,
+          "subgroup_filter",
+          choices = filter_vals,
+          selected = filter_vals
+        )
+      }
+    })
+
+    data_filtered <- shiny::reactive({
+      data <- .data
+
+      if (input$group_filter != "ref_date") {
+        data <- data |>
+          dplyr::filter(
+            .data[[input$group_filter]] %in% input$subgroup_filter
+          )
+      }
+
+      data |>
+        dplyr::filter(
+          .data[["ref_date"]] >= input$date_range[1],
+          .data[["ref_date"]] <= input$date_range[2]
+        )
+    })
+
+    # plot 1. consistency over time
+    output$consistency_panel <- plotly::renderPlotly({
+      id_col <- switch(
+        id,
+        "est" = "est_id",
+        "personnel" = "personnel_id",
+        "contract" = "contract_id"
+      )
+
+      # compute and cache the appropriate data for selected plot type
+      data_consistency_panel <- shiny::reactive({
+        if (input$type_plot == "record") {
+          govhr::compute_record_consistency(
+            data_filtered(),
+            id_col = id_col,
+            group_cols = input$group_filter
+          )
+        } else {
+          govhr::compute_value_consistency(
+            data_filtered(),
+            id_col = id_col,
+            value_col = input$value_col,
+            group_cols = input$group_filter
+          )
+        }
+      }) |>
+        shiny::bindCache(
+          input$type_plot,
+          input$group_filter,
+          input$value_col
+        )
+
+      plot_consistency_trend(
+        data_consistency_panel(),
+        id_col = id_col,
+        type_plot = input$type_plot,
+        group = input$group_filter,
+        value_col = input$value_col,
+        toggle_growth = input$toggle_growth
+      )
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # plot 2. heatmap consistency by group
+    output$consistency_heatmap <- plotly::renderPlotly({
+      id_col <- switch(
+        id,
+        "est" = "est_id",
+        "personnel" = "personnel_id",
+        "contract" = "contract_id"
+      )
+
+      plot_consistency_heatmap(
+        data_filtered(),
+        id_col = id_col,
+        group = input$group_filter
+      )
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })
 }
 
