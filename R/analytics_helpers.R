@@ -158,6 +158,7 @@ render_movement_box <- function(.data, type_movement) {
       ),
       bslib::popover(
         bsicons::bs_icon("info-circle-fill"),
+        placement = "left",
         switch(
           type_movement,
           hire = "Number and share of personnel hired in the most recent reference period.",

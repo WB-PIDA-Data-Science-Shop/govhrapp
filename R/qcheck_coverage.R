@@ -143,6 +143,7 @@ coverage_panel_ui <- function(id, .data) {
         "Coverage over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
+          placement = "left",
           title = "Coverage over time",
           "Computed as the average proportion of non-missing values for all variables over time."
         ),
@@ -162,6 +163,7 @@ coverage_panel_ui <- function(id, .data) {
         "Coverage by variable",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
+          placement = "left",
           title = "Coverage by variable",
           "Computed as the proportion of non-missing values for each variable."
         ),

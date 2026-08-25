@@ -114,7 +114,7 @@ render_validation_box <- function(validation_data, title, icon = "table") {
     total_passes <- sum(df$Passes, na.rm = TRUE)
     total_records <- sum(df$`Total Records`, na.rm = TRUE)
 
-    pass_rate <- round(total_passes / total_records * 100, 1)
+    pass_rate <- round(total_passes / total_records * 100, 2)
 
     theme <- dplyr::case_when(
       pass_rate < 50 ~ "danger",
