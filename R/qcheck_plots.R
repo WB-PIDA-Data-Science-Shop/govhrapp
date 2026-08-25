@@ -158,7 +158,7 @@ plot_coverage_bar <- function(data) {
 #' @param group Character string. Grouping variable.
 #'
 #' @importFrom plotly plot_ly
-#' @importFrom dplyr across everything summarise
+#' @importFrom dplyr across everything summarise mutate
 #' @importFrom tidyr pivot_longer
 #' @importFrom scales label_percent
 #'
@@ -172,7 +172,10 @@ plot_coverage_heatmap <- function(data, group = NULL) {
     data,
     group = group,
     aggregate = FALSE
-  )
+  ) |>
+    dplyr::mutate(
+      coverage = .data[["coverage"]] / 100
+    )
 
   # plot heatmap
   plotly::plot_ly(
@@ -209,8 +212,13 @@ plot_coverage_heatmap <- function(data, group = NULL) {
 #' @param id_col Character string. The column name of the unique identifier for each record.
 #' @param group Character string. The column name of the grouping variable (e.g., "ref_date").
 #'
+#' @importFrom plotly plot_ly
+#' @importFrom dplyr across everything summarise mutate
+#' @importFrom tidyr pivot_longer
+#' @importFrom scales label_percent
+#' @importFrom purrr map_dfr
+#' 
 #' @return A plotly heatmap object representing consistency values by group and variable.
-#'
 plot_consistency_heatmap <- function(data, id_col, group) {
   value_cols <- setdiff(names(data), c(id_col, group))
 
@@ -222,7 +230,10 @@ plot_consistency_heatmap <- function(data, id_col, group) {
       value_col = .x,
       group_cols = group
     ) |>
-      dplyr::mutate(variable = .x)
+      dplyr::mutate(
+        variable = .x,
+        value_consistency = .data[["value_consistency"]] / 100
+      )
   )
 
   plotly::plot_ly(
