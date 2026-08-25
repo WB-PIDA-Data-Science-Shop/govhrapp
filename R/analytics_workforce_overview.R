@@ -83,6 +83,7 @@ workforce_overview_ui <- function(id, .data) {
 #'
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing workforce data.
+#' @param cache A list containing cached data for performance optimization.
 #'
 #' @import shiny
 #' @import bslib
@@ -90,7 +91,7 @@ workforce_overview_ui <- function(id, .data) {
 #' @importFrom shinyWidgets updatePickerInput
 #'
 #' @return A Shiny server function for the workforce overview module.
-workforce_overview_server <- function(id, .data) {
+workforce_overview_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     # update subgroup_filter choices whenever the group column changes
     shiny::observe({
@@ -139,6 +140,7 @@ workforce_overview_server <- function(id, .data) {
     })
 
     workforce_summary <- reactive({
+      if(input$group_filter == "ref_date")
       out <- compute_trend_summary(
         workforce_filtered(),
         group = input$group_filter

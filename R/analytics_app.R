@@ -13,7 +13,7 @@
 #' run_govhrapp(workforce_data, wagebill_data)
 #' }
 #'
-#' @importFrom shiny shinyApp addResourcePath
+#' @importFrom shiny shinyApp addResourcePath useBusyIndicators
 #' @importFrom bslib page_navbar nav_panel nav_spacer bs_theme bs_add_rules navbar_options font_google
 #' @importFrom ggplot2 theme_set theme_minimal theme element_text update_geom_defaults
 #' @importFrom thematic thematic_shiny
@@ -42,8 +42,21 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   ggplot2::update_geom_defaults("line",  list(colour = "#C34729"))
   ggplot2::update_geom_defaults("col",   list(fill   = "#C34729"))
 
+  # cache data to improve performance
+  cache <- list(
+    workforce_trend = workforce_data |>
+      govhr::fastcount(.data[["ref_date"]], name = "value"),
+    wagebill_trend = wagebill_data |>
+      compute_trend_summary(
+        group = "ref_date",
+        measure_col = "gross_salary_lcu"
+      )
+  )
+
   ui <- bslib::page_navbar(
     fillable = FALSE,
+
+    header = shiny::useBusyIndicators(),
 
     navbar_options = navbar_options(
       underline = TRUE
@@ -138,7 +151,7 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   )
 
   server <- function(input, output, session) {
-    overview_server("overview", workforce_data, wagebill_data)
+    overview_server("overview", workforce_data, wagebill_data, cache = cache)
     wagebill_server("wagebill", wagebill_data)
     workforce_server("workforce", workforce_data)
   }

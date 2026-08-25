@@ -151,6 +151,7 @@ importFrom(purrr,
   map,
   map2,
   map_dbl,
+  map_dfr,
   set_names
 )
 importFrom(rlang,":=")
@@ -189,6 +190,7 @@ importFrom(shiny,
   textOutput,
   uiOutput,
   updateSelectInput,
+  useBusyIndicators,
   validate,
   withProgress
 )

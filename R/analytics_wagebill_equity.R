@@ -1,14 +1,13 @@
-
 #' Function to create the UI for the wagebill equity module.
-#' 
+#'
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing wagebill data.
-#' 
+#'
 #' @import bslib
 #' @import shiny
 #' @importFrom plotly plotlyOutput
 #' @importFrom bsicons bs_icon
-#' 
+#'
 #' @return A Shiny module UI function for the wagebill equity module.
 wagebill_equity_ui <- function(id, .data) {
   bslib::layout_sidebar(
@@ -21,6 +20,12 @@ wagebill_equity_ui <- function(id, .data) {
         shiny::NS(id, "wagebill_measure"),
         "Type of Wage:",
         choices = identify_wagebill_choices(.data)
+      ),
+      shiny::radioButtons(
+        inputId = shiny::NS(id, "plot_type"),
+        label = "Type of wage distribution",
+        choices = c("Histogram" = "histogram", "Cumulative" = "cumulative"),
+        selected = "histogram"
       ),
       shiny::actionButton(
         shiny::NS(id, "apply_btn"),
@@ -36,17 +41,6 @@ wagebill_equity_ui <- function(id, .data) {
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
           "Wage density distribution. Choosing a group will add new trend lines, by group.",
-          placement = "left"
-        ),
-        bslib::popover(
-          bsicons::bs_icon("gear"),
-          shiny::radioButtons(
-            inputId = shiny::NS(id, "plot_type"),
-            label = "Plot type",
-            choices = c("Histogram" = "histogram", "Cumulative" = "cumulative"),
-            selected = "histogram"
-          ),
-          title = "Chart options",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -94,15 +88,15 @@ wagebill_equity_ui <- function(id, .data) {
 }
 
 #' Function to create the server logic for the wagebill equity module.
-#' 
+#'
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing wagebill data.
-#' 
+#'
 #' @import shiny
 #' @importFrom plotly renderPlotly
 #' @importFrom dplyr filter
 #' @importFrom govhr compute_compression_ratio
-#' 
+#'
 #' @return A Shiny module server function for the wagebill equity module.
 wagebill_equity_server <- function(id, .data) {
   shiny::moduleServer(id, function(input, output, session) {
@@ -152,6 +146,7 @@ wagebill_equity_server <- function(id, .data) {
     output$wagebill_distribution <- plotly::renderPlotly({
       # filter latest ref_date
       latest_ref_date <- max(wagebill_filtered()[["ref_date"]])
+
       wagebill_filtered_latest <- wagebill_filtered() |>
         dplyr::filter(.data[["ref_date"]] == latest_ref_date)
 
