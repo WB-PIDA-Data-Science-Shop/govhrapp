@@ -22,6 +22,7 @@
 #' @importFrom thematic thematic_shiny
 #' @importFrom lubridate year
 #' @importFrom scales label_number cut_short_scale
+#' @importFrom purrr map2 set_names
 #' @export
 run_govhrapp_qcheck <- function(
   est_data, personnel_data, contract_data, personnel_validation, contract_validation, 
@@ -48,11 +49,49 @@ run_govhrapp_qcheck <- function(
   ggplot2::update_geom_defaults("line",  list(colour = "#C34729"))
   ggplot2::update_geom_defaults("col",   list(fill   = "#C34729"))
 
-  # compute key metrics for coverage and consistency
-  consistency_metrics <- compute_consistency_metrics(est_data, personnel_data, contract_data)
+  # cache
+  
+  # precompute static meso tables once per deployment (default "ref_date" grouping)
+  coverage_by_date <- purrr::map2(
+    c("est", "personnel", "contract"),
+    list(est_data, personnel_data, contract_data),
+    ~govhr::compute_coverage(
+      .y,
+      group = "ref_date",
+      include_ref_date = TRUE,
+      aggregate = TRUE
+    )
+  ) |>
+    purrr::set_names(
+      c("est", "personnel", "contract")
+    )
+
+  consistency_by_date <- purrr::map2(
+    c("est", "personnel", "contract"),
+    list(est_data, personnel_data, contract_data),
+    \(.x, .y){
+      id_col <- switch(
+        .x,
+        "est" = "est_id",
+        "personnel" = "personnel_id",
+        "contract" = "contract_id"
+      )
+      
+      govhr::compute_record_consistency(
+      .y,
+      id_col = id_col,
+      group_cols = "ref_date"
+    )
+  }
+  )|>
+    purrr::set_names(
+      c("est", "personnel", "contract")
+    )
 
   ui <- bslib::page_navbar(
     fillable = FALSE,
+
+    header = shiny::useBusyIndicators(),
 
     # set theme
     theme = bslib::bs_theme(
@@ -72,6 +111,8 @@ run_govhrapp_qcheck <- function(
 
     padding = "20px",
 
+    # cache
+    
     # custom CSS
     # shiny::tags$head(shiny::includeCSS("www/styles.css")),
 
@@ -133,8 +174,14 @@ run_govhrapp_qcheck <- function(
   )
 
   server <- function(input, output, session) {
-    coverage_server("coverage", est_data, personnel_data, contract_data)
-    consistency_server("consistency", est_data, personnel_data, contract_data)
+    coverage_server(
+      "coverage", est_data, personnel_data, contract_data,
+      cache = coverage_by_date
+    )
+    consistency_server(
+      "consistency", est_data, personnel_data, contract_data,
+      cache = consistency_by_date
+    )
     validation_server("validation", personnel_validation, contract_validation)
   }
 

@@ -75,13 +75,14 @@ coverage_ui <- function(id, est_data, personnel_data, contract_data) {
 #' @param est_data Data frame. The establishment-level data.
 #' @param personnel_data Data frame. The personnel-level data.
 #' @param contract_data Data frame. The contract-level data.
+#' @param cache A list of dataframes. It caches pre-computed coverage results. Passed on to `coverage_panel_server()`.
 #'
 #' @return None. Called for side effects (renders Shiny outputs).
 #'
 #' @import shiny
 #'
 #' @keywords internal
-coverage_server <- function(id, est_data, personnel_data, contract_data) {
+coverage_server <- function(id, est_data, personnel_data, contract_data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     # 1. value boxes for coverage metrics
     output$coverage_est <- render_coverage_box(
@@ -103,9 +104,9 @@ coverage_server <- function(id, est_data, personnel_data, contract_data) {
     )
 
     # per-dataset panel sub-modules
-    coverage_panel_server("est",       est_data)
-    coverage_panel_server("personnel", personnel_data)
-    coverage_panel_server("contract",  contract_data)
+    coverage_panel_server("est",       est_data,        coverage_by_date$est)
+    coverage_panel_server("personnel", personnel_data,  coverage_by_date$personnel)
+    coverage_panel_server("contract",  contract_data,   coverage_by_date$contract)
   })
 }
 
@@ -201,9 +202,10 @@ coverage_panel_ui <- function(id, .data) {
 #' @param id Character string. Sub-module ID matching the one used in
 #'   [coverage_panel_ui()].
 #' @param .data Data frame for the panel (e.g., establishment, personnel, or contract).
+#' @param cache A list for caching pre-computed results.
 #'
 #' @return A set of Shiny outputs for the coverage panel.
-coverage_panel_server <- function(id, .data) {
+coverage_panel_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     # update subgroup_filter choices whenever the group column changes
     shiny::observe({
@@ -244,17 +246,39 @@ coverage_panel_server <- function(id, .data) {
           )
       }
 
-      data |>
-        dplyr::filter(
-          .data[["ref_date"]] >= input$date_range[1],
-          .data[["ref_date"]] <= input$date_range[2]
-        )
+      # only filter if user modifies the input for date range, otherwise keep the full dataset
+      if (!is.null(input$date_range)) {
+        data <- data |>
+          dplyr::filter(
+            .data[["ref_date"]] >= input$date_range[1],
+            .data[["ref_date"]] <= input$date_range[2]
+          )
+      }
+      
+      data
+    })
+
+    # if default (group filter input is ref_date), use cache data
+    coverage_trend_data <- shiny::reactive({
+      if (input$group_filter == "ref_date") {
+        data <- cache
+        if (!is.null(input$date_range)) {
+          data <- data |>
+            dplyr::filter(
+              .data[["ref_date"]] >= input$date_range[1],
+              .data[["ref_date"]] <= input$date_range[2]
+            )
+        }
+        data
+      } else {
+        data_filtered()
+      }
     })
 
     # plot 1. coverage over time
     output$coverage_panel <- plotly::renderPlotly({
       plot_coverage_trend(
-        data_filtered(),
+        coverage_trend_data(),
         group = input$group_filter,
         toggle_growth = input$toggle_growth
       )

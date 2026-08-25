@@ -4,7 +4,7 @@
 \alias{coverage_server}
 \title{Coverage Server Module}
 \usage{
-coverage_server(id, est_data, personnel_data, contract_data)
+coverage_server(id, est_data, personnel_data, contract_data, cache)
 }
 \arguments{
 \item{id}{Character string. The module namespace ID.}
@@ -14,6 +14,8 @@ coverage_server(id, est_data, personnel_data, contract_data)
 \item{personnel_data}{Data frame. The personnel-level data.}
 
 \item{contract_data}{Data frame. The contract-level data.}
+
+\item{cache}{A list of dataframes. It caches pre-computed coverage results. Passed on to \code{coverage_panel_server()}.}
 }
 \value{
 None. Called for side effects (renders Shiny outputs).

@@ -75,13 +75,14 @@ consistency_ui <- function(id, est_data, personnel_data, contract_data) {
 #' @param est_data Data frame. The establishment-level data.
 #' @param personnel_data Data frame. The personnel-level data.
 #' @param contract_data Data frame. The contract-level data.
+#' @param cache A list of data frames. Precomputed consistency data for the default grouping (ref_date).
 #'
 #' @return None. Called for side effects (renders Shiny outputs).
 #'
 #' @import shiny
 #'
 #' @keywords internal
-consistency_server <- function(id, est_data, personnel_data, contract_data) {
+consistency_server <- function(id, est_data, personnel_data, contract_data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     # 1. value boxes for coverage metrics
     output$consistency_est <- render_consistency_box(
@@ -109,9 +110,9 @@ consistency_server <- function(id, est_data, personnel_data, contract_data) {
     )
 
     # per-dataset panel sub-modules
-    consistency_panel_server("est", est_data)
-    consistency_panel_server("personnel", personnel_data)
-    consistency_panel_server("contract",  contract_data)
+    consistency_panel_server("est", est_data, cache = cache$est)
+    consistency_panel_server("personnel", personnel_data, cache = cache$personnel)
+    consistency_panel_server("contract",  contract_data, cache = cache$contract)
   })
 }
 
@@ -226,6 +227,7 @@ consistency_panel_ui <- function(id, .data) {
 #'
 #' @param id Character string. Sub-module ID.
 #' @param .data A dataframe. Input dataset for the sub-module.
+#' @param cache A list of dataframes. Precomputed consistency data for the default grouping (ref_date).
 #'
 #' @import shiny
 #' @importFrom plotly renderPlotly
@@ -233,7 +235,7 @@ consistency_panel_ui <- function(id, .data) {
 #' @importFrom dplyr filter
 #'
 #' @return A set of Shiny outputs for the consistency panel.
-consistency_panel_server <- function(id, .data) {
+consistency_panel_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     # update subgroup_filter choices whenever the group column changes
     shiny::observe({
@@ -274,11 +276,15 @@ consistency_panel_server <- function(id, .data) {
           )
       }
 
-      data |>
-        dplyr::filter(
-          .data[["ref_date"]] >= input$date_range[1],
-          .data[["ref_date"]] <= input$date_range[2]
-        )
+      if (!is.null(input$date_range)) {
+        data <- data |>
+          dplyr::filter(
+            .data[["ref_date"]] >= input$date_range[1],
+            .data[["ref_date"]] <= input$date_range[2]
+          )
+      }
+      
+      data
     })
 
     # plot 1. consistency over time
@@ -292,26 +298,26 @@ consistency_panel_server <- function(id, .data) {
 
       # compute and cache the appropriate data for selected plot type
       data_consistency_panel <- shiny::reactive({
-        if (input$type_plot == "record") {
-          govhr::compute_record_consistency(
-            data_filtered(),
-            id_col = id_col,
-            group_cols = input$group_filter
-          )
+        # use cache if default (group filter input is ref_date), otherwise compute on filtered data
+        if (input$group_filter == "ref_date") {
+          cache
         } else {
-          govhr::compute_value_consistency(
-            data_filtered(),
-            id_col = id_col,
-            value_col = input$value_col,
-            group_cols = input$group_filter
-          )
+          if (input$type_plot == "record") {
+            govhr::compute_record_consistency(
+              data_filtered(),
+              id_col = id_col,
+              group_cols = input$group_filter
+            )
+          } else {
+            govhr::compute_value_consistency(
+              data_filtered(),
+              id_col = id_col,
+              value_col = input$value_col,
+              group_cols = input$group_filter
+            )
+          }
         }
-      }) |>
-        shiny::bindCache(
-          input$type_plot,
-          input$group_filter,
-          input$value_col
-        )
+        })
 
       plot_consistency_trend(
         data_consistency_panel(),

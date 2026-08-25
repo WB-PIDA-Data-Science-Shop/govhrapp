@@ -1,45 +1,33 @@
 pkgload::load_all(".")
 
 # micro data
-est_data <- govhr::bra_hrmis_est
+# boostrap to increase sample size and make load testing realistic
+n_boot <- 100
 
-personnel_data <- govhr::bra_hrmis_personnel
+est_data <- purrr::map_dfr(
+  1:n_boot, 
+  ~ slice_sample(govhr::bra_hrmis_est, n = nrow(govhr::bra_hrmis_est), replace = TRUE)
+)
 
-contract_data <- govhr::bra_hrmis_contract
+personnel_data <- purrr::map_dfr(
+  1:n_boot, 
+  ~ slice_sample(govhr::bra_hrmis_personnel, n = nrow(govhr::bra_hrmis_personnel), replace = TRUE)
+)
+
+contract_data <- purrr::map_dfr(
+  1:n_boot, 
+  ~ slice_sample(govhr::bra_hrmis_contract, n = nrow(govhr::bra_hrmis_contract), replace = TRUE)
+)
 
 # validation data
 contract_validation <- govhr::validate_data(
-  contract_data,
+  govhr::bra_hrmis_contract,
   govhr::contract_rules
 )
 
 personnel_validation <- govhr::validate_data(
-  personnel_data,
+  govhr::bra_hrmis_personnel,
   govhr::personnel_rules
-)
-
-cache <- list(
-  box_consistency_est = render_consistency_box(
-      est_data,
-      id_col = "est_id",
-      value_cols = c("est_name_native"),
-      "Establishments",
-      "building"
-    ),
-  box_consistency_personnel = render_consistency_box(
-      personnel_data,
-      id_col = "personnel_id",
-      value_cols = c("birth_date"),
-      "Personnel",
-      "people-fill"
-    ),
-  box_consistency_contract = render_consistency_box(
-      contract_data,
-      id_col = "contract_id",
-      value_cols = c("contract_type"),
-      "Contracts",
-      "file-text-fill"
-    )
 )
 
 run_govhrapp_qcheck(
