@@ -15,7 +15,7 @@ wagebill_equity_ui <- function(id, .data) {
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      !!!ui_filter_controls(.data, id),
+      !!!default_ui_controls(.data, id),
       shiny::selectInput(
         shiny::NS(id, "wagebill_measure"),
         "Type of Wage:",

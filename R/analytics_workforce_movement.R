@@ -20,7 +20,7 @@ workforce_movement_ui <- function(
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      !!!ui_filter_controls(.data, id),
+      !!!default_ui_controls(.data, id),
       shiny::selectInput(
         shiny::NS(id, "movement_type"),
         label = "Select type of movement:",

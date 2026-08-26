@@ -37,7 +37,7 @@ wagebill_ui <- function(id, wagebill_data) {
     accordion_panel(
       "Filters",
       icon = bsicons::bs_icon("sliders"),
-      !!!ui_filter_controls(wagebill_data, id)
+      !!!default_ui_controls(wagebill_data, id)
     ),
     accordion_panel(
       "Measures",

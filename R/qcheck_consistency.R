@@ -133,7 +133,7 @@ consistency_panel_ui <- function(id, .data) {
     accordion_panel(
       "Filters",
       icon = bsicons::bs_icon("filter"),
-      !!!ui_filter_controls(.data, id)
+      !!!default_ui_controls(.data, id)
     ),
     accordion_panel(
       "Additional controls",

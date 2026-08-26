@@ -140,7 +140,7 @@ render_validation_box <- function(validation_data, title, icon = "table") {
 #' @importFrom shinyWidgets pickerInput pickerOptions
 #'  
 #' @return A list of Shiny UI elements for filtering the data.
-ui_filter_controls <- function(.data, id) {
+default_ui_controls <- function(.data, id) {
   group_choices <- identify_group_choices(.data)
 
   list(

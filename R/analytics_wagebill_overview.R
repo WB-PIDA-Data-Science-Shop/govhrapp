@@ -17,7 +17,7 @@ wagebill_overview_ui <- function(id, .data) {
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      !!!ui_filter_controls(.data, id),
+      !!!default_ui_controls(.data, id),
       # conditionally allow user to select wagebill measure if available
       shiny::selectInput(
         shiny::NS(id, "wagebill_measure"),

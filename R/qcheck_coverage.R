@@ -122,7 +122,7 @@ coverage_panel_ui <- function(id, .data) {
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      !!!ui_filter_controls(.data, id),
+      !!!default_ui_controls(.data, id),
       shinyWidgets::materialSwitch(
         shiny::NS(id, "toggle_growth"),
         label = "Switch to baseline index",

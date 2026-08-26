@@ -16,7 +16,7 @@ wagebill_movement_ui <- function(id, .data) {
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      !!!ui_filter_controls(.data, id),
+      !!!default_ui_controls(.data, id),
       shiny::selectInput(
         shiny::NS(id, "event_type"),
         "Type of Movement:",
