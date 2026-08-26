@@ -84,7 +84,12 @@ workforce_ui <- function(id, .data) {
         title = "Movement",
         workforce_movement_ui(NS(id, "movement"), .data)
       ),
-      # sub-panel 3: retirement
+      # sub-panel 3: transfers
+      bslib::nav_panel(
+        title = "Transfers",
+        workforce_transfer_ui(NS(id, "transfer"), .data)
+      ),
+      # sub-panel 4: retirement
       bslib::nav_panel(
         title = "Retirement",
         workforce_retirement_ui(NS(id, "retirement"), .data)
@@ -96,7 +101,8 @@ workforce_ui <- function(id, .data) {
 #' Workforce Analytics Server Module
 #' 
 #' @param id A character string specifying the module ID.
-#' @param .data A data frame containing personnel data.
+#' @param workforce_data A data frame containing personnel data.
+#' @param wagebill_data A data frame containing wage bill data.
 #' @param cache A list containing pre-computed trend summaries for workforce data.
 #' 
 #' @importFrom shiny shinyApp moduleServer reactive renderUI uiOutput
@@ -105,28 +111,29 @@ workforce_ui <- function(id, .data) {
 #' @export
 #' 
 #' @return A Shiny module server function for workforce analytics.
-workforce_server <- function(id, .data, cache) {
+workforce_server <- function(id, workforce_data, wagebill_data, cache) {
   moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
 
     # 1. value boxes for workforce movement metrics
-    output$movement_hire <- render_movement_box(.data, type_movement = "hire")
-    output$movement_fire <- render_movement_box(.data, type_movement = "fire")
+    output$movement_hire <- render_movement_box(workforce_data, type_movement = "hire")
+    output$movement_fire <- render_movement_box(workforce_data, type_movement = "fire")
 
     output$movement_retirement <- render_movement_box(
-      .data,
+      workforce_data,
       type_movement = "retirement"
     )
     
     output$movement_turnover <- render_movement_box(
-      .data,
+      workforce_data,
       type_movement = "turnover"
     )
 
     # 2. panel servers
-    workforce_overview_server("overview", .data, cache = cache)
-    workforce_movement_server("movement", .data)
-    workforce_retirement_server("retirement", .data)
+    workforce_overview_server("overview", workforce_data, cache = cache)
+    workforce_movement_server("movement", workforce_data)
+    workforce_transfer_server("transfer", wagebill_data)
+    workforce_retirement_server("retirement", workforce_data)
   })
 }
 

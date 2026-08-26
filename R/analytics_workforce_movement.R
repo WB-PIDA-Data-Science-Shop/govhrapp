@@ -115,34 +115,7 @@ workforce_movement_server <- function(
   .data
 ) {
   shiny::moduleServer(id, function(input, output, session) {
-    # update subgroup_filter choices whenever the group column changes
-    shiny::observe({
-      variable <- input$group_filter
-
-      if (is.null(variable) || variable == "none") {
-        shinyWidgets::updatePickerInput(
-          session,
-          "subgroup_filter",
-          choices = NULL,
-          selected = character(0)
-        )
-      } else {
-        filter_vals <- sort(
-          as.character(
-            unique(
-              stats::na.omit(.data[[variable]])
-            )
-          )
-        )
-
-        shinyWidgets::updatePickerInput(
-          session,
-          "subgroup_filter",
-          choices = filter_vals,
-          selected = filter_vals
-        )
-      }
-    })
+    update_group_filter_controls(.data, input, session)
 
     data_filtered <- shiny::reactive({
       filter_data(

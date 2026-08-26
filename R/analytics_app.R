@@ -155,7 +155,7 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   server <- function(input, output, session) {
     overview_server("overview", workforce_data, wagebill_data, cache = cache)
     wagebill_server("wagebill", wagebill_data, cache = cache[["wagebill_trend"]])
-    workforce_server("workforce", workforce_data, cache = cache[["workforce_trend"]])
+    workforce_server("workforce", workforce_data, wagebill_data, cache = cache[["workforce_trend"]])
   }
 
   shiny::shinyApp(ui, server, ...)

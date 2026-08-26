@@ -23,30 +23,55 @@ workforce_transfer_ui <- function(id, .data) {
         ),
         class = "d-flex justify-content-between"
       ),
-      plotly::plotlyOutput(shiny::NS(id, "progression_plot"))
+      plotly::plotlyOutput(shiny::NS(id, "transfer_plot"))
     )
   )
 }
 
 workforce_transfer_server <- function(id, .data) {
   moduleServer(id, function(input, output, session) {
-    workforce_filtered <- reactive({
-      req(input$apply_btn)
-      
-      
-    })
+    update_group_filter_controls(.data, input, session)
 
-    transfer_data <- reactive({
-      req(filtered_data())
-      govhr:::estimate_movement_rates(
-        filtered_data(),
-        group_cols = input$group_filter
+    workforce_filtered <- reactive({
+      filter_data(
+        .data,
+        group_filter = input$group_filter,
+        subgroup_filter = input$subgroup_filter,
+        date_range = input$date_range
       )
     })
 
-    output$progression_plot <- plotly::renderPlotly({
-      req(filtered_data())
-      plot_transfer_over_time(filtered_data())
+    transfer_data <- reactive({
+      req(input$apply_btn)
+
+      workforce_filtered() |>
+      as.data.table() |>
+      govhr:::detect_career_transitions(
+        vars = input$group_filter,
+        decision_var = "base_salary_lcu"
+      ) |>
+        govhr::fastcount(
+          dplyr::across(
+            all_of(
+              c("from", "to")
+            )
+          ),
+          name = "transfer"
+        )
+    })
+
+    output$transfer_plot <- plotly::renderPlotly({
+      transfer_data() |>
+        plot_transfer_heatmap()
     })
   })
+}
+
+workforce_transfer_app <- function(.data) {
+  shiny::shinyApp(
+    ui = workforce_transfer_ui("transfer", .data),
+    server = function(input, output, session) {
+      workforce_transfer_server("transfer", .data)
+    }
+  )
 }
