@@ -25,7 +25,11 @@
 #' @importFrom purrr map2 set_names
 #' @export
 run_govhrapp_qcheck <- function(
-  est_data, personnel_data, contract_data, personnel_validation, contract_validation, 
+  est_data,
+  personnel_data,
+  contract_data,
+  personnel_validation,
+  contract_validation,
   ...
 ) {
   # add path to visual assets (image and css)
@@ -46,16 +50,16 @@ run_govhrapp_qcheck <- function(
   )
 
   ggplot2::update_geom_defaults("point", list(colour = "#C34729"))
-  ggplot2::update_geom_defaults("line",  list(colour = "#C34729"))
-  ggplot2::update_geom_defaults("col",   list(fill   = "#C34729"))
+  ggplot2::update_geom_defaults("line", list(colour = "#C34729"))
+  ggplot2::update_geom_defaults("col", list(fill = "#C34729"))
 
   # cache
-  
+
   # precompute static meso tables once per deployment (default "ref_date" grouping)
   coverage_by_date <- purrr::map2(
     c("est", "personnel", "contract"),
     list(est_data, personnel_data, contract_data),
-    ~govhr::compute_coverage(
+    ~ govhr::compute_coverage(
       .y,
       group = "ref_date",
       include_ref_date = TRUE,
@@ -69,21 +73,21 @@ run_govhrapp_qcheck <- function(
   consistency_by_date <- purrr::map2(
     c("est", "personnel", "contract"),
     list(est_data, personnel_data, contract_data),
-    \(.x, .y){
+    \(.x, .y) {
       id_col <- switch(
         .x,
         "est" = "est_id",
         "personnel" = "personnel_id",
         "contract" = "contract_id"
       )
-      
+
       govhr::compute_record_consistency(
-      .y,
-      id_col = id_col,
-      group_cols = "ref_date"
-    )
-  }
-  )|>
+        .y,
+        id_col = id_col,
+        group_cols = "ref_date"
+      )
+    }
+  ) |>
     purrr::set_names(
       c("est", "personnel", "contract")
     )
@@ -96,10 +100,10 @@ run_govhrapp_qcheck <- function(
     # set theme
     theme = bslib::bs_theme(
       bootswatch = "litera",
-      base_font = font_google("Source Sans Pro"),
-      code_font = font_google("Source Sans Pro"),
-      heading_font = font_google("Fira Sans"),
-      navbar_bg = "#FFFFFF"
+      base_font = font_google("Figtree", local = FALSE),
+      code_font = font_google("Source Sans Pro", local = FALSE),
+      heading_font = font_google("Libre Baskerville", local = FALSE),
+      navbar_bg = "#ffffff"
     ) |>
       bslib::bs_add_rules(
         readLines(system.file("www/styles.css", package = "govhrapp"))
@@ -112,7 +116,7 @@ run_govhrapp_qcheck <- function(
     padding = "20px",
 
     # cache
-    
+
     # custom CSS
     # shiny::tags$head(shiny::includeCSS("www/styles.css")),
 
@@ -123,7 +127,11 @@ run_govhrapp_qcheck <- function(
 
       # content
       bslib::layout_columns(
-        col_widths = bslib::breakpoints(sm = 12, md = c(1, 10, 1), lg = c(1.5, 9, 1.5)),
+        col_widths = bslib::breakpoints(
+          sm = 12,
+          md = c(1, 10, 1),
+          lg = c(1.5, 9, 1.5)
+        ),
         shiny::div(),
         bslib::card(
           bslib::card_header(
@@ -138,7 +146,10 @@ run_govhrapp_qcheck <- function(
               style = "max-width: 800px; margin: 0 auto; padding: 2rem 3rem;",
               shiny::tags$h3("Welcome to govhr."),
               shiny::markdown(
-                readLines(system.file("markdown/qcheck_home.md", package = "govhrapp"))
+                readLines(system.file(
+                  "markdown/qcheck_home.md",
+                  package = "govhrapp"
+                ))
               )
             )
           )
@@ -146,7 +157,7 @@ run_govhrapp_qcheck <- function(
         shiny::div()
       )
     ),
-    
+
     # panel 2: coverage
     bslib::nav_panel(
       "Coverage",
@@ -175,11 +186,17 @@ run_govhrapp_qcheck <- function(
 
   server <- function(input, output, session) {
     coverage_server(
-      "coverage", est_data, personnel_data, contract_data,
+      "coverage",
+      est_data,
+      personnel_data,
+      contract_data,
       cache = coverage_by_date
     )
     consistency_server(
-      "consistency", est_data, personnel_data, contract_data,
+      "consistency",
+      est_data,
+      personnel_data,
+      contract_data,
       cache = consistency_by_date
     )
     validation_server("validation", personnel_validation, contract_validation)

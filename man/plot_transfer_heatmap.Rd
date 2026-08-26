@@ -7,9 +7,7 @@
 plot_transfer_heatmap(.data)
 }
 \arguments{
-\item{data}{A data frame.}
-
-\item{group}{Character string. Grouping variable.}
+\item{.data}{A data frame.}
 }
 \value{
 A ggplot2 object representing a heatmap of transfer values between groups

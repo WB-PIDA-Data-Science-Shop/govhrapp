@@ -1,23 +1,11 @@
 pkgload::load_all(".")
 
 # micro data
-# boostrap to increase sample size and make load testing realistic
-n_boot <- 100
+est_data <- govhr::bra_hrmis_est
 
-est_data <- purrr::map_dfr(
-  1:n_boot, 
-  ~ slice_sample(govhr::bra_hrmis_est, n = nrow(govhr::bra_hrmis_est), replace = TRUE)
-)
+personnel_data <- govhr::bra_hrmis_personnel
 
-personnel_data <- purrr::map_dfr(
-  1:n_boot, 
-  ~ slice_sample(govhr::bra_hrmis_personnel, n = nrow(govhr::bra_hrmis_personnel), replace = TRUE)
-)
-
-contract_data <- purrr::map_dfr(
-  1:n_boot, 
-  ~ slice_sample(govhr::bra_hrmis_contract, n = nrow(govhr::bra_hrmis_contract), replace = TRUE)
-)
+contract_data <- govhr::bra_hrmis_contract
 
 # validation data
 contract_validation <- govhr::validate_data(
