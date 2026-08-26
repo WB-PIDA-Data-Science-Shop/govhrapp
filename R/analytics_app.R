@@ -19,8 +19,7 @@
 #' @importFrom thematic thematic_shiny
 #' @importFrom lubridate year
 #' @importFrom scales label_number cut_short_scale
-#' @importFrom tidyr complete
-#' 
+#' @importFrom tidyr complete 
 #' @export
 run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   # add path to visual assets (image and css)
@@ -55,8 +54,25 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
         group = "ref_date",
         measure_col = "gross_salary_lcu"
       ),
-    transfer_default = 
-      
+    transfer_default = wagebill_data |>
+      as.data.table() |>
+      govhr:::detect_career_transitions(
+        vars = "paygrade",
+        decision_var = "base_salary_lcu"
+      ) |>
+      govhr::fastcount(
+        dplyr::across(
+          all_of(
+            c("from", "to")
+          )
+        ),
+        name = "transfer"
+      ) |>
+      tidyr::complete(
+        .data[["from"]],
+        .data[["to"]],
+        fill = list(transfer = 0)
+      )      
   )
 
   ui <- bslib::page_navbar(
