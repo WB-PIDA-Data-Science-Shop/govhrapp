@@ -124,7 +124,7 @@ workforce_server <- function(id, .data, cache) {
     )
 
     # 2. panel servers
-    workforce_overview_server("overview", .data)
+    workforce_overview_server("overview", .data, cache = cache)
     workforce_movement_server("movement", .data)
     workforce_retirement_server("retirement", .data)
   })

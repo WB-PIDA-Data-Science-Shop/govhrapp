@@ -148,7 +148,7 @@ wagebill_server <- function(id, wagebill_data, cache) {
     output$total_pension_liabilities <- render_wagebill_box(wagebill_data, type_measure = "total_pension_liabilities")
 
     # 2. panels for wage bill server
-    wagebill_overview_server("overview", wagebill_data)
+    wagebill_overview_server("overview", wagebill_data, cache = cache)
     wagebill_equity_server("equity", wagebill_data)
     wagebill_movement_server("movement", wagebill_data)
     wagebill_retirement_server("retirement", wagebill_data)
