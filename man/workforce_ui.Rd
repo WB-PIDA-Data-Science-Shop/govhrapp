@@ -2,7 +2,7 @@
 % Please edit documentation in R/analytics_workforce.R
 \name{workforce_ui}
 \alias{workforce_ui}
-\title{Workforce Analytics Module (Beta)}
+\title{Workforce Analytics Module}
 \usage{
 workforce_ui(id, .data)
 }
@@ -15,5 +15,5 @@ workforce_ui(id, .data)
 A Shiny app object for workforce analytics.
 }
 \description{
-Workforce Analytics Module (Beta)
+Workforce Analytics Module
 }

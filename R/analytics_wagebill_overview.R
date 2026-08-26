@@ -91,12 +91,13 @@ wagebill_overview_ui <- function(id, .data) {
 #' 
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing wagebill data.
+#' @param cache A list containing pre-computed trend summaries for workforce and wagebill data.
 #' 
 #' @import shiny
 #' @importFrom plotly renderPlotly
 #' 
 #' @return A Shiny module server function for the wagebill overview module.
-wagebill_overview_server <- function(id, .data) {
+wagebill_overview_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     # choice of cols
     wagebill_group_choices <- identify_group_choices(.data)
@@ -121,11 +122,16 @@ wagebill_overview_server <- function(id, .data) {
     })
 
     wagebill_summary <- shiny::reactive({
-      out <- compute_trend_summary(
-        wagebill_filtered(),
-        group = input$group_filter,
-        measure_col = input$wagebill_measure
-      )
+      # default to cache
+      if(input$group_filter == "ref_date") {
+        out <- cache
+      } else {
+        out <- compute_trend_summary(
+          wagebill_filtered(),
+          group = input$group_filter,
+          measure_col = input$wagebill_measure
+        )
+      }
 
       if (input$toggle_growth) {
         out <- apply_baseline_index(out, group = input$group_filter)

@@ -140,11 +140,15 @@ workforce_overview_server <- function(id, .data, cache) {
     })
 
     workforce_summary <- reactive({
-      if(input$group_filter == "ref_date")
-      out <- compute_trend_summary(
-        workforce_filtered(),
-        group = input$group_filter
-      )
+      # default to cache
+      if(input$group_filter == "ref_date"){
+        out <- cache
+      } else {
+        out <- compute_trend_summary(
+          workforce_filtered(),
+          group = input$group_filter
+        )
+      }
 
       if (input$toggle_growth) {
         out <- apply_baseline_index(out, group = input$group_filter)

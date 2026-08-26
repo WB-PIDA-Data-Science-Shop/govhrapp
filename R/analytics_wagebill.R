@@ -125,6 +125,7 @@ wagebill_ui <- function(id, wagebill_data) {
 #'
 #' @param id Module id.
 #' @param wagebill_data Data frame with wage bill data.
+#' @param cache A list containing pre-computed trend summaries for workforce and wagebill data.
 #'
 #' @importFrom shiny moduleServer reactive validate need bindEvent downloadHandler withProgress incProgress renderUI uiOutput
 #' @importFrom shinyWidgets pickerInput
@@ -140,7 +141,7 @@ wagebill_ui <- function(id, wagebill_data) {
 #' @importFrom rmarkdown render
 #' @importFrom stats na.omit
 #' @export
-wagebill_server <- function(id, wagebill_data) {
+wagebill_server <- function(id, wagebill_data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     # 1. value boxes for wage bill key metrics
     output$total_wagebill <- render_wagebill_box(wagebill_data, type_measure = "total_wagebill")

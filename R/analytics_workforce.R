@@ -1,4 +1,4 @@
-#' Workforce Analytics Module (Beta)
+#' Workforce Analytics Module
 #'
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing personnel data.
@@ -93,17 +93,31 @@ workforce_ui <- function(id, .data) {
   )
 }
 
-workforce_server <- function(id, .data) {
+#' Workforce Analytics Server Module
+#' 
+#' @param id A character string specifying the module ID.
+#' @param .data A data frame containing personnel data.
+#' @param cache A list containing pre-computed trend summaries for workforce data.
+#' 
+#' @importFrom shiny shinyApp moduleServer reactive renderUI uiOutput
+#' @importFrom bslib bs_theme
+#' 
+#' @export
+#' 
+#' @return A Shiny module server function for workforce analytics.
+workforce_server <- function(id, .data, cache) {
   moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
 
     # 1. value boxes for workforce movement metrics
     output$movement_hire <- render_movement_box(.data, type_movement = "hire")
     output$movement_fire <- render_movement_box(.data, type_movement = "fire")
+
     output$movement_retirement <- render_movement_box(
       .data,
       type_movement = "retirement"
     )
+    
     output$movement_turnover <- render_movement_box(
       .data,
       type_movement = "turnover"

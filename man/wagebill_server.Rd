@@ -4,12 +4,14 @@
 \alias{wagebill_server}
 \title{Wage Bill Server Module}
 \usage{
-wagebill_server(id, wagebill_data)
+wagebill_server(id, wagebill_data, cache)
 }
 \arguments{
 \item{id}{Module id.}
 
 \item{wagebill_data}{Data frame with wage bill data.}
+
+\item{cache}{A list containing pre-computed trend summaries for workforce and wagebill data.}
 }
 \description{
 Server logic for wage bill analytics server

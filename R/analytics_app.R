@@ -45,7 +45,9 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   # cache data to improve performance
   cache <- list(
     workforce_trend = workforce_data |>
-      govhr::fastcount(.data[["ref_date"]], name = "value"),
+      compute_trend_summary(
+        group = "ref_date"
+      ),
     wagebill_trend = wagebill_data |>
       compute_trend_summary(
         group = "ref_date",
@@ -152,8 +154,8 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
 
   server <- function(input, output, session) {
     overview_server("overview", workforce_data, wagebill_data, cache = cache)
-    wagebill_server("wagebill", wagebill_data)
-    workforce_server("workforce", workforce_data)
+    wagebill_server("wagebill", wagebill_data, cache = cache[["wagebill_trend"]])
+    workforce_server("workforce", workforce_data, cache = cache[["workforce_trend"]])
   }
 
   shiny::shinyApp(ui, server, ...)

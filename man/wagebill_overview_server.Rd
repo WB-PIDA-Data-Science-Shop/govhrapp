@@ -4,12 +4,14 @@
 \alias{wagebill_overview_server}
 \title{Function to create the server logic for the wagebill overview module.}
 \usage{
-wagebill_overview_server(id, .data)
+wagebill_overview_server(id, .data, cache)
 }
 \arguments{
 \item{id}{A character string specifying the module ID.}
 
 \item{.data}{A data frame containing wagebill data.}
+
+\item{cache}{A list containing pre-computed trend summaries for workforce and wagebill data.}
 }
 \value{
 A Shiny module server function for the wagebill overview module.
