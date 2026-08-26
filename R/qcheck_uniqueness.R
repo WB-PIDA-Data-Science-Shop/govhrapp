@@ -139,7 +139,7 @@ consistency_panel_ui <- function(id, .data) {
       "Additional controls",
       icon = bsicons::bs_icon("bar-chart"),
       shiny::selectInput(
-        shiny::NS(id, "type_plot"),
+        shiny::NS(id, "type_consistency"),
         "Select type of consistency:",
         choices = c(
           "Record" = "record",
@@ -151,7 +151,7 @@ consistency_panel_ui <- function(id, .data) {
       shiny::conditionalPanel(
         condition = sprintf(
           "input['%s'] === 'value'",
-          shiny::NS(id, "type_plot")
+          shiny::NS(id, "type_consistency")
         ),
         shiny::selectInput(
           shiny::NS(id, "value_col"),
@@ -201,23 +201,29 @@ consistency_panel_ui <- function(id, .data) {
       )
     ),
 
-    # plot 2. heatmap consistency by group
-    bslib::card(
-      full_screen = TRUE,
-      fillable = FALSE,
-      bslib::card_header(
-        "Consistency heatmap by group",
-        bslib::popover(
-          bsicons::bs_icon("info-circle-fill"),
-          "Computed as the global average of consistency, at the value level, in each module, by variable and group.",
-          title = "Consistency heatmap by group",
-          placement = "left"
-        ),
-        class = "d-flex justify-content-between"
+    # plot 2. heatmap consistency by group (only display if the type of consistency chosen is value)
+    shiny::conditionalPanel(
+      condition = sprintf(
+        "input['%s'] === 'value'",
+        shiny::NS(id, "type_consistency")
       ),
-      plotly::plotlyOutput(
-        shiny::NS(id, "consistency_heatmap"),
-        height = "400px"
+      bslib::card(
+        full_screen = TRUE,
+        fillable = FALSE,
+        bslib::card_header(
+          "Consistency heatmap by group",
+          bslib::popover(
+            bsicons::bs_icon("info-circle-fill"),
+            "Computed as the global average of consistency, at the value level, in each module, by variable and group.",
+            title = "Consistency heatmap by group",
+            placement = "left"
+          ),
+          class = "d-flex justify-content-between"
+        ),
+        plotly::plotlyOutput(
+          shiny::NS(id, "consistency_heatmap"),
+          height = "400px"
+        )
       )
     )
   )
@@ -260,10 +266,10 @@ consistency_panel_server <- function(id, .data, cache) {
       # compute and cache the appropriate data for selected plot type
       data_consistency_panel <- shiny::reactive({
         # use cache if default (group filter input is ref_date), otherwise compute on filtered data
-        if (input$group_filter == "ref_date") {
+        if (input$type_consistency == "record" && input$group_filter == "ref_date") {
           cache
         } else {
-          if (input$type_plot == "record") {
+          if (input$type_consistency == "record") {
             govhr::compute_record_consistency(
               data_filtered(),
               id_col = id_col,
@@ -283,7 +289,7 @@ consistency_panel_server <- function(id, .data, cache) {
       plot_consistency_trend(
         data_consistency_panel(),
         id_col = id_col,
-        type_plot = input$type_plot,
+        type_plot = input$type_consistency,
         group = input$group_filter,
         value_col = input$value_col,
         toggle_growth = input$toggle_growth
