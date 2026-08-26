@@ -239,25 +239,12 @@ coverage_panel_server <- function(id, .data, cache) {
     })
 
     data_filtered <- shiny::reactive({
-      data <- .data
-
-      if (input$group_filter != "ref_date") {
-        data <- data |>
-          dplyr::filter(
-            .data[[input$group_filter]] %in% input$subgroup_filter
-          )
-      }
-
-      # only filter if user modifies the input for date range, otherwise keep the full dataset
-      if (!is.null(input$date_range)) {
-        data <- data |>
-          dplyr::filter(
-            .data[["ref_date"]] >= input$date_range[1],
-            .data[["ref_date"]] <= input$date_range[2]
-          )
-      }
-      
-      data
+      filter_data(
+        .data,
+        group_filter = input$group_filter,
+        subgroup_filter = input$subgroup_filter,
+        date_range = input$date_range
+      )
     })
 
     # if default (group filter input is ref_date), use cache data

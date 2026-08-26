@@ -111,20 +111,12 @@ wagebill_movement_server <- function(id, .data) {
     update_group_filter_controls(.data, input, session)
 
     wagebill_filtered <- shiny::reactive({
-      data <- .data
-
-      if (input$group_filter != "ref_date") {
-        data <- data |>
-          dplyr::filter(
-            .data[[input$group_filter]] %in% input$subgroup_filter
-          )
-      }
-
-      data |>
-        dplyr::filter(
-          .data[["ref_date"]] >= input$date_range[1],
-          .data[["ref_date"]] <= input$date_range[2]
-        )
+      filter_data(
+        .data,
+        group_filter = input$group_filter,
+        subgroup_filter = input$subgroup_filter,
+        date_range = input$date_range
+      )
     })
 
     # plot 1. labor movement costs

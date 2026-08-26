@@ -267,24 +267,12 @@ consistency_panel_server <- function(id, .data, cache) {
     })
 
     data_filtered <- shiny::reactive({
-      data <- .data
-
-      if (input$group_filter != "ref_date") {
-        data <- data |>
-          dplyr::filter(
-            .data[[input$group_filter]] %in% input$subgroup_filter
-          )
-      }
-
-      if (!is.null(input$date_range)) {
-        data <- data |>
-          dplyr::filter(
-            .data[["ref_date"]] >= input$date_range[1],
-            .data[["ref_date"]] <= input$date_range[2]
-          )
-      }
-      
-      data
+      filter_data(
+        .data,
+        group_filter = input$group_filter,
+        subgroup_filter = input$subgroup_filter,
+        date_range = input$date_range
+      )
     })
 
     # plot 1. consistency over time
