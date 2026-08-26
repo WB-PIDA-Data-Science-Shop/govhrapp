@@ -56,7 +56,7 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
       ),
     transfer_default = wagebill_data |>
       as.data.table() |>
-      govhr:::detect_career_transitions(
+      govhr::detect_career_transitions(
         vars = "paygrade",
         decision_var = "base_salary_lcu"
       ) |>

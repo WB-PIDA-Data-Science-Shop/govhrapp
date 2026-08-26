@@ -660,8 +660,7 @@ plot_movement_cost <- function(.data, group_cols){
 
 #' Plot Transfer Heatmap
 #'
-#' @param data A data frame.
-#' @param group Character string. Grouping variable.
+#' @param .data A data frame.
 #'
 #' @importFrom plotly plot_ly
 #' @importFrom dplyr across everything summarise mutate
@@ -673,8 +672,8 @@ plot_transfer_heatmap <- function(.data) {
   # plot heatmap
   plotly::plot_ly(
     data = .data,
-    x = ~ .data[["from"]],
-    y = ~ .data[["to"]],
+    x = ~ .data[["to"]],
+    y = ~ .data[["from"]],
     z = ~ .data[["transfer"]],
     type = "heatmap",
     colorscale = list(
@@ -687,8 +686,8 @@ plot_transfer_heatmap <- function(.data) {
     xgap = 2,
     ygap = 2,
     hovertemplate = paste0(
-      "Group (from): %{x}<br>",
-      "Group (to): %{y}<br>",
+      "Group (to): %{x}<br>",
+      "Group (from): %{y}<br>",
       "Transfers: %{z}",
       "<extra></extra>"
     ),
@@ -697,7 +696,7 @@ plot_transfer_heatmap <- function(.data) {
     )
   ) |>
     plotly::layout(
-      xaxis = list(title = "Group (from)"),
-      yaxis = list(title = "Group (to)")
+      xaxis = list(title = "Group (to)"),
+      yaxis = list(title = "Group (from)")
     )
 }

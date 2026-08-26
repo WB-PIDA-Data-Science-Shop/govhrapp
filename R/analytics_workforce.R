@@ -140,6 +140,7 @@ workforce_server <- function(id, workforce_data, wagebill_data, cache) {
 
 run_workforce_app <- function(
   workforce_data,
+  wagebill_data,
   ...
 ) {
   theme <- bslib::bs_theme(

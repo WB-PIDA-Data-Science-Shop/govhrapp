@@ -1,18 +1,18 @@
 #' Workforce Transfer UI Module
-#' 
+#'
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing wagebill data.
-#' 
+#'
 #' @importFrom bslib layout_sidebar sidebar card card_header popover
 #' @importFrom shiny dateRangeInput selectInput actionButton NS
 #' @importFrom purrr map discard
 #' @importFrom plotly plotlyOutput
-#' 
+#'
 #' @return A Shiny module UI function for workforce transfer analytics.
 workforce_transfer_ui <- function(id, .data) {
   group_choices <- identify_group_choices(.data) |>
     purrr::map(
-        # remove ref_date from choice set
+      # remove ref_date from choice set
       \(variable_choices) {
         variable_choices |>
           purrr::discard(
@@ -26,20 +26,9 @@ workforce_transfer_ui <- function(id, .data) {
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      shiny::dateRangeInput(
-        shiny::NS(id, "date_range"),
-        "Select date range:",
-        start = min(.data[["ref_date"]], na.rm = TRUE),
-        end = max(.data[["ref_date"]], na.rm = TRUE),
-        min = min(.data[["ref_date"]], na.rm = TRUE),
-        max = max(.data[["ref_date"]], na.rm = TRUE)
-      ),
-      shiny::selectInput(
-        shiny::NS(id, "group"),
-        "Select group:",
-        selected = "paygrade",
-        choices = group_choices
-      ),
+      date_ui(id, .data),
+      group_filter_ui(id, .data, selected = "paygrade", group_choices),
+      subgroup_filter_ui(id, .data),
       shiny::actionButton(
         shiny::NS(id, "apply_btn"),
         "Apply selection",
@@ -64,46 +53,45 @@ workforce_transfer_ui <- function(id, .data) {
 }
 
 #' Workforce Transfer Server Module
-#' 
+#'
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing wagebill data.
 #' @param cache A list containing pre-computed data for caching.
-#' 
+#'
 #' @importFrom shiny moduleServer reactive req bindEvent
 #' @importFrom plotly renderPlotly
 #' @importFrom dplyr filter between
 #' @importFrom tidyr complete
 #' @importFrom data.table as.data.table
 #' @importFrom govhr detect_career_transitions fastcount
-#' 
+#'
 #' @export
-#' 
+#'
 #' @return A Shiny server module for workforce transfer analytics.
 workforce_transfer_server <- function(id, .data, cache) {
   moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
 
+    # ignore initial values for group_filter, subgroup_filter, and date_range
     workforce_filtered <- reactive({
-      req(input$group)
+       req(input$group_filter != "ref_date")
 
-      .data |>
-        dplyr::filter(
-          dplyr::between(
-            .data[["ref_date"]],
-            input$date_range[1],
-            input$date_range[2]
+        .data |>
+          filter_data(
+            group_filter = input$group_filter,
+            subgroup_filter = input$subgroup_filter,
+            date_range = input$date_range
           )
-        )
     })
 
     transfer_data <- reactive({
-      if (input$group == "paygrade") {
+      if (input$group_filter == "paygrade") {
         cache[["transfer_default"]]
       } else {
         workforce_filtered() |>
           as.data.table() |>
-          govhr:::detect_career_transitions(
-            vars = input$group,
+          govhr::detect_career_transitions(
+            vars = input$group_filter,
             decision_var = "base_salary_lcu"
           ) |>
           govhr::fastcount(
@@ -119,14 +107,14 @@ workforce_transfer_server <- function(id, .data, cache) {
             .data[["to"]],
             fill = list(transfer = 0)
           )
-      } 
+      }
     })
 
     output$transfer_plot <- plotly::renderPlotly({
       transfer_data() |>
         plot_transfer_heatmap()
     }) |>
-     shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })
 }
 
