@@ -135,16 +135,8 @@
   font-weight: bold;
 }
 
-/* force markdown-rendered body text to use theme's base font */
-.card-body,
-.card-body *,
-.shiny-html-output,
-.shiny-html-output * {
-  font-family: var(--bs-body-font-family) !important;
-}
-
-/* force accordion titles to use theme's base font */
-.accordion-header,
-.accordion-button {
+/* set fonts */
+.card-body :where(*):not(h1, h2, h3, h4, h5, h6, code, pre, kbd, samp),
+.shiny-html-output :where(*):not(h1, h2, h3, h4, h5, h6, code, pre, kbd, samp) {
   font-family: var(--bs-body-font-family) !important;
 }

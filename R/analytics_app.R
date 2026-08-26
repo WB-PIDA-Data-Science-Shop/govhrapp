@@ -19,6 +19,8 @@
 #' @importFrom thematic thematic_shiny
 #' @importFrom lubridate year
 #' @importFrom scales label_number cut_short_scale
+#' @importFrom tidyr complete
+#' 
 #' @export
 run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   # add path to visual assets (image and css)
@@ -39,8 +41,8 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   )
 
   ggplot2::update_geom_defaults("point", list(colour = "#C34729"))
-  ggplot2::update_geom_defaults("line",  list(colour = "#C34729"))
-  ggplot2::update_geom_defaults("col",   list(fill   = "#C34729"))
+  ggplot2::update_geom_defaults("line", list(colour = "#C34729"))
+  ggplot2::update_geom_defaults("col", list(fill = "#C34729"))
 
   # cache data to improve performance
   cache <- list(
@@ -52,7 +54,9 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
       compute_trend_summary(
         group = "ref_date",
         measure_col = "gross_salary_lcu"
-      )
+      ),
+    transfer_default = 
+      
   )
 
   ui <- bslib::page_navbar(
@@ -85,7 +89,11 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
 
       # content
       bslib::layout_columns(
-        col_widths = bslib::breakpoints(sm = 12, md = c(1, 10, 1), lg = c(1.5, 9, 1.5)),
+        col_widths = bslib::breakpoints(
+          sm = 12,
+          md = c(1, 10, 1),
+          lg = c(1.5, 9, 1.5)
+        ),
         shiny::div(),
         bslib::card(
           bslib::card_header(
@@ -100,7 +108,10 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
               style = "max-width: 800px; margin: 0 auto; padding: 2rem 3rem;",
               shiny::tags$h3("Welcome to govhr."),
               shiny::markdown(
-                readLines(system.file("markdown/analytics_home.md", package = "govhrapp"))
+                readLines(system.file(
+                  "markdown/analytics_home.md",
+                  package = "govhrapp"
+                ))
               )
             )
           )
@@ -120,9 +131,8 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
     bslib::nav_panel(
       "Workforce",
       icon = shiny::icon("person-walking"),
-      workforce_ui("workforce", workforce_data)
+      workforce_ui("workforce", workforce_data, wagebill_data)
     ),
-
 
     # panel 4: wage bill
     bslib::nav_panel(
@@ -154,8 +164,17 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
 
   server <- function(input, output, session) {
     overview_server("overview", workforce_data, wagebill_data, cache = cache)
-    wagebill_server("wagebill", wagebill_data, cache = cache[["wagebill_trend"]])
-    workforce_server("workforce", workforce_data, wagebill_data, cache = cache[["workforce_trend"]])
+    wagebill_server(
+      "wagebill",
+      wagebill_data,
+      cache = cache[["wagebill_trend"]]
+    )
+    workforce_server(
+      "workforce",
+      workforce_data,
+      wagebill_data,
+      cache = cache[c("workforce_trend", "transfer_default")]
+    )
   }
 
   shiny::shinyApp(ui, server, ...)

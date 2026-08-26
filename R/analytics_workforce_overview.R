@@ -107,7 +107,7 @@ workforce_overview_server <- function(id, .data, cache) {
     workforce_summary <- reactive({
       # default to cache
       if(input$group_filter == "ref_date"){
-        out <- cache
+        out <- cache[["workforce_trend"]]
       } else {
         out <- compute_trend_summary(
           workforce_filtered(),

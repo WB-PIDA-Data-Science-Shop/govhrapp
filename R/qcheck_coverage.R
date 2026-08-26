@@ -210,8 +210,6 @@ coverage_panel_ui <- function(id, .data) {
 coverage_panel_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
-      }
-    })
 
     data_filtered <- shiny::reactive({
       filter_data(

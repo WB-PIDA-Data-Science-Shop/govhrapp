@@ -1,14 +1,15 @@
 #' Workforce Analytics Module
 #'
 #' @param id A character string specifying the module ID.
-#' @param .data A data frame containing personnel data.
+#' @param workforce_data A data frame containing personnel data.
+#' @param wagebill_data A data frame containing wage bill data.
 #'
 #' @import shiny
 #' @import bslib
 #' @importFrom plotly renderPlotly
 #'
 #' @return A Shiny app object for workforce analytics.
-workforce_ui <- function(id, .data) {
+workforce_ui <- function(id, workforce_data, wagebill_data) {
   # value boxes for workforce movement metrics
   value_boxes <- list(
     uiOutput(
@@ -77,22 +78,22 @@ workforce_ui <- function(id, .data) {
       # sub-panel 1: overview
       bslib::nav_panel(
         title = "Overview",
-        workforce_overview_ui(NS(id, "overview"), .data)
+        workforce_overview_ui(NS(id, "overview"), workforce_data)
       ),
       # sub-panel 2: movement
       bslib::nav_panel(
         title = "Movement",
-        workforce_movement_ui(NS(id, "movement"), .data)
+        workforce_movement_ui(NS(id, "movement"), workforce_data)
       ),
       # sub-panel 3: transfers
       bslib::nav_panel(
         title = "Transfers",
-        workforce_transfer_ui(NS(id, "transfer"), .data)
+        workforce_transfer_ui(NS(id, "transfer"), wagebill_data)
       ),
       # sub-panel 4: retirement
       bslib::nav_panel(
         title = "Retirement",
-        workforce_retirement_ui(NS(id, "retirement"), .data)
+        workforce_retirement_ui(NS(id, "retirement"), workforce_data)
       )
     )
   )
@@ -132,7 +133,7 @@ workforce_server <- function(id, workforce_data, wagebill_data, cache) {
     # 2. panel servers
     workforce_overview_server("overview", workforce_data, cache = cache)
     workforce_movement_server("movement", workforce_data)
-    workforce_transfer_server("transfer", wagebill_data)
+    workforce_transfer_server("transfer", wagebill_data, cache = cache)
     workforce_retirement_server("retirement", workforce_data)
   })
 }
@@ -148,7 +149,7 @@ run_workforce_app <- function(
   ui <- workforce_ui("test", workforce_data)
 
   server <- function(input, output, session) {
-    workforce_server("test", workforce_data)
+    workforce_server("test", workforce_data, wagebill_data)
   }
 
   shiny::shinyApp(ui, server, ...)

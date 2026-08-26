@@ -4,12 +4,14 @@
 \alias{workforce_ui}
 \title{Workforce Analytics Module}
 \usage{
-workforce_ui(id, .data)
+workforce_ui(id, workforce_data, wagebill_data)
 }
 \arguments{
 \item{id}{A character string specifying the module ID.}
 
-\item{.data}{A data frame containing personnel data.}
+\item{workforce_data}{A data frame containing personnel data.}
+
+\item{wagebill_data}{A data frame containing wage bill data.}
 }
 \value{
 A Shiny app object for workforce analytics.

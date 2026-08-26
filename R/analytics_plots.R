@@ -669,28 +669,31 @@ plot_movement_cost <- function(.data, group_cols){
 #' @importFrom scales label_percent
 #'
 #' @return A ggplot2 object representing a heatmap of transfer values between groups
-plot_transfer_heatmap <- function(data) {
+plot_transfer_heatmap <- function(.data) {
   # plot heatmap
   plotly::plot_ly(
-    data = data,
+    data = .data,
     x = ~ .data[["from"]],
     y = ~ .data[["to"]],
     z = ~ .data[["transfer"]],
     type = "heatmap",
-    colorscale = list(c(0, "#d32f2f"), c(0.5, "#f9a825"), c(1, "#388e3c")),
-    zmin = 0,
-    zmax = 1,
+    colorscale = list(
+      c(min(.data[["transfer"]], na.rm = TRUE), "#d32f2f"),
+      c(median(.data[["transfer"]], na.rm = TRUE), "#f9a825"),
+      c(max(.data[["transfer"]], na.rm = TRUE), "#388e3c")
+    ),
+    zmin = min(.data[["transfer"]], na.rm = TRUE),
+    zmax = max(.data[["transfer"]], na.rm = TRUE),
     xgap = 2,
     ygap = 2,
     hovertemplate = paste0(
-      "Group: %{x}<br>",
-      "Variable: %{y}<br>",
-      "Coverage: %{z:.0%}",
+      "Group (from): %{x}<br>",
+      "Group (to): %{y}<br>",
+      "Transfers: %{z}",
       "<extra></extra>"
     ),
     colorbar = list(
-      title = "Coverage",
-      tickformat = ".0%"
+      title = "Transfers"
     )
   ) |>
     plotly::layout(

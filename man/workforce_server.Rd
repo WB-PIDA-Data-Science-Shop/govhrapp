@@ -4,12 +4,14 @@
 \alias{workforce_server}
 \title{Workforce Analytics Server Module}
 \usage{
-workforce_server(id, .data, cache)
+workforce_server(id, workforce_data, wagebill_data, cache)
 }
 \arguments{
 \item{id}{A character string specifying the module ID.}
 
-\item{.data}{A data frame containing personnel data.}
+\item{workforce_data}{A data frame containing personnel data.}
+
+\item{wagebill_data}{A data frame containing wage bill data.}
 
 \item{cache}{A list containing pre-computed trend summaries for workforce data.}
 }
