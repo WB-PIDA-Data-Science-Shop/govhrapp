@@ -7,7 +7,6 @@ export(compute_decile)
 export(compute_growth_summary)
 export(compute_trend_summary)
 export(deploy_govhrapp)
-export(generate_movement_data)
 export(guess_date_frequency)
 export(overview_server)
 export(overview_ui)
@@ -25,161 +24,201 @@ export(run_govhrapp_qcheck)
 export(run_wagebillapp)
 export(wagebill_server)
 export(wagebill_ui)
+export(workforce_server)
+export(workforce_transfer_server)
 import(bslib)
 import(dplyr)
 import(ggplot2)
 import(shiny)
 importFrom(bsicons,bs_icon)
-importFrom(bslib,accordion)
-importFrom(bslib,accordion_panel)
-importFrom(bslib,bs_add_rules)
-importFrom(bslib,bs_theme)
-importFrom(bslib,card)
-importFrom(bslib,card_body)
-importFrom(bslib,card_header)
-importFrom(bslib,font_google)
-importFrom(bslib,layout_columns)
-importFrom(bslib,layout_sidebar)
-importFrom(bslib,nav_panel)
-importFrom(bslib,nav_spacer)
-importFrom(bslib,navbar_options)
-importFrom(bslib,navset_tab)
-importFrom(bslib,page_navbar)
-importFrom(bslib,page_sidebar)
-importFrom(bslib,sidebar)
-importFrom(bslib,tooltip)
-importFrom(bslib,value_box)
-importFrom(bslib,value_box_theme)
+importFrom(bslib,
+  accordion,
+  accordion_panel,
+  bs_add_rules,
+  bs_theme,
+  card,
+  card_body,
+  card_header,
+  font_google,
+  layout_columns,
+  layout_sidebar,
+  nav_panel,
+  nav_spacer,
+  navbar_options,
+  navset_tab,
+  page_navbar,
+  page_sidebar,
+  popover,
+  sidebar,
+  tooltip,
+  value_box,
+  value_box_theme
+)
 importFrom(collapse,fquantile)
-importFrom(data.table,as.data.table)
-importFrom(data.table,copy)
-importFrom(data.table,fcase)
-importFrom(data.table,rbindlist)
-importFrom(data.table,setDT)
-importFrom(data.table,setorderv)
-importFrom(dplyr,across)
-importFrom(dplyr,all_of)
-importFrom(dplyr,arrange)
-importFrom(dplyr,bind_rows)
-importFrom(dplyr,case_when)
-importFrom(dplyr,collect)
-importFrom(dplyr,everything)
-importFrom(dplyr,filter)
-importFrom(dplyr,first)
-importFrom(dplyr,group_by)
-importFrom(dplyr,last)
-importFrom(dplyr,left_join)
-importFrom(dplyr,mutate)
-importFrom(dplyr,n)
-importFrom(dplyr,n_distinct)
-importFrom(dplyr,ntile)
-importFrom(dplyr,pull)
-importFrom(dplyr,rename)
-importFrom(dplyr,summarise)
-importFrom(dplyr,ungroup)
-importFrom(ggplot2,aes)
-importFrom(ggplot2,element_text)
-importFrom(ggplot2,geom_col)
-importFrom(ggplot2,geom_density)
-importFrom(ggplot2,geom_hline)
-importFrom(ggplot2,geom_jitter)
-importFrom(ggplot2,geom_line)
-importFrom(ggplot2,geom_point)
-importFrom(ggplot2,geom_segment)
-importFrom(ggplot2,geom_vline)
-importFrom(ggplot2,ggplot)
-importFrom(ggplot2,guide_axis)
-importFrom(ggplot2,labs)
-importFrom(ggplot2,scale_color_manual)
-importFrom(ggplot2,scale_x_continuous)
-importFrom(ggplot2,scale_y_continuous)
-importFrom(ggplot2,scale_y_discrete)
-importFrom(ggplot2,theme)
-importFrom(ggplot2,theme_minimal)
-importFrom(ggplot2,theme_set)
-importFrom(ggplot2,update_geom_defaults)
-importFrom(ggplot2,xlab)
-importFrom(ggplot2,ylab)
-importFrom(govhr,complete_dates)
-importFrom(govhr,compute_fastsummary)
-importFrom(govhr,convert_constant_ppp)
-importFrom(govhr,detect_personnel_event)
-importFrom(govhr,fastcount)
-importFrom(govhr,validate_data)
+importFrom(data.table,
+  as.data.table,
+  setorderv
+)
+importFrom(dplyr,
+  across,
+  all_of,
+  arrange,
+  between,
+  bind_rows,
+  case_when,
+  collect,
+  everything,
+  filter,
+  first,
+  group_by,
+  last,
+  left_join,
+  mutate,
+  n,
+  n_distinct,
+  ntile,
+  pull,
+  rename,
+  summarise,
+  ungroup
+)
+importFrom(ggplot2,
+  aes,
+  element_text,
+  geom_col,
+  geom_density,
+  geom_hline,
+  geom_jitter,
+  geom_line,
+  geom_point,
+  geom_segment,
+  geom_vline,
+  ggplot,
+  guide_axis,
+  labs,
+  scale_color_manual,
+  scale_x_continuous,
+  scale_y_continuous,
+  scale_y_discrete,
+  theme,
+  theme_minimal,
+  theme_set,
+  update_geom_defaults,
+  xlab,
+  ylab
+)
+importFrom(govhr,
+  classify_personnel_event,
+  complete_dates,
+  compute_compression_ratio,
+  compute_fastsummary,
+  compute_global_coverage,
+  compute_workforce_movement,
+  convert_constant_ppp,
+  detect_career_transitions,
+  fastcount,
+  project_retirement,
+  validate_data
+)
 importFrom(grDevices,colorRampPalette)
-importFrom(gt,cell_fill)
-importFrom(gt,cols_align)
-importFrom(gt,fmt_markdown)
-importFrom(gt,fmt_number)
-importFrom(gt,gt)
-importFrom(gt,gt_output)
-importFrom(gt,opt_row_striping)
-importFrom(gt,opt_table_outline)
-importFrom(gt,render_gt)
-importFrom(gt,tab_style)
-importFrom(gtsummary,as_gt)
-importFrom(gtsummary,modify_header)
-importFrom(gtsummary,tbl_summary)
-importFrom(lubridate,year)
-importFrom(lubridate,years)
-importFrom(lubridate,ymd)
-importFrom(plotly,animation_opts)
-importFrom(plotly,animation_slider)
-importFrom(plotly,ggplotly)
-importFrom(plotly,layout)
-importFrom(plotly,plot_ly)
-importFrom(plotly,plotlyOutput)
-importFrom(plotly,renderPlotly)
-importFrom(purrr,keep)
-importFrom(purrr,map)
-importFrom(purrr,map_dbl)
-importFrom(purrr,set_names)
+importFrom(gt,
+  cell_fill,
+  cols_align,
+  fmt_markdown,
+  fmt_number,
+  gt,
+  gt_output,
+  opt_row_striping,
+  opt_table_outline,
+  render_gt,
+  tab_style
+)
+importFrom(gtsummary,
+  as_gt,
+  modify_header,
+  tbl_summary
+)
+importFrom(lubridate,
+  year,
+  years
+)
+importFrom(plotly,
+  animation_opts,
+  animation_slider,
+  ggplotly,
+  layout,
+  plot_ly,
+  plotlyOutput,
+  renderPlotly
+)
+importFrom(purrr,
+  discard,
+  keep,
+  map,
+  map2,
+  map_dbl,
+  map_dfr,
+  set_names
+)
 importFrom(rlang,":=")
 importFrom(rmarkdown,render)
 importFrom(rsconnect,deployApp)
-importFrom(scales,comma)
-importFrom(scales,cut_short_scale)
-importFrom(scales,label_number)
-importFrom(scales,label_percent)
-importFrom(shiny,NS)
-importFrom(shiny,actionButton)
-importFrom(shiny,addResourcePath)
-importFrom(shiny,bindEvent)
-importFrom(shiny,downloadButton)
-importFrom(shiny,downloadHandler)
-importFrom(shiny,icon)
-importFrom(shiny,incProgress)
-importFrom(shiny,markdown)
-importFrom(shiny,moduleServer)
-importFrom(shiny,need)
-importFrom(shiny,observe)
-importFrom(shiny,observeEvent)
-importFrom(shiny,p)
-importFrom(shiny,radioButtons)
-importFrom(shiny,reactive)
-importFrom(shiny,renderText)
-importFrom(shiny,renderUI)
-importFrom(shiny,req)
-importFrom(shiny,selectInput)
-importFrom(shiny,shinyApp)
-importFrom(shiny,tagList)
-importFrom(shiny,tags)
-importFrom(shiny,textOutput)
-importFrom(shiny,uiOutput)
-importFrom(shiny,updateSelectInput)
-importFrom(shiny,validate)
-importFrom(shiny,withProgress)
-importFrom(shinyWidgets,materialSwitch)
-importFrom(shinyWidgets,numericRangeInput)
-importFrom(shinyWidgets,pickerInput)
-importFrom(shinyWidgets,pickerOptions)
-importFrom(shinyWidgets,updatePickerInput)
-importFrom(stats,median)
-importFrom(stats,na.omit)
-importFrom(stats,reorder)
+importFrom(scales,
+  comma,
+  cut_short_scale,
+  label_number,
+  label_percent
+)
+importFrom(shiny,
+  NS,
+  actionButton,
+  addResourcePath,
+  bindEvent,
+  conditionalPanel,
+  dateRangeInput,
+  downloadButton,
+  downloadHandler,
+  icon,
+  incProgress,
+  markdown,
+  moduleServer,
+  need,
+  observe,
+  observeEvent,
+  p,
+  radioButtons,
+  reactive,
+  renderText,
+  renderUI,
+  req,
+  selectInput,
+  shinyApp,
+  tagList,
+  tags,
+  textOutput,
+  uiOutput,
+  updateSelectInput,
+  useBusyIndicators,
+  validate,
+  withProgress
+)
+importFrom(shinyWidgets,
+  materialSwitch,
+  numericRangeInput,
+  pickerInput,
+  pickerOptions,
+  updatePickerInput
+)
+importFrom(stats,
+  median,
+  na.omit,
+  reorder
+)
 importFrom(stringr,str_wrap)
 importFrom(thematic,thematic_shiny)
-importFrom(tibble,as_tibble)
 importFrom(tibble,tibble)
-importFrom(tidyr,pivot_longer)
+importFrom(tidyr,
+  complete,
+  pivot_longer
+)
 importFrom(writexl,write_xlsx)

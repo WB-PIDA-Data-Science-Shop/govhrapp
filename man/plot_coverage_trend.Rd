@@ -20,7 +20,7 @@ baseline-index view (first period = 100). Defaults to \code{FALSE}.}
 A ggplot2 object.
 }
 \description{
-Computes coverage using \code{\link[=compute_coverage]{compute_coverage()}} (with \code{ref_date} always
+Computes coverage using \code{\link[govhr:compute_coverage]{govhr::compute_coverage()}} (with \code{ref_date} always
 included, aggregated across variables) and renders a trend line via
 \code{\link[=plot_trend]{plot_trend()}}.
 }

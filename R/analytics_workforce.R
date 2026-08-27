@@ -1,14 +1,15 @@
-#' Workforce Analytics Module (Beta)
+#' Workforce Analytics Module
 #'
 #' @param id A character string specifying the module ID.
-#' @param .data A data frame containing personnel data.
+#' @param workforce_data A data frame containing personnel data.
+#' @param wagebill_data A data frame containing wage bill data.
 #'
 #' @import shiny
 #' @import bslib
 #' @importFrom plotly renderPlotly
 #'
 #' @return A Shiny app object for workforce analytics.
-workforce_ui <- function(id, .data) {
+workforce_ui <- function(id, workforce_data, wagebill_data) {
   # value boxes for workforce movement metrics
   value_boxes <- list(
     uiOutput(
@@ -33,7 +34,7 @@ workforce_ui <- function(id, .data) {
       bslib::card_header("Workforce: Overview"),
       bslib::card_body(
         shiny::markdown(
-          readLines(system.file("markdown/workforce.md", package = "govhrapp"))
+          readLines(system.file("markdown/analytics_workforce.md", package = "govhrapp"))
         )
       )
     ),
@@ -43,7 +44,7 @@ workforce_ui <- function(id, .data) {
         icon = shiny::icon("question-circle"),
         shiny::markdown(
           readLines(system.file(
-            "markdown/workforce_questions.md",
+            "markdown/analytics_workforce_questions.md",
             package = "govhrapp"
           ))
         )
@@ -77,47 +78,69 @@ workforce_ui <- function(id, .data) {
       # sub-panel 1: overview
       bslib::nav_panel(
         title = "Overview",
-        workforce_overview_ui(NS(id, "overview"), .data)
+        workforce_overview_ui(NS(id, "overview"), workforce_data)
       ),
       # sub-panel 2: movement
       bslib::nav_panel(
         title = "Movement",
-        workforce_movement_ui(NS(id, "movement"), .data)
+        workforce_movement_ui(NS(id, "movement"), workforce_data)
       ),
-      # sub-panel 3: retirement
+      # sub-panel 3: transfers
+      bslib::nav_panel(
+        title = "Transfers",
+        workforce_transfer_ui(NS(id, "transfer"), wagebill_data)
+      ),
+      # sub-panel 4: retirement
       bslib::nav_panel(
         title = "Retirement",
-        workforce_retirement_ui(NS(id, "retirement"), .data)
+        workforce_retirement_ui(NS(id, "retirement"), workforce_data)
       )
     )
   )
 }
 
-workforce_server <- function(id, .data) {
+#' Workforce Analytics Server Module
+#' 
+#' @param id A character string specifying the module ID.
+#' @param workforce_data A data frame containing personnel data.
+#' @param wagebill_data A data frame containing wage bill data.
+#' @param cache A list containing pre-computed trend summaries for workforce data.
+#' 
+#' @importFrom shiny shinyApp moduleServer reactive renderUI uiOutput
+#' @importFrom bslib bs_theme
+#' 
+#' @export
+#' 
+#' @return A Shiny module server function for workforce analytics.
+workforce_server <- function(id, workforce_data, wagebill_data, cache) {
   moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
 
     # 1. value boxes for workforce movement metrics
-    output$movement_hire <- render_movement_box(.data, type_movement = "hire")
-    output$movement_fire <- render_movement_box(.data, type_movement = "fire")
+    output$movement_hire <- render_movement_box(workforce_data, type_movement = "hire")
+    output$movement_fire <- render_movement_box(workforce_data, type_movement = "fire")
+
     output$movement_retirement <- render_movement_box(
-      .data,
+      workforce_data,
       type_movement = "retirement"
     )
+    
     output$movement_turnover <- render_movement_box(
-      .data,
+      workforce_data,
       type_movement = "turnover"
     )
 
     # 2. panel servers
-    workforce_overview_server("overview", .data)
-    workforce_movement_server("movement", .data)
-    workforce_retirement_server("retirement", .data)
+    workforce_overview_server("overview", workforce_data, cache = cache)
+    workforce_movement_server("movement", workforce_data)
+    workforce_transfer_server("transfer", wagebill_data, cache = cache)
+    workforce_retirement_server("retirement", workforce_data)
   })
 }
 
 run_workforce_app <- function(
   workforce_data,
+  wagebill_data,
   ...
 ) {
   theme <- bslib::bs_theme(
@@ -127,7 +150,7 @@ run_workforce_app <- function(
   ui <- workforce_ui("test", workforce_data)
 
   server <- function(input, output, session) {
-    workforce_server("test", workforce_data)
+    workforce_server("test", workforce_data, wagebill_data)
   }
 
   shiny::shinyApp(ui, server, ...)

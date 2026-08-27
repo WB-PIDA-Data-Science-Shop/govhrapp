@@ -17,15 +17,20 @@
 #'
 #' @return A data frame with columns `ref_date`, optionally `group`, and `value`.
 #'
-#' @importFrom dplyr group_by across all_of summarise n
-#' @importFrom govhr compute_fastsummary
+#' @importFrom dplyr group_by across all_of
+#' @importFrom govhr compute_fastsummary fastcount
 #' @export
 compute_trend_summary <- function(data, group, measure_col = NULL) {
   groups <- if (group == "ref_date") "ref_date" else c("ref_date", group)
 
   if (is.null(measure_col)) {
     data |>
-      dplyr::summarise(value = dplyr::n(), .by = dplyr::all_of(groups))
+      govhr::fastcount(
+        dplyr::across(
+          dplyr::all_of(groups)
+        ),
+        name = "value"
+      )
   } else {
     data |>
       govhr::compute_fastsummary(
@@ -584,8 +589,8 @@ plot_compression_ratio <- function(.data, group_cols){
       ggplot2::aes(
         x = .data[["percentile_50"]],
         y = .data[[group_cols]],
-        xmin = .data[["percentile_10"]],
-        xmax = .data[["percentile_90"]]
+        xmin = .data[["percentile_lower"]],
+        xmax = .data[["percentile_upper"]]
       )
     ) +
     ggplot2::geom_point(
@@ -650,4 +655,48 @@ plot_movement_cost <- function(.data, group_cols){
   }
 
   plotly::ggplotly(plot)
+}
+
+
+#' Plot Transfer Heatmap
+#'
+#' @param .data A data frame.
+#'
+#' @importFrom plotly plot_ly
+#' @importFrom dplyr across everything summarise mutate
+#' @importFrom tidyr pivot_longer
+#' @importFrom scales label_percent
+#'
+#' @return A ggplot2 object representing a heatmap of transfer values between groups
+plot_transfer_heatmap <- function(.data) {
+  # plot heatmap
+  plotly::plot_ly(
+    data = .data,
+    x = ~ .data[["to"]],
+    y = ~ .data[["from"]],
+    z = ~ .data[["transfer"]],
+    type = "heatmap",
+    colorscale = list(
+      c(min(.data[["transfer"]], na.rm = TRUE), "#d32f2f"),
+      c(median(.data[["transfer"]], na.rm = TRUE), "#f9a825"),
+      c(max(.data[["transfer"]], na.rm = TRUE), "#388e3c")
+    ),
+    zmin = min(.data[["transfer"]], na.rm = TRUE),
+    zmax = max(.data[["transfer"]], na.rm = TRUE),
+    xgap = 2,
+    ygap = 2,
+    hovertemplate = paste0(
+      "Group (to): %{x}<br>",
+      "Group (from): %{y}<br>",
+      "Transfers: %{z}",
+      "<extra></extra>"
+    ),
+    colorbar = list(
+      title = "Transfers"
+    )
+  ) |>
+    plotly::layout(
+      xaxis = list(title = "Group (to)"),
+      yaxis = list(title = "Group (from)")
+    )
 }

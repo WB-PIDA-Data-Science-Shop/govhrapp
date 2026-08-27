@@ -4,7 +4,7 @@
 \alias{overview_server}
 \title{Overview Server Module}
 \usage{
-overview_server(id, workforce_data, wagebill_data)
+overview_server(id, workforce_data, wagebill_data, cache)
 }
 \arguments{
 \item{id}{Module id.}
@@ -12,6 +12,8 @@ overview_server(id, workforce_data, wagebill_data)
 \item{workforce_data}{Data frame with workforce/personnel data (headcount).}
 
 \item{wagebill_data}{Data frame with contract/salary data (wage bill).}
+
+\item{cache}{List of cached data frames for improved performance.}
 }
 \description{
 Overview Server Module

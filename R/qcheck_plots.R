@@ -1,6 +1,6 @@
 #' Plot Coverage Over Time
 #'
-#' Computes coverage using [compute_coverage()] (with `ref_date` always
+#' Computes coverage using [govhr::compute_coverage()] (with `ref_date` always
 #' included, aggregated across variables) and renders a trend line via
 #' [plot_trend()].
 #'
@@ -15,7 +15,7 @@
 #'
 #' @keywords internal
 plot_coverage_trend <- function(data, group, toggle_growth = FALSE) {
-  coverage_data <- compute_coverage(
+  coverage_data <- govhr::compute_coverage(
     data,
     group = group,
     include_ref_date = TRUE,
@@ -81,7 +81,7 @@ plot_consistency_trend <- function(
 
 #' Plot Coverage by Group (Coloured Bar Chart)
 #'
-#' Computes per-group coverage using [compute_coverage()] (without
+#' Computes per-group coverage using [govhr::compute_coverage()] (without
 #' `ref_date`, not aggregated) and renders a horizontal bar chart coloured
 #' green-yellow-red according to the same cutpoints used by the value boxes:
 #'
@@ -103,7 +103,7 @@ plot_consistency_trend <- function(
 #' @keywords internal
 plot_coverage_bar <- function(data) {
   # compute coverage by variable and group, when chosen
-  coverage_data <- compute_coverage(
+  coverage_data <- govhr::compute_coverage(
     data,
     include_ref_date = FALSE,
     aggregate = FALSE
@@ -158,7 +158,7 @@ plot_coverage_bar <- function(data) {
 #' @param group Character string. Grouping variable.
 #'
 #' @importFrom plotly plot_ly
-#' @importFrom dplyr across everything summarise
+#' @importFrom dplyr across everything summarise mutate
 #' @importFrom tidyr pivot_longer
 #' @importFrom scales label_percent
 #'
@@ -168,11 +168,14 @@ plot_coverage_heatmap <- function(data, group = NULL) {
     group <- "ref_date"
   }
 
-  coverage_data <- compute_coverage(
+  coverage_data <- govhr::compute_coverage(
     data,
     group = group,
     aggregate = FALSE
-  )
+  ) |>
+    dplyr::mutate(
+      coverage = .data[["coverage"]] / 100
+    )
 
   # plot heatmap
   plotly::plot_ly(
@@ -209,20 +212,28 @@ plot_coverage_heatmap <- function(data, group = NULL) {
 #' @param id_col Character string. The column name of the unique identifier for each record.
 #' @param group Character string. The column name of the grouping variable (e.g., "ref_date").
 #'
+#' @importFrom plotly plot_ly
+#' @importFrom dplyr across everything summarise mutate
+#' @importFrom tidyr pivot_longer
+#' @importFrom scales label_percent
+#' @importFrom purrr map_dfr
+#' 
 #' @return A plotly heatmap object representing consistency values by group and variable.
-#'
 plot_consistency_heatmap <- function(data, id_col, group) {
   value_cols <- setdiff(names(data), c(id_col, group))
 
   consistency_data <- purrr::map_dfr(
     value_cols,
-    ~ compute_value_consistency(
+    ~ govhr::compute_value_consistency(
       data,
       id_col = id_col,
       value_col = .x,
       group_cols = group
     ) |>
-      dplyr::mutate(variable = .x)
+      dplyr::mutate(
+        variable = .x,
+        value_consistency = .data[["value_consistency"]] / 100
+      )
   )
 
   plotly::plot_ly(

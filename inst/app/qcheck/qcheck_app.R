@@ -9,12 +9,12 @@ contract_data <- govhr::bra_hrmis_contract
 
 # validation data
 contract_validation <- govhr::validate_data(
-  contract_data,
+  govhr::bra_hrmis_contract,
   govhr::contract_rules
 )
 
 personnel_validation <- govhr::validate_data(
-  personnel_data,
+  govhr::bra_hrmis_personnel,
   govhr::personnel_rules
 )
 

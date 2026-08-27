@@ -37,7 +37,7 @@ wagebill_ui <- function(id, wagebill_data) {
     accordion_panel(
       "Filters",
       icon = bsicons::bs_icon("sliders"),
-      !!!ui_filter_controls(wagebill_data, id)
+      !!!default_ui_controls(wagebill_data, id)
     ),
     accordion_panel(
       "Measures",
@@ -52,7 +52,7 @@ wagebill_ui <- function(id, wagebill_data) {
       bslib::card_header("Wage Bill Analytics"),
       bslib::card_body(
         shiny::markdown(
-          readLines(system.file("markdown/wagebill.md", package = "govhrapp"))
+          readLines(system.file("markdown/analytics_wagebill.md", package = "govhrapp"))
         )
       )
     ),
@@ -62,7 +62,7 @@ wagebill_ui <- function(id, wagebill_data) {
         icon = shiny::icon("question-circle"),
         shiny::markdown(
           readLines(system.file(
-            "markdown/wagebill_questions.md",
+            "markdown/analytics_wagebill_questions.md",
             package = "govhrapp"
           ))
         )
@@ -125,6 +125,7 @@ wagebill_ui <- function(id, wagebill_data) {
 #'
 #' @param id Module id.
 #' @param wagebill_data Data frame with wage bill data.
+#' @param cache A list containing pre-computed trend summaries for workforce and wagebill data.
 #'
 #' @importFrom shiny moduleServer reactive validate need bindEvent downloadHandler withProgress incProgress renderUI uiOutput
 #' @importFrom shinyWidgets pickerInput
@@ -140,14 +141,14 @@ wagebill_ui <- function(id, wagebill_data) {
 #' @importFrom rmarkdown render
 #' @importFrom stats na.omit
 #' @export
-wagebill_server <- function(id, wagebill_data) {
+wagebill_server <- function(id, wagebill_data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     # 1. value boxes for wage bill key metrics
     output$total_wagebill <- render_wagebill_box(wagebill_data, type_measure = "total_wagebill")
     output$total_pension_liabilities <- render_wagebill_box(wagebill_data, type_measure = "total_pension_liabilities")
 
     # 2. panels for wage bill server
-    wagebill_overview_server("overview", wagebill_data)
+    wagebill_overview_server("overview", wagebill_data, cache = cache)
     wagebill_equity_server("equity", wagebill_data)
     wagebill_movement_server("movement", wagebill_data)
     wagebill_retirement_server("retirement", wagebill_data)

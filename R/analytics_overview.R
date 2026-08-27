@@ -68,6 +68,7 @@ overview_ui <- function(id, workforce_data, wagebill_data) {
 #' @param id Module id.
 #' @param workforce_data Data frame with workforce/personnel data (headcount).
 #' @param wagebill_data Data frame with contract/salary data (wage bill).
+#' @param cache List of cached data frames for improved performance.
 #'
 #' @importFrom shiny moduleServer reactive renderUI renderText tags radioButtons
 #' @importFrom plotly renderPlotly ggplotly
@@ -78,33 +79,27 @@ overview_ui <- function(id, workforce_data, wagebill_data) {
 #' @importFrom scales label_number cut_short_scale
 #' @importFrom govhr fastcount compute_fastsummary
 #' @export
-overview_server <- function(id, workforce_data, wagebill_data) {
+overview_server <- function(id, workforce_data, wagebill_data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
 
     # obtain latest reference date
     latest_workforce_date <- reactive({
-      max(workforce_data[["ref_date"]], na.rm = TRUE)
+      max(cache[["workforce_trend"]][["ref_date"]], na.rm = TRUE)
     })
 
     latest_wagebill_date <- reactive({
-      max(wagebill_data[["ref_date"]], na.rm = TRUE)
+      max(cache[["wagebill_trend"]][["ref_date"]], na.rm = TRUE)
     })
 
     latest_workforce <- reactive({
-      workforce_data |>
+      cache[["workforce_trend"]] |>
         dplyr::filter(.data[["ref_date"]] == latest_workforce_date())
     })
 
     latest_wagebill <- reactive({
-      wagebill_data |>
+      cache[["wagebill_trend"]] |>
         dplyr::filter(.data[["ref_date"]] == latest_wagebill_date())
     })
-
-    # detect which salary columns are present in wagebill_data
-    salary_cols <- intersect(
-      c("base_salary_lcu", "gross_salary_lcu", "net_salary_lcu", "allowance_lcu"),
-      names(wagebill_data)
-    )
 
     # value boxes
     output$vb_date_label <- shiny::renderUI({
@@ -120,58 +115,28 @@ overview_server <- function(id, workforce_data, wagebill_data) {
     })
 
     output$vb_headcount <- shiny::renderUI({
-      n <- nrow(latest_workforce())
+      n <- latest_workforce() |>
+        dplyr::pull(.data[["value"]])
+      
       shiny::tags$span(
         scales::label_number(scale_cut = scales::cut_short_scale())(n)
       )
     })
 
     output$vb_wagebill <- shiny::renderUI({
-      if (length(salary_cols) == 0) {
-        return(shiny::tags$span("N/A"))
-      }
-      d <- latest_wagebill()
-      base  <- if ("base_salary_lcu" %in% names(d)) d[["base_salary_lcu"]] else 0
-      allow <- if ("allowance_lcu"   %in% names(d)) d[["allowance_lcu"]]   else 0
-      total <- sum(base + allow, na.rm = TRUE)
+      wagebill_value <- latest_wagebill() |>
+        dplyr::pull(.data[["value"]])
+      
       shiny::tags$span(
         scales::label_number(
           scale_cut = scales::cut_short_scale()
-        )(total),
-        bslib::tooltip(
-          bsicons::bs_icon("info-circle", style = "font-size: 0.75em; margin-left: 4px;"),
-          "Sum of base salary and allowances in local currency units (LCU)."
+        )(wagebill_value),
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill", style = "font-size: 0.75em; margin-left: 4px;"),
+          "Gross salary in local currency units (LCU).",
+          placement = "left"
         )
       )
-    })
-
-    # headcount panel
-
-    heacount_panel <- reactive({
-      workforce_data |>
-        govhr::fastcount(.data[["ref_date"]], name = "value")
-    })
-
-    # plot 1. wage bill
-    # Total compensation = base_salary_lcu + allowance_lcu
-
-    wagebill_panel <- reactive({
-      has_base  <- "base_salary_lcu" %in% names(wagebill_data)
-      has_allow <- "allowance_lcu"   %in% names(wagebill_data)
-
-      wagebill_data |>
-        dplyr::mutate(
-          total_compensation = dplyr::case_when(
-            has_base  & has_allow ~ .data[["base_salary_lcu"]] + .data[["allowance_lcu"]],
-            has_base              ~ .data[["base_salary_lcu"]],
-            has_allow             ~ .data[["allowance_lcu"]],
-            TRUE                  ~ NA_real_
-          )
-        ) |>
-        dplyr::summarise(
-          value = sum(.data[["total_compensation"]], na.rm = TRUE),
-          .by = .data[["ref_date"]]
-        )
     })
 
     output$chart_area <- shiny::renderUI({
@@ -195,10 +160,12 @@ overview_server <- function(id, workforce_data, wagebill_data) {
           full_screen = TRUE,
           bslib::card_header(
             "Integrated: Headcount and Wage Bill",
-            bslib::tooltip(
-              bsicons::bs_icon("info-circle"),
-              "Both series are indexed to 100 for the earliest reference date."
-            )
+            bslib::popover(
+              bsicons::bs_icon("info-circle-fill"),
+              "Both series are indexed to 100 for the earliest reference date.",
+              placement = "left"
+            ),
+            class = "d-flex justify-content-between"
           ),
           bslib::card_body(
             plotly::plotlyOutput(session$ns("plot_integrated"), height = "420px")
@@ -209,7 +176,7 @@ overview_server <- function(id, workforce_data, wagebill_data) {
 
     # plot option 1. headcount
     output$plot_headcount <- plotly::renderPlotly({
-      plot <- heacount_panel() |>
+      plot <- cache[["workforce_trend"]] |>
         ggplot2::ggplot(ggplot2::aes(x = .data[["ref_date"]], y = .data[["value"]])) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
@@ -223,7 +190,7 @@ overview_server <- function(id, workforce_data, wagebill_data) {
 
     # plot option 2. total wage bill
     output$plot_wagebill <- plotly::renderPlotly({
-      plot <- wagebill_panel() |>
+      plot <- cache[["wagebill_trend"]] |>
         ggplot2::ggplot(ggplot2::aes(x = .data[["ref_date"]], y = .data[["value"]])) +
         ggplot2::geom_point(colour = "#004181") +
         ggplot2::geom_line(colour  = "#004181") +
@@ -247,8 +214,8 @@ overview_server <- function(id, workforce_data, wagebill_data) {
       }
 
       combined <- dplyr::bind_rows(
-        index_to_100(heacount_panel(), "Headcount"),
-        index_to_100(wagebill_panel(),  "Total compensation")
+        index_to_100(cache[["workforce_trend"]], "Headcount"),
+        index_to_100(cache[["wagebill_trend"]],  "Total compensation")
       )
 
       palette <- c("Headcount" = "#C34729", "Total compensation" = "#004181")

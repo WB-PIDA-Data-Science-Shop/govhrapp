@@ -111,15 +111,6 @@
   padding: 0px 40px;
 }
 
-/* ensure correct font */
-.card-body,
-.card-body p,
-.card-body ol,
-.card-body ul,
-.card-body li {
-  font-family: "Source Sans Pro", sans-serif !important;
-}
-
 /* customize download button */
 .btn.shiny-download-link {
   background-color: #C34729 !important;
@@ -142,4 +133,10 @@
 .nav-underline .nav-link.active {
   color: #002244 !important; 
   font-weight: bold;
+}
+
+/* set fonts */
+.card-body :where(*):not(h1, h2, h3, h4, h5, h6, code, pre, kbd, samp),
+.shiny-html-output :where(*):not(h1, h2, h3, h4, h5, h6, code, pre, kbd, samp) {
+  font-family: var(--bs-body-font-family) !important;
 }
