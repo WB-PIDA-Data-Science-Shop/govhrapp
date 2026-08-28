@@ -35,19 +35,36 @@ workforce_transfer_ui <- function(id, .data) {
         icon = shiny::icon("play")
       )
     ),
+    # plot 1. transfers over time
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Transitions over time",
+        "Transfers over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
           "The number of internal transfers over time. This is computed as the number of internal transfers over the entire time period, considering as a transfer a movement of personnel across groups between each reference date.",
-          title = "Transitions over time",
+          title = "Transfers over time",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
       ),
-      plotly::plotlyOutput(shiny::NS(id, "transfer_plot"))
+      plotly::plotlyOutput(shiny::NS(id, "transfer_trend_plot"))
+    ),
+
+    # plot 2. heatmap
+    bslib::card(
+      full_screen = TRUE,
+      bslib::card_header(
+        "Transfers over time",
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "The number of internal transfers over time. This is computed as the number of internal transfers over the entire time period, considering as a transfer a movement of personnel across groups between each reference date.",
+          title = "Transfers over time",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
+      ),
+      plotly::plotlyOutput(shiny::NS(id, "transfer_network_plot"))
     )
   )
 }
@@ -60,7 +77,7 @@ workforce_transfer_ui <- function(id, .data) {
 #'
 #' @importFrom shiny moduleServer reactive req bindEvent
 #' @importFrom plotly renderPlotly
-#' @importFrom dplyr filter between
+#' @importFrom dplyr filter between across all_of
 #' @importFrom tidyr complete
 #' @importFrom data.table as.data.table
 #' @importFrom govhr detect_career_transitions fastcount
@@ -89,30 +106,58 @@ workforce_transfer_server <- function(id, .data, cache) {
         cache[["transfer_default"]]
       } else {
         workforce_filtered() |>
-          as.data.table() |>
-          govhr::detect_career_transitions(
-            vars = input$group_filter,
-            decision_var = "base_salary_lcu"
-          ) |>
-          govhr::fastcount(
-            dplyr::across(
-              all_of(
-                c("from", "to")
-              )
-            ),
-            name = "transfer"
-          ) |>
-          tidyr::complete(
-            .data[["from"]],
-            .data[["to"]],
-            fill = list(transfer = 0)
+          detect_career_transition(
+            group_cols = input$group_filter
           )
       }
     })
 
-    output$transfer_plot <- plotly::renderPlotly({
-      transfer_data() |>
-        plot_transfer_heatmap()
+    # plot 1. transfers over time
+    output$transfer_trend_plot <- plotly::renderPlotly({
+      # use cache if default group is selected
+      if(input$group_filter == "paygrade") {
+        cache[["transfer_default"]] |>
+          govhr::fastcount(
+            ref_date,
+            name = "transfer"
+          ) |>
+          plot_trend(
+        group = "ref_date",
+            y_col = "transfer",
+            y_label = "Number of Transfers"
+          )
+      } else {
+        transfer_data() |>
+          detect_career_transition(
+            identifier = input$id_col,
+            group_cols = input$group_filter
+          ) |>
+          govhr::fastcount(
+            ref_date,
+            name = "transfer"
+          ) |>
+          plot_trend(
+            group = "ref_date",
+            y_col = "transfer",
+            y_label = "Number of Transfers"
+          )
+      }
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # plot 2. transfer network
+    output$transfer_network_plot <- plotly::renderPlotly({
+      if(input$group_filter == "paygrade") {
+        cache[["transfer_default"]] |>
+          plotly_transfer_network()
+      } else {
+        transfer_data() |>
+          detect_career_transition(
+            identifier = input$id_col,
+            group_cols = input$group_filter
+          ) |>
+          plotly_transfer_network()
+      }
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })

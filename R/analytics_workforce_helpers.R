@@ -46,7 +46,8 @@ workforce_transition_ui <- function(id, .data) {
 #' @param group_cols A character vector specifying the column names for grouping (e.g., paygrade, department).
 #' @param return_all A logical value indicating whether to return all records (including non-transitions) or only transitions (default is FALSE).
 #' 
-#' @importFrom data.table as.data.table setorderv rleidv
+#' @importFrom data.table as.data.table setorderv rleidv shift setnames :=
+#' @importFrom stats complete.cases
 #' @return A data frame containing detected career transitions with columns for the unique identifier, from group, to group, and reference date.
 #' 
 #' @export
@@ -56,7 +57,9 @@ detect_career_transition <- function(
 ) {
   dt <- as.data.table(.data)
 
-  dt <- dt[complete.cases(dt[, c(id_col, group_cols), with = FALSE])]
+  dt <- dt[
+    stats::complete.cases(dt[, c(id_col, group_cols), with = FALSE])
+  ]
 
   # if necessary, combine group cols into a single column
   if (length(group_cols) > 1) {
@@ -65,31 +68,29 @@ detect_career_transition <- function(
     group_cols <- "grouping"
   }
 
-  setorderv(dt, c(id_col, "ref_date"))
+  data.table::setorderv(dt, c(id_col, "ref_date"))
 
   # collapse to spell, i.e., when an entity stays in the same group for
   # consecutive periods
-  dt[, .spell_id := rleidv(.SD), by = id_col, .SDcols = group_cols]
+  dt[, ".spell_id" := data.table::rleidv(.SD), by = id_col, .SDcols = group_cols]
 
   spells <- unique(dt, by = c(id_col, ".spell_id"))[
     , c(id_col, group_cols, "ref_date"), with = FALSE
   ]
 
-  setnames(spells, group_cols, "from")
+  data.table::setnames(spells, group_cols, "from")
 
   # create a column for the ref_date of transition
   spells[
     , 
     `:=`(
-      to = shift(from, type = "lead"),
-      start_ref_date = ref_date,
-      end_ref_date = shift(ref_date, type = "lead")
+      to = data.table::shift(from, type = "lead")
     ), 
     by = id_col
   ]
 
-  out <- spells[,  c(id_col, "from", "to", "start_ref_date", "end_ref_date"), with = FALSE]
-  setorderv(out, c(id_col, "start_ref_date"))
+  out <- spells[,  c(id_col, "from", "to", "ref_date"), with = FALSE]
+  data.table::setorderv(out, c(id_col, "ref_date"))
 
   # if return_all is FALSE, remove non-transitions
   if (!return_all) {

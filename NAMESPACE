@@ -57,9 +57,12 @@ importFrom(bslib,
 )
 importFrom(collapse,fquantile)
 importFrom(data.table,
+  ":=",
   as.data.table,
   rleidv,
-  setorderv
+  setnames,
+  setorderv,
+  shift
 )
 importFrom(dplyr,
   across,
@@ -86,6 +89,7 @@ importFrom(dplyr,
 )
 importFrom(ggplot2,
   aes,
+  after_stat,
   element_text,
   geom_col,
   geom_density,
@@ -102,12 +106,22 @@ importFrom(ggplot2,
   scale_x_continuous,
   scale_y_continuous,
   scale_y_discrete,
+  stage,
   theme,
   theme_minimal,
   theme_set,
+  theme_void,
   update_geom_defaults,
   xlab,
   ylab
+)
+importFrom(ggraph,
+  geom_edge_fan,
+  geom_node_point,
+  geom_node_text,
+  ggraph,
+  scale_edge_alpha_identity,
+  scale_edge_width_continuous
 )
 importFrom(govhr,
   classify_personnel_event,
@@ -212,6 +226,7 @@ importFrom(shinyWidgets,
   updatePickerInput
 )
 importFrom(stats,
+  complete.cases,
   median,
   na.omit,
   reorder
@@ -219,6 +234,7 @@ importFrom(stats,
 importFrom(stringr,str_wrap)
 importFrom(thematic,thematic_shiny)
 importFrom(tibble,tibble)
+importFrom(tidygraph,as_tbl_graph)
 importFrom(tidyr,
   complete,
   pivot_longer

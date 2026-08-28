@@ -55,24 +55,10 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
         measure_col = "gross_salary_lcu"
       ),
     transfer_default = wagebill_data |>
-      as.data.table() |>
-      govhr::detect_career_transitions(
-        vars = "paygrade",
-        decision_var = "base_salary_lcu"
-      ) |>
-      govhr::fastcount(
-        dplyr::across(
-          all_of(
-            c("from", "to")
-          )
-        ),
-        name = "transfer"
-      ) |>
-      tidyr::complete(
-        .data[["from"]],
-        .data[["to"]],
-        fill = list(transfer = 0)
-      )      
+      detect_career_transition(
+        id_col = "personnel_id",
+        group_cols = "paygrade"
+      )
   )
 
   ui <- bslib::page_navbar(

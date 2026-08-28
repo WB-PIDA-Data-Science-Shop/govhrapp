@@ -27,3 +27,4 @@ wagebill_data <- govhr::bra_hrmis_contract |>
   )
 
 run_govhrapp(workforce_data, wagebill_data)
+ 

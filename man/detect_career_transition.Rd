@@ -4,7 +4,12 @@
 \alias{detect_career_transition}
 \title{Detect Career Transitions}
 \usage{
-detect_career_transition(.data, id_col = "contract_id", group_cols)
+detect_career_transition(
+  .data,
+  id_col = "contract_id",
+  group_cols,
+  return_all = FALSE
+)
 }
 \arguments{
 \item{.data}{A data frame containing workforce data.}
@@ -12,6 +17,8 @@ detect_career_transition(.data, id_col = "contract_id", group_cols)
 \item{id_col}{A character string specifying the column name for the unique identifier (default is "contract_id").}
 
 \item{group_cols}{A character vector specifying the column names for grouping (e.g., paygrade, department).}
+
+\item{return_all}{A logical value indicating whether to return all records (including non-transitions) or only transitions (default is FALSE).}
 }
 \value{
 A data frame containing detected career transitions with columns for the unique identifier, from group, to group, and reference date.
