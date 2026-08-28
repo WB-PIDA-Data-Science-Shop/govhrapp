@@ -1,7 +1,7 @@
 #' Identify available grouping choices based on the columns present in the data.
 #' @param .data A data frame.
 #' 
-#' @import dplyr
+#' @importFrom dplyr filter summarise pull
 #' @importFrom purrr set_names
 #' @return A named list of grouping choices, where each element corresponds to a module and contains a named vector of variable IDs and their corresponding variable names.
 identify_group_choices <- function(.data){

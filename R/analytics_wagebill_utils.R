@@ -1,7 +1,7 @@
 #' Function to identify available wagebill measure choices from the data and dictionary
 #' @param .data A data frame containing wagebill data.
 #' 
-#' @import dplyr
+#' @importFrom dplyr filter summarise pull
 #' @importFrom purrr set_names
 #' 
 #' @return A named list of wagebill measure choices, where each element corresponds to a module and contains a named vector of variable IDs and their corresponding variable names.

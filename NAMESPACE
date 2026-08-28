@@ -28,7 +28,6 @@ export(wagebill_ui)
 export(workforce_server)
 export(workforce_transfer_server)
 import(bslib)
-import(dplyr)
 import(ggplot2)
 import(shiny)
 importFrom(bsicons,bs_icon)
@@ -57,7 +56,6 @@ importFrom(bslib,
 )
 importFrom(collapse,fquantile)
 importFrom(data.table,
-  ":=",
   as.data.table,
   rleidv,
   setnames,
@@ -154,13 +152,20 @@ importFrom(gtsummary,
   modify_header,
   tbl_summary
 )
+importFrom(igraph,
+  V,
+  as.igraph,
+  as_data_frame
+)
 importFrom(lubridate,
   year,
   years
 )
 importFrom(plotly,
+  add_trace,
   animation_opts,
   animation_slider,
+  config,
   ggplotly,
   layout,
   plot_ly,
@@ -183,7 +188,8 @@ importFrom(scales,
   comma,
   cut_short_scale,
   label_number,
-  label_percent
+  label_percent,
+  rescale
 )
 importFrom(shiny,
   NS,
@@ -234,7 +240,11 @@ importFrom(stats,
 importFrom(stringr,str_wrap)
 importFrom(thematic,thematic_shiny)
 importFrom(tibble,tibble)
-importFrom(tidygraph,as_tbl_graph)
+importFrom(tidygraph,
+  activate,
+  as_tbl_graph,
+  as_tibble
+)
 importFrom(tidyr,
   complete,
   pivot_longer

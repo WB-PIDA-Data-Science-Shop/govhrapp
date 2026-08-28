@@ -11,7 +11,7 @@
 #' @importFrom shiny NS markdown icon uiOutput radioButtons
 #' @importFrom plotly plotlyOutput
 #' @importFrom lubridate year
-#' @import dplyr
+#' @importFrom dplyr filter mutate arrange group_by ungroup summarise bind_rows n_distinct first
 #' @export
 overview_ui <- function(id, workforce_data, wagebill_data) {
   ns <- shiny::NS(id)

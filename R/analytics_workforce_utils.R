@@ -46,7 +46,7 @@ workforce_transition_ui <- function(id, .data) {
 #' @param group_cols A character vector specifying the column names for grouping (e.g., paygrade, department).
 #' @param return_all A logical value indicating whether to return all records (including non-transitions) or only transitions (default is FALSE).
 #' 
-#' @importFrom data.table as.data.table setorderv rleidv shift setnames :=
+#' @importFrom data.table as.data.table setorderv rleidv shift setnames
 #' @importFrom stats complete.cases
 #' @return A data frame containing detected career transitions with columns for the unique identifier, from group, to group, and reference date.
 #' 
@@ -55,7 +55,7 @@ detect_career_transition <- function(
   .data, id_col = "contract_id", group_cols,
   return_all = FALSE
 ) {
-  dt <- as.data.table(.data)
+  dt <- data.table::as.data.table(.data)
 
   dt <- dt[
     stats::complete.cases(dt[, c(id_col, group_cols), with = FALSE])
@@ -83,9 +83,7 @@ detect_career_transition <- function(
   # create a column for the ref_date of transition
   spells[
     , 
-    `:=`(
-      to = data.table::shift(from, type = "lead")
-    ), 
+    "to" := data.table::shift(from, type = "lead"), 
     by = id_col
   ]
 

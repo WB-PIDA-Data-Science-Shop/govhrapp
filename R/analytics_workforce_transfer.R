@@ -29,6 +29,12 @@ workforce_transfer_ui <- function(id, .data) {
       date_ui(id, .data),
       group_filter_ui(id, .data, selected = "paygrade", group_choices),
       subgroup_filter_ui(id, .data),
+      shiny::selectInput(
+        shiny::NS(id, "id_col"),
+        "Identifier",
+        choices = c("Personnel"=  "personnel_id", "Contract" = "contract_id"),
+        selected = "personnel_id"
+      ),
       shiny::actionButton(
         shiny::NS(id, "apply_btn"),
         "Apply selection",
@@ -129,7 +135,7 @@ workforce_transfer_server <- function(id, .data, cache) {
       } else {
         transfer_data() |>
           detect_career_transition(
-            identifier = input$id_col,
+            id_col = input$id_col,
             group_cols = input$group_filter
           ) |>
           govhr::fastcount(
@@ -153,7 +159,7 @@ workforce_transfer_server <- function(id, .data, cache) {
       } else {
         transfer_data() |>
           detect_career_transition(
-            identifier = input$id_col,
+            id_col = input$id_col,
             group_cols = input$group_filter
           ) |>
           plotly_transfer_network()
