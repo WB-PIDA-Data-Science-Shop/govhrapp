@@ -32,7 +32,7 @@ workforce_transfer_ui <- function(id, .data) {
       shiny::selectInput(
         shiny::NS(id, "id_col"),
         "Identifier",
-        choices = c("Personnel"=  "personnel_id", "Contract" = "contract_id"),
+        choices = c("Personnel" = "personnel_id", "Contract" = "contract_id"),
         selected = "personnel_id"
       ),
       shiny::actionButton(
@@ -97,22 +97,22 @@ workforce_transfer_server <- function(id, .data, cache) {
 
     # ignore initial values for group_filter, subgroup_filter, and date_range
     workforce_filtered <- reactive({
-       req(input$group_filter != "ref_date")
-
-        .data |>
-          filter_data(
-            group_filter = input$group_filter,
-            subgroup_filter = input$subgroup_filter,
-            date_range = input$date_range
-          )
+      .data |>
+        filter_data(
+          group_filter = input$group_filter,
+          subgroup_filter = input$subgroup_filter,
+          date_range = input$date_range
+        )
     })
 
     transfer_data <- reactive({
-      if (input$group_filter == "paygrade") {
+      # only use cache if no apply button has been clicked
+      if (input$apply_btn == 0) {
         cache[["transfer_default"]]
       } else {
         workforce_filtered() |>
           detect_career_transition(
+            id_col = input$id_col,
             group_cols = input$group_filter
           )
       }
@@ -121,23 +121,19 @@ workforce_transfer_server <- function(id, .data, cache) {
     # plot 1. transfers over time
     output$transfer_trend_plot <- plotly::renderPlotly({
       # use cache if default group is selected
-      if(input$group_filter == "paygrade") {
+      if (input$apply_btn == 0) {
         cache[["transfer_default"]] |>
           govhr::fastcount(
             ref_date,
             name = "transfer"
           ) |>
           plot_trend(
-        group = "ref_date",
+            group = "ref_date",
             y_col = "transfer",
             y_label = "Number of Transfers"
           )
       } else {
         transfer_data() |>
-          detect_career_transition(
-            id_col = input$id_col,
-            group_cols = input$group_filter
-          ) |>
           govhr::fastcount(
             ref_date,
             name = "transfer"
@@ -153,15 +149,11 @@ workforce_transfer_server <- function(id, .data, cache) {
 
     # plot 2. transfer network
     output$transfer_network_plot <- plotly::renderPlotly({
-      if(input$group_filter == "paygrade") {
+      if (input$apply_btn == 0) {
         cache[["transfer_default"]] |>
           plotly_transfer_network()
       } else {
         transfer_data() |>
-          detect_career_transition(
-            id_col = input$id_col,
-            group_cols = input$group_filter
-          ) |>
           plotly_transfer_network()
       }
     }) |>
