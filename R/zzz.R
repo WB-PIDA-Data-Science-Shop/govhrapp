@@ -76,5 +76,6 @@ utils::globalVariables(c(
   "start_ref_date",
   "end_ref_date",
   "weight",
-  "name"
+  "name",
+  "count"
 ))
