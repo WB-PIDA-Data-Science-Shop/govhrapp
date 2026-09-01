@@ -44,21 +44,10 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   ggplot2::update_geom_defaults("col", list(fill = "#C34729"))
 
   # cache data to improve performance
-  cache <- list(
-    workforce_trend = workforce_data |>
-      compute_trend_summary(
-        group = "ref_date"
-      ),
-    wagebill_trend = wagebill_data |>
-      compute_trend_summary(
-        group = "ref_date",
-        measure_col = "gross_salary_lcu"
-      ),
-    transfer_default = wagebill_data |>
-      detect_career_transition(
-        id_col = "personnel_id",
-        group_cols = "paygrade"
-      )
+  meso_table <- build_meso_table(
+    workforce_data,
+    wagebill_data,
+    wagebill_measure = "wagebill"
   )
 
   ui <- bslib::page_navbar(

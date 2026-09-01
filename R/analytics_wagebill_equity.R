@@ -95,6 +95,7 @@ wagebill_equity_ui <- function(id, .data) {
 #' @import shiny
 #' @importFrom plotly renderPlotly
 #' @importFrom dplyr filter
+#' @importFrom tidyr unnest
 #' @importFrom govhr compute_compression_ratio
 #'
 #' @return A Shiny module server function for the wagebill equity module.
@@ -114,21 +115,35 @@ wagebill_equity_server <- function(id, .data) {
       )
     })
 
+    # only rebuilt when the wagebill measure changes; the density and decile
+    # plots below then just look up the latest reference date's pre-computed
+    # distributions instead of recomputing them from raw contract rows.
+    wagebill_meso_table <- reactive({
+      build_wagebill_meso_table(.data, wagebill_measure = input$wagebill_measure)
+    })
+
+    wagebill_meso_latest <- reactive({
+      lookup_meso_table(
+        wagebill_meso_table(),
+        group_var = input$group_filter,
+        subgroup_filter = input$subgroup_filter,
+        date_range = input$date_range
+      ) |>
+        dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]]))
+    })
+
     # plot 1. wage density
     output$wagebill_density <- plotly::renderPlotly({
-      wagebill_density <- wagebill_filtered() |>
-        dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]])) |>
-        compute_percentile(
-          group_col = input$group_filter,
-          binwidth = 100,
-          measure_col = input$wagebill_measure
-        )
+      wagebill_density <- wagebill_meso_latest() |>
+        dplyr::select("subgroup", "percentile_distribution") |>
+        tidyr::unnest("percentile_distribution") |>
+        label_subgroup(input$group_filter)
 
       plotly::ggplotly(
         plot_histogram(
           wagebill_density,
           plot_type = input$plot_type,
-          group_col = input$group_filter
+          group_col = if (input$group_filter == "ref_date") NULL else input$group_filter
         )
       )
     }) |>
@@ -136,18 +151,10 @@ wagebill_equity_server <- function(id, .data) {
 
     # plot 2. wage by decile
     output$wagebill_distribution <- plotly::renderPlotly({
-      # filter latest ref_date
-      latest_ref_date <- max(wagebill_filtered()[["ref_date"]])
-
-      wagebill_filtered_latest <- wagebill_filtered() |>
-        dplyr::filter(.data[["ref_date"]] == latest_ref_date)
-
-      wagebill_distribution <- compute_decile(
-        wagebill_filtered_latest,
-        group_cols = input$group_filter,
-        measure_col = input$wagebill_measure,
-        latest_measure = TRUE
-      )
+      wagebill_distribution <- wagebill_meso_latest() |>
+        dplyr::select("subgroup", "decile_distribution") |>
+        tidyr::unnest("decile_distribution") |>
+        label_subgroup(input$group_filter)
 
       n_groups <- nrow(wagebill_distribution)
       plot_height <- max(350, n_groups * 35 + 100)

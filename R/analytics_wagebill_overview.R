@@ -113,17 +113,26 @@ wagebill_overview_server <- function(id, .data, cache) {
       )
     })
 
+    # only rebuilt when the wagebill measure changes; every other control
+    # (group, subgroup, date range) below is then a cheap filter over this
+    # pre-aggregated table instead of a recomputation over raw contract rows.
+    wagebill_meso_table <- reactive({
+      build_wagebill_meso_table(.data, wagebill_measure = input$wagebill_measure)
+    })
+
+    wagebill_meso <- reactive({
+      lookup_meso_table(
+        wagebill_meso_table(),
+        group_var = input$group_filter,
+        subgroup_filter = input$subgroup_filter,
+        date_range = input$date_range
+      ) |>
+        label_subgroup(input$group_filter) |>
+        dplyr::rename(value = "wagebill")
+    })
+
     wagebill_summary <- shiny::reactive({
-      # default to cache
-      if(input$group_filter == "ref_date") {
-        out <- cache
-      } else {
-        out <- compute_trend_summary(
-          wagebill_filtered(),
-          group = input$group_filter,
-          measure_col = input$wagebill_measure
-        )
-      }
+      out <- wagebill_meso()
 
       if (input$toggle_growth) {
         out <- apply_baseline_index(out, group = input$group_filter)
@@ -193,11 +202,11 @@ wagebill_overview_server <- function(id, .data, cache) {
         )
       )
 
-      cross_section_data <- compute_cross_section_summary(
-        wagebill_filtered(),
-        group = input$group_filter,
-        measure_col = input$wagebill_measure
-      )
+      cross_section_data <- wagebill_meso() |>
+        dplyr::filter(
+          .data[["ref_date"]] == max(.data[["ref_date"]]),
+          .by = dplyr::all_of(input$group_filter)
+        )
 
       n_groups <- nrow(cross_section_data)
       plot_height <- max(350, n_groups * 35 + 100)
@@ -222,10 +231,10 @@ wagebill_overview_server <- function(id, .data, cache) {
         )
       )
 
-      change_data <- compute_growth_summary(
-        wagebill_filtered(),
-        group = input$group_filter,
-        measure_col = input$wagebill_measure
+      change_data <- meso_growth_summary(
+        wagebill_meso(),
+        group_var = input$group_filter,
+        value_col = "value"
       )
 
       n_groups <- nrow(change_data)

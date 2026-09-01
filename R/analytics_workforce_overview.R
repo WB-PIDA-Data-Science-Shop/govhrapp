@@ -95,25 +95,25 @@ workforce_overview_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
 
-    workforce_filtered <- shiny::reactive({
-      filter_data(
-        .data,
-        group_filter = input$group_filter,
+    # workforce headcount doesn't depend on a wagebill measure, so the meso
+    # table can be built once per session and every plot below becomes a
+    # cheap filter (via lookup_meso_table()) instead of a recomputation over
+    # raw personnel-level rows.
+    workforce_meso_table <- build_workforce_meso_table(.data)
+
+    workforce_meso <- reactive({
+      lookup_meso_table(
+        workforce_meso_table,
+        group_var = input$group_filter,
         subgroup_filter = input$subgroup_filter,
         date_range = input$date_range
-      )
+      ) |>
+        label_subgroup(input$group_filter) |>
+        dplyr::rename(value = "headcount")
     })
 
     workforce_summary <- reactive({
-      # default to cache
-      if(input$group_filter == "ref_date"){
-        out <- cache[["workforce_trend"]]
-      } else {
-        out <- compute_trend_summary(
-          workforce_filtered(),
-          group = input$group_filter
-        )
-      }
+      out <- workforce_meso()
 
       if (input$toggle_growth) {
         out <- apply_baseline_index(out, group = input$group_filter)
@@ -141,10 +141,11 @@ workforce_overview_server <- function(id, .data, cache) {
         need(input$group_filter != "ref_date", "Please select a group.")
       )
 
-      cross_section_data <- compute_cross_section_summary(
-        workforce_filtered(),
-        group = input$group_filter
-      )
+      cross_section_data <- workforce_meso() |>
+        dplyr::filter(
+          .data[["ref_date"]] == max(.data[["ref_date"]]),
+          .by = dplyr::all_of(input$group_filter)
+        )
 
       n_groups <- nrow(cross_section_data)
       plot_height <- max(350, n_groups * 35 + 100)
@@ -166,9 +167,10 @@ workforce_overview_server <- function(id, .data, cache) {
         need(input$group_filter != "ref_date", "Please select a group.")
       )
 
-      change_data <- compute_growth_summary(
-        workforce_filtered(),
-        group = input$group_filter
+      change_data <- meso_growth_summary(
+        workforce_meso(),
+        group_var = input$group_filter,
+        value_col = "value"
       )
 
       n_groups <- nrow(change_data)
