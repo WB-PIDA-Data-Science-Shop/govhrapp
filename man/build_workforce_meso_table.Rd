@@ -7,8 +7,7 @@
 build_workforce_meso_table(
   workforce_data,
   group_vars = NULL,
-  scalars = list(headcount = function(data) nrow(dplyr::distinct(data,
-    .data[["personnel_id"]])))
+  indicators = NULL
 )
 }
 \arguments{
@@ -19,13 +18,13 @@ containing \code{ref_date}.}
 for. Defaults to \code{"ref_date"} plus every character grouping column
 identified by \code{\link[=identify_group_choices]{identify_group_choices()}}.}
 
-\item{scalars}{A named list of functions, each taking a single-cell data
+\item{indicators}{A named list of functions, each taking a single-cell data
 frame and returning a single scalar. Defaults to \code{headcount}, the count
 of distinct \code{personnel_id}.}
 }
 \value{
 A tidy data frame with \code{ref_date}, \code{group_var}, \code{subgroup}, and one
-column per entry in \code{scalars}.
+column per entry in \code{indicators}.
 }
 \description{
 Builds the workforce half of a meso table (see \code{\link[=build_meso_table]{build_meso_table()}}):

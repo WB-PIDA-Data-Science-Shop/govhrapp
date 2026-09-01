@@ -4,27 +4,7 @@
 \alias{build_wagebill_meso_table}
 \title{Build a Wagebill Meso Table}
 \usage{
-build_wagebill_meso_table(
-  wagebill_data,
-  group_vars = NULL,
-  wagebill_measure = "gross_salary_lcu",
-  percentile_binwidth = 100,
-  vectors = list(percentile_distribution = function(data) {
-     if (nrow(data) == 0) {
- 
-           return(NULL)
-     }
-     compute_percentile(data, measure_col =
-    wagebill_measure, binwidth = percentile_binwidth)
- }, decile_distribution =
-    function(data) {
-     if (nrow(data) == 0) {
-         return(NULL)
-     }
-    
-    compute_decile(data, measure_col = wagebill_measure)
- })
-)
+build_wagebill_meso_table(wagebill_data, group_vars = NULL, indicators = NULL)
 }
 \arguments{
 \item{wagebill_data}{A data frame with contract/salary attributes,
@@ -32,19 +12,12 @@ containing \code{ref_date} and \code{wagebill_measure}.}
 
 \item{group_vars}{Character vector of grouping columns to build meso cells
 for. Defaults to \code{"ref_date"} plus every character grouping column
-identified by \code{\link[=identify_group_choices]{identify_group_choices()}}.}
-
-\item{wagebill_measure}{Character string naming the wage column to
-summarize. Default \code{"gross_salary_lcu"}.}
-
-\item{percentile_binwidth}{Numeric bin width passed to
-\code{compute_percentile()} when building \code{percentile_distribution}. Default
+identified by \code{\link[=identify_group_choices]{identify_group_choices()}}
 \code{100}.}
 
-\item{vectors}{A named list of functions, each taking a single-cell data
-frame and returning an arbitrary object to store in a list-column.
-Defaults compute \code{percentile_distribution} via \code{compute_percentile()}
-and \code{decile_distribution} via \code{compute_decile()}.}
+\item{indicators}{A named list of functions, each taking a single-cell data
+frame and returning a vector. Defaults to \code{wagebill}, the sum of
+\code{wagebill_measure} columns.}
 }
 \value{
 A tidy data frame with \code{ref_date}, \code{group_var}, \code{subgroup},

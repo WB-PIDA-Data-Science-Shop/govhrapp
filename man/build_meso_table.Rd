@@ -4,30 +4,7 @@
 \alias{build_meso_table}
 \title{Build a Meso-Level Summary Table}
 \usage{
-build_meso_table(
-  workforce_data,
-  wagebill_data,
-  group_vars = NULL,
-  wagebill_measure = "gross_salary_lcu",
-  percentile_binwidth = 100,
-  scalars = list(headcount = function(data) nrow(dplyr::distinct(data,
-    .data[["personnel_id"]]))),
-  vectors = list(percentile_distribution = function(data) {
-     if (nrow(data) == 0) {
- 
-           return(NULL)
-     }
-     compute_percentile(data, measure_col =
-    wagebill_measure, binwidth = percentile_binwidth)
- }, decile_distribution =
-    function(data) {
-     if (nrow(data) == 0) {
-         return(NULL)
-     }
-    
-    compute_decile(data, measure_col = wagebill_measure)
- })
-)
+build_meso_table(workforce_data, wagebill_data, group_vars = NULL)
 }
 \arguments{
 \item{workforce_data}{A data frame with workforce/personnel attributes

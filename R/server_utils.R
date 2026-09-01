@@ -422,30 +422,7 @@ build_wagebill_meso_table <- function(
 build_meso_table <- function(
   workforce_data,
   wagebill_data,
-  group_vars = NULL,
-  wagebill_measure = "gross_salary_lcu",
-  percentile_binwidth = 100,
-  scalars = list(
-    headcount = function(data) data |> dplyr::distinct(.data[["personnel_id"]]) |> nrow()
-  ),
-  vectors = list(
-    percentile_distribution = function(data) {
-      if (nrow(data) == 0) {
-        return(NULL)
-      }
-      compute_percentile(
-        data,
-        measure_col = wagebill_measure,
-        binwidth = percentile_binwidth
-      )
-    },
-    decile_distribution = function(data) {
-      if (nrow(data) == 0) {
-        return(NULL)
-      }
-      compute_decile(data, measure_col = wagebill_measure)
-    }
-  )
+  group_vars = NULL
 ) {
   # identify available group_vars
   if (is.null(group_vars)) {
@@ -454,14 +431,11 @@ build_meso_table <- function(
     group_vars <- union("ref_date", intersect(workforce_vars, wagebill_vars))
   }
 
-  workforce_cells <- build_workforce_meso_table(workforce_data, group_vars, scalars)
+  workforce_cells <- build_workforce_meso_table(workforce_data, group_vars)
 
   wagebill_cells <- build_wagebill_meso_table(
     wagebill_data,
-    group_vars,
-    wagebill_measure,
-    percentile_binwidth,
-    vectors
+    group_vars
   )
 
   dplyr::full_join(

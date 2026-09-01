@@ -4,13 +4,15 @@
 \alias{nest_meso_cells}
 \title{Nest Data into Meso-Level Cells}
 \usage{
-nest_meso_cells(data, group_vars)
+nest_meso_cells(data, group_vars, measure_cols = NULL)
 }
 \arguments{
 \item{data}{A data frame containing at least \code{ref_date}.}
 
 \item{group_vars}{Character vector of column names in \code{data} to build cells
 for. Use \code{"ref_date"} to represent the whole-population (ungrouped) cell.}
+
+\item{measure_cols}{Optional character string naming a column in \code{data} to be used as the measure for the wage bill meso table.}
 }
 \value{
 A data frame with columns \code{ref_date}, \code{group_var}, \code{subgroup}, and
@@ -20,7 +22,6 @@ a list-column \code{cell_data}.
 Internal helper that reshapes a data frame into "meso" cells: one row per
 combination of \code{ref_date}, grouping variable (\code{group_var}), and grouping
 value (\code{subgroup}). The raw rows belonging to each cell are kept in a
-list-column (\code{cell_data}), ready for indicator or data-object functions to
-be mapped over them.
+list-column (\code{cell_data}), ready for functions to be mapped onto them.
 }
 \keyword{internal}
