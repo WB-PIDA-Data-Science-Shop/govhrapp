@@ -52,7 +52,9 @@ workforce_transition_ui <- function(id, .data) {
 #' 
 #' @export
 detect_career_transition <- function(
-  .data, id_col = "contract_id", group_cols,
+  .data, 
+  id_col = "contract_id", 
+  group_cols,
   return_all = FALSE
 ) {
   dt <- data.table::as.data.table(.data)

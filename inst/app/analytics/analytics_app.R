@@ -10,6 +10,7 @@ workforce_data <- govhr::bra_hrmis_personnel |>
   dplyr::select(dplyr::all_of(c(
     "ref_date",
     "personnel_id",
+    "est_id",
     "gender",
     "educat7",
     "employment_status",

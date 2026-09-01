@@ -119,13 +119,13 @@ wagebill_equity_server <- function(id, .data) {
     # plots below then just look up the latest reference date's pre-computed
     # distributions instead of recomputing them from raw contract rows.
     wagebill_meso_table <- reactive({
-      build_wagebill_meso_table(.data, wagebill_measure = input$wagebill_measure)
+      build_wagebill_meso_table(.data)
     })
 
     wagebill_meso_latest <- reactive({
       lookup_meso_table(
         wagebill_meso_table(),
-        group_var = input$group_filter,
+        group_var_value = input$group_filter,
         subgroup_filter = input$subgroup_filter,
         date_range = input$date_range
       ) |>

@@ -46,8 +46,7 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   # cache data to improve performance
   meso_table <- build_meso_table(
     workforce_data,
-    wagebill_data,
-    wagebill_measure = "wagebill"
+    wagebill_data
   )
 
   ui <- bslib::page_navbar(
@@ -158,7 +157,7 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
     wagebill_server(
       "wagebill",
       wagebill_data,
-      cache = cache[["wagebill_trend"]]
+      cache = wagebill_meso
     )
     workforce_server(
       "workforce",

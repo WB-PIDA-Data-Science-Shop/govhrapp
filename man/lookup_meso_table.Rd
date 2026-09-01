@@ -6,7 +6,7 @@
 \usage{
 lookup_meso_table(
   meso_table,
-  group_var,
+  group_var_value,
   subgroup_filter = NULL,
   date_range = NULL
 )
@@ -14,7 +14,7 @@ lookup_meso_table(
 \arguments{
 \item{meso_table}{A meso table (or a slice of one).}
 
-\item{group_var}{Character string naming the grouping variable to look up,
+\item{group_var_value}{Character string naming the grouping variable to look up,
 e.g. \code{"ref_date"}, \code{"paygrade"}, or \code{"gender"}.}
 
 \item{subgroup_filter}{Character vector of subgroup values to keep, or

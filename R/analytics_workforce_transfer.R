@@ -27,7 +27,7 @@ workforce_transfer_ui <- function(id, .data) {
       title = "Controls",
       width = "300px",
       date_ui(id, .data),
-      group_filter_ui(id, .data, selected = "paygrade", group_choices),
+      group_filter_ui(id, .data, selected = "est_id", group_choices),
       subgroup_filter_ui(id, .data),
       shiny::selectInput(
         shiny::NS(id, "id_col"),

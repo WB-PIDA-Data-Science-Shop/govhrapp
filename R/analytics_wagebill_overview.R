@@ -117,13 +117,13 @@ wagebill_overview_server <- function(id, .data, cache) {
     # (group, subgroup, date range) below is then a cheap filter over this
     # pre-aggregated table instead of a recomputation over raw contract rows.
     wagebill_meso_table <- reactive({
-      build_wagebill_meso_table(.data, wagebill_measure = input$wagebill_measure)
+      build_wagebill_meso_table(.data)
     })
 
     wagebill_meso <- reactive({
       lookup_meso_table(
         wagebill_meso_table(),
-        group_var = input$group_filter,
+        group_var_value = input$group_filter,
         subgroup_filter = input$subgroup_filter,
         date_range = input$date_range
       ) |>

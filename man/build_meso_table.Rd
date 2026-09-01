@@ -17,24 +17,6 @@ bill), containing \code{ref_date} and \code{wagebill_measure}.}
 for, e.g. \code{c("ref_date", "paygrade", "gender")}. Defaults to \code{"ref_date"}
 plus every character grouping column common to both \code{workforce_data} and
 \code{wagebill_data}, as identified by \code{\link[=identify_group_choices]{identify_group_choices()}}.}
-
-\item{wagebill_measure}{Character string naming the wage column to
-summarize in \code{wagebill_data}. Default \code{"gross_salary_lcu"}.}
-
-\item{percentile_binwidth}{Numeric bin width passed to
-\code{compute_percentile()} when building \code{percentile_distribution}. Default
-\code{100}.}
-
-\item{scalars}{A named list of functions, each taking a single-cell data
-frame (all rows for one \code{ref_date}/\code{group_var}/\code{subgroup} combination,
-from \code{workforce_data}) and returning a single scalar. Defaults to
-\code{headcount}, the row count.}
-
-\item{vectors}{A named list of functions, each taking a single-cell data
-frame (from \code{wagebill_data}) and returning an arbitrary vector (typically
-a data frame) to store in a list-column. Defaults compute
-\code{percentile_distribution} via \code{compute_percentile()} and
-\code{decile_distribution} via \code{compute_decile()}.}
 }
 \value{
 A tidy data frame (the "meso table") with one row per
@@ -72,7 +54,7 @@ meso_table <- build_meso_table(workforce_data, wagebill_data)
 meso_table$percentile_distribution[[1]]
 
 # look up just the "paygrade" trend, without recomputing anything:
-lookup_meso_table(meso_table, group_var = "paygrade")
+lookup_meso_table(meso_table, group_var_value = "paygrade")
 }
 
 }

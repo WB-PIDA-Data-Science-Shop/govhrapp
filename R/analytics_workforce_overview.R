@@ -104,7 +104,7 @@ workforce_overview_server <- function(id, .data, cache) {
     workforce_meso <- reactive({
       lookup_meso_table(
         workforce_meso_table,
-        group_var = input$group_filter,
+        group_var_value = input$group_filter,
         subgroup_filter = input$subgroup_filter,
         date_range = input$date_range
       ) |>
