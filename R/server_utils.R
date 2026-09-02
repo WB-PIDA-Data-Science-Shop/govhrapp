@@ -237,8 +237,8 @@ meso_growth_summary <- function(meso_slice, group_var, value_col) {
 #' entry in `scalars`. Standalone from [build_wagebill_meso_table()] since
 #' workforce indicators (e.g. headcount) don't depend on a wagebill measure.
 #'
-#' @param workforce_data A data frame with workforce/personnel attributes,
-#'   containing `ref_date`.
+#' @param workforce_data A data frame with workforce/personnel attributes.
+#' @param wagebill_data A data frame with contract/salary attributes.
 #' @param group_vars Character vector of grouping columns to build meso cells
 #'   for. Defaults to `"ref_date"` plus every character grouping column
 #'   identified by [identify_group_choices()].

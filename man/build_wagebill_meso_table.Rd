@@ -24,7 +24,7 @@ A tidy data frame with \code{ref_date}, \code{group_var}, \code{subgroup},
 \code{wagebill}, and one list-column per entry in \code{vectors}.
 }
 \description{
-Builds the wagebill half of a meso table (see \code{\link[=build_meso_table]{build_meso_table()}}): one
+Builds the wagebill half of a meso table (see \code{\link[=build_analytics_meso_table]{build_analytics_meso_table()}}): one
 row per \code{ref_date}/\code{group_var}/\code{subgroup} cell, with a \code{wagebill} scalar
 plus one list-column per entry in \code{vectors}. Standalone from
 \code{\link[=build_workforce_meso_table]{build_workforce_meso_table()}} so that it can be rebuilt on its own

@@ -12,8 +12,9 @@ build_workforce_meso_table(
 )
 }
 \arguments{
-\item{workforce_data}{A data frame with workforce/personnel attributes,
-containing \code{ref_date}.}
+\item{workforce_data}{A data frame with workforce/personnel attributes.}
+
+\item{wagebill_data}{A data frame with contract/salary attributes.}
 
 \item{group_vars}{Character vector of grouping columns to build meso cells
 for. Defaults to \code{"ref_date"} plus every character grouping column
@@ -28,7 +29,7 @@ A tidy data frame with \code{ref_date}, \code{group_var}, \code{subgroup}, and o
 column per entry in \code{indicators}.
 }
 \description{
-Builds the workforce half of a meso table (see \code{\link[=build_meso_table]{build_meso_table()}}):
+Builds the workforce half of a meso table (see \code{\link[=build_analytics_meso_table]{build_analytics_meso_table()}}):
 one row per \code{ref_date}/\code{group_var}/\code{subgroup} cell, with one column per
 entry in \code{scalars}. Standalone from \code{\link[=build_wagebill_meso_table]{build_wagebill_meso_table()}} since
 workforce indicators (e.g. headcount) don't depend on a wagebill measure.

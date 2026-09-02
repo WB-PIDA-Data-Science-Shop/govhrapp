@@ -4,16 +4,12 @@
 \alias{overview_server}
 \title{Overview Server Module}
 \usage{
-overview_server(id, meso_data)
+overview_server(id, meso_table)
 }
 \arguments{
 \item{id}{Module id.}
 
-\item{workforce_data}{Data frame with workforce/personnel data (headcount).}
-
-\item{wagebill_data}{Data frame with contract/salary data (wage bill).}
-
-\item{cache}{List of cached data frames for improved performance.}
+\item{meso_table}{Data frame with meso-level summary data (headcount and wage bill).}
 }
 \description{
 Overview Server Module

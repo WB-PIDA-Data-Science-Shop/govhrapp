@@ -50,7 +50,6 @@ compute_trend_summary <- function(data, group, measure_col = NULL) {
 #' @param data A data frame with columns `ref_date` and `value`, as returned by
 #'   [compute_trend_summary()].
 #' @param value_col Character string of the column to rescale. Default `"value"`.
-#' @param index_label Character string for the new column name of the rescaled values. Default `"value"`.
 #' @param group Character string naming the grouping column, or `"ref_date"` for
 #'   no grouping.
 #'

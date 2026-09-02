@@ -4,11 +4,13 @@
 \alias{apply_baseline_index}
 \title{Apply Baseline Index to Trend Summary}
 \usage{
-apply_baseline_index(data, group)
+apply_baseline_index(data, value_col = "value", group)
 }
 \arguments{
 \item{data}{A data frame with columns \code{ref_date} and \code{value}, as returned by
 \code{\link[=compute_trend_summary]{compute_trend_summary()}}.}
+
+\item{value_col}{Character string of the column to rescale. Default \code{"value"}.}
 
 \item{group}{Character string naming the grouping column, or \code{"ref_date"} for
 no grouping.}

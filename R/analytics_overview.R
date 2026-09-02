@@ -3,8 +3,6 @@
 #' Summary dashboard tab combining headline wage bill and headcount indicators.
 #'
 #' @param id Module id.
-#' @param workforce_data Data frame with workforce/personnel data (headcount).
-#' @param wagebill_data Data frame with contract/salary data (wage bill).
 #'
 #' @importFrom bslib layout_columns layout_sidebar sidebar card card_header card_body value_box value_box_theme tooltip
 #' @importFrom bsicons bs_icon
@@ -13,7 +11,7 @@
 #' @importFrom lubridate year
 #' @importFrom dplyr filter mutate arrange group_by ungroup summarise bind_rows n_distinct first
 #' @export
-overview_ui <- function(id, workforce_data, wagebill_data) {
+overview_ui <- function(id) {
   ns <- shiny::NS(id)
 
   bslib::layout_columns(
@@ -65,10 +63,7 @@ overview_ui <- function(id, workforce_data, wagebill_data) {
 #' Overview Server Module
 #'
 #' @param id Module id.
-#' @param id Module id.
-#' @param workforce_data Data frame with workforce/personnel data (headcount).
-#' @param wagebill_data Data frame with contract/salary data (wage bill).
-#' @param cache List of cached data frames for improved performance.
+#' @param meso_table Data frame with meso-level summary data (headcount and wage bill).
 #'
 #' @importFrom shiny moduleServer reactive renderUI renderText tags radioButtons
 #' @importFrom plotly renderPlotly ggplotly

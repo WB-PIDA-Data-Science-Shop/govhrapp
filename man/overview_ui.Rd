@@ -4,14 +4,10 @@
 \alias{overview_ui}
 \title{Overview UI Module}
 \usage{
-overview_ui(id, workforce_data, wagebill_data)
+overview_ui(id)
 }
 \arguments{
 \item{id}{Module id.}
-
-\item{workforce_data}{Data frame with workforce/personnel data (headcount).}
-
-\item{wagebill_data}{Data frame with contract/salary data (wage bill).}
 }
 \description{
 Summary dashboard tab combining headline wage bill and headcount indicators.

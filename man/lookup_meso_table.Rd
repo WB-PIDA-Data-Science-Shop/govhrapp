@@ -18,7 +18,7 @@ lookup_meso_table(
 e.g. \code{"ref_date"}, \code{"paygrade"}, or \code{"gender"}.}
 
 \item{subgroup_filter}{Character vector of subgroup values to keep, or
-\code{NULL}/\code{character(0)} to keep every subgroup available for \code{group_var}.
+\code{NULL} to keep every subgroup available for \code{group_var}.
 Ignored when \code{group_var == "ref_date"}.}
 
 \item{date_range}{A length-2 vector of dates (or values coercible to
@@ -30,7 +30,7 @@ The subset of \code{meso_table} matching \code{group_var} (and, if supplied,
 \code{subgroup_filter} and \code{date_range}).
 }
 \description{
-Filters a meso table (as produced by \code{\link[=build_meso_table]{build_meso_table()}},
+Filters a meso table (as produced by \code{\link[=build_analytics_meso_table]{build_analytics_meso_table()}},
 \code{\link[=build_workforce_meso_table]{build_workforce_meso_table()}}, or \code{\link[=build_wagebill_meso_table]{build_wagebill_meso_table()}}) down to
 the rows needed to drive a single plot: one grouping variable, optionally
 a set of subgroups, and optionally a reference-date range. This is the

@@ -19,7 +19,7 @@
 #' @importFrom thematic thematic_shiny
 #' @importFrom lubridate year
 #' @importFrom scales label_number cut_short_scale
-#' @importFrom tidyr complete 
+#' @importFrom tidyr complete
 #' @export
 run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   # add path to visual assets (image and css)
@@ -44,7 +44,7 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   ggplot2::update_geom_defaults("col", list(fill = "#C34729"))
 
   # cache data to improve performance
-  meso_table <- build_meso_table(
+  meso_table <- build_analytics_meso_table(
     workforce_data,
     wagebill_data
   )
@@ -114,7 +114,7 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
     bslib::nav_panel(
       "Overview",
       icon = shiny::icon("gauge"),
-      overview_ui("overview", workforce_data, wagebill_data)
+      overview_ui("overview")
     ),
 
     # panel 3: workforce planning
@@ -153,17 +153,17 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   )
 
   server <- function(input, output, session) {
-    overview_server("overview", workforce_data, wagebill_data, cache = cache)
+    overview_server("overview", meso_table)
     wagebill_server(
       "wagebill",
       wagebill_data,
-      cache = wagebill_meso
+      cache = meso_table
     )
     workforce_server(
       "workforce",
       workforce_data,
       wagebill_data,
-      cache = cache[c("workforce_trend", "transfer_default")]
+      cache = meso_table
     )
   }
 
