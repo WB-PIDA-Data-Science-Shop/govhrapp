@@ -79,44 +79,39 @@ overview_ui <- function(id, workforce_data, wagebill_data) {
 #' @importFrom scales label_number cut_short_scale
 #' @importFrom govhr fastcount compute_fastsummary
 #' @export
-overview_server <- function(id, workforce_data, wagebill_data, cache) {
+overview_server <- function(id, meso_table) {
   shiny::moduleServer(id, function(input, output, session) {
 
     # obtain latest reference date
-    latest_workforce_date <- reactive({
-      max(cache[["workforce_trend"]][["ref_date"]], na.rm = TRUE)
-    })
+    latest_ref_date <- meso_table |>
+      dplyr::filter(.data[["group"]] == "ref_date") |>
+      dplyr::pull(.data[["ref_date"]]) |>
+      max(na.rm = TRUE)
 
-    latest_wagebill_date <- reactive({
-      max(cache[["wagebill_trend"]][["ref_date"]], na.rm = TRUE)
-    })
-
-    latest_workforce <- reactive({
-      cache[["workforce_trend"]] |>
-        dplyr::filter(.data[["ref_date"]] == latest_workforce_date())
-    })
-
-    latest_wagebill <- reactive({
-      cache[["wagebill_trend"]] |>
-        dplyr::filter(.data[["ref_date"]] == latest_wagebill_date())
-    })
+    overview_data <- meso_table |>
+        dplyr::filter(
+          .data[["group_var"]] == "ref_date"
+        )
 
     # value boxes
     output$vb_date_label <- shiny::renderUI({
       shiny::tags$span(
-        paste0("Headcount (", format(latest_workforce_date(), "%b %Y"), ")")
+        paste0("Headcount (", format(latest_ref_date, "%b %Y"), ")")
       )
     })
 
     output$vb_wagebill_label <- shiny::renderUI({
       shiny::tags$span(
-        paste0("Wage Bill (", format(latest_wagebill_date(), "%b %Y"), ")")
+        paste0("Wage Bill (", format(latest_ref_date, "%b %Y"), ")")
       )
     })
 
     output$vb_headcount <- shiny::renderUI({
-      n <- latest_workforce() |>
-        dplyr::pull(.data[["value"]])
+      n <- overview_data |>
+        filter(
+          .data[["ref_date"]] == latest_ref_date
+        ) |>
+        dplyr::pull(.data[["headcount"]])
       
       shiny::tags$span(
         scales::label_number(scale_cut = scales::cut_short_scale())(n)
@@ -124,8 +119,11 @@ overview_server <- function(id, workforce_data, wagebill_data, cache) {
     })
 
     output$vb_wagebill <- shiny::renderUI({
-      wagebill_value <- latest_wagebill() |>
-        dplyr::pull(.data[["value"]])
+      wagebill_value <- overview_data |>
+        dplyr::filter(
+          .data[["ref_date"]] == latest_ref_date
+        ) |>
+        dplyr::pull(.data[["wagebill_gross_salary_lcu"]])
       
       shiny::tags$span(
         scales::label_number(
@@ -176,8 +174,8 @@ overview_server <- function(id, workforce_data, wagebill_data, cache) {
 
     # plot option 1. headcount
     output$plot_headcount <- plotly::renderPlotly({
-      plot <- cache[["workforce_trend"]] |>
-        ggplot2::ggplot(ggplot2::aes(x = .data[["ref_date"]], y = .data[["value"]])) +
+      plot <- overview_data |>
+        ggplot2::ggplot(ggplot2::aes(x = .data[["ref_date"]], y = .data[["headcount"]])) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
         ggplot2::scale_y_continuous(
@@ -190,8 +188,8 @@ overview_server <- function(id, workforce_data, wagebill_data, cache) {
 
     # plot option 2. total wage bill
     output$plot_wagebill <- plotly::renderPlotly({
-      plot <- cache[["wagebill_trend"]] |>
-        ggplot2::ggplot(ggplot2::aes(x = .data[["ref_date"]], y = .data[["value"]])) +
+      plot <- overview_data |>
+        ggplot2::ggplot(ggplot2::aes(x = .data[["ref_date"]], y = .data[["wagebill_gross_salary_lcu"]])) +
         ggplot2::geom_point(colour = "#004181") +
         ggplot2::geom_line(colour  = "#004181") +
         ggplot2::scale_y_continuous(
@@ -204,19 +202,19 @@ overview_server <- function(id, workforce_data, wagebill_data, cache) {
 
     # plot option 3. integrated
     output$plot_integrated <- plotly::renderPlotly({
-      index_to_100 <- function(df, label) {
-        df |>
-          dplyr::arrange(.data[["ref_date"]]) |>
-          dplyr::mutate(
-            value  = .data[["value"]] / dplyr::first(.data[["value"]]) * 100,
-            series = label
-          )
-      }
-
       combined <- dplyr::bind_rows(
-        index_to_100(cache[["workforce_trend"]], "Headcount"),
-        index_to_100(cache[["wagebill_trend"]],  "Total compensation")
-      )
+        apply_baseline_index(
+          overview_data, value_col = "headcount", group = "ref_date"
+        ) |>
+          dplyr::mutate(series = "Headcount"),
+        apply_baseline_index(overview_data, value_col = "wagebill_gross_salary_lcu", group = "ref_date") |>
+          dplyr::mutate(series = "Total compensation")
+      ) |>
+        dplyr::select(
+          dplyr::all_of(
+            c("ref_date", "value", "series")
+          )
+        )
 
       palette <- c("Headcount" = "#C34729", "Total compensation" = "#004181")
 

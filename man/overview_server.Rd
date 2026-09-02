@@ -4,7 +4,7 @@
 \alias{overview_server}
 \title{Overview Server Module}
 \usage{
-overview_server(id, workforce_data, wagebill_data, cache)
+overview_server(id, meso_data)
 }
 \arguments{
 \item{id}{Module id.}

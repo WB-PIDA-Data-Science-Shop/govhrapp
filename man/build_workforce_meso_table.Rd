@@ -6,6 +6,7 @@
 \usage{
 build_workforce_meso_table(
   workforce_data,
+  wagebill_data,
   group_vars = NULL,
   indicators = NULL
 )

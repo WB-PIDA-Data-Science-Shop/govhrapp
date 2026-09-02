@@ -49,6 +49,8 @@ compute_trend_summary <- function(data, group, measure_col = NULL) {
 #'
 #' @param data A data frame with columns `ref_date` and `value`, as returned by
 #'   [compute_trend_summary()].
+#' @param value_col Character string of the column to rescale. Default `"value"`.
+#' @param index_label Character string for the new column name of the rescaled values. Default `"value"`.
 #' @param group Character string naming the grouping column, or `"ref_date"` for
 #'   no grouping.
 #'
@@ -56,18 +58,18 @@ compute_trend_summary <- function(data, group, measure_col = NULL) {
 #'
 #' @importFrom dplyr arrange mutate across all_of ungroup first
 #' @export
-apply_baseline_index <- function(data, group) {
+apply_baseline_index <- function(data, value_col = "value", group) {
   if (group == "ref_date") {
     data |>
       dplyr::arrange(.data[["ref_date"]]) |>
       dplyr::mutate(
-        value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100
+        value = .data[[value_col]] / dplyr::first(.data[[value_col]]) * 100
       )
   } else {
     data |>
       dplyr::arrange(.data[["ref_date"]]) |>
       dplyr::mutate(
-        value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100,
+        value = .data[[value_col]] / dplyr::first(.data[[value_col]]) * 100,
         .by = dplyr::all_of(group)
       )
   }

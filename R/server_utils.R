@@ -111,7 +111,7 @@ nest_meso_cells <- function(data, group_vars, measure_cols = NULL) {
 
 #' Look Up a Slice of a Meso Table
 #'
-#' Filters a meso table (as produced by [build_meso_table()],
+#' Filters a meso table (as produced by [build_analytics_meso_table()],
 #' [build_workforce_meso_table()], or [build_wagebill_meso_table()]) down to
 #' the rows needed to drive a single plot: one grouping variable, optionally
 #' a set of subgroups, and optionally a reference-date range. This is the
@@ -124,7 +124,7 @@ nest_meso_cells <- function(data, group_vars, measure_cols = NULL) {
 #' @param group_var_value Character string naming the grouping variable to look up,
 #'   e.g. `"ref_date"`, `"paygrade"`, or `"gender"`.
 #' @param subgroup_filter Character vector of subgroup values to keep, or
-#'   `NULL`/`character(0)` to keep every subgroup available for `group_var`.
+#'   `NULL` to keep every subgroup available for `group_var`.
 #'   Ignored when `group_var == "ref_date"`.
 #' @param date_range A length-2 vector of dates (or values coercible to
 #'   `Date`) giving the inclusive range of `ref_date` to keep, or `NULL` to
@@ -141,15 +141,10 @@ lookup_meso_table <- function(
   subgroup_filter = NULL,
   date_range = NULL
 ) {
-  # NOTE: `.env[["group_var"]]` (rather than the bare `group_var`) is required
-  # here because the meso table itself has a column literally named
-  # "group_var"; inside `dplyr::filter()`, a bare `group_var` would resolve
-  # to that data-variable (data-mask precedence), turning this into a
-  # self-comparison that always returns `TRUE` instead of filtering.
   out <- meso_table |>
     dplyr::filter(.data[["group_var"]] == group_var_value)
 
-  if (group_var_value != "ref_date" && length(subgroup_filter) > 0) {
+  if (group_var_value != "ref_date" && !is.null(subgroup_filter)) {
     out <- out |>
       dplyr::filter(.data[["subgroup"]] %in% subgroup_filter)
   }
@@ -237,7 +232,7 @@ meso_growth_summary <- function(meso_slice, group_var, value_col) {
 
 #' Build a Workforce Meso Table
 #'
-#' Builds the workforce half of a meso table (see [build_meso_table()]):
+#' Builds the workforce half of a meso table (see [build_analytics_meso_table()]):
 #' one row per `ref_date`/`group_var`/`subgroup` cell, with one column per
 #' entry in `scalars`. Standalone from [build_wagebill_meso_table()] since
 #' workforce indicators (e.g. headcount) don't depend on a wagebill measure.
@@ -270,8 +265,6 @@ build_workforce_meso_table <- function(
     )
   }
 
-  # fix group_vars
-
   if(is.null(indicators)) {
     indicators <- list(
       headcount = function(cell) {
@@ -285,8 +278,7 @@ build_workforce_meso_table <- function(
           id_col = "personnel_id",
           # defaults to identifying transfers across paygrades
           group_cols = "est_id"
-        ) |>
-          nrow()
+        )
       }
     )
   }
@@ -306,21 +298,27 @@ build_workforce_meso_table <- function(
           indicators[["headcount"]](cell)
         }
       ),
-      transfer = purrr::map_dbl(
+      # only compute transfers for reference dates
+      transfer = case_when(
+        group_var == "ref_date" ~ purrr::map(
         .data[["wagebill_cell_data"]],
-        function(cell) {
-          indicators[["transfer"]](cell)
-        }
+          function(cell) {
+            indicators[["transfer"]](cell)
+          }
+        ),
+        T ~ NA
       )
     )
 
   workforce_meso |>
-    dplyr::select(-"cell_data")
+    dplyr::select(
+      -dplyr::ends_with("cell_data")
+    )
 }
 
 #' Build a Wagebill Meso Table
 #'
-#' Builds the wagebill half of a meso table (see [build_meso_table()]): one
+#' Builds the wagebill half of a meso table (see [build_analytics_meso_table()]): one
 #' row per `ref_date`/`group_var`/`subgroup` cell, with a `wagebill` scalar
 #' plus one list-column per entry in `vectors`. Standalone from
 #' [build_workforce_meso_table()] so that it can be rebuilt on its own
@@ -420,10 +418,7 @@ build_wagebill_meso_table <- function(
 #'
 #' @examples
 #' \dontrun{
-#' meso_table <- build_meso_table(workforce_data, wagebill_data)
-#'
-#' # a single slice's percentile distribution:
-#' meso_table$percentile_distribution[[1]]
+#' meso_table <- build_analytics_meso_table(workforce_data, wagebill_data)
 #'
 #' # look up just the "paygrade" trend, without recomputing anything:
 #' lookup_meso_table(meso_table, group_var_value = "paygrade")
@@ -431,7 +426,7 @@ build_wagebill_meso_table <- function(
 #'
 #' @importFrom dplyr full_join
 #' @export
-build_meso_table <- function(
+build_analytics_meso_table <- function(
   workforce_data,
   wagebill_data,
   group_vars = NULL
@@ -443,19 +438,32 @@ build_meso_table <- function(
     group_vars <- union("ref_date", intersect(workforce_vars, wagebill_vars))
   }
 
-  workforce_cells <- build_workforce_meso_table(workforce_data, group_vars)
+  workforce_cells <- build_workforce_meso_table(
+    workforce_data,
+    wagebill_data, 
+    group_vars
+  )
 
   wagebill_cells <- build_wagebill_meso_table(
     wagebill_data,
     group_vars
   )
 
-  # transfer default
-
-
-  dplyr::full_join(
+  analytics_meso <- dplyr::full_join(
     workforce_cells,
     wagebill_cells,
     by = c("ref_date", "group_var", "subgroup")
-  )
+  ) |>
+    dplyr::select(
+      dplyr::all_of(
+        c(
+          "group_var",
+          "subgroup",
+          "ref_date"
+        )
+      ),
+      dplyr::everything()
+    )
+  
+  analytics_meso
 }
