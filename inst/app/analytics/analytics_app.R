@@ -28,10 +28,10 @@ wagebill_data <- govhr::bra_hrmis_contract |>
 
 # bootstrap to increase size
 workforce_data <- workforce_data |>
-  dplyr::slice_sample(n = 1e7, replace = TRUE)
+  dplyr::slice_sample(n = 1e6, replace = TRUE)
 
 wagebill_data <- wagebill_data |>
-  dplyr::slice_sample(n = 1e7, replace = TRUE)
+  dplyr::slice_sample(n = 1e6, replace = TRUE)
 
 # cache data to improve performance
 cache <- list(

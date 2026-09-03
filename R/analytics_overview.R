@@ -59,57 +59,52 @@ overview_ui <- function(id) {
         )
       ),
 
-      # navset_hidden binds panel visibility to input$display_mode via
-      # each panel's `value`, and Shiny's tab-based suspend/resume is
-      # reliable even inside full_screen cards (unlike conditionalPanel).
-      bslib::navset_hidden(
-        id = ns("display_mode"),
-
-        bslib::nav_panel(
-          value = "headcount",
-          bslib::card(
-            full_screen = TRUE,
-            bslib::card_header("Headcount"),
-            bslib::card_body(
-              plotly::plotlyOutput(ns("plot_headcount"), height = "350px")
-            )
+      # plot 1. headcount
+      shiny::conditionalPanel(
+        condition = sprintf("input['%s'] == 'headcount'", ns("display_mode")),
+        bslib::card(
+          full_screen = TRUE,
+          bslib::card_header("Headcount"),
+          bslib::card_body(
+            plotly::plotlyOutput(ns("plot_headcount"), height = "350px")
           )
-        ),
+        )
+      ),
 
-        bslib::nav_panel(
-          value = "wagebill",
-          bslib::card(
-            full_screen = TRUE,
-            bslib::card_header("Wage Bill"),
-            bslib::card_body(
-              plotly::plotlyOutput(ns("plot_wagebill"), height = "350px")
-            )
+      # plot 2. wage bill
+      shiny::conditionalPanel(
+        condition = sprintf("input['%s'] == 'wagebill'", ns("display_mode")),
+        bslib::card(
+          full_screen = TRUE,
+          bslib::card_header("Wage Bill"),
+          bslib::card_body(
+            plotly::plotlyOutput(ns("plot_wagebill"), height = "350px")
           )
-        ),
+        )
+      ),
 
-        bslib::nav_panel(
-          value = "integrated",
-          bslib::card(
-            full_screen = TRUE,
-            bslib::card_header(
-              "Integrated: Headcount and Wage Bill",
-              bslib::popover(
-                bsicons::bs_icon("info-circle-fill"),
-                "Both series are indexed to 100 for the earliest reference date.",
-                placement = "left"
-              ),
-              class = "d-flex justify-content-between"
+      # plot 3. integrated
+      shiny::conditionalPanel(
+        condition = sprintf("input['%s'] == 'integrated'", ns("display_mode")),
+        bslib::card(
+          full_screen = TRUE,
+          bslib::card_header(
+            "Integrated: Headcount and Wage Bill",
+            bslib::popover(
+              bsicons::bs_icon("info-circle-fill"),
+              "Both series are indexed to 100 for the earliest reference date.",
+              placement = "left"
             ),
-            bslib::card_body(
-              plotly::plotlyOutput(ns("plot_integrated"), height = "350px")
-            )
+            class = "d-flex justify-content-between"
+          ),
+          bslib::card_body(
+            plotly::plotlyOutput(ns("plot_integrated"), height = "350px")
           )
         )
       )
     )
   )
 }
-
 
 #' Overview Server Module
 #'
@@ -150,83 +145,74 @@ overview_server <- function(id, cache) {
     output$vb_headcount      <- shiny::renderText(headcount_val)
     output$vb_wagebill       <- shiny::renderText(wagebill_val)
 
-    axis_fmt <- scales::label_number(scale_cut = scales::cut_short_scale())
-
     output$plot_headcount <- plotly::renderPlotly({
-      plotly::plot_ly(
-        data = workforce_overview,
-        x = ~ref_date,
-        y = ~value,
-        type = "scatter",
-        mode = "lines+markers",
-        line = list(color = "#000000"),
-        marker = list(color = "#000000")
-      ) |>
-        plotly::layout(
-          xaxis = list(title = "Time"),
-          yaxis = list(title = "Headcount", tickformat = "~s")
-        )
+      req(input$display_mode == "headcount")
+
+      plotly::ggplotly(workforce_overview |>
+        ggplot2::ggplot(ggplot2::aes(x = .data[["ref_date"]], y = .data[["value"]])) +
+        ggplot2::geom_point() +
+        ggplot2::geom_line() +
+        ggplot2::scale_y_continuous(
+          labels = scales::label_number(scale_cut = scales::cut_short_scale())
+        ) +
+        ggplot2::labs(x = "Time", y = "Headcount")
+      ) 
     })
 
     output$plot_wagebill <- plotly::renderPlotly({
-      plotly::plot_ly(
-        data = wagebill_overview,
-        x = ~ref_date,
-        y = ~value,
-        type = "scatter",
-        mode = "lines+markers",
-        line = list(color = "#004181"),
-        marker = list(color = "#004181")
-      ) |>
-        plotly::layout(
-          xaxis = list(title = "Time"),
-          yaxis = list(title = "Total compensation (LCU)", tickformat = "~s")
-        )
+      req(input$display_mode == "wagebill")
+
+      plotly::ggplotly(wagebill_overview |>
+        ggplot2::ggplot(ggplot2::aes(x = .data[["ref_date"]], y = .data[["value"]])) +
+        ggplot2::geom_point(colour = "#004181") +
+        ggplot2::geom_line(colour  = "#004181") +
+        ggplot2::scale_y_continuous(
+          labels = scales::label_number(scale_cut = scales::cut_short_scale())
+        ) +
+        ggplot2::labs(x = "Time", y = "Total compensation (LCU)")
+      )
     })
 
-    # Indexed series are only computed the first time the "integrated"
-    # panel is actually selected, not eagerly at module init.
     output$plot_integrated <- plotly::renderPlotly({
+      req(input$display_mode == "integrated")
+
+      palette <- c("Headcount" = "#C34729", "Total compensation" = "#004181")
+
+      # index series for the integrated plot only — kept separate, see note below
       indexed_workforce <- workforce_overview |>
         dplyr::arrange(.data[["ref_date"]]) |>
-        dplyr::mutate(
-          value  = .data[["value"]] / dplyr::first(.data[["value"]]) * 100,
-          series = "Headcount"
-        )
+        dplyr::mutate(value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100)
 
       indexed_wagebill <- wagebill_overview |>
         dplyr::arrange(.data[["ref_date"]]) |>
-        dplyr::mutate(
-          value  = .data[["value"]] / dplyr::first(.data[["value"]]) * 100,
-          series = "Total compensation"
-        )
+        dplyr::mutate(value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100)
 
-      combined <- dplyr::bind_rows(indexed_workforce, indexed_wagebill)
-      palette  <- c("Headcount" = "#C34729", "Total compensation" = "#004181")
+      combined <- dplyr::bind_rows(
+        dplyr::mutate(indexed_workforce, series = "Headcount"),
+        dplyr::mutate(indexed_wagebill,  series = "Total compensation")
+      )
 
-      plotly::plot_ly(colors = palette) |>
-        plotly::add_trace(
-          data = combined,
-          x = ~ref_date,
-          y = ~value,
-          color = ~series,
-          type = "scatter",
-          mode = "lines+markers"
-        ) |>
-        plotly::layout(
-          xaxis = list(title = "Time"),
-          yaxis = list(title = "Baseline index (earliest period = 100)"),
-          shapes = list(
-            list(
-              type = "line",
-              x0 = 0, x1 = 1, xref = "paper",
-              y0 = 100, y1 = 100,
-              line = list(color = "grey50", dash = "dash")
+      plotly::ggplotly(
+        combined |>
+          ggplot2::ggplot(
+            ggplot2::aes(
+              x     = .data[["ref_date"]],
+              y     = .data[["value"]],
+              color = .data[["series"]],
+              group = .data[["series"]]
             )
-          ),
-          legend = list(title = list(text = ""))
-        )
-    }) |>
-      shiny::bindEvent(input$display_mode, ignoreInit = FALSE)
+          ) +
+          ggplot2::geom_point() +
+          ggplot2::geom_line() +
+          ggplot2::geom_hline(yintercept = 100, linetype = "dashed", colour = "grey50") +
+          ggplot2::scale_color_manual(values = palette) +
+          ggplot2::scale_y_continuous(labels = scales::label_number(suffix = "")) +
+          ggplot2::labs(
+            x = "Time",
+            y = "Baseline index (earliest period = 100)",
+            color = NULL
+          ) 
+      )
+    })
   })
 }
