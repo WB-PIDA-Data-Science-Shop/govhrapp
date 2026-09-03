@@ -22,7 +22,5 @@ Renames the generic \code{subgroup} column produced by \code{\link[=nest_meso_ce
 \code{"paygrade"}), so the result can be passed directly to plotting helpers
 such as \code{\link[=plot_trend]{plot_trend()}}, \code{\link[=plot_bar_total]{plot_bar_total()}}, \code{\link[=plot_bar_growth]{plot_bar_growth()}}, and
 \code{\link[=apply_baseline_index]{apply_baseline_index()}}, all of which expect group values to live in a
-column named after the grouping variable. When \code{group_var} is
-\code{"ref_date"} (no grouping), \code{subgroup} is always \code{NA} and is dropped
-instead of renamed.
+column named after the grouping variable.
 }

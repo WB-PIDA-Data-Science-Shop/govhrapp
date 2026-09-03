@@ -4,15 +4,15 @@
 \alias{nest_meso_cells}
 \title{Nest Data into Meso-Level Cells}
 \usage{
-nest_meso_cells(data, group_vars, measure_cols = NULL)
+nest_meso_cells(.data, group_vars = NULL, measure_cols = NULL)
 }
 \arguments{
-\item{data}{A data frame containing at least \code{ref_date}.}
+\item{.data}{A data frame, typically either workforce or wagebill data, containing \code{ref_date} and one or more grouping variables.}
 
-\item{group_vars}{Character vector of column names in \code{data} to build cells
-for. Use \code{"ref_date"} to represent the whole-population (ungrouped) cell.}
+\item{group_vars}{Character vector of column names in \code{.data} to build cells
+for. If NULL, defaults to \code{"ref_date"} plus every possible grouping column.}
 
-\item{measure_cols}{Optional character string naming a column in \code{data} to be used as the measure for the wage bill meso table.}
+\item{measure_cols}{Optional character string naming a column in \code{.data} to be used as the measure for the wage bill meso table.}
 }
 \value{
 A data frame with columns \code{ref_date}, \code{group_var}, \code{subgroup}, and
@@ -23,5 +23,8 @@ Internal helper that reshapes a data frame into "meso" cells: one row per
 combination of \code{ref_date}, grouping variable (\code{group_var}), and grouping
 value (\code{subgroup}). The raw rows belonging to each cell are kept in a
 list-column (\code{cell_data}), ready for functions to be mapped onto them.
+}
+\seealso{
+\code{\link[=build_workforce_meso_table]{build_workforce_meso_table()}}, \code{\link[=build_wagebill_meso_table]{build_wagebill_meso_table()}}, \code{\link[=build_analytics_meso_table]{build_analytics_meso_table()}}.
 }
 \keyword{internal}

@@ -71,10 +71,10 @@ filter_data <- function(data, group_filter, subgroup_filter, date_range) {
 #' value (`subgroup`). The raw rows belonging to each cell are kept in a
 #' list-column (`cell_data`), ready for functions to be mapped onto them.
 #'
-#' @param data A data frame containing at least `ref_date`.
-#' @param group_vars Character vector of column names in `data` to build cells
-#'   for. Use `"ref_date"` to represent the whole-population (ungrouped) cell.
-#' @param measure_cols Optional character string naming a column in `data` to be used as the measure for the wage bill meso table.
+#' @param .data A data frame, typically either workforce or wagebill data, containing `ref_date` and one or more grouping variables.
+#' @param group_vars Character vector of column names in `.data` to build cells
+#'   for. If NULL, defaults to `"ref_date"` plus every possible grouping column.
+#' @param measure_cols Optional character string naming a column in `.data` to be used as the measure for the wage bill meso table.
 #'
 #' @return A data frame with columns `ref_date`, `group_var`, `subgroup`, and
 #'   a list-column `cell_data`.
@@ -83,30 +83,46 @@ filter_data <- function(data, group_filter, subgroup_filter, date_range) {
 #' @importFrom tidyr nest
 #' @importFrom purrr map_dfr
 #' @keywords internal
-nest_meso_cells <- function(data, group_vars, measure_cols = NULL) {
-  purrr::map_dfr(group_vars, function(group_var) {
-    if (group_var != "ref_date" && !group_var %in% names(data)) {
-      return(NULL)
+#' 
+#' @seealso [build_workforce_meso_table()], [build_wagebill_meso_table()], [build_analytics_meso_table()].
+nest_meso_cells <- function(.data, group_vars = NULL, measure_cols = NULL) {
+  if (is.null(group_vars)) {
+    group_vars <- setdiff(
+      unlist(identify_group_choices(.data), use.names = FALSE),
+      "ref_date"
+    )
+  }
+    
+  nest_ref_date <- .data |>
+    dplyr::group_nest(
+      across("ref_date"),
+      .key = "cell_data"
+    ) |>
+    dplyr::transmute(
+      group_var = "ref_date",
+      subgroup = as.character(.data[["ref_date"]]),
+      .data[["cell_data"]]
+    )
+  
+  nest_group_vars <- purrr::map_dfr(
+    group_vars[group_vars != "ref_date"],
+    function(group_var) {
+      .data |>
+        dplyr::group_nest(
+          across(c(group_var)),
+          .key = "cell_data"
+        ) |>
+        dplyr::mutate(
+          group_var = group_var,
+          subgroup = .data[[group_var]]
+        ) |>
+        dplyr::select(
+          "group_var", "subgroup", "cell_data"
+        )
     }
-
-    data |>
-      dplyr::mutate(
-        subgroup = if (group_var == "ref_date") {
-          NA_character_
-        } else {
-          as.character(.data[[group_var]])
-        },
-        group_var = group_var,
-        # keep a duplicate of `ref_date` as the nest key so that the original
-        # `ref_date` column is retained inside `cell_data`; several downstream
-        # helpers (e.g. `compute_decile()`) expect a `ref_date` column even
-        # when the cell already represents a single reference date.
-        .ref_date_key = .data[["ref_date"]]
-      ) |>
-      dplyr::filter(group_var == "ref_date" | !is.na(.data[["subgroup"]])) |>
-      tidyr::nest(cell_data = -c(".ref_date_key", "group_var", "subgroup")) |>
-      dplyr::rename(ref_date = ".ref_date_key")
-  })
+  )
+  
+  dplyr::bind_rows(nest_ref_date, nest_group_vars)
 }
 
 #' Look Up a Slice of a Meso Table
@@ -167,9 +183,7 @@ lookup_meso_table <- function(
 #' `"paygrade"`), so the result can be passed directly to plotting helpers
 #' such as [plot_trend()], [plot_bar_total()], [plot_bar_growth()], and
 #' [apply_baseline_index()], all of which expect group values to live in a
-#' column named after the grouping variable. When `group_var` is
-#' `"ref_date"` (no grouping), `subgroup` is always `NA` and is dropped
-#' instead of renamed.
+#' column named after the grouping variable.
 #'
 #' @param meso_slice A data frame containing a `subgroup` column, as returned
 #'   by [lookup_meso_table()].
@@ -181,13 +195,8 @@ lookup_meso_table <- function(
 #' @importFrom dplyr rename select
 #' @export
 label_subgroup <- function(meso_slice, group_var) {
-  if (group_var == "ref_date") {
-    meso_slice |>
-      dplyr::select(-"subgroup")
-  } else {
-    meso_slice |>
+  meso_slice |>
       dplyr::rename(!!group_var := "subgroup")
-  }
 }
 
 #' Compute a Growth Rate from a Meso Table Slice
@@ -249,8 +258,20 @@ meso_growth_summary <- function(meso_slice, group_var, value_col) {
 #' @return A tidy data frame with `ref_date`, `group_var`, `subgroup`, and one
 #'   column per entry in `indicators`.
 #'
-#' @importFrom dplyr select distinct
+#' @importFrom dplyr select distinct left_join filter matches mutate
 #' @importFrom purrr map_dbl
+#' 
+#' @examples
+#' workforce_data <- govhr::bra_hrmis_personnel
+#' 
+#' wagebill_data <- govhr::bra_hrmis_contract |>
+#'  dplyr::left_join(
+#'   workforce_data,
+#'  by = c("ref_date", "personnel_id")
+#' )
+#' 
+#' build_workforce_meso_table(workforce_data, wagebill_data)
+#' 
 #' @export
 build_workforce_meso_table <- function(
   workforce_data,
@@ -278,7 +299,8 @@ build_workforce_meso_table <- function(
           id_col = "personnel_id",
           # defaults to identifying transfers across paygrades
           group_cols = "est_id"
-        )
+        ) |>
+          nrow()
       }
     )
   }
@@ -287,32 +309,36 @@ build_workforce_meso_table <- function(
   wagebill_meso <- nest_meso_cells(wagebill_data, group_vars) |>
     rename(wagebill_cell_data = "cell_data")
 
-  workforce_meso <- workforce_meso |>
-    left_join(
-      wagebill_meso, by = c("ref_date", "group_var", "subgroup")
-    ) |>
+  workforce_meso_baseline <- workforce_meso |>
     dplyr::mutate(
       headcount = purrr::map_dbl(
         .data[["cell_data"]],
-        function(cell) {
-          indicators[["headcount"]](cell)
-        }
-      ),
-      # only compute transfers for reference dates
-      transfer = case_when(
-        group_var == "ref_date" ~ purrr::map(
+        indicators[["headcount"]]
+      )
+    )
+  
+  workforce_meso_extension <- workforce_meso |>
+    left_join(
+      wagebill_meso,
+      by = c("group_var", "subgroup")
+    ) |>
+    filter(
+      .data[["group_var"]] == "ref_date"
+    ) |>
+    dplyr::mutate(
+      transfer = purrr::map_dbl(
         .data[["wagebill_cell_data"]],
-          function(cell) {
-            indicators[["transfer"]](cell)
-          }
-        ),
-        T ~ NA
+        indicators[["transfer"]]
       )
     )
 
-  workforce_meso |>
+  workforce_meso_baseline |>
+    left_join(
+      workforce_meso_extension,
+      by = c("group_var", "subgroup")
+    ) |>
     dplyr::select(
-      -dplyr::ends_with("cell_data")
+      -dplyr::matches("cell_data")
     )
 }
 
@@ -337,8 +363,12 @@ build_workforce_meso_table <- function(
 #' @return A tidy data frame with `ref_date`, `group_var`, `subgroup`,
 #'   `wagebill`, and one list-column per entry in `vectors`.
 #'
-#' @importFrom dplyr select
-#' @importFrom purrr map map_dbl
+#' @importFrom dplyr select distinct left_join filter matches mutate
+#' @importFrom purrr map_dbl
+#' 
+#' @examples
+#' build_wagebill_meso_table(govhr::bra_hrmis_contract)
+#' 
 #' @export
 build_wagebill_meso_table <- function(
   wagebill_data,
@@ -352,32 +382,62 @@ build_wagebill_meso_table <- function(
     )
   }
 
-  indicators <- list(
+  indicators_baseline <- list(
     wagebill = function(data) {
-      collapse::fsum(data[[wagebill_measure]], na.rm = TRUE)
+      collapse::fsum(data[["gross_salary_lcu"]], na.rm = TRUE)
     }
   )
 
-  wagebill_measure_cols <- identify_wagebill_choices(wagebill_data) |>
-      unlist(use.names = FALSE)
+  indicators_extension <- list(
+    wagebill_sd = function(data) {
+      collapse::fsd(data[["gross_salary_lcu"]], na.rm = TRUE)
+    },
+    compression_ratio = function(data) {
+      # 90th percentile / 10th percentile of the wagebill measure, ignoring NAs
+      collapse::fquantile(
+        data[["gross_salary_lcu"]],
+        probs = .9,
+        na.rm = TRUE
+      )/collapse::fquantile(
+        data[["gross_salary_lcu"]],
+        probs = .1,
+        na.rm = TRUE
+      )
+    }
+  )
 
   wagebill_meso <- nest_meso_cells(
     wagebill_data, group_vars
   )
 
-  for (wagebill_measure in wagebill_measure_cols) {
-    for (indicator in names(indicators)) {
-      wagebill_meso[[paste0(indicator, "_", wagebill_measure)]] <- purrr::map_dbl(
-        wagebill_meso[["cell_data"]],
-        function(cell) {
-          indicators[[indicator]](cell)
-        }
+  wagebill_meso_baseline <- wagebill_meso |>
+    dplyr::mutate(
+      wagebill = purrr::map_dbl(
+        .data[["cell_data"]],
+        indicators_baseline[["wagebill"]]
       )
-    }
-  }
+    )
+  
+  wagebill_meso_extension <- wagebill_meso |>
+    dplyr::mutate(
+      wagebill_sd = purrr::map_dbl(
+        .data[["cell_data"]],
+        indicators_extension[["wagebill_sd"]]
+      ),
+      compression_ratio = purrr::map_dbl(
+        .data[["cell_data"]],
+        indicators_extension[["compression_ratio"]]
+      )
+    )
 
-  wagebill_meso |>
-    dplyr::select(-"cell_data")
+  wagebill_meso_baseline |>
+    left_join(
+      wagebill_meso_extension,
+      by = c("group_var", "subgroup")
+    ) |>
+    dplyr::select(
+      -dplyr::matches("cell_data")
+    )
 }
 
 #' Build a Meso-Level Summary Table

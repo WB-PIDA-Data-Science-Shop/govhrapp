@@ -34,3 +34,15 @@ one row per \code{ref_date}/\code{group_var}/\code{subgroup} cell, with one colu
 entry in \code{scalars}. Standalone from \code{\link[=build_wagebill_meso_table]{build_wagebill_meso_table()}} since
 workforce indicators (e.g. headcount) don't depend on a wagebill measure.
 }
+\examples{
+workforce_data <- govhr::bra_hrmis_personnel
+
+wagebill_data <- govhr::bra_hrmis_contract |>
+ dplyr::left_join(
+  workforce_data,
+ by = c("ref_date", "personnel_id")
+)
+
+build_workforce_meso_table(workforce_data, wagebill_data)
+
+}

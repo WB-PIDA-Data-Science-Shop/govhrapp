@@ -30,3 +30,7 @@ plus one list-column per entry in \code{vectors}. Standalone from
 \code{\link[=build_workforce_meso_table]{build_workforce_meso_table()}} so that it can be rebuilt on its own
 whenever \code{wagebill_measure} changes, without touching workforce data.
 }
+\examples{
+build_wagebill_meso_table(govhr::bra_hrmis_contract)
+
+}
