@@ -79,43 +79,31 @@ overview_ui <- function(id, workforce_data, wagebill_data) {
 #' @importFrom scales label_number cut_short_scale
 #' @importFrom govhr fastcount compute_fastsummary
 #' @export
-overview_server <- function(id, workforce_data, wagebill_data, cache) {
+overview_server <- function(id, cache) {
   shiny::moduleServer(id, function(input, output, session) {
+    workforce_overview <- cache[["workforce_trend"]]
+    wagebill_overview <- cache[["wagebill_trend"]]
 
-    # obtain latest reference date
-    latest_workforce_date <- reactive({
-      max(cache[["workforce_trend"]][["ref_date"]], na.rm = TRUE)
-    })
-
-    latest_wagebill_date <- reactive({
-      max(cache[["wagebill_trend"]][["ref_date"]], na.rm = TRUE)
-    })
-
-    latest_workforce <- reactive({
-      cache[["workforce_trend"]] |>
-        dplyr::filter(.data[["ref_date"]] == latest_workforce_date())
-    })
-
-    latest_wagebill <- reactive({
-      cache[["wagebill_trend"]] |>
-        dplyr::filter(.data[["ref_date"]] == latest_wagebill_date())
+    latest_ref_date <- shiny::reactive({
+      max(workforce_overview[["ref_date"]], wagebill_overview[["ref_date"]])
     })
 
     # value boxes
     output$vb_date_label <- shiny::renderUI({
       shiny::tags$span(
-        paste0("Headcount (", format(latest_workforce_date(), "%b %Y"), ")")
+        paste0("Headcount (", format(latest_ref_date(), "%b %Y"), ")")
       )
     })
 
     output$vb_wagebill_label <- shiny::renderUI({
       shiny::tags$span(
-        paste0("Wage Bill (", format(latest_wagebill_date(), "%b %Y"), ")")
+        paste0("Wage Bill (", format(latest_ref_date(), "%b %Y"), ")")
       )
     })
 
     output$vb_headcount <- shiny::renderUI({
-      n <- latest_workforce() |>
+      n <- workforce_overview |>
+        dplyr::filter(.data[["ref_date"]] == latest_ref_date()) |>
         dplyr::pull(.data[["value"]])
       
       shiny::tags$span(
@@ -124,7 +112,8 @@ overview_server <- function(id, workforce_data, wagebill_data, cache) {
     })
 
     output$vb_wagebill <- shiny::renderUI({
-      wagebill_value <- latest_wagebill() |>
+      wagebill_value <- wagebill_overview |>
+        dplyr::filter(.data[["ref_date"]] == latest_ref_date()) |>
         dplyr::pull(.data[["value"]])
       
       shiny::tags$span(

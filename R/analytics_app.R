@@ -165,7 +165,7 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   )
 
   server <- function(input, output, session) {
-    overview_server("overview", workforce_data, wagebill_data, cache = cache)
+    overview_server("overview", cache = cache)
     wagebill_server(
       "wagebill",
       wagebill_data,
