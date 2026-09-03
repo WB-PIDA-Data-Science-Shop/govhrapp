@@ -4,12 +4,14 @@
 \alias{run_govhrapp}
 \title{Run the govhr Shiny Dashboard Application}
 \usage{
-run_govhrapp(workforce_data, wagebill_data, ...)
+run_govhrapp(workforce_data, wagebill_data, cache, ...)
 }
 \arguments{
 \item{workforce_data}{Data frame with workforce/personnel attributes (headcount).}
 
 \item{wagebill_data}{Data frame with contract/salary attributes (wage bill).}
+
+\item{cache}{List of cached data frames for improved performance.}
 
 \item{...}{Additional arguments passed to \code{\link[shiny]{shinyApp}}.}
 }

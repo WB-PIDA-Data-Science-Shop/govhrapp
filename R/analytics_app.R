@@ -109,7 +109,7 @@ run_govhrapp <- function(workforce_data, wagebill_data, cache, ...) {
     bslib::nav_panel(
       "Overview",
       icon = shiny::icon("gauge"),
-      overview_ui("overview", workforce_data, wagebill_data)
+      overview_ui("overview")
     ),
 
     # panel 3: workforce planning
