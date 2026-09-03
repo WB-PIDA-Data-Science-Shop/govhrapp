@@ -65,9 +65,6 @@ overview_ui <- function(id, workforce_data, wagebill_data) {
 #' Overview Server Module
 #'
 #' @param id Module id.
-#' @param id Module id.
-#' @param workforce_data Data frame with workforce/personnel data (headcount).
-#' @param wagebill_data Data frame with contract/salary data (wage bill).
 #' @param cache List of cached data frames for improved performance.
 #'
 #' @importFrom shiny moduleServer reactive renderUI renderText tags radioButtons
