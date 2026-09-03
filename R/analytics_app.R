@@ -4,6 +4,7 @@
 #'
 #' @param workforce_data Data frame with workforce/personnel attributes (headcount).
 #' @param wagebill_data Data frame with contract/salary attributes (wage bill).
+#' @param cache List of cached data frames for improved performance.
 #' @param ... Additional arguments passed to \code{\link[shiny]{shinyApp}}.
 #'
 #' @return A Shiny app object.
@@ -21,7 +22,7 @@
 #' @importFrom scales label_number cut_short_scale
 #' @importFrom tidyr complete 
 #' @export
-run_govhrapp <- function(workforce_data, wagebill_data, ...) {
+run_govhrapp <- function(workforce_data, wagebill_data, cache, ...) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", system.file("www", package = "govhrapp"))
 
@@ -42,24 +43,6 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   ggplot2::update_geom_defaults("point", list(colour = "#C34729"))
   ggplot2::update_geom_defaults("line", list(colour = "#C34729"))
   ggplot2::update_geom_defaults("col", list(fill = "#C34729"))
-
-  # cache data to improve performance
-  cache <- list(
-    workforce_trend = workforce_data |>
-      compute_trend_summary(
-        group = "ref_date"
-      ),
-    wagebill_trend = wagebill_data |>
-      compute_trend_summary(
-        group = "ref_date",
-        measure_col = "gross_salary_lcu"
-      ),
-    transfer_default = wagebill_data |>
-      detect_career_transition(
-        id_col = "personnel_id",
-        group_cols = "paygrade"
-      )
-  )
 
   ui <- bslib::page_navbar(
     fillable = FALSE,

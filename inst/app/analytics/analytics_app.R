@@ -26,5 +26,29 @@ wagebill_data <- govhr::bra_hrmis_contract |>
     country_code = "BRA"
   )
 
-run_govhrapp(workforce_data, wagebill_data)
- 
+# bootstrap to increase size
+workforce_data <- workforce_data |>
+  dplyr::slice_sample(n = 1e7, replace = TRUE)
+
+wagebill_data <- wagebill_data |>
+  dplyr::slice_sample(n = 1e7, replace = TRUE)
+
+# cache data to improve performance
+cache <- list(
+  workforce_trend = workforce_data |>
+    compute_trend_summary(
+      group = "ref_date"
+    ),
+  wagebill_trend = wagebill_data |>
+    compute_trend_summary(
+      group = "ref_date",
+      measure_col = "gross_salary_lcu"
+    ),
+  transfer_default = wagebill_data |>
+    detect_career_transition(
+      id_col = "personnel_id",
+      group_cols = "paygrade"
+    )
+)
+
+run_govhrapp(workforce_data, wagebill_data, cache)

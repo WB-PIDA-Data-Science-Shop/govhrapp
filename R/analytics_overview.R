@@ -81,26 +81,24 @@ overview_server <- function(id, cache) {
     workforce_overview <- cache[["workforce_trend"]]
     wagebill_overview <- cache[["wagebill_trend"]]
 
-    latest_ref_date <- shiny::reactive({
-      max(workforce_overview[["ref_date"]], wagebill_overview[["ref_date"]])
-    })
+    latest_ref_date <- max(workforce_overview[["ref_date"]])
 
     # value boxes
     output$vb_date_label <- shiny::renderUI({
       shiny::tags$span(
-        paste0("Headcount (", format(latest_ref_date(), "%b %Y"), ")")
+        paste0("Headcount (", format(latest_ref_date, "%b %Y"), ")")
       )
     })
 
     output$vb_wagebill_label <- shiny::renderUI({
       shiny::tags$span(
-        paste0("Wage Bill (", format(latest_ref_date(), "%b %Y"), ")")
+        paste0("Wage Bill (", format(latest_ref_date, "%b %Y"), ")")
       )
     })
 
     output$vb_headcount <- shiny::renderUI({
       n <- workforce_overview |>
-        dplyr::filter(.data[["ref_date"]] == latest_ref_date()) |>
+        dplyr::filter(.data[["ref_date"]] == latest_ref_date) |>
         dplyr::pull(.data[["value"]])
       
       shiny::tags$span(
@@ -110,7 +108,7 @@ overview_server <- function(id, cache) {
 
     output$vb_wagebill <- shiny::renderUI({
       wagebill_value <- wagebill_overview |>
-        dplyr::filter(.data[["ref_date"]] == latest_ref_date()) |>
+        dplyr::filter(.data[["ref_date"]] == latest_ref_date) |>
         dplyr::pull(.data[["value"]])
       
       shiny::tags$span(
