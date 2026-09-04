@@ -77,14 +77,16 @@ wagebill_retirement_ui <- function(id, .data) {
 #' 
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing wagebill data.
+#' @param cache A list containing cached data for the module.
 #' 
 #' @import shiny
 #' @importFrom plotly renderPlotly ggplotly
 #' @importFrom dplyr filter rename
 #' @importFrom govhr project_retirement
+#' @importFrom purrr pluck
 #' 
 #' @return A Shiny module server function for the wagebill retirement module.
-wagebill_retirement_server <- function(id, .data) {
+wagebill_retirement_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
 
@@ -99,12 +101,17 @@ wagebill_retirement_server <- function(id, .data) {
 
     # plot 1. retirement costs
     output$wagebill_retirement <- plotly::renderPlotly({
-      retirement_data <- govhr::compute_movement_cost(
-        wagebill_filtered(),
-        event_type = "retirement",
-        measure_col = input$wagebill_measure,
-        group_cols = input$group_filter
-      )
+      retirement_data <- if(input$apply_btn == 0) {
+        cache |>
+          purrr::pluck("wagebill", "wagebill_retirement")
+      } else {
+        govhr::compute_movement_cost(
+          wagebill_filtered(),
+          event_type = "retirement",
+          measure_col = input$wagebill_measure,
+          group_cols = input$group_filter
+        )
+      }
 
       plotly::ggplotly(
         plot_trend(
@@ -119,14 +126,19 @@ wagebill_retirement_server <- function(id, .data) {
 
     # plot 2. projected retirement costs
     output$wagebill_retirement_projection <- plotly::renderPlotly({
-      retirement_projection_data <- govhr::project_retirement(
-        wagebill_filtered(),
-        group_cols = input$group_filter,
-        measure_col = input$wagebill_measure
-      ) |>
-        rename(
-          ref_date = retirement_date
-        )
+      retirement_projection_data <- if(input$apply_btn == 0) {
+        cache |>
+          purrr::pluck("wagebill", "wagebill_retirement_expected")
+      } else {
+        project_retirement(
+          .data = wagebill_filtered(),
+          threshold_age = input$threshold_age,
+          birth_col = "birth_date",
+          group_cols = input$group_filter,
+          measure_col = input$wagebill_measure
+        ) |>
+          dplyr::rename(ref_date = "retirement_date")
+      }
 
       plotly::ggplotly(
         plot_trend(

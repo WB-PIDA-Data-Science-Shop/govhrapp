@@ -148,9 +148,9 @@ wagebill_server <- function(id, wagebill_data, cache) {
 
     # 2. panels for wage bill server
     wagebill_overview_server("overview", wagebill_data, cache = cache)
-    wagebill_equity_server("equity", wagebill_data)
-    wagebill_movement_server("movement", wagebill_data)
-    wagebill_retirement_server("retirement", wagebill_data)
+    wagebill_equity_server("equity", wagebill_data, cache = cache)
+    wagebill_movement_server("movement", wagebill_data, cache = cache)
+    wagebill_retirement_server("retirement", wagebill_data, cache = cache)
   })
 }
 

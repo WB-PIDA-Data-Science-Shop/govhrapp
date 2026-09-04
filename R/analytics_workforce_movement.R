@@ -1,4 +1,3 @@
-
 #' Workforce Movement UI
 #'
 #' @param id A character string specifying the module ID.
@@ -99,6 +98,7 @@ workforce_movement_ui <- function(
 #'
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing personnel data.
+#' @param cache A list containing cached data for the module.
 #'
 #' @import shiny
 #' @import bslib
@@ -108,32 +108,39 @@ workforce_movement_ui <- function(
 #' @importFrom shinyWidgets updatePickerInput
 #' @importFrom dplyr filter
 #' @importFrom govhr compute_workforce_movement classify_personnel_event
+#' @importFrom purrr pluck
 #'
 #' @return A Shiny server function for the workforce movement module.
 workforce_movement_server <- function(
   id,
-  .data
+  .data,
+  cache
 ) {
   shiny::moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
 
     data_filtered <- shiny::reactive({
-      filter_data(
-        .data,
-        group_filter = input$group_filter,
-        subgroup_filter = input$subgroup_filter,
-        date_range = input$date_range
-      )
+      .data |>
+          filter_data(
+            group_filter = input$group_filter,
+            subgroup_filter = input$subgroup_filter,
+            date_range = input$date_range
+          )
     })
 
     # plot 1. hiring counts/rates over time
     output$movement_trend <- plotly::renderPlotly({
-      plot_data <- govhr::compute_workforce_movement(
-        .data = data_filtered(),
-        movement_type = input$movement_type,
-        measurement_type = input$measurement_type,
-        group_cols = input$group_filter
-      )
+      plot_data <- if(input$apply_btn == 0) {
+        cache |>
+          purrr::pluck("workforce", "workforce_movement")
+      } else {
+        govhr::compute_workforce_movement(
+          .data = data_filtered(),
+          movement_type = input$movement_type,
+          measurement_type = input$measurement_type,
+          group_cols = input$group_filter
+        )
+      }
 
       plot_movement(
         plot_data,
@@ -278,4 +285,3 @@ workforce_movement_server <- function(
       bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })
 }
-

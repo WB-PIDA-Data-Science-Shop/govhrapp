@@ -87,6 +87,7 @@ workforce_transfer_ui <- function(id, .data) {
 #' @importFrom tidyr complete
 #' @importFrom data.table as.data.table
 #' @importFrom govhr detect_career_transitions fastcount
+#' @importFrom purrr pluck
 #'
 #' @export
 #'
@@ -110,7 +111,8 @@ workforce_transfer_server <- function(id, .data, cache) {
     transfer_data <- reactive({
       # only use cache if no apply button has been clicked
       if (input$apply_btn == 0) {
-        cache[["transfer_default"]]
+        cache |>
+          purrr::pluck("workforce", "workforce_transfer")
       } else {
         workforce_filtered() |>
           detect_career_transition(
@@ -124,7 +126,8 @@ workforce_transfer_server <- function(id, .data, cache) {
     output$transfer_trend_plot <- plotly::renderPlotly({
       # use cache if default group is selected
       if (input$apply_btn == 0) {
-        cache[["transfer_default"]] |>
+        cache |>
+          purrr::pluck("workforce", "workforce_transfer") |>
           govhr::fastcount(
             ref_date,
             name = "transfer"
@@ -152,7 +155,8 @@ workforce_transfer_server <- function(id, .data, cache) {
     # plot 2. transfer network
     output$transfer_network_plot <- plotly::renderPlotly({
       if (input$apply_btn == 0) {
-        cache[["transfer_default"]] |>
+        cache |>
+          purrr::pluck("workforce", "workforce_transfer") |>
           plotly_transfer_network()
       } else {
         transfer_data() |>

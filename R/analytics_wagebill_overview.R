@@ -118,7 +118,8 @@ wagebill_overview_server <- function(id, .data, cache) {
     wagebill_summary <- shiny::reactive({
       # default to cache
       if(input$apply_btn == 0){
-        out <- cache[["wagebill_overview"]]
+        out <- cache |>
+          purrr::pluck("wagebill", "wagebill_overview")
       } else {
         out <- compute_trend_summary(
           wagebill_filtered(),

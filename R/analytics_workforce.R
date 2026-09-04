@@ -132,9 +132,9 @@ workforce_server <- function(id, workforce_data, wagebill_data, cache) {
 
     # 2. panel servers
     workforce_overview_server("overview", workforce_data, cache = cache)
-    workforce_movement_server("movement", workforce_data)
+    workforce_movement_server("movement", workforce_data, cache = cache)
     workforce_transfer_server("transfer", wagebill_data, cache = cache)
-    workforce_retirement_server("retirement", workforce_data)
+    workforce_retirement_server("retirement", workforce_data, cache = cache)
   })
 }
 

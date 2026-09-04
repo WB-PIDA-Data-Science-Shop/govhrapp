@@ -120,8 +120,11 @@ overview_ui <- function(id) {
 overview_server <- function(id, cache) {
   shiny::moduleServer(id, function(input, output, session) {
 
-    workforce_overview <- cache[["workforce_overview"]]
-    wagebill_overview  <- cache[["wagebill_overview"]]
+    workforce_overview <- cache |>
+      purrr::pluck("workforce", "workforce_overview")
+    
+    wagebill_overview  <- cache |>
+      purrr::pluck("wagebill", "wagebill_overview")
 
     latest_ref_date <- max(workforce_overview[["ref_date"]], na.rm = TRUE)
     date_label <- format(as.Date(latest_ref_date), "%b %Y")

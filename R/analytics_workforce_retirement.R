@@ -74,12 +74,14 @@ workforce_retirement_ui <- function(
 #'
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing personnel data.
+#' @param cache A list containing pre-computed trend summaries for workforce data.
 #'
 #' @import shiny
 #' @import bslib
 #' @importFrom plotly renderPlotly
 #' @importFrom dplyr filter rename
 #' @importFrom govhr classify_personnel_event project_retirement compute_workforce_movement
+#' @importFrom purrr pluck
 #'
 #' @return A Shiny server function for the workforce retirement module.
 workforce_retirement_server <- function(
@@ -102,7 +104,8 @@ workforce_retirement_server <- function(
     # plot 1. retirement counts/rates over time
     output[["retirement_plot"]] <- plotly::renderPlotly({
       plot_data <- if (input$apply_btn == 0) {
-        cache[["workforce_retirement"]]
+        cache |>
+          purrr::pluck("workforce", "workforce_retirement")
       } else {
         classify_personnel_event(
           .data = .data,
@@ -125,7 +128,8 @@ workforce_retirement_server <- function(
     # plot 2. projected retirements
     output[["retirement_expected_plot"]] <- plotly::renderPlotly({
       plot_data <- if (input$apply_btn == 0) {
-        cache[["workforce_retirement_expected"]]
+        cache |>
+          purrr::pluck("workforce", "workforce_retirement_expected")
       } else {
         project_retirement(
           .data = .data,

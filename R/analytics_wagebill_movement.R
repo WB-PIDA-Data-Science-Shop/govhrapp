@@ -97,13 +97,15 @@ wagebill_movement_ui <- function(id, .data) {
 #' 
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing wagebill data.
+#' @param cache A list containing cached data for the module.
 #' 
 #' @import shiny
 #' @importFrom plotly renderPlotly ggplotly
 #' @importFrom dplyr filter
+#' @importFrom purrr pluck
 #' 
 #' @return A Shiny module server function for the wagebill movement module.
-wagebill_movement_server <- function(id, .data) {
+wagebill_movement_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     # choice of cols
     wagebill_group_choices <- identify_group_choices(.data)
@@ -121,12 +123,17 @@ wagebill_movement_server <- function(id, .data) {
 
     # plot 1. labor movement costs
     output$wagebill_movement <- plotly::renderPlotly({
-      labor_movement_data <- govhr::compute_movement_cost(
-        wagebill_filtered(),
-        event_type = input$event_type,
-        measure_col = input$wagebill_measure,
-        group_cols = input$group_filter
-      )
+      labor_movement_data <- if (input$apply_btn == 0) {
+        cache |>
+          purrr::pluck("wagebill", "wagebill_movement")
+      } else {
+        govhr::compute_movement_cost(
+          wagebill_filtered(),
+          event_type = input$event_type,
+          measure_col = input$wagebill_measure,
+          group_cols = input$group_filter
+        )
+      }
 
       plotly::ggplotly(
         plot_trend(

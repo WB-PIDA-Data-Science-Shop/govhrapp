@@ -718,7 +718,7 @@ plot_transfer_network <- function(.data) {
   graph_data <- tidygraph::as_tbl_graph(.data, directed = TRUE)
 
   # Generate the graph plot
-  plot <- ggraph::ggraph(graph_data, layout = "linear") +
+  plot <- ggraph::ggraph(graph_data, layout = "centrality") +
     ggraph::geom_edge_arc(
       ggplot2::aes(
         edge_width = weight,
