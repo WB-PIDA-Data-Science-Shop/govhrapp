@@ -78,5 +78,10 @@ utils::globalVariables(c(
   "weight",
   "name",
   "count",
-  "cache"
+  "cache",
+  "degree",
+  "node_id",
+  "nodes",
+  "x",
+  "y"
 ))
