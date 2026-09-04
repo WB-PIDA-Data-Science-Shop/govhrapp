@@ -26,7 +26,7 @@ export(run_wagebillapp)
 export(wagebill_server)
 export(wagebill_ui)
 export(workforce_server)
-export(workforce_transfer_server)
+export(workforce_transition_server)
 import(bslib)
 import(ggplot2)
 import(shiny)
@@ -82,6 +82,7 @@ importFrom(dplyr,
   ntile,
   pull,
   rename,
+  select,
   summarise,
   ungroup
 )
@@ -127,6 +128,7 @@ importFrom(govhr,
   compute_compression_ratio,
   compute_fastsummary,
   compute_global_coverage,
+  compute_movement_cost,
   compute_workforce_movement,
   convert_constant_ppp,
   detect_career_transitions,
@@ -152,20 +154,13 @@ importFrom(gtsummary,
   modify_header,
   tbl_summary
 )
-importFrom(igraph,
-  V,
-  as.igraph,
-  as_data_frame
-)
 importFrom(lubridate,
   year,
   years
 )
 importFrom(plotly,
-  add_trace,
   animation_opts,
   animation_slider,
-  config,
   ggplotly,
   layout,
   plot_ly,
@@ -179,6 +174,7 @@ importFrom(purrr,
   map2,
   map_dbl,
   map_dfr,
+  pluck,
   set_names
 )
 importFrom(rlang,":=")
@@ -188,8 +184,7 @@ importFrom(scales,
   comma,
   cut_short_scale,
   label_number,
-  label_percent,
-  rescale
+  label_percent
 )
 importFrom(shiny,
   NS,
@@ -240,11 +235,7 @@ importFrom(stats,
 importFrom(stringr,str_wrap)
 importFrom(thematic,thematic_shiny)
 importFrom(tibble,tibble)
-importFrom(tidygraph,
-  activate,
-  as_tbl_graph,
-  as_tibble
-)
+importFrom(tidygraph,as_tbl_graph)
 importFrom(tidyr,
   complete,
   pivot_longer

@@ -4,12 +4,14 @@
 \alias{wagebill_movement_server}
 \title{Function to create the server logic for the wagebill movement module.}
 \usage{
-wagebill_movement_server(id, .data)
+wagebill_movement_server(id, .data, cache)
 }
 \arguments{
 \item{id}{A character string specifying the module ID.}
 
 \item{.data}{A data frame containing wagebill data.}
+
+\item{cache}{A list containing cached data for the module.}
 }
 \value{
 A Shiny module server function for the wagebill movement module.

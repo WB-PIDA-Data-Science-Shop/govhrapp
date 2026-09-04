@@ -1,4 +1,4 @@
-#' Workforce Transfer UI Module
+#' Workforce Transition UI Module
 #'
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing wagebill data.
@@ -8,26 +8,21 @@
 #' @importFrom purrr map discard
 #' @importFrom plotly plotlyOutput
 #'
-#' @return A Shiny module UI function for workforce transfer analytics.
-workforce_transfer_ui <- function(id, .data) {
-  group_choices <- identify_group_choices(.data) |>
-    purrr::map(
-      # remove ref_date from choice set
-      \(variable_choices) {
-        variable_choices |>
-          purrr::discard(
-            \(x) x == "ref_date"
-          )
-      }
-    )
-
+#' @return A Shiny module UI function for workforce transition analytics.
+workforce_transition_ui <- function(id, .data) {
+  choices <- identify_group_choices(.data)[
+    c("Personnel", "Contract")
+  ]
+  
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
       date_ui(id, .data),
-      group_filter_ui(id, .data, selected = "paygrade", group_choices),
+      group_filter_ui(
+        id, .data, selected = "paygrade", group_choices = choices
+      ),
       subgroup_filter_ui(id, .data),
       shiny::selectInput(
         shiny::NS(id, "id_col"),
@@ -41,41 +36,43 @@ workforce_transfer_ui <- function(id, .data) {
         icon = shiny::icon("play")
       )
     ),
-    # plot 1. transfers over time
+
+    # plot 1. transitions over time
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Transfers over time",
+        "Transitions over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "The number of internal transfers over time. This is computed as the number of internal transfers over the entire time period, considering as a transfer a movement of personnel across groups between each reference date.",
-          title = "Transfers over time",
+          "The number of internal transitions over time. This is computed as the number of internal transitions over the entire time period, considering as a transition a movement of personnel across groups between each reference date.",
+          title = "Transitions over time",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
       ),
-      plotly::plotlyOutput(shiny::NS(id, "transfer_trend_plot"))
+      plotly::plotlyOutput(shiny::NS(id, "transition_trend_plot"))
     ),
 
-    # plot 2. heatmap
+    # plot 2. transition network
     bslib::card(
+      min_height = "500px",
       full_screen = TRUE,
       bslib::card_header(
-        "Transfers over time",
+        "Transition Network",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "The number of internal transfers over time. This is computed as the number of internal transfers over the entire time period, considering as a transfer a movement of personnel across groups between each reference date.",
-          title = "Transfers over time",
+          "The number of internal transitions over time. This is computed as the number of internal transitions over the entire time period, considering as a transition a movement of personnel across groups between each reference date.",
+          title = "Transition Network",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
       ),
-      plotly::plotlyOutput(shiny::NS(id, "transfer_network_plot"))
+      ggiraph::girafeOutput(shiny::NS(id, "transition_network_plot"), height = "100%")
     )
   )
 }
 
-#' Workforce Transfer Server Module
+#' Workforce Transition Server Module
 #'
 #' @param id A character string specifying the module ID.
 #' @param .data A data frame containing wagebill data.
@@ -91,8 +88,8 @@ workforce_transfer_ui <- function(id, .data) {
 #'
 #' @export
 #'
-#' @return A Shiny server module for workforce transfer analytics.
-workforce_transfer_server <- function(id, .data, cache) {
+#' @return A Shiny server module for workforce transition analytics.
+workforce_transition_server <- function(id, .data, cache) {
   moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
 
@@ -108,11 +105,11 @@ workforce_transfer_server <- function(id, .data, cache) {
         )
     })
 
-    transfer_data <- reactive({
+    transition_data <- reactive({
       # only use cache if no apply button has been clicked
       if (input$apply_btn == 0) {
         cache |>
-          purrr::pluck("workforce", "workforce_transfer")
+          purrr::pluck("workforce", "workforce_transition")
       } else {
         workforce_filtered() |>
           detect_career_transition(
@@ -122,56 +119,56 @@ workforce_transfer_server <- function(id, .data, cache) {
       }
     })
 
-    # plot 1. transfers over time
-    output$transfer_trend_plot <- plotly::renderPlotly({
+    # plot 1. transitions over time
+    output$transition_trend_plot <- plotly::renderPlotly({
       # use cache if default group is selected
       if (input$apply_btn == 0) {
         cache |>
-          purrr::pluck("workforce", "workforce_transfer") |>
+          purrr::pluck("workforce", "workforce_transition") |>
           govhr::fastcount(
             ref_date,
-            name = "transfer"
+            name = "transition"
           ) |>
           plot_trend(
             group = "ref_date",
-            y_col = "transfer",
-            y_label = "Number of Transfers"
+            y_col = "transition",
+            y_label = "Number of Transitions"
           )
       } else {
-        transfer_data() |>
+        transition_data() |>
           govhr::fastcount(
             ref_date,
-            name = "transfer"
+            name = "transition"
           ) |>
           plot_trend(
             group = "ref_date",
-            y_col = "transfer",
-            y_label = "Number of Transfers"
+            y_col = "transition",
+            y_label = "Number of Transitions"
           )
       }
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
-    # plot 2. transfer network
-    output$transfer_network_plot <- plotly::renderPlotly({
-      if (input$apply_btn == 0) {
+    # plot 2. transition network
+    output$transition_network_plot <- ggiraph::renderGirafe(
+      {if (input$apply_btn == 0) {
         cache |>
-          purrr::pluck("workforce", "workforce_transfer") |>
-          plotly_transfer_network()
+          purrr::pluck("workforce", "workforce_transition") |>
+          plot_transition_network()
       } else {
-        transfer_data() |>
-          plotly_transfer_network()
-      }
-    }) |>
+        transition_data() |>
+          plot_transition_network()
+      }}
+    ) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })
 }
 
-workforce_transfer_app <- function(.data) {
+workforce_transition_app <- function(.data, cache) {
   shiny::shinyApp(
-    ui = workforce_transfer_ui("transfer", .data),
+    ui = workforce_transition_ui("transition", .data),
     server = function(input, output, session) {
-      workforce_transfer_server("transfer", .data)
+      workforce_transition_server("transition", .data, cache)
     }
   )
 }

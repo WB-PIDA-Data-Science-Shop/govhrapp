@@ -701,195 +701,80 @@ plot_transfer_heatmap <- function(.data) {
     )
 }
 
-#' Plot Transfer Network
+#' Plot Transition Network
 #' 
-#' @param .data A data frame containing the transfer data with columns `from`, `to`, and `weight`.
+#' @param .data A data frame containing the transition data with columns `from`, `to`, and `weight`.
 #' 
 #' @importFrom tidygraph as_tbl_graph
 #' @importFrom ggraph ggraph geom_edge_fan geom_node_point geom_node_text scale_edge_width_continuous scale_edge_alpha_identity
 #' @importFrom ggplot2 aes stage after_stat theme_void
 #' 
-#' @return A ggplot2 object representing a transfer network.
-plot_transfer_network <- function(.data) {
+#' @return A ggplot2 object representing a transition network.
+plot_transition_network <- function(.data) {
   .data <- .data |>
     govhr::fastcount(.data[["from"]], .data[["to"]], name = "weight")
 
-  # Convert to tidygraph object
   graph_data <- tidygraph::as_tbl_graph(.data, directed = TRUE)
 
-  # Generate the graph plot
-  plot <- ggraph::ggraph(graph_data, layout = "centrality") +
+  n_nodes <- igraph::gorder(graph_data)
+  many_nodes <- n_nodes >= 10
+  orange_palette <- grDevices::colorRampPalette(c("#C34729", "#F5C6A0"))(
+      n_nodes
+  )
+
+  graph_data <- graph_data |>
+    tidygraph::activate(nodes) |>
+    tidygraph::mutate(
+      node_id = as.character(dplyr::row_number()),
+      node_id = factor(node_id, levels = as.character(sort(as.integer(node_id)))),
+      label = if (many_nodes) node_id else name,
+      degree = tidygraph::centrality_degree(mode = "all")
+    )
+
+  point_size <- scales::rescale(
+    graph_data |> tidygraph::activate(nodes) |> dplyr::pull(degree),
+    to = if (many_nodes) c(6, 14) else c(20, 30)
+  )
+
+  plot <- ggraph::ggraph(graph_data, layout = "stress") +
     ggraph::geom_edge_arc(
-      ggplot2::aes(
-        edge_width = weight,
-        edge_alpha = 0.5
-      ),
-      color = "#4a5568"
+      ggplot2::aes(edge_width = weight, edge_alpha = 0.5),
+      color = "#4a5568",
+      arrow = grid::arrow(length = grid::unit(3, "mm"), type = "closed"),
+      end_cap = ggraph::circle(4, "mm"),
+      start_cap = ggraph::circle(4, "mm")
     ) +
-    # annote inflows and outflows
-    ggplot2::geom_hline(
-      yintercept = 0,
-      linetype = "dashed",
-      color = "#2d224e"
+    ggraph::geom_node_point(
+      ggplot2::aes(size = point_size, color = if (many_nodes) node_id else "#C34729")
     ) +
-    ggplot2::annotate(
-      "text",
-      x = 0,
-      y = 0.1,
-      label = "Outflows",
-      color = "#2d224e",
-      size = 6,
+    ggraph::geom_node_text(
+      ggplot2::aes(label = if (many_nodes) node_id else name),
+      color = if (many_nodes) "white" else "#2d224e",
+      size = if (many_nodes) 3 else 8,
       fontface = "bold"
     ) +
-      ggplot2::annotate(
-        "text",
-        x = 0,
-        y = -0.1,
-        label = "Inflows",
-        color = "#2d224e",
-        size = 6,
-        fontface = "bold"   
-    ) +
-    ggraph::geom_node_point(size = 30, color = "#2d224e") +
-    ggraph::geom_node_text(aes(label = name), color = "white", size = 10, fontface = "bold") +
-    ggraph::scale_edge_width_continuous(range = c(0.2, 5), guide = "none") +
-    ggraph::scale_edge_alpha_identity(guide = "none") +
-    ggplot2::theme_void()
-
-  plot
-}
-
-#' Plot Transfer Network (plotly implementation)
-#'
-#' @param .data A data frame containing the transfer data with columns `from` and `to`.
-#'
-#' @importFrom tidygraph as_tbl_graph activate as_tibble
-#' @importFrom igraph as.igraph V as_data_frame
-#' @importFrom plotly plot_ly add_trace layout config
-#' @importFrom scales rescale
-#' @importFrom dplyr mutate
-#'
-#' @return A plotly object representing a transfer network arc diagram.
-plotly_transfer_network <- function(.data) {
-  .data <- .data |>
-    govhr::fastcount(.data[["from"]], .data[["to"]], name = "weight")
-
-  ig <- tidygraph::as_tbl_graph(.data, directed = TRUE) |>
-    igraph::as.igraph()
-
-  # --- Linear layout ----------------------------------------------------------
-  node_names <- igraph::V(ig)$name
-  n_nodes    <- length(node_names)
-
-  nodes <- data.frame(
-    name  = node_names,
-    x     = seq(0, 1, length.out = n_nodes),
-    y     = 0,
-    order = seq_len(n_nodes),
-    stringsAsFactors = FALSE
-  )
-
-  # --- Edge data --------------------------------------------------------------
-  edges_df <- igraph::as_data_frame(ig, what = "edges")
-
-  edges_df$x0         <- nodes$x[match(edges_df$from, nodes$name)]
-  edges_df$x1         <- nodes$x[match(edges_df$to,   nodes$name)]
-  edges_df$from_order <- nodes$order[match(edges_df$from, nodes$name)]
-  edges_df$to_order   <- nodes$order[match(edges_df$to,   nodes$name)]
-
-  # Matches fold = TRUE logic: from > to (internal index) goes below
-  edges_df$is_regression <- edges_df$from_order > edges_df$to_order
-  edges_df$direction     <- ifelse(edges_df$is_regression, -1, 1)
-  edges_df$width         <- scales::rescale(edges_df$weight, to = c(0.5, 6))
-
-  # --- Arc Bézier helper ------------------------------------------------------
-  make_arc <- function(x0, x1, direction = 1, arc_scale = 0.5, n = 60) {
-    cx <- (x0 + x1) / 2
-    cy <- direction * abs(x1 - x0) * arc_scale
-
-    t <- seq(0, 1, length.out = n)
-    data.frame(
-      x = c((1 - t)^2 * x0 + 2 * (1 - t) * t * cx + t^2 * x1, NA_real_),
-      y = c((1 - t)^2 * 0  + 2 * (1 - t) * t * cy + t^2 * 0,  NA_real_)
-    )
-  }
-
-  # --- Build figure -----------------------------------------------------------
-  fig <- plotly::plot_ly()
-
-  for (i in seq_len(nrow(edges_df))) {
-    e   <- edges_df[i, ]
-    pts <- make_arc(e$x0, e$x1, direction = e$direction)
-
-    fig <- plotly::add_trace(
-      fig,
-      type       = "scatter",
-      mode       = "lines",
-      x          = pts$x,
-      y          = pts$y,
-      line       = list(color = "rgba(74,85,104,0.5)", width = e$width, shape = "spline"),
-      hoverinfo  = "none",
-      showlegend = FALSE
-    )
-  }
-
-  # Node markers + labels
-  fig <- plotly::add_trace(
-    fig,
-    type         = "scatter",
-    mode         = "markers+text",
-    x            = nodes$x,
-    y            = nodes$y,
-    text         = nodes$name,
-    textposition = "middle center",
-    textfont     = list(color = "white", size = 13, family = "Arial Black"),
-    marker       = list(size = 30, color = "#2d224e", line = list(width = 0)),
-    hovertext    = nodes$name,
-    hoverinfo    = "text",
-    showlegend   = FALSE
-  )
-
-  max_span <- max(abs(edges_df$x1 - edges_df$x0)) * 0.5 + 0.15
-
-  fig |>
-    plotly::layout(
-      xaxis = list(visible = FALSE, range = c(-0.15, 1.15)),
-      yaxis = list(visible = FALSE, range = c(-max_span, max_span)),
-      paper_bgcolor = "white",
-      plot_bgcolor  = "white",
-      margin = list(l = 10, r = 10, t = 30, b = 30),
-      # Dashed separator line
-      shapes = list(
-        list(
-          type    = "line",
-          x0      = 0, x1 = 1,
-          y0      = 0, y1 = 0,
-          xref    = "x", yref = "y",
-          line    = list(color = "#2d224e", dash = "dash", width = 1),
-          layer = "below"
-        )
+    # INVISIBLE HOVER LAYER FOR TOOLTIPS
+    ggiraph::geom_point_interactive(
+      ggplot2::aes(
+        x = x, y = y, 
+        size = point_size, 
+        tooltip = name, 
+        data_id = node_id
       ),
-      # Outflows / Inflows annotations
-      annotations = list(
-        list(
-          x         = 0,
-          y         = max_span * 0.15,
-          text      = "<b>Outflows</b>",
-          showarrow = FALSE,
-          xref      = "x", yref = "y",
-          font      = list(color = "#2d224e", size = 14, family = "Arial Black"),
-          xanchor   = "left"
-        ),
-        list(
-          x         = 0,
-          y         = -max_span * 0.15,
-          text      = "<b>Inflows</b>",
-          showarrow = FALSE,
-          xref      = "x", yref = "y",
-          font      = list(color = "#2d224e", size = 14, family = "Arial Black"),
-          xanchor   = "left"
-        )
-      )
-    ) |>
-    plotly::config(displayModeBar = FALSE)
+      alpha = 0.01 # Invisible but still detects mouse hover events
+    ) +
+    ggraph::scale_edge_width_continuous(range = c(0.2, 3), guide = "none") +
+    ggraph::scale_edge_alpha_identity(guide = "none") +
+    ggplot2::scale_size_identity(guide = "none") +
+    ggplot2::scale_color_manual(values = orange_palette, guide = "none") + # Hides color legend
+    ggplot2::theme_void() +
+    ggplot2::theme(legend.position = "none") # Enforces no legends
+
+  # Return the html widget wrapper
+  ggiraph::girafe(
+    ggobj = plot,
+    options = list(
+      ggiraph::opts_hover(css = "stroke:#2d224e;stroke-width:2px;") 
+    )
+  )
 }

@@ -108,11 +108,8 @@ workforce_retirement_server <- function(
           purrr::pluck("workforce", "workforce_retirement")
       } else {
         classify_personnel_event(
-          .data = .data,
-          event_type = "retirement",
-          threshold_age = input$threshold_age,
-          birth_col = "birth_date",
-          group_cols = input$group_filter
+          .data = data_filtered(),
+          event_type = "retirement"
         )
       }
 

@@ -175,7 +175,7 @@ wagebill_equity_server <- function(id, .data, cache) {
       } else {
         compute_compression_ratio(
           wagebill_filtered(),
-          group_col = input$group_filter,
+          group_cols = input$group_filter,
           measure_col = input$wagebill_measure
         )
       }

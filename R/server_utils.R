@@ -71,7 +71,7 @@ filter_data <- function(data, group_filter, subgroup_filter, date_range) {
 #' @return A list containing cached data frames for improved performance.
 #'
 #' @importFrom dplyr filter select rename
-#' @importFrom govhr compute_trend_summary compute_workforce_movement compute_movement_cost
+#' @importFrom govhr compute_workforce_movement compute_movement_cost
 build_analytics_cache <- function(workforce_data, wagebill_data) {
   # cache data to improve performance
   cache_workforce <- list(
@@ -81,8 +81,8 @@ build_analytics_cache <- function(workforce_data, wagebill_data) {
         group = "ref_date"
       ),
 
-    # transfer module
-    workforce_transfer = wagebill_data |>
+    # transition module
+    workforce_transition = wagebill_data |>
       detect_career_transition(
         id_col = "personnel_id",
         group_cols = "paygrade"
@@ -150,7 +150,7 @@ build_analytics_cache <- function(workforce_data, wagebill_data) {
       ),
     wagebill_equity_compression = wagebill_data |>
       compute_compression_ratio(
-        group_col = NULL,
+        group_cols = NULL,
         measure_col = "gross_salary_lcu"
       ),
 

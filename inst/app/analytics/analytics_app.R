@@ -26,13 +26,6 @@ wagebill_data <- govhr::bra_hrmis_contract |>
     country_code = "BRA"
   )
 
-# bootstrap to increase size
-workforce_data <- workforce_data |>
-  dplyr::slice_sample(n = 1e6, replace = TRUE)
-
-wagebill_data <- wagebill_data |>
-  dplyr::slice_sample(n = 1e6, replace = TRUE)
-
 cache_analytics <- build_analytics_cache(workforce_data, wagebill_data)
 
-run_govhrapp_beta(workforce_data, wagebill_data, cache_analytics)
+run_govhrapp(workforce_data, wagebill_data, cache_analytics)

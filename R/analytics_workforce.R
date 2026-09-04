@@ -78,17 +78,17 @@ workforce_ui <- function(id, workforce_data, wagebill_data) {
       # sub-panel 1: overview
       bslib::nav_panel(
         title = "Overview",
-        workforce_overview_ui(NS(id, "overview"), workforce_data)
+        workforce_overview_ui(NS(id, "overview"), wagebill_data)
       ),
       # sub-panel 2: movement
       bslib::nav_panel(
         title = "Movement",
         workforce_movement_ui(NS(id, "movement"), workforce_data)
       ),
-      # sub-panel 3: transfers
+      # sub-panel 3: transitions
       bslib::nav_panel(
-        title = "Transfers",
-        workforce_transfer_ui(NS(id, "transfer"), wagebill_data)
+        title = "Transitions",
+        workforce_transition_ui(NS(id, "transition"), wagebill_data)
       ),
       # sub-panel 4: retirement
       bslib::nav_panel(
@@ -133,7 +133,7 @@ workforce_server <- function(id, workforce_data, wagebill_data, cache) {
     # 2. panel servers
     workforce_overview_server("overview", workforce_data, cache = cache)
     workforce_movement_server("movement", workforce_data, cache = cache)
-    workforce_transfer_server("transfer", wagebill_data, cache = cache)
+    workforce_transition_server("transition", wagebill_data, cache = cache)
     workforce_retirement_server("retirement", workforce_data, cache = cache)
   })
 }

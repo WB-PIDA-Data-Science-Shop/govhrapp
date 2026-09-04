@@ -4,12 +4,14 @@
 \alias{wagebill_equity_server}
 \title{Function to create the server logic for the wagebill equity module.}
 \usage{
-wagebill_equity_server(id, .data)
+wagebill_equity_server(id, .data, cache)
 }
 \arguments{
 \item{id}{A character string specifying the module ID.}
 
 \item{.data}{A data frame containing wagebill data.}
+
+\item{cache}{A list of cached data frames for improved performance.}
 }
 \value{
 A Shiny module server function for the wagebill equity module.

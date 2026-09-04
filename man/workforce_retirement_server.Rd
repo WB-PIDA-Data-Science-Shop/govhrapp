@@ -4,12 +4,14 @@
 \alias{workforce_retirement_server}
 \title{Workforce Retirement Server}
 \usage{
-workforce_retirement_server(id, .data)
+workforce_retirement_server(id, .data, cache)
 }
 \arguments{
 \item{id}{A character string specifying the module ID.}
 
 \item{.data}{A data frame containing personnel data.}
+
+\item{cache}{A list containing pre-computed trend summaries for workforce data.}
 }
 \value{
 A Shiny server function for the workforce retirement module.

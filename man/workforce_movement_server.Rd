@@ -4,12 +4,14 @@
 \alias{workforce_movement_server}
 \title{Workforce Movement Server}
 \usage{
-workforce_movement_server(id, .data)
+workforce_movement_server(id, .data, cache)
 }
 \arguments{
 \item{id}{A character string specifying the module ID.}
 
 \item{.data}{A data frame containing personnel data.}
+
+\item{cache}{A list containing cached data for the module.}
 }
 \value{
 A Shiny server function for the workforce movement module.
