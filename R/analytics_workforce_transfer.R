@@ -97,6 +97,8 @@ workforce_transfer_server <- function(id, .data, cache) {
 
     # ignore initial values for group_filter, subgroup_filter, and date_range
     workforce_filtered <- reactive({
+      req(input$apply_btn)
+
       .data |>
         filter_data(
           group_filter = input$group_filter,

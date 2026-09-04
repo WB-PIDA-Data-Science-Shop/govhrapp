@@ -84,10 +84,13 @@ workforce_retirement_ui <- function(
 #' @return A Shiny server function for the workforce retirement module.
 workforce_retirement_server <- function(
   id,
-  .data
+  .data,
+  cache
 ) {
   shiny::moduleServer(id, function(input, output, session) {
     data_filtered <- shiny::reactive({
+      req(input$apply_btn)
+
       filter_data(
         .data,
         group_filter = input$group_filter,
@@ -98,12 +101,17 @@ workforce_retirement_server <- function(
 
     # plot 1. retirement counts/rates over time
     output[["retirement_plot"]] <- plotly::renderPlotly({
-      plot_data <- govhr::compute_workforce_movement(
-        .data = data_filtered(),
-        movement_type = "retirement",
-        measurement_type = input$measurement_type,
-        group_cols = input$group_filter
-      )
+      plot_data <- if (input$apply_btn == 0) {
+        cache[["workforce_retirement"]]
+      } else {
+        classify_personnel_event(
+          .data = .data,
+          event_type = "retirement",
+          threshold_age = input$threshold_age,
+          birth_col = "birth_date",
+          group_cols = input$group_filter
+        )
+      }
 
       plot_movement(
         plot_data,
@@ -116,14 +124,18 @@ workforce_retirement_server <- function(
 
     # plot 2. projected retirements
     output[["retirement_expected_plot"]] <- plotly::renderPlotly({
-      plot_data <- govhr::project_retirement(
-        .data = data_filtered(),
-        threshold_age = input$threshold_age,
-        birth_col = "birth_date",
-        group_cols = input$group_filter,
-        simplify_retirement_date = TRUE
-      ) |>
-        rename(ref_date = "retirement_date")
+      plot_data <- if (input$apply_btn == 0) {
+        cache[["workforce_retirement_expected"]]
+      } else {
+        project_retirement(
+          .data = .data,
+          threshold_age = input$threshold_age,
+          birth_col = "birth_date",
+          group_cols = input$group_filter,
+          simplify_retirement_date = TRUE
+        ) |>
+          dplyr::rename(ref_date = "retirement_date")
+      }
 
       plot_movement(
         plot_data,

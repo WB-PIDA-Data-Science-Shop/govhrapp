@@ -105,6 +105,8 @@ wagebill_overview_server <- function(id, .data, cache) {
     update_group_filter_controls(.data, input, session)
 
     wagebill_filtered <- shiny::reactive({
+      req(input$apply_btn)
+
       filter_data(
         .data,
         group_filter = input$group_filter,
@@ -115,8 +117,8 @@ wagebill_overview_server <- function(id, .data, cache) {
 
     wagebill_summary <- shiny::reactive({
       # default to cache
-      if(input$group_filter == "ref_date") {
-        out <- cache
+      if(input$apply_btn == 0){
+        out <- cache[["wagebill_overview"]]
       } else {
         out <- compute_trend_summary(
           wagebill_filtered(),
@@ -140,7 +142,7 @@ wagebill_overview_server <- function(id, .data, cache) {
           groups = c("ref_date", "country_code")
         )
     })
-
+    
     # plot 1. panel
     output$wagebill_panel <- plotly::renderPlotly({
       plotly::ggplotly(
@@ -184,7 +186,7 @@ wagebill_overview_server <- function(id, .data, cache) {
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
-    # plot 2. total by group
+    # plot 3. total by group
     output$wagebill_cross_section <- plotly::renderPlotly({
       shiny::validate(
         shiny::need(
@@ -213,7 +215,7 @@ wagebill_overview_server <- function(id, .data, cache) {
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
-    # plot 3. growth rate by group
+    # plot 4. growth rate by group
     output$wagebill_change <- plotly::renderPlotly({
       shiny::validate(
         shiny::need(

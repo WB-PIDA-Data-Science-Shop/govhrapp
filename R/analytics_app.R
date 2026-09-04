@@ -152,13 +152,13 @@ run_govhrapp <- function(workforce_data, wagebill_data, cache, ...) {
     wagebill_server(
       "wagebill",
       wagebill_data,
-      cache = cache[["wagebill_trend"]]
+      cache = cache
     )
     workforce_server(
       "workforce",
       workforce_data,
       wagebill_data,
-      cache = cache[c("workforce_trend", "transfer_default")]
+      cache = cache
     )
   }
 

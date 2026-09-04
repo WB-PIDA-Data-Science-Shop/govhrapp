@@ -35,19 +35,36 @@ wagebill_data <- wagebill_data |>
 
 # cache data to improve performance
 cache <- list(
-  workforce_trend = workforce_data |>
+  # workforce cache
+  workforce_overview = workforce_data |>
     compute_trend_summary(
       group = "ref_date"
     ),
-  wagebill_trend = wagebill_data |>
-    compute_trend_summary(
-      group = "ref_date",
-      measure_col = "gross_salary_lcu"
-    ),
-  transfer_default = wagebill_data |>
+  workforce_transfer = wagebill_data |>
     detect_career_transition(
       id_col = "personnel_id",
       group_cols = "paygrade"
+    ),
+  workforce_retirement = wagebill_data |>
+    govhr::compute_workforce_movement(
+        movement_type = "retirement",
+        measurement_type = "count",
+        group_cols = "ref_date"
+  ),
+  workforce_retirement_expected = project_retirement(
+    .data = wagebill_data,
+    threshold_age = 60,
+    birth_col = "birth_date",
+    group_cols = "ref_date",
+    simplify_retirement_date = TRUE
+  ) |>
+    dplyr::rename(ref_date = "retirement_date"),
+
+  # wage bill cache
+  wagebill_overview = wagebill_data |>
+    compute_trend_summary(
+      group = "ref_date",
+      measure_col = "gross_salary_lcu"
     )
 )
 
