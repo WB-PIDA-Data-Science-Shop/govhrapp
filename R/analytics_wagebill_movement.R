@@ -20,7 +20,7 @@ wagebill_movement_ui <- function(id, .data) {
       shiny::selectInput(
         shiny::NS(id, "event_type"),
         "Type of Movement:",
-        choices = c("Hire" = "hire", "Fire" = "fire"),
+        choices = c("Recruitment" = "hire", "Separation" = "fire"),
         selected = "hire"
       ),
       shiny::selectInput(

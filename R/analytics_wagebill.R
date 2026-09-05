@@ -72,7 +72,7 @@ wagebill_ui <- function(id, wagebill_data) {
     # value boxes
      bslib::card(
       bslib::card_header(
-        "Wagebill: Key Metrics",
+        "Wagebill: Key Indicators",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
           "Computed as the most recent wagebill (active workers) and pension liability (pensioners).",

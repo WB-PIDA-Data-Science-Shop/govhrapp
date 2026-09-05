@@ -23,7 +23,7 @@ workforce_movement_ui <- function(
       shiny::selectInput(
         shiny::NS(id, "movement_type"),
         label = "Select type of movement:",
-        choices = c("Hire" = "hire", "Fire" = "fire", "Turnover" = "turnover")
+        choices = c("Recruitment" = "hire", "Separation" = "fire", "Turnover" = "turnover")
       ),
       shiny::selectInput(
         shiny::NS(id, "measurement_type"),

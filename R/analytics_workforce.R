@@ -52,10 +52,10 @@ workforce_ui <- function(id, workforce_data, wagebill_data) {
       open = FALSE
     ),
 
-    # 1. value boxes for coverage metrics
+    # 1. value boxes for coverage metrics in the same row
     bslib::card(
       bslib::card_header(
-        "Workforce: Key Metrics",
+        "Workforce: Key Indicators",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
           "Computed as the most recent count or share of hires and fires. For turnover, it is the ratio of hires to fires in the most recent reference period.",
@@ -66,7 +66,6 @@ workforce_ui <- function(id, workforce_data, wagebill_data) {
       ),
       bslib::card_body(
         layout_column_wrap(
-          width = 1/2,
           fill = FALSE,
           !!!value_boxes
         )

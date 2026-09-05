@@ -66,7 +66,7 @@ overview_ui <- function(id) {
           full_screen = TRUE,
           bslib::card_header("Headcount"),
           bslib::card_body(
-            plotly::plotlyOutput(ns("plot_headcount"), height = "350px")
+            plotly::plotlyOutput(ns("plot_headcount"), height = "450px")
           )
         )
       ),
@@ -78,7 +78,7 @@ overview_ui <- function(id) {
           full_screen = TRUE,
           bslib::card_header("Wage Bill"),
           bslib::card_body(
-            plotly::plotlyOutput(ns("plot_wagebill"), height = "350px")
+            plotly::plotlyOutput(ns("plot_wagebill"), height = "450px")
           )
         )
       ),
@@ -98,7 +98,7 @@ overview_ui <- function(id) {
             class = "d-flex justify-content-between"
           ),
           bslib::card_body(
-            plotly::plotlyOutput(ns("plot_integrated"), height = "350px")
+            plotly::plotlyOutput(ns("plot_integrated"), height = "450px")
           )
         )
       )

@@ -55,7 +55,8 @@ workforce_transition_ui <- function(id, .data) {
 
     # plot 2. transition network
     bslib::card(
-      min_height = "500px",
+      min_height = "300px",
+      max_height = "900px",
       full_screen = TRUE,
       bslib::card_header(
         "Transition Network",
@@ -67,7 +68,7 @@ workforce_transition_ui <- function(id, .data) {
         ),
         class = "d-flex justify-content-between"
       ),
-      ggiraph::girafeOutput(shiny::NS(id, "transition_network_plot"), height = "100%")
+      ggiraph::girafeOutput(shiny::NS(id, "transition_network_plot"))
     )
   )
 }
