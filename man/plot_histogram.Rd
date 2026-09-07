@@ -17,7 +17,7 @@ plot_histogram(.data, plot_type = "histogram", group_col = NULL)
 single panel.}
 }
 \value{
-A plotly object.
+A ggplot object.
 }
 \description{
 Draws binned wage shares as a histogram or as a cumulative distribution,

@@ -14,7 +14,7 @@ plot_decile(.data, group_col)
 panel.}
 }
 \value{
-A plotly object.
+A ggplot object.
 }
 \description{
 Draws a bar chart of the mean measure within each decile, faceted by group

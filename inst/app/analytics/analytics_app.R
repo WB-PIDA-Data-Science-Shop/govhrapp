@@ -28,4 +28,4 @@ wagebill_data <- govhr::bra_hrmis_contract |>
 
 cache_analytics <- build_analytics_cache(workforce_data, wagebill_data)
 
-run_govhrapp(workforce_data, wagebill_data, cache_analytics)
+run_govhrapp_analytics(workforce_data, wagebill_data, cache_analytics)

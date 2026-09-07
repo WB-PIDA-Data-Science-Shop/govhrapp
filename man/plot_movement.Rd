@@ -19,7 +19,7 @@ grouping column.}
 grouping.}
 }
 \value{
-A plotly object.
+A ggplot object.
 }
 \description{
 Draws movement counts or rates over \code{ref_date}, one coloured series per

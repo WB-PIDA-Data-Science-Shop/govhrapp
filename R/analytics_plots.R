@@ -430,10 +430,9 @@ plot_segment <- function(.data, measure_col, group_col) {
 #' @param group_col Character. Column to group by, or `"ref_date"` for no
 #'   grouping.
 #'
-#' @return A plotly object.
+#' @return A ggplot object.
 #'
 #' @importFrom ggplot2 aes annotate geom_hline geom_line geom_point ggplot labs scale_y_continuous
-#' @importFrom plotly ggplotly
 #' @importFrom scales label_number percent_format
 #' @export
 plot_movement <- function(.data, movement_type, measurement_type, group_col) {
@@ -484,7 +483,7 @@ plot_movement <- function(.data, movement_type, measurement_type, group_col) {
       ggplot2::labs(y = "Replacement rate")
   }
 
-  plotly::ggplotly(plot)
+  plot
 }
 
 #' Plot Mean Wage by Decile
@@ -497,10 +496,9 @@ plot_movement <- function(.data, movement_type, measurement_type, group_col) {
 #' @param group_col Character. Column to facet by, or `"ref_date"` for a single
 #'   panel.
 #'
-#' @return A plotly object.
+#' @return A ggplot object.
 #'
 #' @importFrom ggplot2 aes facet_wrap geom_col ggplot label_wrap_gen labs scale_x_continuous vars
-#' @importFrom plotly ggplotly
 #' @keywords internal
 plot_decile <- function(.data, group_col) {
   plot <- .data |>
@@ -519,7 +517,7 @@ plot_decile <- function(.data, group_col) {
       )
   }
 
-  plotly::ggplotly(plot)
+  plot
 }
 
 #' Plot Wage Distribution
@@ -534,10 +532,9 @@ plot_decile <- function(.data, group_col) {
 #' @param group_col Character. Column to facet by, or `NULL`/`"ref_date"` for a
 #'   single panel.
 #'
-#' @return A plotly object.
+#' @return A ggplot object.
 #'
 #' @importFrom ggplot2 aes facet_wrap geom_col ggplot label_wrap_gen labs scale_y_continuous vars
-#' @importFrom plotly ggplotly
 #' @importFrom scales label_percent
 #' @keywords internal
 plot_histogram <- function(.data, plot_type = "histogram", group_col = NULL) {
@@ -563,7 +560,7 @@ plot_histogram <- function(.data, plot_type = "histogram", group_col = NULL) {
       )
   }
 
-  plotly::ggplotly(plot)
+  plot
 }
 
 #' Plot Wage Compression Ratio
@@ -576,10 +573,9 @@ plot_histogram <- function(.data, plot_type = "histogram", group_col = NULL) {
 #' @param group_col Character. Column to group by, or `NULL`/`"ref_date"` for no
 #'   grouping.
 #'
-#' @return A plotly object.
+#' @return A ggplot object.
 #'
 #' @importFrom ggplot2 aes geom_linerange geom_point ggplot labs
-#' @importFrom plotly ggplotly
 #' @keywords internal
 plot_compression_ratio <- function(.data, group_col) {
   group_col <- if (is.null(group_col)) "ref_date" else group_col
@@ -609,7 +605,7 @@ plot_compression_ratio <- function(.data, group_col) {
       group_color_scale(.data[[group_col]])
   }
 
-  plotly::ggplotly(plot)
+  plot
 }
 
 #' Plot Movement Cost by Group

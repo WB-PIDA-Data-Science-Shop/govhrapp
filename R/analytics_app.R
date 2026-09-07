@@ -13,7 +13,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' run_govhrapp(workforce_data, wagebill_data)
+#' run_govhrapp_analytics(workforce_data, wagebill_data)
 #' }
 #'
 #' @importFrom shiny shinyApp addResourcePath useBusyIndicators
@@ -24,7 +24,7 @@
 #' @importFrom scales label_number cut_short_scale
 #' @importFrom tidyr complete 
 #' @export
-run_govhrapp <- function(
+run_govhrapp_analytics <- function(
   workforce_data,
   wagebill_data,
   cache = build_analytics_cache(workforce_data, wagebill_data),

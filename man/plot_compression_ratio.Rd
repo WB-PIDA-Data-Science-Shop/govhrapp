@@ -14,7 +14,7 @@ plot_compression_ratio(.data, group_col)
 grouping.}
 }
 \value{
-A plotly object.
+A ggplot object.
 }
 \description{
 Draws the median wage per group as a point, spanned by a line range between

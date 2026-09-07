@@ -1,0 +1,133 @@
+---
+title: "Standard Analytics Report"
+format:
+  docx:
+    toc: true
+    number-sections: true
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+params:
+  ref_dates: NULL
+  workforce_indicators: NULL
+  wagebill_indicators: NULL
+  plots: NULL
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 8,
+  fig.height = 4.5
+)
+
+# draws one cached figure, or a placeholder when the panel has no data
+show_plot <- function(name) {
+  plot <- params$plots[[name]]
+  if (is.null(plot)) {
+    knitr::asis_output("*No data available for this indicator.*")
+  } else {
+    plot
+  }
+}
+
+show_table <- function(x) {
+  knitr::kable(x, digits = 2, format.args = list(big.mark = ","))
+}
+```
+
+This report covers the period **`r params$ref_dates[1]`** to **`r params$ref_dates[2]`**. Every figure is drawn from the same pre-computed summaries the Standard Analytics dashboard serves, at the default grouping over reference dates.
+
+# Key indicators
+
+## Workforce
+
+```{r}
+show_table(params$workforce_indicators)
+```
+
+## Wage bill
+
+```{r}
+show_table(params$wagebill_indicators)
+```
+
+# Workforce
+
+## Headcount over time
+
+```{r}
+show_plot("workforce_overview")
+```
+
+## Hiring
+
+```{r}
+show_plot("workforce_movement")
+```
+
+## Transitions between groups
+
+```{r}
+show_plot("workforce_transition")
+```
+
+## Retirement
+
+```{r}
+show_plot("workforce_retirement")
+```
+
+Projected retirements:
+
+```{r}
+show_plot("workforce_retirement_expected")
+```
+
+# Wage bill
+
+## Wage bill over time
+
+```{r}
+show_plot("wagebill_overview")
+```
+
+## Wage distribution
+
+```{r}
+show_plot("wagebill_density")
+```
+
+Mean wage by decile:
+
+```{r}
+show_plot("wagebill_decile")
+```
+
+Compression ratio between the 10th and 90th percentile:
+
+```{r}
+show_plot("wagebill_compression")
+```
+
+## Labor movement costs
+
+```{r}
+show_plot("wagebill_movement")
+```
+
+## Retirement costs
+
+```{r}
+show_plot("wagebill_retirement")
+```
+
+Projected retirement costs:
+
+```{r}
+show_plot("wagebill_retirement_expected")
+```
+
+---
+
+*Report generated on `r format(Sys.time(), '%B %d, %Y at %I:%M %p')`.*
