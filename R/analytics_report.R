@@ -19,7 +19,6 @@
 #' @importFrom govhr fastcount
 #' @importFrom purrr pluck
 #' @importFrom rmarkdown render
-#' @importFrom here here
 #' @export
 generate_analytics_report <- function(workforce_data, wagebill_data) {
   cache <- build_analytics_cache(workforce_data, wagebill_data)
@@ -126,7 +125,7 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
   )
 
   output_file <- file.path(
-    getwd(),
+    tempdir(),
     paste0("analytics_report_", format(Sys.Date(), "%Y%m%d"), ".docx")
   )
 

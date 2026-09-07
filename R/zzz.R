@@ -73,6 +73,7 @@ utils::globalVariables(c(
   "movement_cost",
   "to",
   "from",
+  "from_date",
   "start_ref_date",
   "end_ref_date",
   "weight",

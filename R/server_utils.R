@@ -198,7 +198,7 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
     workforce_transition = wagebill_data |>
       detect_career_transition(
         id_col = "personnel_id",
-        group_cols = "paygrade"
+        group_cols = "contract_type"
       ),
 
     # retirement module

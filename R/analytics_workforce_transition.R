@@ -22,7 +22,7 @@ workforce_transition_ui <- function(id, .data) {
       width = "300px",
       date_ui(id, .data),
       group_filter_ui(
-        id, .data, selected = "paygrade", group_choices = choices
+        id, .data, selected = "contract_type", group_choices = choices
       ),
       subgroup_filter_ui(id),
       shiny::selectInput(
@@ -56,8 +56,7 @@ workforce_transition_ui <- function(id, .data) {
 
     # plot 2. transition network
     bslib::card(
-      min_height = "300px",
-      max_height = "900px",
+      height = "600px",
       full_screen = TRUE,
       bslib::card_header(
         "Transition Network",

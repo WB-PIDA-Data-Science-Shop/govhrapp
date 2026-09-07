@@ -21,14 +21,22 @@ tracked. Default \code{"contract_id"}.}
 \item{group_cols}{Character vector of columns defining the career position
 (e.g. paygrade, department). Multiple columns are pasted into one label.}
 
-\item{return_all}{Logical. Keep terminal spells, whose \code{to} is \code{NA}. Default
-\code{FALSE}.}
+\item{return_all}{Logical. Keep terminal spells, which have no destination
+and so carry \code{NA} in both \code{to} and \code{ref_date}. Default \code{FALSE}.}
 }
 \value{
-A data table with the identifier, \code{from}, \code{to} and \code{ref_date}.
+A data table with the identifier, \code{from}, \code{to}, \code{from_date} and
+\code{ref_date}.
 }
 \description{
 Collapses each entity's history into spells of consecutive periods in the
-same group, then pairs each spell with the one that follows it. The
-\code{ref_date} on a returned row is the date the \code{from} spell began.
+same group, then pairs each spell with the one that follows it. A row is
+dated by \code{ref_date}, the period in which the entity is first observed in the
+destination group, so a transition is counted when it happens. \code{from_date}
+records when the origin spell began.
+}
+\details{
+Records must be uniquely identified by \code{id_col} and \code{ref_date}. An entity
+holding more than one record in the same period has no well-defined position,
+so every record for that entity is dropped with a warning reporting how many.
 }
