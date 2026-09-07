@@ -2,15 +2,19 @@
 % Please edit documentation in R/analytics_overview.R
 \name{overview_server}
 \alias{overview_server}
-\title{Overview Server Module}
+\title{Overview Server}
 \usage{
 overview_server(id, cache)
 }
 \arguments{
-\item{id}{Module id.}
+\item{id}{Character. Module namespace ID.}
 
-\item{cache}{List of cached data frames for improved performance.}
+\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
+}
+\value{
+A Shiny module server function.
 }
 \description{
-Overview Server Module
+Renders the headline headcount and wage bill indicators and the three
+summary charts, all read from the analytics cache.
 }

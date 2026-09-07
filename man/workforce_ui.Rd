@@ -2,20 +2,22 @@
 % Please edit documentation in R/analytics_workforce.R
 \name{workforce_ui}
 \alias{workforce_ui}
-\title{Workforce Analytics Module}
+\title{Workforce UI}
 \usage{
 workforce_ui(id, workforce_data, wagebill_data)
 }
 \arguments{
-\item{id}{A character string specifying the module ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{workforce_data}{A data frame containing personnel data.}
+\item{workforce_data}{Data frame containing personnel data.}
 
-\item{wagebill_data}{A data frame containing wage bill data.}
+\item{wagebill_data}{Data frame containing wage bill data, used by the
+overview and transition panels.}
 }
 \value{
-A Shiny app object for workforce analytics.
+A Shiny UI definition.
 }
 \description{
-Workforce Analytics Module
+Top-level workforce tab: guidance, key indicator boxes, and the overview,
+movement, transition and retirement panels.
 }

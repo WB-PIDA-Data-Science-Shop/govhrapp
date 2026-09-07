@@ -2,18 +2,18 @@
 % Please edit documentation in R/analytics_wagebill_movement.R
 \name{wagebill_movement_ui}
 \alias{wagebill_movement_ui}
-\title{Function to create the UI for the wagebill movement module.}
+\title{Wage Bill Movement UI}
 \usage{
 wagebill_movement_ui(id, .data)
 }
 \arguments{
-\item{id}{A character string specifying the module ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{.data}{A data frame containing wagebill data.}
+\item{.data}{Data frame containing wage bill data.}
 }
 \value{
-A Shiny module UI function for the wagebill movement module.
+A Shiny UI definition.
 }
 \description{
-Function to create the UI for the wagebill movement module.
+Sidebar controls and plots for the cost of recruitment and separation.
 }

@@ -2,18 +2,18 @@
 % Please edit documentation in R/analytics_wagebill_retirement.R
 \name{wagebill_retirement_ui}
 \alias{wagebill_retirement_ui}
-\title{Wagebill retirement UI module.}
+\title{Wage Bill Retirement UI}
 \usage{
 wagebill_retirement_ui(id, .data)
 }
 \arguments{
-\item{id}{A character string specifying the module ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{.data}{A data frame containing wagebill data.}
+\item{.data}{Data frame containing wage bill data.}
 }
 \value{
-A Shiny module UI function for the wagebill retirement module.
+A Shiny UI definition.
 }
 \description{
-Wagebill retirement UI module.
+Sidebar controls and plots for realised and projected retirement costs.
 }

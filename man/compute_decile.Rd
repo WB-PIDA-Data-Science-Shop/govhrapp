@@ -2,22 +2,26 @@
 % Please edit documentation in R/govhr_port.R
 \name{compute_decile}
 \alias{compute_decile}
-\title{Function to compute deciles of a measure column within groups and reference dates.}
+\title{Compute Deciles of a Measure}
 \usage{
 compute_decile(.data, group_cols = NULL, measure_col, latest_measure = FALSE)
 }
 \arguments{
-\item{.data}{A data frame containing the data to be processed.}
+\item{.data}{Data frame containing a \code{ref_date} column and the measure.}
 
-\item{group_cols}{A character vector of column names to group the data by.}
+\item{group_cols}{Character vector of columns to group by, or \code{NULL} for no
+grouping.}
 
-\item{measure_col}{The name of the column for which deciles will be computed.}
+\item{measure_col}{Character. Numeric column to rank into deciles.}
 
-\item{latest_measure}{A logical value indicating whether to return only the measures for the latest reference date's deciles (default is FALSE).}
+\item{latest_measure}{Logical. Restrict to the latest reference date and drop
+\code{ref_date} from the grouping. Default \code{FALSE}.}
 }
 \value{
-A data frame containing the deciles, median values, and mean values for the specified measure column within the specified groups and reference dates.
+A data frame with the grouping columns, \code{decile}, \code{median_value} and
+\code{mean_value}.
 }
 \description{
-Function to compute deciles of a measure column within groups and reference dates.
+Assigns rows to deciles of \code{measure_col} within each group and reference
+date, then reports the median and mean of the measure in each decile.
 }

@@ -1,14 +1,17 @@
 #' Workforce Overview UI
 #'
-#' @param id A character string specifying the module ID.
-#' @param .data A data frame containing workforce data.
+#' Sidebar controls, a headcount time trend, and totals and growth rates by
+#' group.
 #'
-#' @import shiny
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame containing workforce data.
+#'
+#' @return A Shiny UI definition.
+#'
 #' @import bslib
-#' @importFrom shinyWidgets materialSwitch
+#' @import shiny
 #' @importFrom plotly plotlyOutput
-#'
-#' @return A Shiny UI function for the workforce overview module.
+#' @importFrom shinyWidgets materialSwitch
 workforce_overview_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
@@ -81,16 +84,16 @@ workforce_overview_ui <- function(id, .data) {
 
 #' Workforce Overview Server
 #'
-#' @param id A character string specifying the module ID.
-#' @param .data A data frame containing workforce data.
-#' @param cache A list containing cached data for performance optimization.
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame containing workforce data.
+#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#'
+#' @return A Shiny module server function.
 #'
 #' @import shiny
-#' @import bslib
-#' @importFrom plotly renderPlotly ggplotly
-#' @importFrom shinyWidgets updatePickerInput
-#'
-#' @return A Shiny server function for the workforce overview module.
+#' @importFrom plotly ggplotly renderPlotly
+#' @importFrom purrr pluck
+#' @keywords internal
 workforce_overview_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
@@ -104,23 +107,21 @@ workforce_overview_server <- function(id, .data, cache) {
       )
     })
 
-    workforce_summary <- reactive({
-      # default to cache
-      if(input$apply_btn == 0){
-        out <- cache |>
-          purrr::pluck("workforce", "workforce_overview")
+    workforce_summary <- shiny::reactive({
+      summary <- if (input$apply_btn == 0) {
+        purrr::pluck(cache, "workforce", "workforce_overview")
       } else {
-        out <- compute_trend_summary(
+        compute_trend_summary(
           workforce_filtered(),
-          group = input$group_filter
+          group_col = input$group_filter
         )
       }
 
       if (input$toggle_growth) {
-        out <- apply_baseline_index(out, group = input$group_filter)
+        summary <- apply_baseline_index(summary, group_col = input$group_filter)
       }
 
-      out
+      summary
     })
 
     # plot 1. panel
@@ -128,58 +129,52 @@ workforce_overview_server <- function(id, .data, cache) {
       plotly::ggplotly(
         plot_trend(
           workforce_summary(),
-          group = input$group_filter,
+          group_col = input$group_filter,
           toggle_growth = input$toggle_growth,
           y_label = "Headcount"
         )
       )
     }) |>
-      bindEvent(input$apply_btn, ignoreNULL = FALSE)
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
     # plot 2. total by group
     output$workforce_cross_section <- plotly::renderPlotly({
-      validate(
-        need(input$group_filter != "ref_date", "Please select a group.")
+      shiny::validate(
+        shiny::need(input$group_filter != "ref_date", "Please select a group.")
       )
 
       cross_section_data <- compute_cross_section_summary(
         workforce_filtered(),
-        group = input$group_filter
+        group_col = input$group_filter
       )
-
-      n_groups <- nrow(cross_section_data)
-      plot_height <- max(350, n_groups * 35 + 100)
 
       plotly::ggplotly(
         plot_bar_total(
           cross_section_data,
-          group = input$group_filter,
+          group_col = input$group_filter,
           x_label = "Headcount"
         ),
-        height = plot_height
+        height = scale_plot_height(cross_section_data)
       )
     }) |>
-      bindEvent(input$apply_btn, ignoreNULL = FALSE)
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
     # plot 3. growth rate by group
     output$workforce_growth <- plotly::renderPlotly({
-      validate(
-        need(input$group_filter != "ref_date", "Please select a group.")
+      shiny::validate(
+        shiny::need(input$group_filter != "ref_date", "Please select a group.")
       )
 
       change_data <- compute_growth_summary(
         workforce_filtered(),
-        group = input$group_filter
+        group_col = input$group_filter
       )
-
-      n_groups <- nrow(change_data)
-      plot_height <- max(350, n_groups * 35 + 100)
 
       plotly::ggplotly(
-        plot_bar_growth(change_data, group = input$group_filter),
-        height = plot_height
+        plot_bar_growth(change_data, group_col = input$group_filter),
+        height = scale_plot_height(change_data)
       )
     }) |>
-      bindEvent(input$apply_btn, ignoreNULL = FALSE)
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })
 }

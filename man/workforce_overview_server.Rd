@@ -7,15 +7,16 @@
 workforce_overview_server(id, .data, cache)
 }
 \arguments{
-\item{id}{A character string specifying the module ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{.data}{A data frame containing workforce data.}
+\item{.data}{Data frame containing workforce data.}
 
-\item{cache}{A list containing cached data for performance optimization.}
+\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
 }
 \value{
-A Shiny server function for the workforce overview module.
+A Shiny module server function.
 }
 \description{
 Workforce Overview Server
 }
+\keyword{internal}

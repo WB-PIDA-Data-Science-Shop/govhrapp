@@ -2,22 +2,27 @@
 % Please edit documentation in R/server_utils.R
 \name{filter_data}
 \alias{filter_data}
-\title{Filter data based on group, subgroup, and date range inputs}
+\title{Filter Data by Group, Subgroup and Date Range}
 \usage{
-filter_data(data, group_filter, subgroup_filter, date_range)
+filter_data(.data, group_filter, subgroup_filter, date_range)
 }
 \arguments{
-\item{data}{A data frame containing the data to be filtered.}
+\item{.data}{Data frame to filter.}
 
-\item{group_filter}{A character string specifying the group variable to filter by.}
+\item{group_filter}{Character. Grouping column to filter on, or \code{"ref_date"}
+/ \code{NULL} to skip subgroup filtering.}
 
-\item{subgroup_filter}{A character vector specifying the subgroups to filter by.}
+\item{subgroup_filter}{Character vector of subgroup values to keep.}
 
-\item{date_range}{A vector of two dates specifying the date range to filter by.}
+\item{date_range}{Length-two vector of dates bounding \code{ref_date}, or \code{NULL}
+to skip date filtering.}
 }
 \value{
-A filtered data frame based on the specified inputs.
+A filtered data frame of the same class as \code{.data}.
 }
 \description{
-Filter data based on group, subgroup, and date range inputs
+Applies the sidebar selections to the panel data. Each selection is optional:
+a \code{"ref_date"} or \code{NULL} \code{group_filter} skips the subgroup step, and a \code{NULL}
+\code{date_range} skips the date step.
 }
+\keyword{internal}

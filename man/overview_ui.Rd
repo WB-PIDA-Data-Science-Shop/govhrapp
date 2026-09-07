@@ -2,12 +2,15 @@
 % Please edit documentation in R/analytics_overview.R
 \name{overview_ui}
 \alias{overview_ui}
-\title{Overview UI Module}
+\title{Overview UI}
 \usage{
 overview_ui(id)
 }
 \arguments{
-\item{id}{Module id.}
+\item{id}{Character. Module namespace ID.}
+}
+\value{
+A Shiny UI definition.
 }
 \description{
 Summary dashboard tab combining headline wage bill and headcount indicators.

@@ -2,18 +2,19 @@
 % Please edit documentation in R/ui_utils.R
 \name{subgroup_filter_ui}
 \alias{subgroup_filter_ui}
-\title{UI for the subgroup filter input.}
+\title{Subgroup Filter Input}
 \usage{
-subgroup_filter_ui(id, .data)
+subgroup_filter_ui(id)
 }
 \arguments{
-\item{id}{Character string. The module namespace ID.}
-
-\item{.data}{Data frame. The data to be used for determining the available subgroup choices.}
+\item{id}{Character. Module namespace ID.}
 }
 \value{
-A Shiny UI element for selecting a subgroup filter, conditionally displayed based on the selected group.
+A Shiny conditional panel wrapping a picker input.
 }
 \description{
-UI for the subgroup filter input.
+Renders the subgroup picker, shown only once a grouping column other than
+\code{ref_date} is selected. Choices are populated server-side by
+\code{\link[=update_group_filter_controls]{update_group_filter_controls()}}.
 }
+\keyword{internal}

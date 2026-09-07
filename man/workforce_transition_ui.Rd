@@ -2,18 +2,19 @@
 % Please edit documentation in R/analytics_workforce_transition.R
 \name{workforce_transition_ui}
 \alias{workforce_transition_ui}
-\title{Workforce Transition UI Module}
+\title{Workforce Transition UI}
 \usage{
 workforce_transition_ui(id, .data)
 }
 \arguments{
-\item{id}{A character string specifying the module ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{.data}{A data frame containing wagebill data.}
+\item{.data}{Data frame containing wage bill data.}
 }
 \value{
-A Shiny module UI function for workforce transition analytics.
+A Shiny UI definition.
 }
 \description{
-Workforce Transition UI Module
+Sidebar controls, a transition trend plot and an interactive transition
+network.
 }

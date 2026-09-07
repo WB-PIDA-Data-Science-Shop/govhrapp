@@ -2,20 +2,23 @@
 % Please edit documentation in R/server_utils.R
 \name{update_group_filter_controls}
 \alias{update_group_filter_controls}
-\title{Update filter controls based on selected group variable}
+\title{Update Subgroup Filter Choices}
 \usage{
 update_group_filter_controls(.data, input, session)
 }
 \arguments{
-\item{.data}{A data frame containing the data to be filtered.}
+\item{.data}{Data frame holding the columns available for grouping.}
 
-\item{input}{A Shiny input object containing the selected group variable.}
+\item{input}{Shiny input object carrying \code{group_filter}.}
 
-\item{session}{A Shiny session object.}
+\item{session}{Shiny session object.}
 }
 \value{
-None. This function updates the filter controls in the Shiny UI.
+Invisibly, the observer created for the picker. Called for its side
+effect on the UI.
 }
 \description{
-Update filter controls based on selected group variable
+Repopulates the subgroup picker whenever the selected grouping column
+changes. Distinct values are scanned once per column and reused thereafter.
 }
+\keyword{internal}

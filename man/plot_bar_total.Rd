@@ -2,26 +2,24 @@
 % Please edit documentation in R/analytics_plots.R
 \name{plot_bar_total}
 \alias{plot_bar_total}
-\title{Plot Horizontal Bar Chart of Totals by Group}
+\title{Plot Totals by Group}
 \usage{
-plot_bar_total(data, group, x_col = "value", x_label = "Value")
+plot_bar_total(.data, group_col, x_col = "value", x_label = "Value")
 }
 \arguments{
-\item{data}{A data frame with the grouping column and a \code{value} column, as
+\item{.data}{Data frame with the grouping column and the x-axis column, as
 returned by \code{\link[=compute_cross_section_summary]{compute_cross_section_summary()}}.}
 
-\item{group}{Character string naming the grouping column.}
+\item{group_col}{Character. Column to group by.}
 
-\item{x_col}{Character string of the column to plot on the x-axis. Default \code{"value"}.}
+\item{x_col}{Character. Column to plot on the x-axis. Default \code{"value"}.}
 
-\item{x_label}{Character string for the x-axis label. Default \code{"Value"}.}
+\item{x_label}{Character. x-axis label. Default \code{"Value"}.}
 }
 \value{
 A ggplot2 object.
 }
 \description{
-Produces a ggplot2 horizontal bar chart with groups ordered by \code{value}.
-Missing values in either \code{value} or the group column are dropped. The x-axis
-uses short-scale number formatting (e.g. 1K, 1M) and the y-axis uses
-\code{guide_axis(n.dodge = 2)} to prevent overlapping labels.
+Draws a horizontal bar chart with groups ordered by the plotted value. Rows
+missing either the value or the group label are dropped.
 }

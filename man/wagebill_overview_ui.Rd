@@ -2,18 +2,19 @@
 % Please edit documentation in R/analytics_wagebill_overview.R
 \name{wagebill_overview_ui}
 \alias{wagebill_overview_ui}
-\title{Function to create the UI for the wagebill overview module.}
+\title{Wage Bill Overview UI}
 \usage{
 wagebill_overview_ui(id, .data)
 }
 \arguments{
-\item{id}{A character string specifying the module ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{.data}{A data frame containing wagebill data.}
+\item{.data}{Data frame containing wage bill data.}
 }
 \value{
-A Shiny module UI function for the wagebill overview module.
+A Shiny UI definition.
 }
 \description{
-Function to create the UI for the wagebill overview module.
+Sidebar controls, a wage bill time trend, and totals and growth rates by
+group.
 }

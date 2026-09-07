@@ -2,15 +2,19 @@
 % Please edit documentation in R/analytics_wagebill.R
 \name{wagebill_ui}
 \alias{wagebill_ui}
-\title{Wage Bill UI Module}
+\title{Wage Bill UI}
 \usage{
 wagebill_ui(id, wagebill_data)
 }
 \arguments{
-\item{id}{Module id.}
+\item{id}{Character. Module namespace ID.}
 
-\item{wagebill_data}{Data frame with wage bill data.}
+\item{wagebill_data}{Data frame containing wage bill data.}
+}
+\value{
+A Shiny UI definition.
 }
 \description{
-UI for wage bill analytics, including overview, controls, and plots.
+Top-level wage bill tab: guidance, key indicator boxes, and the overview,
+equity, movement and retirement panels.
 }

@@ -2,22 +2,25 @@
 % Please edit documentation in R/ui_utils.R
 \name{group_filter_ui}
 \alias{group_filter_ui}
-\title{UI for the group filter input.}
+\title{Group Filter Input}
 \usage{
 group_filter_ui(id, .data, selected = "ref_date", group_choices = NULL)
 }
 \arguments{
-\item{id}{Character string. The module namespace ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame. The data to be used for determining the available grouping choices.}
+\item{.data}{Data frame whose columns bound the available choices.}
 
-\item{selected}{Character string. The default selected group. Defaults to "ref_date".}
+\item{selected}{Character. Grouping column selected by default. Default
+\code{"ref_date"}.}
 
-\item{group_choices}{Optional named vector of grouping choices. If NULL, the function will identify available grouping choices from the data.}
+\item{group_choices}{Named list of grouping choices. Default \code{NULL}, which
+derives them from \code{.data} via \code{\link[=identify_group_choices]{identify_group_choices()}}.}
 }
 \value{
-A Shiny UI element for selecting a group filter.
+A Shiny select input.
 }
 \description{
-UI for the group filter input.
+Group Filter Input
 }
+\keyword{internal}

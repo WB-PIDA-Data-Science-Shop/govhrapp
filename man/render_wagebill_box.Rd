@@ -2,18 +2,25 @@
 % Please edit documentation in R/analytics_wagebill_utils.R
 \name{render_wagebill_box}
 \alias{render_wagebill_box}
-\title{Function to render a wagebill summary value box.}
+\title{Render a Wage Bill Value Box}
 \usage{
-render_wagebill_box(wagebill_data, type_measure)
+render_wagebill_box(.data, measure_type, cache = NULL)
 }
 \arguments{
-\item{wagebill_data}{A data frame containing wagebill data.}
+\item{.data}{Data frame containing wage bill data.}
 
-\item{type_measure}{A character string specifying which measure to display. Must be one of "total_wagebill" or "total_pension_liabilities".}
+\item{measure_type}{Character. Either \code{"total_wagebill"} or
+\code{"total_pension_liabilities"}.}
+
+\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}},
+or \code{NULL} to compute the values directly.}
 }
 \value{
-A Shiny UI output rendering a value box summarizing the wage bill or pension liabilities total.
+A Shiny render function producing the value box.
 }
 \description{
-Function to render a wagebill summary value box.
+Renders the total wage bill or total pension liabilities at the latest
+reference date. Values are read from the analytics cache when available and
+computed from \code{.data} otherwise.
 }
+\keyword{internal}

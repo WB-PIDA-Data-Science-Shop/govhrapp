@@ -1,14 +1,22 @@
 #' Detect Career Transitions
-#' 
-#' @param .data A data frame containing workforce data.
-#' @param id_col A character string specifying the column name for the unique identifier (default is "contract_id").
-#' @param group_cols A character vector specifying the column names for grouping (e.g., paygrade, department).
-#' @param return_all A logical value indicating whether to return all records (including non-transitions) or only transitions (default is FALSE).
-#' 
-#' @importFrom data.table as.data.table setorderv rleidv shift setnames
+#'
+#' Collapses each entity's history into spells of consecutive periods in the
+#' same group, then pairs each spell with the one that follows it. The
+#' `ref_date` on a returned row is the date the `from` spell began.
+#'
+#' @param .data Data frame containing a `ref_date` column, the identifier and
+#'   the grouping columns.
+#' @param id_col Character. Column identifying the entity whose career is
+#'   tracked. Default `"contract_id"`.
+#' @param group_cols Character vector of columns defining the career position
+#'   (e.g. paygrade, department). Multiple columns are pasted into one label.
+#' @param return_all Logical. Keep terminal spells, whose `to` is `NA`. Default
+#'   `FALSE`.
+#'
+#' @return A data table with the identifier, `from`, `to` and `ref_date`.
+#'
+#' @importFrom data.table as.data.table rleidv setnames setorderv shift
 #' @importFrom stats complete.cases
-#' @return A data frame containing detected career transitions with columns for the unique identifier, from group, to group, and reference date.
-#' 
 #' @export
 detect_career_transition <- function(
   .data, id_col = "contract_id", group_cols,

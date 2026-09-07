@@ -2,22 +2,24 @@
 % Please edit documentation in R/analytics_workforce.R
 \name{workforce_server}
 \alias{workforce_server}
-\title{Workforce Analytics Server Module}
+\title{Workforce Server}
 \usage{
 workforce_server(id, workforce_data, wagebill_data, cache)
 }
 \arguments{
-\item{id}{A character string specifying the module ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{workforce_data}{A data frame containing personnel data.}
+\item{workforce_data}{Data frame containing personnel data.}
 
-\item{wagebill_data}{A data frame containing wage bill data.}
+\item{wagebill_data}{Data frame containing wage bill data, used by the
+overview and transition panels.}
 
-\item{cache}{A list containing pre-computed trend summaries for workforce data.}
+\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
 }
 \value{
-A Shiny module server function for workforce analytics.
+A Shiny module server function.
 }
 \description{
-Workforce Analytics Server Module
+Renders the key indicator boxes and delegates to the overview, movement,
+transition and retirement panel servers.
 }

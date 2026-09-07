@@ -2,7 +2,7 @@
 % Please edit documentation in R/govhr_port.R
 \name{compute_percentile}
 \alias{compute_percentile}
-\title{Function to compute the percentile values}
+\title{Bin a Measure into a Share Distribution}
 \usage{
 compute_percentile(
   .data,
@@ -13,19 +13,24 @@ compute_percentile(
 )
 }
 \arguments{
-\item{.data}{A data frame.}
+\item{.data}{Data frame containing a \code{ref_date} column and the measure.}
 
-\item{group_col}{A character vector of column names to group the data by.}
+\item{group_col}{Character. Column to group by, or \code{NULL} for no grouping.}
 
-\item{measure_col}{The name of the column for which the percentile values will be computed.}
+\item{measure_col}{Character. Numeric column to bin.}
 
-\item{binwidth}{The width of the bins for grouping the measure values (default is 1).}
+\item{binwidth}{Numeric. Width of each bin. Default \code{1}.}
 
-\item{latest_measure}{A logical value indicating whether to return only the measures for the latest reference date.}
+\item{latest_measure}{Logical. Restrict to the latest reference date. Default
+\code{FALSE}.}
 }
 \value{
-A data frame containing the 90th, 50th, and 10th percentiles for the specified measure column within the specified groups and reference dates.
+A data frame with the grouping column, \code{bin}, \code{count}, \code{pct} and
+\code{cum_pct}.
 }
 \description{
-Function to compute the percentile values
+Bins \code{measure_col} at a fixed width and reports each bin's share and
+cumulative share of observations, filling empty bins with zero so the
+distribution is gap-free.
 }
+\keyword{internal}

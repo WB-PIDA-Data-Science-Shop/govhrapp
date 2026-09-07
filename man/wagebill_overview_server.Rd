@@ -2,20 +2,21 @@
 % Please edit documentation in R/analytics_wagebill_overview.R
 \name{wagebill_overview_server}
 \alias{wagebill_overview_server}
-\title{Function to create the server logic for the wagebill overview module.}
+\title{Wage Bill Overview Server}
 \usage{
 wagebill_overview_server(id, .data, cache)
 }
 \arguments{
-\item{id}{A character string specifying the module ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{.data}{A data frame containing wagebill data.}
+\item{.data}{Data frame containing wage bill data.}
 
-\item{cache}{A list containing pre-computed trend summaries for workforce and wagebill data.}
+\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
 }
 \value{
-A Shiny module server function for the wagebill overview module.
+A Shiny module server function.
 }
 \description{
-Function to create the server logic for the wagebill overview module.
+Wage Bill Overview Server
 }
+\keyword{internal}

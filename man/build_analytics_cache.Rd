@@ -2,18 +2,23 @@
 % Please edit documentation in R/server_utils.R
 \name{build_analytics_cache}
 \alias{build_analytics_cache}
-\title{Build cache for analytics app}
+\title{Build the Analytics Cache}
 \usage{
 build_analytics_cache(workforce_data, wagebill_data)
 }
 \arguments{
-\item{workforce_data}{A data frame containing workforce data.}
+\item{workforce_data}{Data frame with workforce/personnel attributes
+(headcount).}
 
-\item{wagebill_data}{A data frame containing wage bill data.}
+\item{wagebill_data}{Data frame with contract/salary attributes (wage bill).}
 }
 \value{
-A list containing cached data frames for improved performance.
+A named list with \code{workforce} and \code{wagebill} elements, each a list of
+pre-computed data frames keyed by panel.
 }
 \description{
-Build cache for analytics app
+Pre-computes the summaries each analytics panel shows before the user applies
+any filter, so app start-up and first paint do no aggregation. Built once by
+the app entry point and passed to every module server.
 }
+\keyword{internal}

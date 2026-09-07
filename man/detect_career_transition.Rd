@@ -12,17 +12,23 @@ detect_career_transition(
 )
 }
 \arguments{
-\item{.data}{A data frame containing workforce data.}
+\item{.data}{Data frame containing a \code{ref_date} column, the identifier and
+the grouping columns.}
 
-\item{id_col}{A character string specifying the column name for the unique identifier (default is "contract_id").}
+\item{id_col}{Character. Column identifying the entity whose career is
+tracked. Default \code{"contract_id"}.}
 
-\item{group_cols}{A character vector specifying the column names for grouping (e.g., paygrade, department).}
+\item{group_cols}{Character vector of columns defining the career position
+(e.g. paygrade, department). Multiple columns are pasted into one label.}
 
-\item{return_all}{A logical value indicating whether to return all records (including non-transitions) or only transitions (default is FALSE).}
+\item{return_all}{Logical. Keep terminal spells, whose \code{to} is \code{NA}. Default
+\code{FALSE}.}
 }
 \value{
-A data frame containing detected career transitions with columns for the unique identifier, from group, to group, and reference date.
+A data table with the identifier, \code{from}, \code{to} and \code{ref_date}.
 }
 \description{
-Detect Career Transitions
+Collapses each entity's history into spells of consecutive periods in the
+same group, then pairs each spell with the one that follows it. The
+\code{ref_date} on a returned row is the date the \code{from} spell began.
 }

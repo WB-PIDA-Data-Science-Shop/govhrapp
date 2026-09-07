@@ -2,20 +2,21 @@
 % Please edit documentation in R/analytics_wagebill_retirement.R
 \name{wagebill_retirement_server}
 \alias{wagebill_retirement_server}
-\title{Server for the wagebill retirement module.}
+\title{Wage Bill Retirement Server}
 \usage{
 wagebill_retirement_server(id, .data, cache)
 }
 \arguments{
-\item{id}{A character string specifying the module ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{.data}{A data frame containing wagebill data.}
+\item{.data}{Data frame containing wage bill data.}
 
-\item{cache}{A list containing cached data for the module.}
+\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
 }
 \value{
-A Shiny module server function for the wagebill retirement module.
+A Shiny module server function.
 }
 \description{
-Server for the wagebill retirement module.
+Wage Bill Retirement Server
 }
+\keyword{internal}

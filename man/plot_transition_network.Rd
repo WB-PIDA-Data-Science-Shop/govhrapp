@@ -7,11 +7,15 @@
 plot_transition_network(.data)
 }
 \arguments{
-\item{.data}{A data frame containing the transition data with columns \code{from}, \code{to}, and \code{weight}.}
+\item{.data}{Data frame with \code{from} and \code{to} columns, as returned by
+\code{\link[=detect_career_transition]{detect_career_transition()}}.}
 }
 \value{
-A ggplot2 object representing a transition network.
+A ggiraph girafe object.
 }
 \description{
-Plot Transition Network
+Draws career transitions as a directed graph, with edge width proportional to
+the number of transitions and node size to degree centrality. Networks of ten
+or more nodes are labelled by index rather than by name.
 }
+\keyword{internal}

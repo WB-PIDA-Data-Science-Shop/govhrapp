@@ -1,15 +1,21 @@
-#' Function to compute deciles of a measure column within groups and reference dates.
+#' Compute Deciles of a Measure
 #'
-#' @param .data A data frame containing the data to be processed.
-#' @param group_cols A character vector of column names to group the data by.
-#' @param measure_col The name of the column for which deciles will be computed.
-#' @param latest_measure A logical value indicating whether to return only the measures for the latest reference date's deciles (default is FALSE).
+#' Assigns rows to deciles of `measure_col` within each group and reference
+#' date, then reports the median and mean of the measure in each decile.
 #'
-#' @return A data frame containing the deciles, median values, and mean values for the specified measure column within the specified groups and reference dates.
+#' @param .data Data frame containing a `ref_date` column and the measure.
+#' @param group_cols Character vector of columns to group by, or `NULL` for no
+#'   grouping.
+#' @param measure_col Character. Numeric column to rank into deciles.
+#' @param latest_measure Logical. Restrict to the latest reference date and drop
+#'   `ref_date` from the grouping. Default `FALSE`.
+#'
+#' @return A data frame with the grouping columns, `decile`, `median_value` and
+#'   `mean_value`.
 #'
 #' @importFrom data.table as.data.table setorderv
 #' @importFrom dplyr ntile
-#'
+#' @importFrom stats median
 #' @export
 compute_decile <- function(
   .data,
@@ -45,18 +51,24 @@ compute_decile <- function(
   out[]
 }
 
-#' Function to compute the percentile values
+#' Bin a Measure into a Share Distribution
 #'
-#' @param .data A data frame.
-#' @param group_col A character vector of column names to group the data by.
-#' @param measure_col The name of the column for which the percentile values will be computed.
-#' @param binwidth The width of the bins for grouping the measure values (default is 1).
-#' @param latest_measure A logical value indicating whether to return only the measures for the latest reference date.
+#' Bins `measure_col` at a fixed width and reports each bin's share and
+#' cumulative share of observations, filling empty bins with zero so the
+#' distribution is gap-free.
 #'
-#' @importFrom data.table as.data.table setorderv
-#' @importFrom collapse fquantile
+#' @param .data Data frame containing a `ref_date` column and the measure.
+#' @param group_col Character. Column to group by, or `NULL` for no grouping.
+#' @param measure_col Character. Numeric column to bin.
+#' @param binwidth Numeric. Width of each bin. Default `1`.
+#' @param latest_measure Logical. Restrict to the latest reference date. Default
+#'   `FALSE`.
 #'
-#' @return A data frame containing the 90th, 50th, and 10th percentiles for the specified measure column within the specified groups and reference dates.
+#' @return A data frame with the grouping column, `bin`, `count`, `pct` and
+#'   `cum_pct`.
+#'
+#' @importFrom data.table CJ as.data.table data.table setnames setorderv
+#' @keywords internal
 compute_percentile <- function(
   .data,
   group_col = NULL,
@@ -105,4 +117,43 @@ compute_percentile <- function(
   ]
 
   binned[]
+}
+
+
+compute_compression_ratio <- function(
+  .data,
+  group_cols = NULL,
+  percentiles = c(0.9, 0.5, 0.1),
+  measure_col
+) {
+  # consider generalizing this function to compute any percentile, not just 90th, 50th, and 10th
+  dt <- data.table::as.data.table(.data)
+
+  by_cols <- group_cols
+
+  out <- dt[
+    !is.na(get(measure_col)),
+    .(
+      percentile_upper = collapse::fquantile(
+        get(measure_col),
+        probs = percentiles[1],
+        na.rm = TRUE
+      ),
+      percentile_50 = collapse::fquantile(
+        get(measure_col),
+        probs = percentiles[2],
+        na.rm = TRUE
+      ),
+      percentile_lower = collapse::fquantile(
+        get(measure_col),
+        probs = percentiles[3],
+        na.rm = TRUE
+      )
+    ),
+    keyby = by_cols
+  ]
+
+  data.table::setorderv(out, by_cols)
+
+  out[]
 }

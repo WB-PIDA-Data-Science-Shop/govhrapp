@@ -129,8 +129,8 @@ generate_wagebill_report <- function(wagebill_summary_data,
       dplyr::mutate(year = lubridate::year(.data[["ref_date"]])) |>
       dplyr::filter(year == max(year)) |>
       plot_segment(
-        col = wagebill_measure,
-        group = wagebill_group
+        measure_col = wagebill_measure,
+        group_col = wagebill_group
       ) +
       ggplot2::labs(x = "Wage bill", y = "")
   } else NULL

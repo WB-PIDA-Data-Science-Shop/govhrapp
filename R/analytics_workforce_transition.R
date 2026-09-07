@@ -1,19 +1,20 @@
-#' Workforce Transition UI Module
+#' Workforce Transition UI
 #'
-#' @param id A character string specifying the module ID.
-#' @param .data A data frame containing wagebill data.
+#' Sidebar controls, a transition trend plot and an interactive transition
+#' network.
 #'
-#' @importFrom bslib layout_sidebar sidebar card card_header popover
-#' @importFrom shiny dateRangeInput selectInput actionButton NS
-#' @importFrom purrr map discard
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame containing wage bill data.
+#'
+#' @return A Shiny UI definition.
+#'
+#' @importFrom bslib card card_header layout_sidebar popover sidebar
+#' @importFrom ggiraph girafeOutput
 #' @importFrom plotly plotlyOutput
-#'
-#' @return A Shiny module UI function for workforce transition analytics.
+#' @importFrom shiny NS actionButton selectInput
 workforce_transition_ui <- function(id, .data) {
-  choices <- identify_group_choices(.data)[
-    c("Personnel", "Contract")
-  ]
-  
+  choices <- identify_group_choices(.data)[c("Personnel", "Contract")]
+
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
@@ -23,7 +24,7 @@ workforce_transition_ui <- function(id, .data) {
       group_filter_ui(
         id, .data, selected = "paygrade", group_choices = choices
       ),
-      subgroup_filter_ui(id, .data),
+      subgroup_filter_ui(id),
       shiny::selectInput(
         shiny::NS(id, "id_col"),
         "Identifier",
@@ -73,98 +74,81 @@ workforce_transition_ui <- function(id, .data) {
   )
 }
 
-#' Workforce Transition Server Module
+#' Workforce Transition Server
 #'
-#' @param id A character string specifying the module ID.
-#' @param .data A data frame containing wagebill data.
-#' @param cache A list containing pre-computed data for caching.
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame containing wage bill data.
+#' @param cache List of pre-computed summaries from [build_analytics_cache()].
 #'
-#' @importFrom shiny moduleServer reactive req bindEvent
-#' @importFrom plotly renderPlotly
-#' @importFrom dplyr filter between across all_of
-#' @importFrom tidyr complete
-#' @importFrom data.table as.data.table
-#' @importFrom govhr detect_career_transitions fastcount
+#' @return A Shiny module server function.
+#'
+#' @importFrom ggiraph renderGirafe
+#' @importFrom govhr fastcount
+#' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
+#' @importFrom shiny bindEvent moduleServer reactive req
 #'
 #' @export
-#'
-#' @return A Shiny server module for workforce transition analytics.
 workforce_transition_server <- function(id, .data, cache) {
-  moduleServer(id, function(input, output, session) {
+  shiny::moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
 
-    # ignore initial values for group_filter, subgroup_filter, and date_range
-    workforce_filtered <- reactive({
-      req(input$apply_btn)
+    workforce_filtered <- shiny::reactive({
+      shiny::req(input$apply_btn)
 
-      .data |>
-        filter_data(
-          group_filter = input$group_filter,
-          subgroup_filter = input$subgroup_filter,
-          date_range = input$date_range
+      filter_data(
+        .data,
+        group_filter = input$group_filter,
+        subgroup_filter = input$subgroup_filter,
+        date_range = input$date_range
+      )
+    })
+
+    # both plots read the same transitions, so detect them once per apply
+    transition_data <- shiny::reactive({
+      if (input$apply_btn == 0) {
+        purrr::pluck(cache, "workforce", "workforce_transition")
+      } else {
+        detect_career_transition(
+          workforce_filtered(),
+          id_col = input$id_col,
+          group_cols = input$group_filter
         )
-    })
-
-    transition_data <- reactive({
-      # only use cache if no apply button has been clicked
-      if (input$apply_btn == 0) {
-        cache |>
-          purrr::pluck("workforce", "workforce_transition")
-      } else {
-        workforce_filtered() |>
-          detect_career_transition(
-            id_col = input$id_col,
-            group_cols = input$group_filter
-          )
-      }
-    })
-
-    # plot 1. transitions over time
-    output$transition_trend_plot <- plotly::renderPlotly({
-      # use cache if default group is selected
-      if (input$apply_btn == 0) {
-        cache |>
-          purrr::pluck("workforce", "workforce_transition") |>
-          govhr::fastcount(
-            ref_date,
-            name = "transition"
-          ) |>
-          plot_trend(
-            group = "ref_date",
-            y_col = "transition",
-            y_label = "Number of Transitions"
-          )
-      } else {
-        transition_data() |>
-          govhr::fastcount(
-            ref_date,
-            name = "transition"
-          ) |>
-          plot_trend(
-            group = "ref_date",
-            y_col = "transition",
-            y_label = "Number of Transitions"
-          )
       }
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
-    # plot 2. transition network
-    output$transition_network_plot <- ggiraph::renderGirafe(
-      {if (input$apply_btn == 0) {
-        cache |>
-          purrr::pluck("workforce", "workforce_transition") |>
-          plot_transition_network()
-      } else {
+    # plot 1. transitions over time
+    output$transition_trend_plot <- plotly::renderPlotly({
+      plotly::ggplotly(
         transition_data() |>
-          plot_transition_network()
-      }}
-    ) |>
+          govhr::fastcount(ref_date, name = "transition") |>
+          plot_trend(
+            group_col = "ref_date",
+            y_col = "transition",
+            y_label = "Number of Transitions"
+          )
+      )
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # plot 2. transition network
+    output$transition_network_plot <- ggiraph::renderGirafe({
+      plot_transition_network(transition_data())
+    }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })
 }
 
+#' Launch the Workforce Transition Module Standalone
+#'
+#' @param .data Data frame containing wage bill data.
+#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#'
+#' @return A Shiny app object.
+#'
+#' @importFrom shiny shinyApp
+#' @keywords internal
 workforce_transition_app <- function(.data, cache) {
   shiny::shinyApp(
     ui = workforce_transition_ui("transition", .data),

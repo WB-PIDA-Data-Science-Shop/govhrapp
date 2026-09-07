@@ -1,118 +1,97 @@
-#' Identify available grouping choices based on the columns present in the data.
-#' @param .data A data frame.
-#' 
-#' @importFrom dplyr filter summarise pull
+#' Nest Dictionary Variables by Module
+#'
+#' Collapses dictionary rows into the named list of named vectors that Shiny
+#' select inputs use to render optgroups.
+#'
+#' @param dictionary_rows Data frame of `govhr::dictionary` rows with
+#'   `variable_id`, `variable_name` and `module` columns.
+#'
+#' @return A named list keyed by module, each element a named character vector
+#'   of variable IDs labelled by variable name.
+#'
+#' @importFrom dplyr pull summarise
 #' @importFrom purrr set_names
-#' @return A named list of grouping choices, where each element corresponds to a module and contains a named vector of variable IDs and their corresponding variable names.
-identify_group_choices <- function(.data){
-  available_cols <- names(.data)
-
-  group_choices <- c(
-      list("All" = "ref_date"),
-      govhr::dictionary |>
-        dplyr::filter(
-          .data[["variable_id"]] %in%
-            available_cols &
-            .data[["variable_class"]] == "character" &
-            !.data[["variable_id"]] %in%
-              c("ref_date", "contract_id", "personnel_id")
-        ) |>
-        dplyr::summarise(
-          choices = list(
-            purrr::set_names(.data[["variable_id"]], .data[["variable_name"]])
-          ),
-          .by = .data[["module"]]
-        ) |>
-        dplyr::pull(.data[["choices"]], name = .data[["module"]])
-    )
-
-  group_choices
+#' @keywords internal
+nest_choices_by_module <- function(dictionary_rows) {
+  dictionary_rows |>
+    dplyr::summarise(
+      choices = list(
+        purrr::set_names(.data[["variable_id"]], .data[["variable_name"]])
+      ),
+      .by = "module"
+    ) |>
+    dplyr::pull(.data[["choices"]], name = .data[["module"]])
 }
 
-
-
-#' Generate UI controls to filter data.
-#' 
-#' @param .data Data frame. The data to be filtered.
-#' @param id Character string. The module namespace ID.
+#' Identify Available Grouping Choices
 #'
-#' @import shiny
-#' @importFrom shinyWidgets pickerInput pickerOptions
-#'  
-#' @return A list of Shiny UI elements for filtering the data.
-default_ui_controls <- function(.data, id) {
-  group_choices <- identify_group_choices(.data)
+#' Lists the categorical variables present in the data that can be used as a
+#' grouping dimension, nested by dictionary module. Always includes an "All"
+#' option mapped to `ref_date`.
+#'
+#' @param .data Data frame whose columns bound the available choices.
+#'
+#' @return A named list of grouping choices, keyed by module.
+#'
+#' @importFrom dplyr filter
+#' @keywords internal
+identify_group_choices <- function(.data) {
+  available_cols <- names(.data)
 
-  list(
-    shiny::dateRangeInput(
-      shiny::NS(id, "date_range"),
-      "Select date range:",
-      start = min(.data[["ref_date"]], na.rm = TRUE),
-      end = max(.data[["ref_date"]], na.rm = TRUE),
-      min = min(.data[["ref_date"]], na.rm = TRUE),
-      max = max(.data[["ref_date"]], na.rm = TRUE)
-    ),
-    shiny::selectInput(
-      shiny::NS(id, "group_filter"),
-      "Select group:",
-      choices = group_choices
-    ),
-    # only show the subgroup filter if a group is selected and it's not "ref_date"
-    shiny::conditionalPanel(
-      condition = sprintf(
-        "input['%s'] !== 'none' && input['%s'] !== 'ref_date'",
-        shiny::NS(id, "group_filter"),
-        shiny::NS(id, "group_filter")
-      ),
-      # subgroup filter: dynamically populated based on the selected group
-      shinyWidgets::pickerInput(
-        shiny::NS(id, "subgroup_filter"),
-        "Select subgroups:",
-        choices = NULL,
-        multiple = TRUE,
-        options = shinyWidgets::pickerOptions(
-          actionsBox = TRUE,
-          liveSearch = TRUE,
-          selectedTextFormat = "count > 3",
-          countSelectedText = "{0} subgroups selected",
-          noneSelectedText = "No subgroups selected",
-          container = "body"
-        )
-      )
-    )
+  c(
+    list("All" = "ref_date"),
+    govhr::dictionary |>
+      dplyr::filter(
+        .data[["variable_id"]] %in% available_cols,
+        .data[["variable_class"]] == "character",
+        !.data[["variable_id"]] %in%
+          c("ref_date", "contract_id", "personnel_id")
+      ) |>
+      nest_choices_by_module()
   )
 }
 
-#' UI for the date range input.
+#' Date Range Filter Input
 #'
-#' @param id Character string. The module namespace ID.
-#' @param .data Data frame. The data to be used for determining the date range.
-#' 
-#' @importFrom shiny dateRangeInput NS
-#' 
-#' @return A Shiny UI element for selecting a date range.
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame whose `ref_date` column bounds the selectable range.
+#'
+#' @return A Shiny date range input.
+#'
+#' @importFrom shiny NS dateRangeInput
+#' @keywords internal
 date_ui <- function(id, .data) {
+  date_range <- range(.data[["ref_date"]], na.rm = TRUE)
+
   shiny::dateRangeInput(
     shiny::NS(id, "date_range"),
     "Select date range:",
-    start = min(.data[["ref_date"]], na.rm = TRUE),
-    end = max(.data[["ref_date"]], na.rm = TRUE),
-    min = min(.data[["ref_date"]], na.rm = TRUE),
-    max = max(.data[["ref_date"]], na.rm = TRUE)
+    start = date_range[1],
+    end = date_range[2],
+    min = date_range[1],
+    max = date_range[2]
   )
 }
 
-#' UI for the group filter input.
-#' 
-#' @param id Character string. The module namespace ID.
-#' @param .data Data frame. The data to be used for determining the available grouping choices.
-#' @param selected Character string. The default selected group. Defaults to "ref_date".
-#' @param group_choices Optional named vector of grouping choices. If NULL, the function will identify available grouping choices from the data.
-#' 
-#' @importFrom shiny selectInput NS
-#' 
-#' @return A Shiny UI element for selecting a group filter.
-group_filter_ui <- function(id, .data, selected = "ref_date", group_choices = NULL) {
+#' Group Filter Input
+#'
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame whose columns bound the available choices.
+#' @param selected Character. Grouping column selected by default. Default
+#'   `"ref_date"`.
+#' @param group_choices Named list of grouping choices. Default `NULL`, which
+#'   derives them from `.data` via [identify_group_choices()].
+#'
+#' @return A Shiny select input.
+#'
+#' @importFrom shiny NS selectInput
+#' @keywords internal
+group_filter_ui <- function(
+  id,
+  .data,
+  selected = "ref_date",
+  group_choices = NULL
+) {
   if (is.null(group_choices)) {
     group_choices <- identify_group_choices(.data)
   }
@@ -125,24 +104,26 @@ group_filter_ui <- function(id, .data, selected = "ref_date", group_choices = NU
   )
 }
 
-#' UI for the subgroup filter input.
-#' 
-#' @param id Character string. The module namespace ID.
-#' @param .data Data frame. The data to be used for determining the available subgroup choices.
-#' 
-#' @importFrom shiny conditionalPanel NS
+#' Subgroup Filter Input
+#'
+#' Renders the subgroup picker, shown only once a grouping column other than
+#' `ref_date` is selected. Choices are populated server-side by
+#' [update_group_filter_controls()].
+#'
+#' @param id Character. Module namespace ID.
+#'
+#' @return A Shiny conditional panel wrapping a picker input.
+#'
+#' @importFrom shiny NS conditionalPanel
 #' @importFrom shinyWidgets pickerInput pickerOptions
-#' 
-#' @return A Shiny UI element for selecting a subgroup filter, conditionally displayed based on the selected group.
-subgroup_filter_ui <- function(id, .data) {
-  # only show the subgroup filter if a group is selected and it's not "ref_date"
+#' @keywords internal
+subgroup_filter_ui <- function(id) {
   shiny::conditionalPanel(
     condition = sprintf(
       "input['%s'] !== 'none' && input['%s'] !== 'ref_date'",
       shiny::NS(id, "group_filter"),
       shiny::NS(id, "group_filter")
     ),
-    # subgroup filter: dynamically populated based on the selected group
     shinyWidgets::pickerInput(
       shiny::NS(id, "subgroup_filter"),
       "Select subgroups:",
@@ -157,5 +138,24 @@ subgroup_filter_ui <- function(id, .data) {
         container = "body"
       )
     )
+  )
+}
+
+#' Default Sidebar Filter Controls
+#'
+#' Assembles the date, group and subgroup controls shared by every analytics
+#' panel sidebar.
+#'
+#' @param .data Data frame to be filtered.
+#' @param id Character. Module namespace ID.
+#'
+#' @return A list of Shiny UI elements.
+#'
+#' @keywords internal
+default_ui_controls <- function(.data, id) {
+  list(
+    date_ui(id, .data),
+    group_filter_ui(id, .data),
+    subgroup_filter_ui(id)
   )
 }
