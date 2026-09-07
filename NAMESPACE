@@ -96,7 +96,9 @@ importFrom(ggiraph,
 importFrom(ggplot2,
   aes,
   annotate,
+  coord_cartesian,
   element_text,
+  expansion,
   facet_wrap,
   geom_col,
   geom_hline,
@@ -110,6 +112,7 @@ importFrom(ggplot2,
   guide_axis,
   label_wrap_gen,
   labs,
+  margin,
   scale_color_manual,
   scale_size_identity,
   scale_x_continuous,
@@ -170,6 +173,7 @@ importFrom(purrr,
   set_names
 )
 importFrom(rlang,":=")
+importFrom(rmarkdown,render)
 importFrom(rsconnect,deployApp)
 importFrom(scales,
   comma,

@@ -140,3 +140,25 @@
 .shiny-html-output :where(*):not(h1, h2, h3, h4, h5, h6, code, pre, kbd, samp) {
   font-family: var(--bs-body-font-family) !important;
 }
+
+/* ggiraph pins the svg's max-width/max-height to the container size measured at
+   render time and ships an empty resize handler, so a girafe output never grows
+   with its card - full screen included. Drop the pinned limits and let the svg
+   fill the output box; the svg's own preserveAspectRatio does the scaling. */
+.html-widget.girafe {
+  display: flex;
+  min-height: 0;
+}
+
+.girafe_container_std {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.girafe_container_std > svg {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+}

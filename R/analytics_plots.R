@@ -703,7 +703,8 @@ plot_transfer_heatmap <- function(.data) {
 #' @return A ggiraph girafe object.
 #'
 #' @importFrom dplyr pull row_number
-#' @importFrom ggplot2 aes scale_color_manual scale_size_identity theme theme_void
+#' @importFrom ggplot2 aes coord_cartesian expansion margin scale_color_manual
+#'   scale_size_identity scale_x_continuous scale_y_continuous theme theme_void
 #' @importFrom govhr fastcount
 #' @importFrom grDevices colorRampPalette
 #' @importFrom tidygraph as_tbl_graph
@@ -769,13 +770,26 @@ plot_transition_network <- function(.data) {
     ggraph::scale_edge_alpha_identity(guide = "none") +
     ggplot2::scale_size_identity(guide = "none") +
     ggplot2::scale_color_manual(values = orange_palette, guide = "none") +
+    # the layout pushes nodes to the extremes, so pad the panel and disable
+    # clipping to keep the outermost points and labels whole
+    ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = 0.12)) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = 0.12)) +
+    ggplot2::coord_cartesian(clip = "off") +
     ggplot2::theme_void() +
-    ggplot2::theme(legend.position = "none")
+    ggplot2::theme(
+      legend.position = "none",
+      plot.margin = ggplot2::margin(10, 10, 10, 10)
+    )
 
+  # the svg keeps this aspect ratio whatever the card size, so pick a landscape
+  # one that matches the card rather than girafe's default 6x5
   ggiraph::girafe(
     ggobj = plot,
+    width_svg = 10,
+    height_svg = 6,
     options = list(
-      ggiraph::opts_hover(css = "stroke:#2d224e;stroke-width:2px;")
+      ggiraph::opts_hover(css = "stroke:#2d224e;stroke-width:2px;"),
+      ggiraph::opts_sizing(rescale = TRUE, width = 1)
     )
   )
 }
