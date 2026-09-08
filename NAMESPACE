@@ -5,6 +5,7 @@ export(compute_cross_section_summary)
 export(compute_decile)
 export(compute_growth_summary)
 export(compute_trend_summary)
+export(count_entity)
 export(deploy_govhrapp)
 export(detect_career_transition)
 export(generate_analytics_report)
@@ -64,7 +65,8 @@ importFrom(data.table,
   rleidv,
   setnames,
   setorderv,
-  shift
+  shift,
+  uniqueN
 )
 importFrom(dplyr,
   across,

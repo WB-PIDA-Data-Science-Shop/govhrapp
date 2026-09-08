@@ -157,3 +157,29 @@ compute_compression_ratio <- function(
 
   out[]
 }
+
+#' Count Unique Entities by Group
+#' 
+#' @param .data Data frame containing the data.
+#' @param id_col Character. Column name of the unique identifier for the entity.
+#' @param group_cols Character vector of column names to group by, or `NULL` for no grouping.
+#' 
+#' @return A data frame with the grouping columns and a `count` column representing the number of unique entities in each group.
+#' 
+#' @importFrom data.table as.data.table uniqueN setorderv
+#' @export
+count_entity <- function(.data, id_col, group_cols = NULL){
+  dt <- data.table::as.data.table(.data)
+
+  out <- dt[
+    !is.na(get(id_col)),
+    .(
+      count = data.table::uniqueN(get(id_col))
+    ),
+    keyby = group_cols
+  ]
+
+  data.table::setorderv(out, c(group_cols, "count"))
+
+  out[]
+}

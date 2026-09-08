@@ -702,7 +702,7 @@ plot_transfer_heatmap <- function(.data) {
 #'
 #' @return A ggiraph girafe object.
 #'
-#' @importFrom dplyr pull row_number
+#' @importFrom dplyr across mutate pull row_number
 #' @importFrom ggplot2 aes coord_cartesian expansion margin scale_color_manual
 #'   scale_size_identity scale_x_continuous scale_y_continuous theme theme_void
 #' @importFrom govhr fastcount
@@ -710,7 +710,14 @@ plot_transfer_heatmap <- function(.data) {
 #' @importFrom tidygraph as_tbl_graph
 #' @keywords internal
 plot_transition_network <- function(.data) {
-  edges <- govhr::fastcount(.data, .data[["from"]], .data[["to"]], name = "weight")
+  edges <- govhr::fastcount(.data, .data[["from"]], .data[["to"]], name = "weight") |>
+    # coerce to character to ensure that as_tble_graph produces a `name` column
+    dplyr::mutate(
+      dplyr::across(
+        c("from", "to"), 
+        as.character
+      )
+    )
 
   graph_data <- tidygraph::as_tbl_graph(edges, directed = TRUE)
 
@@ -726,7 +733,7 @@ plot_transition_network <- function(.data) {
         node_id,
         levels = as.character(sort(as.integer(node_id)))
       ),
-      label = if (many_nodes) node_id else name,
+      label = if (many_nodes) node_id else .data[["name"]],
       degree = tidygraph::centrality_degree(mode = "all")
     )
 
@@ -750,18 +757,17 @@ plot_transition_network <- function(.data) {
       )
     ) +
     ggraph::geom_node_text(
-      ggplot2::aes(label = if (many_nodes) node_id else name),
+      ggplot2::aes(label = if (many_nodes) node_id else .data[["name"]]),
       color = if (many_nodes) "white" else "#2d224e",
       size = if (many_nodes) 3 else 8,
       fontface = "bold"
     ) +
-    # invisible layer carrying the hover tooltips
     ggiraph::geom_point_interactive(
       ggplot2::aes(
         x = x,
         y = y,
         size = point_size,
-        tooltip = name,
+        tooltip = .data[["name"]],
         data_id = node_id
       ),
       alpha = 0.01
@@ -781,8 +787,6 @@ plot_transition_network <- function(.data) {
       plot.margin = ggplot2::margin(10, 10, 10, 10)
     )
 
-  # the svg keeps this aspect ratio whatever the card size, so pick a landscape
-  # one that matches the card rather than girafe's default 6x5
   ggiraph::girafe(
     ggobj = plot,
     width_svg = 10,
