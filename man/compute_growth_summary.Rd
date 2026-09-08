@@ -4,26 +4,21 @@
 \alias{compute_growth_summary}
 \title{Compute Growth Rate Summary}
 \usage{
-compute_growth_summary(data, group, measure_col = NULL)
+compute_growth_summary(.data, group_col, measure_col = NULL)
 }
 \arguments{
-\item{data}{A data frame with \code{ref_date} and the grouping column.}
+\item{.data}{Data frame containing \code{ref_date} and the grouping column.}
 
-\item{group}{Character string naming the grouping column.}
+\item{group_col}{Character. Column to group by.}
 
-\item{measure_col}{Character string naming the numeric column to sum, or
-\code{NULL} to count rows.}
+\item{measure_col}{Character. Numeric column to sum, or \code{NULL} to count rows.}
 }
 \value{
-A data frame with the grouping column and a \code{growth_rate} column
-(percentage points, e.g. 12.5 for +12.5\%).
+A data frame with the grouping column and a \code{growth_rate} column, in
+percentage points (e.g. \code{12.5} for +12.5\%).
 }
 \description{
-Filters to the first and last reference date within each group and computes
-the percentage change from first to last. Used as the data source for
-growth-rate bar charts.
-}
-\details{
-When \code{measure_col} is \code{NULL}, counts rows per date-group cell (headcount).
-When a column name is supplied, sums that column (wage bill).
+Keeps each group's first and last reference date and computes the percentage
+change between them. Counts rows when \code{measure_col} is \code{NULL} (headcount) and
+sums the column otherwise (wage bill).
 }

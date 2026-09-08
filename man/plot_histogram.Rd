@@ -2,20 +2,25 @@
 % Please edit documentation in R/analytics_plots.R
 \name{plot_histogram}
 \alias{plot_histogram}
-\title{Plot Density as Percentage Share}
+\title{Plot Wage Distribution}
 \usage{
 plot_histogram(.data, plot_type = "histogram", group_col = NULL)
 }
 \arguments{
-\item{.data}{A data frame.}
+\item{.data}{Data frame with \code{bin}, \code{pct} and \code{cum_pct}, as returned by
+\code{\link[=compute_percentile]{compute_percentile()}}.}
 
-\item{plot_type}{A character string indicating the type of plot: "histogram" or "cumulative".}
+\item{plot_type}{Character. Either \code{"histogram"} or \code{"cumulative"}. Default
+\code{"histogram"}.}
 
-\item{group_col}{The column name to group by.}
+\item{group_col}{Character. Column to facet by, or \code{NULL}/\code{"ref_date"} for a
+single panel.}
 }
 \value{
-A plotly object.
+A ggplot object.
 }
 \description{
-Plot Density as Percentage Share
+Draws binned wage shares as a histogram or as a cumulative distribution,
+faceted by group when one is supplied.
 }
+\keyword{internal}

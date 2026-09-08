@@ -1,15 +1,16 @@
-
-#' Function to create the UI for the wagebill movement module.
-#' 
-#' @param id A character string specifying the module ID.
-#' @param .data A data frame containing wagebill data.
-#' 
+#' Wage Bill Movement UI
+#'
+#' Sidebar controls and plots for the cost of recruitment and separation.
+#'
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame containing wage bill data.
+#'
+#' @return A Shiny UI definition.
+#'
 #' @import bslib
 #' @import shiny
-#' @importFrom plotly plotlyOutput
 #' @importFrom bsicons bs_icon
-#' 
-#' @return A Shiny module UI function for the wagebill movement module.
+#' @importFrom plotly plotlyOutput
 wagebill_movement_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
@@ -20,7 +21,7 @@ wagebill_movement_ui <- function(id, .data) {
       shiny::selectInput(
         shiny::NS(id, "event_type"),
         "Type of Movement:",
-        choices = c("Hire" = "hire", "Fire" = "fire"),
+        choices = c("Recruitment" = "hire", "Separation" = "fire"),
         selected = "hire"
       ),
       shiny::selectInput(
@@ -93,21 +94,20 @@ wagebill_movement_ui <- function(id, .data) {
   )
 }
 
-#' Function to create the server logic for the wagebill movement module.
-#' 
-#' @param id A character string specifying the module ID.
-#' @param .data A data frame containing wagebill data.
-#' 
+#' Wage Bill Movement Server
+#'
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame containing wage bill data.
+#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#'
+#' @return A Shiny module server function.
+#'
 #' @import shiny
-#' @importFrom plotly renderPlotly ggplotly
-#' @importFrom dplyr filter
-#' 
-#' @return A Shiny module server function for the wagebill movement module.
-wagebill_movement_server <- function(id, .data) {
+#' @importFrom plotly ggplotly renderPlotly
+#' @importFrom purrr pluck
+#' @keywords internal
+wagebill_movement_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
-    # choice of cols
-    wagebill_group_choices <- identify_group_choices(.data)
-
     update_group_filter_controls(.data, input, session)
 
     wagebill_filtered <- shiny::reactive({
@@ -119,19 +119,27 @@ wagebill_movement_server <- function(id, .data) {
       )
     })
 
+    # all three plots read the same aggregate, so compute it once per apply
+    movement_cost <- shiny::reactive({
+      if (input$apply_btn == 0) {
+        purrr::pluck(cache, "wagebill", "wagebill_movement")
+      } else {
+        govhr::compute_movement_cost(
+          wagebill_filtered(),
+          event_type = input$event_type,
+          measure_col = input$wagebill_measure,
+          group_cols = input$group_filter
+        )
+      }
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
     # plot 1. labor movement costs
     output$wagebill_movement <- plotly::renderPlotly({
-      labor_movement_data <- govhr::compute_movement_cost(
-        wagebill_filtered(),
-        event_type = input$event_type,
-        measure_col = input$wagebill_measure,
-        group_cols = input$group_filter
-      )
-
       plotly::ggplotly(
         plot_trend(
-          labor_movement_data,
-          group = input$group_filter,
+          movement_cost(),
+          group_col = input$group_filter,
           toggle_growth = input$toggle_growth,
           y_col = "movement_cost",
           y_label = "Movement Costs"
@@ -142,53 +150,47 @@ wagebill_movement_server <- function(id, .data) {
 
     # plot 2. labor movement costs by group
     output$wagebill_movement_by_group <- plotly::renderPlotly({
-      validate(
+      shiny::validate(
         shiny::need(
           input$group_filter != "ref_date",
           "Please select a group."
         )
       )
 
-      labor_movement_data <- govhr::compute_movement_cost(
-        wagebill_filtered(),
-        event_type = input$event_type,
-        measure_col = input$wagebill_measure,
-        group_cols = input$group_filter
-      )
-
-      n_groups <- nrow(labor_movement_data)
-      plot_height <- max(350, n_groups * 35 + 100)
+      movement_cost_data <- movement_cost() |>
+        dplyr::group_by(
+          dplyr::across(
+            dplyr::all_of(input$group_filter)
+          )
+        ) |>
+        summarise(
+          movement_cost = sum(movement_cost, na.rm = TRUE),
+          .groups = "drop"
+        )
 
       plotly::ggplotly(
         plot_bar_total(
-          labor_movement_data,
-          group = input$group_filter,
+          movement_cost_data,
+          group_col = input$group_filter,
           x_col = "movement_cost",
           x_label = "Movement Costs"
         ),
-        height = plot_height
+        height = scale_plot_height(movement_cost_data)
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
     # plot 3. growth in labor movement costs by group
     output$wagebill_movement_growth <- plotly::renderPlotly({
-      validate(
+      shiny::validate(
         shiny::need(
           input$group_filter != "ref_date",
           "Please select a group."
         )
       )
 
-      wagebill_movement_data <- govhr::compute_movement_cost(
-        wagebill_filtered(),
-        event_type = input$event_type,
-        measure_col = input$wagebill_measure,
-        group_cols = input$group_filter
-      )
-
-      # compute growth between min and max ref_date for each group
-      wagebill_movement_growth_data <- wagebill_movement_data[
+      # growth between the first and last reference date, by group
+      movement_cost_growth <- movement_cost()[
         ref_date %in% range(ref_date),
         .(
           growth_rate = (movement_cost[ref_date == max(ref_date)] -
@@ -198,15 +200,12 @@ wagebill_movement_server <- function(id, .data) {
         by = c(input$group_filter)
       ]
 
-      n_groups <- nrow(wagebill_movement_growth_data)
-      plot_height <- max(350, n_groups * 35 + 100)
-
       plotly::ggplotly(
         plot_bar_growth(
-          wagebill_movement_growth_data,
-          group = input$group_filter
+          movement_cost_growth,
+          group_col = input$group_filter
         ),
-        height = plot_height
+        height = scale_plot_height(movement_cost_growth)
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)

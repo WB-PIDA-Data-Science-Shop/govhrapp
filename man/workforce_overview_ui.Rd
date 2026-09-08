@@ -7,13 +7,14 @@
 workforce_overview_ui(id, .data)
 }
 \arguments{
-\item{id}{A character string specifying the module ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{.data}{A data frame containing workforce data.}
+\item{.data}{Data frame containing workforce data.}
 }
 \value{
-A Shiny UI function for the workforce overview module.
+A Shiny UI definition.
 }
 \description{
-Workforce Overview UI
+Sidebar controls, a headcount time trend, and totals and growth rates by
+group.
 }

@@ -10,3 +10,4 @@
 ^app.R$
 ^manifest.json$
 rsconnect
+^spielplatz$

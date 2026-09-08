@@ -5,35 +5,33 @@
 \title{Plot Time Trend}
 \usage{
 plot_trend(
-  data,
-  group,
+  .data,
+  group_col,
   toggle_growth = FALSE,
   y_col = "value",
   y_label = "Value"
 )
 }
 \arguments{
-\item{data}{A data frame with columns \code{ref_date} and \code{value}, as returned by
+\item{.data}{Data frame with \code{ref_date} and the y-axis column, as returned by
 \code{\link[=compute_trend_summary]{compute_trend_summary()}} and optionally \code{\link[=apply_baseline_index]{apply_baseline_index()}}.}
 
-\item{group}{Character string naming the grouping column, or \code{"ref_date"} for
-no grouping.}
+\item{group_col}{Character. Column to group by, or \code{"ref_date"} for no
+grouping.}
 
-\item{toggle_growth}{Logical. If \code{TRUE}, format the y-axis as a baseline
-index and add a dashed reference line at 100. Default \code{FALSE}.}
+\item{toggle_growth}{Logical. Format the y-axis as a baseline index. Default
+\code{FALSE}.}
 
-\item{y_col}{Character string of the column to plot on the y-axis. Default \code{"value"}.}
+\item{y_col}{Character. Column to plot on the y-axis. Default \code{"value"}.}
 
-\item{y_label}{Character string for the y-axis label used when
-\code{toggle_growth} is \code{FALSE}. Default \code{"Value"}.}
+\item{y_label}{Character. y-axis label, used when \code{toggle_growth} is \code{FALSE}.
+Default \code{"Value"}.}
 }
 \value{
 A ggplot2 object.
 }
 \description{
-Produces a ggplot2 line and point chart of \code{value} over \code{ref_date}. When a
-grouping variable is present, each group receives its own line coloured with
-an orange palette. When \code{toggle_growth} is \code{TRUE}, the y-axis is formatted
-for a baseline index (first period = 100) with a reference line at 100;
-otherwise raw values are shown with short-scale labels.
+Draws a line-and-point chart of the measure over \code{ref_date}, one coloured
+series per group. When \code{toggle_growth} is \code{TRUE} the y-axis is formatted as a
+baseline index with a dashed reference line at 100.
 }

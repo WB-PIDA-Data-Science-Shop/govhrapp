@@ -1,58 +1,36 @@
-#' Wage Bill UI Module
+#' Wage Bill UI
 #'
-#' UI for wage bill analytics, including overview, controls, and plots.
+#' Top-level wage bill tab: guidance, key indicator boxes, and the overview,
+#' equity, movement and retirement panels.
 #'
-#' @param id Module id.
-#' @param wagebill_data Data frame with wage bill data.
+#' @param id Character. Module namespace ID.
+#' @param wagebill_data Data frame containing wage bill data.
 #'
-#' @importFrom bslib layout_columns card card_header card_body accordion accordion_panel layout_sidebar sidebar tooltip navset_tab nav_panel
+#' @return A Shiny UI definition.
+#'
+#' @importFrom bslib accordion accordion_panel card card_body card_header layout_column_wrap layout_columns nav_panel navset_underline popover
 #' @importFrom bsicons bs_icon
-#' @importFrom shiny markdown icon NS selectInput downloadButton actionButton uiOutput
-#' @importFrom shinyWidgets numericRangeInput materialSwitch pickerInput
-#' @importFrom plotly plotlyOutput
-#' @importFrom stringr str_wrap
-#' @importFrom lubridate year
-#' @importFrom purrr keep map set_names
-#' @importFrom stats na.omit
-#' @import dplyr
+#' @importFrom shiny NS icon markdown uiOutput
 #' @export
 wagebill_ui <- function(id, wagebill_data) {
-  macroindicator_choices <- c(
-    "GDP" = "gdp_lcu",
-    "Public expenditure" = "pexpenditure_lcu",
-    "Public revenue" = "prevenue_lcu"
-  )
-
   # value boxes for total wage bill and pension liabilities
   value_boxes <- list(
-    uiOutput(
-      NS(id, "total_wagebill")
-    ),
-    uiOutput(
-      NS(id, "total_pension_liabilities")
-    )
-  )
-
-  accordion_controls <- bslib::accordion(
-    accordion_panel(
-      "Filters",
-      icon = bsicons::bs_icon("sliders"),
-      !!!default_ui_controls(wagebill_data, id)
-    ),
-    accordion_panel(
-      "Measures",
-      icon = bsicons::bs_icon("bar-chart"),
-      !!!wagebill_overview_ui(id, wagebill_data)
-    )
+    shiny::uiOutput(shiny::NS(id, "total_wagebill")),
+    shiny::uiOutput(shiny::NS(id, "total_pension_liabilities"))
   )
 
   bslib::layout_columns(
     fillable = FALSE,
+    col_widths = 12,
+
     bslib::card(
       bslib::card_header("Wage Bill Analytics"),
       bslib::card_body(
         shiny::markdown(
-          readLines(system.file("markdown/analytics_wagebill.md", package = "govhrapp"))
+          readLines(system.file(
+            "markdown/analytics_wagebill.md",
+            package = "govhrapp"
+          ))
         )
       )
     ),
@@ -71,9 +49,9 @@ wagebill_ui <- function(id, wagebill_data) {
     ),
 
     # value boxes
-     bslib::card(
+    bslib::card(
       bslib::card_header(
-        "Wagebill: Key Metrics",
+        "Wagebill: Key Indicators",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
           "Computed as the most recent wagebill (active workers) and pension liability (pensioners).",
@@ -83,150 +61,103 @@ wagebill_ui <- function(id, wagebill_data) {
         class = "d-flex justify-content-between"
       ),
       bslib::card_body(
-        layout_column_wrap(
-          width = 1/2,
+        bslib::layout_column_wrap(
+          width = 1 / 2,
           fill = FALSE,
           !!!value_boxes
         )
       )
     ),
 
-
     # panels
     bslib::navset_underline(
-      # sub-panel 1: overview
       bslib::nav_panel(
         title = "Overview",
-        wagebill_overview_ui(NS(id, "overview"), wagebill_data)
+        wagebill_overview_ui(shiny::NS(id, "overview"), wagebill_data)
       ),
-      # sub-panel 2: equity
       bslib::nav_panel(
         title = "Equity",
-        wagebill_equity_ui(NS(id, "equity"), wagebill_data)
+        wagebill_equity_ui(shiny::NS(id, "equity"), wagebill_data)
       ),
-      # sub-panel 3: movement
       bslib::nav_panel(
         title = "Movement",
-        wagebill_movement_ui(NS(id, "movement"), wagebill_data)
+        wagebill_movement_ui(shiny::NS(id, "movement"), wagebill_data)
       ),
-      # sub-panel 4: retirement
       bslib::nav_panel(
         title = "Retirement",
-        wagebill_retirement_ui(NS(id, "retirement"), wagebill_data)
+        wagebill_retirement_ui(shiny::NS(id, "retirement"), wagebill_data)
       )
-    ),
-    col_widths = c(12, 12, 12)
+    )
   )
 }
 
-#' Wage Bill Server Module
+#' Wage Bill Server
 #'
-#' Server logic for wage bill analytics server
+#' Renders the key indicator boxes and delegates to the overview, equity,
+#' movement and retirement panel servers.
 #'
-#' @param id Module id.
-#' @param wagebill_data Data frame with wage bill data.
-#' @param cache A list containing pre-computed trend summaries for workforce and wagebill data.
+#' @param id Character. Module namespace ID.
+#' @param wagebill_data Data frame containing wage bill data.
+#' @param cache List of pre-computed summaries from [build_analytics_cache()].
 #'
-#' @importFrom shiny moduleServer reactive validate need bindEvent downloadHandler withProgress incProgress renderUI uiOutput
-#' @importFrom shinyWidgets pickerInput
-#' @importFrom plotly renderPlotly ggplotly plot_ly layout animation_opts animation_slider
-#' @importFrom dplyr filter mutate arrange ungroup across all_of first last pull left_join summarise n_distinct
-#' @importFrom lubridate year years
-#' @importFrom govhr compute_fastsummary complete_dates convert_constant_ppp
-#' @importFrom ggplot2 ggplot aes geom_point geom_line geom_col geom_hline geom_vline scale_y_continuous scale_x_continuous scale_y_discrete scale_color_manual guide_axis labs xlab ylab
-#' @importFrom grDevices colorRampPalette
-#' @importFrom stats reorder
-#' @importFrom scales label_number cut_short_scale comma
-#' @importFrom stringr str_wrap
-#' @importFrom rmarkdown render
-#' @importFrom stats na.omit
+#' @return A Shiny module server function.
+#'
+#' @importFrom shiny moduleServer
 #' @export
 wagebill_server <- function(id, wagebill_data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     # 1. value boxes for wage bill key metrics
-    output$total_wagebill <- render_wagebill_box(wagebill_data, type_measure = "total_wagebill")
-    output$total_pension_liabilities <- render_wagebill_box(wagebill_data, type_measure = "total_pension_liabilities")
+    output$total_wagebill <- render_wagebill_box(
+      wagebill_data,
+      measure_type = "total_wagebill",
+      cache = cache
+    )
+    output$total_pension_liabilities <- render_wagebill_box(
+      wagebill_data,
+      measure_type = "total_pension_liabilities",
+      cache = cache
+    )
 
     # 2. panels for wage bill server
     wagebill_overview_server("overview", wagebill_data, cache = cache)
-    wagebill_equity_server("equity", wagebill_data)
-    wagebill_movement_server("movement", wagebill_data)
-    wagebill_retirement_server("retirement", wagebill_data)
+    wagebill_equity_server("equity", wagebill_data, cache = cache)
+    wagebill_movement_server("movement", wagebill_data, cache = cache)
+    wagebill_retirement_server("retirement", wagebill_data, cache = cache)
   })
 }
 
 #' Run the Wage Bill Shiny Application
 #'
-#' Launches an interactive Shiny application for analyzing wage bill data,
-#' including time trends, cross-sectional comparisons, growth rate analysis,
-#' and animated visualizations.
+#' Launches the wage bill analytics app on its own, outside the full govhr
+#' dashboard. Panels cover overview trends, pay equity, movement costs and
+#' retirement costs.
 #'
-#' @param wagebill_data A data frame containing wage bill information with the
-#'   following required columns:
-#'   \itemize{
-#'     \item \code{ref_date}: Reference date (Date class)
-#'     \item \code{personnel_id}: Personnel identifier (for animation)
-#'     \item \code{base_salary_lcu}: Base salary in local currency units
-#'     \item \code{gross_salary_lcu}: Gross salary in local currency units
-#'     \item \code{net_salary_lcu}: Net salary in local currency units
-#'     \item \code{est_id}: Establishment identifier
-#'     \item \code{contract_type_native}: Contract type
-#'     \item \code{paygrade}: Paygrade classification
-#'     \item \code{occupation_native}: Occupation classification
-#'     \item \code{gender}: Gender
-#'     \item \code{educat7}: Education level
-#'     \item \code{status}: Employment status
-#'   }
-#' @param ... Additional arguments passed to \code{\link[shiny]{shinyApp}}.
+#' @param wagebill_data Data frame containing wage bill data. Requires
+#'   `ref_date`, `personnel_id`, `employment_status`, `birth_date` and at least
+#'   one salary column (`gross_salary_lcu` is used for the key indicators);
+#'   categorical columns present in `govhr::dictionary` become grouping options.
+#' @param cache List of pre-computed summaries from [build_wagebill_cache()].
+#'   Defaults to building one from `wagebill_data`.
+#' @param ... Additional arguments passed to [shiny::shinyApp()].
 #'
 #' @return A Shiny app object.
 #'
-#' @details
-#' The application is organized into two main tabs:
-#'
-#' \strong{Overview Tab:}
-#' \itemize{
-#'   \item Time trend analysis with optional baseline indexing
-#'   \item Cross-sectional wage bill totals by group
-#'   \item Year-over-year growth rates by group
-#'   \item Wage bill dispersion and variation analysis
-#'   \item Download Word report functionality
-#' }
-#'
-#' \strong{Animation Tab:}
-#' \itemize{
-#'   \item Animated scatter plot showing the evolution of wage bill vs. headcount over time
-#'   \item Log-scale axes for better visualization of different magnitudes
-#'   \item Frame-by-frame animation through time periods
-#' }
-#'
-#' All visualizations support interactive filtering by time period, wage type
-#' (base/gross/net salary), and grouping variable (establishment, contract type,
-#' personnel characteristics).
-#'
 #' @examples
 #' \dontrun{
-#' # Run with default data
-#' run_wagebillapp(wagebill_data = govhr::wagebill)
-#'
-#' # Run with filtered data
-#' my_data <- govhr::wagebill |>
-#'   dplyr::filter(lubridate::year(ref_date) >= 2015)
-#' run_wagebillapp(wagebill_data = my_data)
+#' run_wagebillapp(wagebill_data = govhr::bra_hrmis_contract)
 #' }
 #'
 #' @importFrom shiny shinyApp
-#' @importFrom bslib page_sidebar sidebar
-#' @importFrom plotly plotlyOutput renderPlotly ggplotly
 #' @export
 run_wagebillapp <- function(
   wagebill_data,
+  cache = list(wagebill = build_wagebill_cache(wagebill_data)),
   ...
 ) {
-  ui <- wagebill_ui("test", wagebill_data)
+  ui <- wagebill_ui("wagebill", wagebill_data)
 
   server <- function(input, output, session) {
-    wagebill_server("test", wagebill_data)
+    wagebill_server("wagebill", wagebill_data, cache = cache)
   }
 
   shiny::shinyApp(ui, server, ...)

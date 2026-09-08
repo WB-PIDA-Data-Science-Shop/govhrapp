@@ -4,26 +4,21 @@
 \alias{compute_trend_summary}
 \title{Compute Trend Summary}
 \usage{
-compute_trend_summary(data, group, measure_col = NULL)
+compute_trend_summary(.data, group_col, measure_col = NULL)
 }
 \arguments{
-\item{data}{A data frame containing at least a \code{ref_date} column.}
+\item{.data}{Data frame containing at least a \code{ref_date} column.}
 
-\item{group}{Character string naming the grouping column, or \code{"ref_date"} for
-no grouping.}
+\item{group_col}{Character. Column to group by, or \code{"ref_date"} for no
+grouping.}
 
-\item{measure_col}{Character string naming the numeric column to sum, or
-\code{NULL} to count rows.}
+\item{measure_col}{Character. Numeric column to sum, or \code{NULL} to count rows.}
 }
 \value{
-A data frame with columns \code{ref_date}, optionally \code{group}, and \code{value}.
+A data frame with \code{ref_date}, optionally \code{group_col}, and \code{value}.
 }
 \description{
-Summarizes data over time by grouping variable, producing a tidy data frame
-with \code{ref_date}, optional group column, and \code{value}. Used as the data source
-for time trend plots.
-}
-\details{
-When \code{measure_col} is \code{NULL}, counts rows per period (headcount). When a
-column name is supplied, sums that column per period (wage bill).
+Aggregates data over time into a tidy frame of \code{ref_date}, the optional
+grouping column, and \code{value}. Counts rows when \code{measure_col} is \code{NULL}
+(headcount) and sums the column otherwise (wage bill).
 }

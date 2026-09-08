@@ -2,15 +2,18 @@
 #'
 #' Launches an interactive Shiny dashboard for govhr data visualization and analysis.
 #'
-#' @param workforce_data Data frame with workforce/personnel attributes (headcount).
+#' @param workforce_data Data frame with workforce/personnel attributes
+#'   (headcount).
 #' @param wagebill_data Data frame with contract/salary attributes (wage bill).
-#' @param ... Additional arguments passed to \code{\link[shiny]{shinyApp}}.
+#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#'   Defaults to building one from the supplied data.
+#' @param ... Additional arguments passed to [shiny::shinyApp()].
 #'
 #' @return A Shiny app object.
 #'
 #' @examples
 #' \dontrun{
-#' run_govhrapp(workforce_data, wagebill_data)
+#' run_govhrapp_analytics(workforce_data, wagebill_data)
 #' }
 #'
 #' @importFrom shiny shinyApp addResourcePath useBusyIndicators
@@ -21,7 +24,12 @@
 #' @importFrom scales label_number cut_short_scale
 #' @importFrom tidyr complete 
 #' @export
-run_govhrapp <- function(workforce_data, wagebill_data, ...) {
+run_govhrapp_analytics <- function(
+  workforce_data,
+  wagebill_data,
+  cache = build_analytics_cache(workforce_data, wagebill_data),
+  ...
+) {
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", system.file("www", package = "govhrapp"))
 
@@ -42,38 +50,6 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   ggplot2::update_geom_defaults("point", list(colour = "#C34729"))
   ggplot2::update_geom_defaults("line", list(colour = "#C34729"))
   ggplot2::update_geom_defaults("col", list(fill = "#C34729"))
-
-  # cache data to improve performance
-  cache <- list(
-    workforce_trend = workforce_data |>
-      compute_trend_summary(
-        group = "ref_date"
-      ),
-    wagebill_trend = wagebill_data |>
-      compute_trend_summary(
-        group = "ref_date",
-        measure_col = "gross_salary_lcu"
-      ),
-    transfer_default = wagebill_data |>
-      as.data.table() |>
-      govhr::detect_career_transitions(
-        vars = "paygrade",
-        decision_var = "base_salary_lcu"
-      ) |>
-      govhr::fastcount(
-        dplyr::across(
-          all_of(
-            c("from", "to")
-          )
-        ),
-        name = "transfer"
-      ) |>
-      tidyr::complete(
-        .data[["from"]],
-        .data[["to"]],
-        fill = list(transfer = 0)
-      )      
-  )
 
   ui <- bslib::page_navbar(
     fillable = FALSE,
@@ -140,7 +116,7 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
     bslib::nav_panel(
       "Overview",
       icon = shiny::icon("gauge"),
-      overview_ui("overview", workforce_data, wagebill_data)
+      overview_ui("overview")
     ),
 
     # panel 3: workforce planning
@@ -179,17 +155,17 @@ run_govhrapp <- function(workforce_data, wagebill_data, ...) {
   )
 
   server <- function(input, output, session) {
-    overview_server("overview", workforce_data, wagebill_data, cache = cache)
+    overview_server("overview", cache = cache)
     wagebill_server(
       "wagebill",
       wagebill_data,
-      cache = cache[["wagebill_trend"]]
+      cache = cache
     )
     workforce_server(
       "workforce",
       workforce_data,
       wagebill_data,
-      cache = cache[c("workforce_trend", "transfer_default")]
+      cache = cache
     )
   }
 

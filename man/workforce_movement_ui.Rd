@@ -7,13 +7,14 @@
 workforce_movement_ui(id, .data)
 }
 \arguments{
-\item{id}{A character string specifying the module ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{.data}{A data frame containing personnel data.}
+\item{.data}{Data frame containing personnel data.}
 }
 \value{
-A Shiny UI function for the workforce movement module.
+A Shiny UI definition.
 }
 \description{
-Workforce Movement UI
+Sidebar controls, trend and by-group plots, and a mover profile table for
+recruitment, separation and turnover.
 }

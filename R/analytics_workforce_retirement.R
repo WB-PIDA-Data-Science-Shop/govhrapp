@@ -1,17 +1,16 @@
 #' Workforce Retirement UI
 #'
-#' @param id A character string specifying the module ID.
-#' @param .data A data frame containing personnel data.
+#' Sidebar controls and plots for realised and projected retirements.
 #'
-#' @import shiny
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame containing personnel data.
+#'
+#' @return A Shiny UI definition.
+#'
 #' @import bslib
+#' @import shiny
 #' @importFrom plotly plotlyOutput
-#'
-#' @return A Shiny UI function for the workforce retirement module.
-workforce_retirement_ui <- function(
-  id,
-  .data
-) {
+workforce_retirement_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     theme = bslib::bs_theme(bootswatch = "litera"),
@@ -72,22 +71,25 @@ workforce_retirement_ui <- function(
 
 #' Workforce Retirement Server
 #'
-#' @param id A character string specifying the module ID.
-#' @param .data A data frame containing personnel data.
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame containing personnel data.
+#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#'
+#' @return A Shiny module server function.
 #'
 #' @import shiny
-#' @import bslib
+#' @importFrom dplyr rename
+#' @importFrom govhr compute_workforce_movement project_retirement
 #' @importFrom plotly renderPlotly
-#' @importFrom dplyr filter rename
-#' @importFrom govhr classify_personnel_event project_retirement compute_workforce_movement
-#'
-#' @return A Shiny server function for the workforce retirement module.
-workforce_retirement_server <- function(
-  id,
-  .data
-) {
+#' @importFrom purrr pluck
+#' @keywords internal
+workforce_retirement_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
+    update_group_filter_controls(.data, input, session)
+
     data_filtered <- shiny::reactive({
+      shiny::req(input$apply_btn)
+
       filter_data(
         .data,
         group_filter = input$group_filter,
@@ -97,41 +99,49 @@ workforce_retirement_server <- function(
     })
 
     # plot 1. retirement counts/rates over time
-    output[["retirement_plot"]] <- plotly::renderPlotly({
-      plot_data <- govhr::compute_workforce_movement(
-        .data = data_filtered(),
-        movement_type = "retirement",
-        measurement_type = input$measurement_type,
-        group_cols = input$group_filter
-      )
+    output$retirement_plot <- plotly::renderPlotly({
+      plot_data <- if (input$apply_btn == 0) {
+        purrr::pluck(cache, "workforce", "workforce_retirement")
+      } else {
+        govhr::compute_workforce_movement(
+          .data = data_filtered(),
+          movement_type = "retirement",
+          measurement_type = input$measurement_type,
+          group_cols = input$group_filter
+        )
+      }
 
       plot_movement(
         plot_data,
         movement_type = "retirement",
         measurement_type = input$measurement_type,
-        group_cols = input$group_filter
+        group_col = input$group_filter
       )
     }) |>
-      bindEvent(input$apply_btn, ignoreNULL = FALSE)
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
     # plot 2. projected retirements
-    output[["retirement_expected_plot"]] <- plotly::renderPlotly({
-      plot_data <- govhr::project_retirement(
-        .data = data_filtered(),
-        threshold_age = input$threshold_age,
-        birth_col = "birth_date",
-        group_cols = input$group_filter,
-        simplify_retirement_date = TRUE
-      ) |>
-        rename(ref_date = "retirement_date")
+    output$retirement_expected_plot <- plotly::renderPlotly({
+      plot_data <- if (input$apply_btn == 0) {
+        purrr::pluck(cache, "workforce", "workforce_retirement_expected")
+      } else {
+        govhr::project_retirement(
+          .data = data_filtered(),
+          threshold_age = input$threshold_age,
+          birth_col = "birth_date",
+          group_cols = input$group_filter,
+          simplify_retirement_date = TRUE
+        ) |>
+          dplyr::rename(ref_date = "retirement_date")
+      }
 
       plot_movement(
         plot_data,
         movement_type = "retirement",
         measurement_type = input$measurement_type,
-        group_cols = input$group_filter
+        group_col = input$group_filter
       )
     }) |>
-      bindEvent(input$apply_btn, ignoreNULL = FALSE)
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })
 }

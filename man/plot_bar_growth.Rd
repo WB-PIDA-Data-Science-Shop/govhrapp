@@ -2,22 +2,20 @@
 % Please edit documentation in R/analytics_plots.R
 \name{plot_bar_growth}
 \alias{plot_bar_growth}
-\title{Plot Horizontal Bar Chart of Growth Rates by Group}
+\title{Plot Growth Rates by Group}
 \usage{
-plot_bar_growth(data, group)
+plot_bar_growth(.data, group_col)
 }
 \arguments{
-\item{data}{A data frame with the grouping column and a \code{growth_rate} column,
+\item{.data}{Data frame with the grouping column and a \code{growth_rate} column,
 as returned by \code{\link[=compute_growth_summary]{compute_growth_summary()}}.}
 
-\item{group}{Character string naming the grouping column.}
+\item{group_col}{Character. Column to group by.}
 }
 \value{
 A ggplot2 object.
 }
 \description{
-Produces a ggplot2 horizontal bar chart with groups ordered by \code{growth_rate}.
-A dashed vertical line is drawn at zero to distinguish positive from negative
-growth. The x-axis uses short-scale number formatting and the y-axis uses
-\code{guide_axis(n.dodge = 2)}.
+Draws a horizontal bar chart with groups ordered by \code{growth_rate}, with a
+dashed reference line at zero separating growth from decline.
 }

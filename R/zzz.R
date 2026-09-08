@@ -70,5 +70,19 @@ utils::globalVariables(c(
   "birth_date",
   "decile",
   "bin",
-  "movement_cost"
+  "movement_cost",
+  "to",
+  "from",
+  "from_date",
+  "start_ref_date",
+  "end_ref_date",
+  "weight",
+  "name",
+  "count",
+  "cache",
+  "degree",
+  "node_id",
+  "nodes",
+  "x",
+  "y"
 ))

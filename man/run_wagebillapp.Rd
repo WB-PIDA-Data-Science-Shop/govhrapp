@@ -4,68 +4,34 @@
 \alias{run_wagebillapp}
 \title{Run the Wage Bill Shiny Application}
 \usage{
-run_wagebillapp(wagebill_data, ...)
+run_wagebillapp(
+  wagebill_data,
+  cache = list(wagebill = build_wagebill_cache(wagebill_data)),
+  ...
+)
 }
 \arguments{
-\item{wagebill_data}{A data frame containing wage bill information with the
-following required columns:
-\itemize{
-\item \code{ref_date}: Reference date (Date class)
-\item \code{personnel_id}: Personnel identifier (for animation)
-\item \code{base_salary_lcu}: Base salary in local currency units
-\item \code{gross_salary_lcu}: Gross salary in local currency units
-\item \code{net_salary_lcu}: Net salary in local currency units
-\item \code{est_id}: Establishment identifier
-\item \code{contract_type_native}: Contract type
-\item \code{paygrade}: Paygrade classification
-\item \code{occupation_native}: Occupation classification
-\item \code{gender}: Gender
-\item \code{educat7}: Education level
-\item \code{status}: Employment status
-}}
+\item{wagebill_data}{Data frame containing wage bill data. Requires
+\code{ref_date}, \code{personnel_id}, \code{employment_status}, \code{birth_date} and at least
+one salary column (\code{gross_salary_lcu} is used for the key indicators);
+categorical columns present in \code{govhr::dictionary} become grouping options.}
 
-\item{...}{Additional arguments passed to \code{\link[shiny]{shinyApp}}.}
+\item{cache}{List of pre-computed summaries from \code{\link[=build_wagebill_cache]{build_wagebill_cache()}}.
+Defaults to building one from \code{wagebill_data}.}
+
+\item{...}{Additional arguments passed to \code{\link[shiny:shinyApp]{shiny::shinyApp()}}.}
 }
 \value{
 A Shiny app object.
 }
 \description{
-Launches an interactive Shiny application for analyzing wage bill data,
-including time trends, cross-sectional comparisons, growth rate analysis,
-and animated visualizations.
-}
-\details{
-The application is organized into two main tabs:
-
-\strong{Overview Tab:}
-\itemize{
-\item Time trend analysis with optional baseline indexing
-\item Cross-sectional wage bill totals by group
-\item Year-over-year growth rates by group
-\item Wage bill dispersion and variation analysis
-\item Download Word report functionality
-}
-
-\strong{Animation Tab:}
-\itemize{
-\item Animated scatter plot showing the evolution of wage bill vs. headcount over time
-\item Log-scale axes for better visualization of different magnitudes
-\item Frame-by-frame animation through time periods
-}
-
-All visualizations support interactive filtering by time period, wage type
-(base/gross/net salary), and grouping variable (establishment, contract type,
-personnel characteristics).
+Launches the wage bill analytics app on its own, outside the full govhr
+dashboard. Panels cover overview trends, pay equity, movement costs and
+retirement costs.
 }
 \examples{
 \dontrun{
-# Run with default data
-run_wagebillapp(wagebill_data = govhr::wagebill)
-
-# Run with filtered data
-my_data <- govhr::wagebill |>
-  dplyr::filter(lubridate::year(ref_date) >= 2015)
-run_wagebillapp(wagebill_data = my_data)
+run_wagebillapp(wagebill_data = govhr::bra_hrmis_contract)
 }
 
 }

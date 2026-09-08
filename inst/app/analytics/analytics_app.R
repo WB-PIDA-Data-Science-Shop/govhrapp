@@ -26,4 +26,6 @@ wagebill_data <- govhr::bra_hrmis_contract |>
     country_code = "BRA"
   )
 
-run_govhrapp(workforce_data, wagebill_data)
+cache_analytics <- build_analytics_cache(workforce_data, wagebill_data)
+
+run_govhrapp_analytics(workforce_data, wagebill_data, cache_analytics)

@@ -25,7 +25,7 @@ plot_coverage_trend <- function(data, group, toggle_growth = FALSE) {
   plot_trend(
     coverage_data,
     y_col = "coverage",
-    group = group,
+    group_col = group,
     toggle_growth = toggle_growth,
     y_label = "Coverage"
   )
@@ -73,7 +73,7 @@ plot_consistency_trend <- function(
   plot_trend(
     data,
     y_col = consistency_col,
-    group = group,
+    group_col = group,
     toggle_growth = toggle_growth,
     y_label = "Consistency"
   )

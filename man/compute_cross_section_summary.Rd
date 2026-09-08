@@ -4,26 +4,20 @@
 \alias{compute_cross_section_summary}
 \title{Compute Cross-Section Summary}
 \usage{
-compute_cross_section_summary(data, group, measure_col = NULL)
+compute_cross_section_summary(.data, group_col, measure_col = NULL)
 }
 \arguments{
-\item{data}{A data frame containing a \code{ref_date} column and the grouping
-column.}
+\item{.data}{Data frame containing \code{ref_date} and the grouping column.}
 
-\item{group}{Character string naming the grouping column.}
+\item{group_col}{Character. Column to group by.}
 
-\item{measure_col}{Character string naming the numeric column to sum, or
-\code{NULL} to count rows.}
+\item{measure_col}{Character. Numeric column to sum, or \code{NULL} to count rows.}
 }
 \value{
 A data frame with the grouping column and a \code{value} column.
 }
 \description{
-Filters to the latest reference date within each group, then aggregates to
-produce a per-group \code{value}. Used as the data source for total-by-group bar
-charts.
-}
-\details{
-When \code{measure_col} is \code{NULL}, counts rows (headcount). When a column name is
-supplied, sums that column (wage bill).
+Keeps each group's latest reference date and aggregates it into a single
+\code{value} per group. Counts rows when \code{measure_col} is \code{NULL} (headcount) and
+sums the column otherwise (wage bill).
 }

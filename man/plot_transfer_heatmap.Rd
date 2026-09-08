@@ -7,11 +7,13 @@
 plot_transfer_heatmap(.data)
 }
 \arguments{
-\item{.data}{A data frame.}
+\item{.data}{Data frame with \code{from}, \code{to} and \code{transfer} columns.}
 }
 \value{
-A ggplot2 object representing a heatmap of transfer values between groups
+A plotly object.
 }
 \description{
-Plot Transfer Heatmap
+Draws transfers between groups as a heatmap, origin groups on the y-axis and
+destination groups on the x-axis.
 }
+\keyword{internal}

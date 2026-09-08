@@ -1,14 +1,16 @@
-#' Function to create the UI for the wagebill equity module.
+#' Wage Bill Equity UI
 #'
-#' @param id A character string specifying the module ID.
-#' @param .data A data frame containing wagebill data.
+#' Sidebar controls and plots for wage distribution, deciles and compression.
+#'
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame containing wage bill data.
+#'
+#' @return A Shiny UI definition.
 #'
 #' @import bslib
 #' @import shiny
-#' @importFrom plotly plotlyOutput
 #' @importFrom bsicons bs_icon
-#'
-#' @return A Shiny module UI function for the wagebill equity module.
+#' @importFrom plotly plotlyOutput
 wagebill_equity_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
@@ -87,22 +89,21 @@ wagebill_equity_ui <- function(id, .data) {
   )
 }
 
-#' Function to create the server logic for the wagebill equity module.
+#' Wage Bill Equity Server
 #'
-#' @param id A character string specifying the module ID.
-#' @param .data A data frame containing wagebill data.
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame containing wage bill data.
+#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#'
+#' @return A Shiny module server function.
 #'
 #' @import shiny
-#' @importFrom plotly renderPlotly
-#' @importFrom dplyr filter
 #' @importFrom govhr compute_compression_ratio
-#'
-#' @return A Shiny module server function for the wagebill equity module.
-wagebill_equity_server <- function(id, .data) {
+#' @importFrom plotly renderPlotly
+#' @importFrom purrr pluck
+#' @keywords internal
+wagebill_equity_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
-    # choice of cols
-    wagebill_group_choices <- identify_group_choices(.data)
-
     update_group_filter_controls(.data, input, session)
 
     wagebill_filtered <- shiny::reactive({
@@ -116,70 +117,57 @@ wagebill_equity_server <- function(id, .data) {
 
     # plot 1. wage density
     output$wagebill_density <- plotly::renderPlotly({
-      wagebill_density <- wagebill_filtered() |>
-        dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]])) |>
+      wagebill_density <- if (input$apply_btn == 0) {
+        purrr::pluck(cache, "wagebill", "wagebill_equity_percentile")
+      } else {
         compute_percentile(
+          wagebill_filtered(),
           group_col = input$group_filter,
           binwidth = 100,
           measure_col = input$wagebill_measure
         )
+      }
 
-      plotly::ggplotly(
-        plot_histogram(
-          wagebill_density,
-          plot_type = input$plot_type,
-          group_col = input$group_filter
-        )
+      plot_histogram(
+        wagebill_density,
+        plot_type = input$plot_type,
+        group_col = input$group_filter
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
     # plot 2. wage by decile
     output$wagebill_distribution <- plotly::renderPlotly({
-      # filter latest ref_date
-      latest_ref_date <- max(wagebill_filtered()[["ref_date"]])
+      wagebill_distribution <- if (input$apply_btn == 0) {
+        purrr::pluck(cache, "wagebill", "wagebill_equity_decile")
+      } else {
+        compute_decile(
+          wagebill_filtered(),
+          group_cols = input$group_filter,
+          measure_col = input$wagebill_measure,
+          latest_measure = TRUE
+        )
+      }
 
-      wagebill_filtered_latest <- wagebill_filtered() |>
-        dplyr::filter(.data[["ref_date"]] == latest_ref_date)
-
-      wagebill_distribution <- compute_decile(
-        wagebill_filtered_latest,
-        group_cols = input$group_filter,
-        measure_col = input$wagebill_measure,
-        latest_measure = TRUE
-      )
-
-      n_groups <- nrow(wagebill_distribution)
-      plot_height <- max(350, n_groups * 35 + 100)
-
-      plotly::ggplotly(
-        plot_decile(
-          wagebill_distribution,
-          group_cols = input$group_filter
-        ),
-        height = plot_height
-      )
+      plot_decile(wagebill_distribution, group_col = input$group_filter)
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
     # plot 3. wage range between 10th and 90th percentile
     output$wagebill_compression_ratio <- plotly::renderPlotly({
-      wagebill_compression_ratio <- govhr::compute_compression_ratio(
-        wagebill_filtered(),
-        group_cols = input$group_filter,
-        measure_col = input$wagebill_measure,
-        latest_measure = TRUE
-      )
+      wagebill_compression_ratio <- if (input$apply_btn == 0) {
+        purrr::pluck(cache, "wagebill", "wagebill_equity_compression")
+      } else {
+        compute_compression_ratio(
+          wagebill_filtered(),
+          group_cols = input$group_filter,
+          measure_col = input$wagebill_measure
+        )
+      }
 
-      n_groups <- nrow(wagebill_compression_ratio)
-      plot_height <- max(350, n_groups * 35 + 100)
-
-      plotly::ggplotly(
-        plot_compression_ratio(
-          wagebill_compression_ratio,
-          group_cols = input$group_filter
-        ),
-        height = plot_height
+      plot_compression_ratio(
+        wagebill_compression_ratio,
+        group_col = input$group_filter
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)

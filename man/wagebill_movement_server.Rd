@@ -2,18 +2,21 @@
 % Please edit documentation in R/analytics_wagebill_movement.R
 \name{wagebill_movement_server}
 \alias{wagebill_movement_server}
-\title{Function to create the server logic for the wagebill movement module.}
+\title{Wage Bill Movement Server}
 \usage{
-wagebill_movement_server(id, .data)
+wagebill_movement_server(id, .data, cache)
 }
 \arguments{
-\item{id}{A character string specifying the module ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{.data}{A data frame containing wagebill data.}
+\item{.data}{Data frame containing wage bill data.}
+
+\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
 }
 \value{
-A Shiny module server function for the wagebill movement module.
+A Shiny module server function.
 }
 \description{
-Function to create the server logic for the wagebill movement module.
+Wage Bill Movement Server
 }
+\keyword{internal}

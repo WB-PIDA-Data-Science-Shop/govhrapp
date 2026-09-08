@@ -1,16 +1,18 @@
-
-#' Function to create the UI for the wagebill overview module.
-#' 
-#' @param id A character string specifying the module ID.
-#' @param .data A data frame containing wagebill data.
+#' Wage Bill Overview UI
 #'
-#' @import shiny
+#' Sidebar controls, a wage bill time trend, and totals and growth rates by
+#' group.
+#'
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame containing wage bill data.
+#'
+#' @return A Shiny UI definition.
+#'
 #' @import bslib
-#' @importFrom shinyWidgets materialSwitch
-#' @importFrom plotly plotlyOutput
+#' @import shiny
 #' @importFrom bsicons bs_icon
-#' 
-#' @return A Shiny module UI function for the wagebill overview module.
+#' @importFrom plotly plotlyOutput
+#' @importFrom shinyWidgets materialSwitch
 wagebill_overview_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
@@ -87,24 +89,30 @@ wagebill_overview_ui <- function(id, .data) {
   )
 }
 
-#' Function to create the server logic for the wagebill overview module.
-#' 
-#' @param id A character string specifying the module ID.
-#' @param .data A data frame containing wagebill data.
-#' @param cache A list containing pre-computed trend summaries for workforce and wagebill data.
-#' 
+#' Wage Bill Overview Server
+#'
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame containing wage bill data.
+#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#'
+#' @return A Shiny module server function.
+#'
 #' @import shiny
-#' @importFrom plotly renderPlotly
-#' 
-#' @return A Shiny module server function for the wagebill overview module.
+#' @importFrom dplyr left_join mutate
+#' @importFrom ggplot2 aes geom_line geom_point ggplot scale_y_continuous xlab ylab
+#' @importFrom govhr compute_fastsummary
+#' @importFrom lubridate year
+#' @importFrom plotly ggplotly renderPlotly
+#' @importFrom purrr pluck
+#' @importFrom scales percent_format
+#' @keywords internal
 wagebill_overview_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
-    # choice of cols
-    wagebill_group_choices <- identify_group_choices(.data)
-
     update_group_filter_controls(.data, input, session)
 
     wagebill_filtered <- shiny::reactive({
+      shiny::req(input$apply_btn)
+
       filter_data(
         .data,
         group_filter = input$group_filter,
@@ -114,24 +122,39 @@ wagebill_overview_server <- function(id, .data, cache) {
     })
 
     wagebill_summary <- shiny::reactive({
-      # default to cache
-      if(input$group_filter == "ref_date") {
-        out <- cache
+      summary <- if (input$apply_btn == 0) {
+        purrr::pluck(cache, "wagebill", "wagebill_overview")
       } else {
-        out <- compute_trend_summary(
+        compute_trend_summary(
           wagebill_filtered(),
-          group = input$group_filter,
+          group_col = input$group_filter,
           measure_col = input$wagebill_measure
         )
       }
 
       if (input$toggle_growth) {
-        out <- apply_baseline_index(out, group = input$group_filter)
+        summary <- apply_baseline_index(summary, group_col = input$group_filter)
       }
 
-      out
+      summary
     })
 
+    # plot 1. panel
+    output$wagebill_panel <- plotly::renderPlotly({
+      plotly::ggplotly(
+        plot_trend(
+          wagebill_summary(),
+          group_col = input$group_filter,
+          toggle_growth = input$toggle_growth,
+          y_label = "Wage Bill"
+        )
+      )
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # plot 2. wage bill as a share of a macro indicator
+    # NOTE: not yet wired into wagebill_overview_ui(); the sidebar has no
+    # `macroindicator_measure` input, so this output is never rendered.
     wagebill_annual <- shiny::reactive({
       wagebill_filtered() |>
         govhr::compute_fastsummary(
@@ -141,34 +164,18 @@ wagebill_overview_server <- function(id, .data, cache) {
         )
     })
 
-    # plot 1. panel
-    output$wagebill_panel <- plotly::renderPlotly({
-      plotly::ggplotly(
-        plot_trend(
-          wagebill_summary(),
-          group = input$group_filter,
-          toggle_growth = input$toggle_growth,
-          y_label = "Wage Bill"
-        )
-      )
-    }) |>
-      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
-
-    # plot 2. macro panel
-    output$wagebill_fiscal <- renderPlotly({
-      wagebill_fiscal <- wagebill_annual() |>
-        mutate(
-          year = lubridate::year(ref_date)
-        ) |>
-        left_join(
+    output$wagebill_fiscal <- plotly::renderPlotly({
+      plot <- wagebill_annual() |>
+        dplyr::mutate(year = lubridate::year(.data[["ref_date"]])) |>
+        dplyr::left_join(
           govhr::macro_indicators,
           by = c("country_code", "year")
         ) |>
-        mutate(
-          ratio = .data[["value"]] / .data[[input$macroindicator_measure]] * 100
-        )
-
-      plot <- wagebill_fiscal |>
+        dplyr::mutate(
+          ratio = .data[["value"]] /
+            .data[[input$macroindicator_measure]] *
+            100
+        ) |>
         ggplot2::ggplot(
           ggplot2::aes(x = .data[["ref_date"]], y = .data[["ratio"]])
         ) +
@@ -184,7 +191,7 @@ wagebill_overview_server <- function(id, .data, cache) {
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
-    # plot 2. total by group
+    # plot 3. total by group
     output$wagebill_cross_section <- plotly::renderPlotly({
       shiny::validate(
         shiny::need(
@@ -195,25 +202,22 @@ wagebill_overview_server <- function(id, .data, cache) {
 
       cross_section_data <- compute_cross_section_summary(
         wagebill_filtered(),
-        group = input$group_filter,
+        group_col = input$group_filter,
         measure_col = input$wagebill_measure
       )
-
-      n_groups <- nrow(cross_section_data)
-      plot_height <- max(350, n_groups * 35 + 100)
 
       plotly::ggplotly(
         plot_bar_total(
           cross_section_data,
-          group = input$group_filter,
+          group_col = input$group_filter,
           x_label = "Wage bill"
         ),
-        height = plot_height
+        height = scale_plot_height(cross_section_data)
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
-    # plot 3. growth rate by group
+    # plot 4. growth rate by group
     output$wagebill_change <- plotly::renderPlotly({
       shiny::validate(
         shiny::need(
@@ -224,16 +228,13 @@ wagebill_overview_server <- function(id, .data, cache) {
 
       change_data <- compute_growth_summary(
         wagebill_filtered(),
-        group = input$group_filter,
+        group_col = input$group_filter,
         measure_col = input$wagebill_measure
       )
 
-      n_groups <- nrow(change_data)
-      plot_height <- max(350, n_groups * 35 + 100)
-
       plotly::ggplotly(
-        plot_bar_growth(change_data, group = input$group_filter),
-        height = plot_height
+        plot_bar_growth(change_data, group_col = input$group_filter),
+        height = scale_plot_height(change_data)
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)

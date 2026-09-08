@@ -2,18 +2,18 @@
 % Please edit documentation in R/analytics_wagebill_equity.R
 \name{wagebill_equity_ui}
 \alias{wagebill_equity_ui}
-\title{Function to create the UI for the wagebill equity module.}
+\title{Wage Bill Equity UI}
 \usage{
 wagebill_equity_ui(id, .data)
 }
 \arguments{
-\item{id}{A character string specifying the module ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{.data}{A data frame containing wagebill data.}
+\item{.data}{Data frame containing wage bill data.}
 }
 \value{
-A Shiny module UI function for the wagebill equity module.
+A Shiny UI definition.
 }
 \description{
-Function to create the UI for the wagebill equity module.
+Sidebar controls and plots for wage distribution, deciles and compression.
 }

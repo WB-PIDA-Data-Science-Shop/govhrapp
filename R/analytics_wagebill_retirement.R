@@ -1,15 +1,15 @@
-
-
-#' Wagebill retirement UI module.
-#' 
-#' @param id A character string specifying the module ID.
-#' @param .data A data frame containing wagebill data.
-#' 
+#' Wage Bill Retirement UI
+#'
+#' Sidebar controls and plots for realised and projected retirement costs.
+#'
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame containing wage bill data.
+#'
+#' @return A Shiny UI definition.
+#'
 #' @import bslib
 #' @import shiny
 #' @importFrom plotly plotlyOutput
-#' 
-#' @return A Shiny module UI function for the wagebill retirement module.
 wagebill_retirement_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
@@ -73,18 +73,21 @@ wagebill_retirement_ui <- function(id, .data) {
   )
 }
 
-#' Server for the wagebill retirement module.
-#' 
-#' @param id A character string specifying the module ID.
-#' @param .data A data frame containing wagebill data.
-#' 
+#' Wage Bill Retirement Server
+#'
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame containing wage bill data.
+#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#'
+#' @return A Shiny module server function.
+#'
 #' @import shiny
-#' @importFrom plotly renderPlotly ggplotly
-#' @importFrom dplyr filter rename
-#' @importFrom govhr project_retirement
-#' 
-#' @return A Shiny module server function for the wagebill retirement module.
-wagebill_retirement_server <- function(id, .data) {
+#' @importFrom dplyr rename
+#' @importFrom govhr compute_movement_cost project_retirement
+#' @importFrom plotly ggplotly renderPlotly
+#' @importFrom purrr pluck
+#' @keywords internal
+wagebill_retirement_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
 
@@ -99,17 +102,21 @@ wagebill_retirement_server <- function(id, .data) {
 
     # plot 1. retirement costs
     output$wagebill_retirement <- plotly::renderPlotly({
-      retirement_data <- govhr::compute_movement_cost(
-        wagebill_filtered(),
-        event_type = "retirement",
-        measure_col = input$wagebill_measure,
-        group_cols = input$group_filter
-      )
+      retirement_data <- if (input$apply_btn == 0) {
+        purrr::pluck(cache, "wagebill", "wagebill_retirement")
+      } else {
+        govhr::compute_movement_cost(
+          wagebill_filtered(),
+          event_type = "retirement",
+          measure_col = input$wagebill_measure,
+          group_cols = input$group_filter
+        )
+      }
 
       plotly::ggplotly(
         plot_trend(
           retirement_data,
-          group = input$group_filter,
+          group_col = input$group_filter,
           y_col = "movement_cost",
           y_label = "Retirement Costs"
         )
@@ -119,19 +126,23 @@ wagebill_retirement_server <- function(id, .data) {
 
     # plot 2. projected retirement costs
     output$wagebill_retirement_projection <- plotly::renderPlotly({
-      retirement_projection_data <- govhr::project_retirement(
-        wagebill_filtered(),
-        group_cols = input$group_filter,
-        measure_col = input$wagebill_measure
-      ) |>
-        rename(
-          ref_date = retirement_date
-        )
+      retirement_projection_data <- if (input$apply_btn == 0) {
+        purrr::pluck(cache, "wagebill", "wagebill_retirement_expected")
+      } else {
+        govhr::project_retirement(
+          .data = wagebill_filtered(),
+          threshold_age = input$threshold_age,
+          birth_col = "birth_date",
+          group_cols = input$group_filter,
+          measure_col = input$wagebill_measure
+        ) |>
+          dplyr::rename(ref_date = "retirement_date")
+      }
 
       plotly::ggplotly(
         plot_trend(
           retirement_projection_data,
-          group = input$group_filter,
+          group_col = input$group_filter,
           y_col = "projected_cost",
           y_label = "Projected Retirement Costs"
         )

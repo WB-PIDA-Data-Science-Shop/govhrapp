@@ -1,45 +1,51 @@
-#' Overview UI Module
+#' Overview UI
 #'
 #' Summary dashboard tab combining headline wage bill and headcount indicators.
 #'
-#' @param id Module id.
-#' @param workforce_data Data frame with workforce/personnel data (headcount).
-#' @param wagebill_data Data frame with contract/salary data (wage bill).
+#' @param id Character. Module namespace ID.
 #'
-#' @importFrom bslib layout_columns layout_sidebar sidebar card card_header card_body value_box value_box_theme tooltip
+#' @return A Shiny UI definition.
+#'
 #' @importFrom bsicons bs_icon
-#' @importFrom shiny NS markdown icon uiOutput radioButtons
+#' @importFrom bslib card card_body card_header layout_columns layout_sidebar popover sidebar value_box value_box_theme
 #' @importFrom plotly plotlyOutput
-#' @importFrom lubridate year
-#' @import dplyr
+#' @importFrom shiny NS conditionalPanel radioButtons tagList textOutput
 #' @export
-overview_ui <- function(id, workforce_data, wagebill_data) {
+overview_ui <- function(id) {
   ns <- shiny::NS(id)
 
   bslib::layout_columns(
     fillable = FALSE,
     col_widths = 12,
 
-    # value boxes
     bslib::layout_columns(
       col_widths = c(6, 6),
       bslib::value_box(
-        title = shiny::uiOutput(ns("vb_date_label")),
-        value = shiny::uiOutput(ns("vb_headcount")),
+        title = shiny::textOutput(ns("vb_date_label")),
+        value = shiny::textOutput(ns("vb_headcount")),
         showcase = bsicons::bs_icon("people-fill"),
         theme = bslib::value_box_theme(bg = "#C34729", fg = "#FFFFFF"),
         max_height = "150px"
       ),
       bslib::value_box(
-        title = shiny::uiOutput(ns("vb_wagebill_label")),
-        value = shiny::uiOutput(ns("vb_wagebill")),
+        title = shiny::textOutput(ns("vb_wagebill_label")),
+        value = shiny::tagList(
+          shiny::textOutput(ns("vb_wagebill")),
+          bslib::popover(
+            bsicons::bs_icon(
+              "info-circle-fill",
+              style = "font-size: 0.75em; margin-left: 4px;"
+            ),
+            "Gross salary in local currency units (LCU).",
+            placement = "left"
+          )
+        ),
         showcase = bsicons::bs_icon("cash-stack"),
         theme = bslib::value_box_theme(bg = "#004181", fg = "#FFFFFF"),
         max_height = "150px"
       )
     ),
-    
-    # plot
+
     bslib::layout_sidebar(
       fillable = FALSE,
       sidebar = bslib::sidebar(
@@ -50,113 +56,42 @@ overview_ui <- function(id, workforce_data, wagebill_data) {
           ns("display_mode"),
           label = NULL,
           choices = list(
-            "Workforce"  = "headcount",
-            "Wage Bill"  = "wagebill",
+            "Workforce" = "headcount",
+            "Wage Bill" = "wagebill",
             "Integrated" = "integrated"
           ),
           selected = "headcount"
         )
       ),
-      shiny::uiOutput(ns("chart_area"))
-    )
-  )
-}
 
-#' Overview Server Module
-#'
-#' @param id Module id.
-#' @param id Module id.
-#' @param workforce_data Data frame with workforce/personnel data (headcount).
-#' @param wagebill_data Data frame with contract/salary data (wage bill).
-#' @param cache List of cached data frames for improved performance.
-#'
-#' @importFrom shiny moduleServer reactive renderUI renderText tags radioButtons
-#' @importFrom plotly renderPlotly ggplotly
-#' @importFrom dplyr filter mutate arrange group_by ungroup summarise bind_rows n_distinct first
-#' @importFrom lubridate year
-#' @importFrom ggplot2 ggplot aes geom_point geom_line scale_y_continuous scale_color_manual geom_hline labs xlab ylab
-#' @importFrom grDevices colorRampPalette
-#' @importFrom scales label_number cut_short_scale
-#' @importFrom govhr fastcount compute_fastsummary
-#' @export
-overview_server <- function(id, workforce_data, wagebill_data, cache) {
-  shiny::moduleServer(id, function(input, output, session) {
-
-    # obtain latest reference date
-    latest_workforce_date <- reactive({
-      max(cache[["workforce_trend"]][["ref_date"]], na.rm = TRUE)
-    })
-
-    latest_wagebill_date <- reactive({
-      max(cache[["wagebill_trend"]][["ref_date"]], na.rm = TRUE)
-    })
-
-    latest_workforce <- reactive({
-      cache[["workforce_trend"]] |>
-        dplyr::filter(.data[["ref_date"]] == latest_workforce_date())
-    })
-
-    latest_wagebill <- reactive({
-      cache[["wagebill_trend"]] |>
-        dplyr::filter(.data[["ref_date"]] == latest_wagebill_date())
-    })
-
-    # value boxes
-    output$vb_date_label <- shiny::renderUI({
-      shiny::tags$span(
-        paste0("Headcount (", format(latest_workforce_date(), "%b %Y"), ")")
-      )
-    })
-
-    output$vb_wagebill_label <- shiny::renderUI({
-      shiny::tags$span(
-        paste0("Wage Bill (", format(latest_wagebill_date(), "%b %Y"), ")")
-      )
-    })
-
-    output$vb_headcount <- shiny::renderUI({
-      n <- latest_workforce() |>
-        dplyr::pull(.data[["value"]])
-      
-      shiny::tags$span(
-        scales::label_number(scale_cut = scales::cut_short_scale())(n)
-      )
-    })
-
-    output$vb_wagebill <- shiny::renderUI({
-      wagebill_value <- latest_wagebill() |>
-        dplyr::pull(.data[["value"]])
-      
-      shiny::tags$span(
-        scales::label_number(
-          scale_cut = scales::cut_short_scale()
-        )(wagebill_value),
-        bslib::popover(
-          bsicons::bs_icon("info-circle-fill", style = "font-size: 0.75em; margin-left: 4px;"),
-          "Gross salary in local currency units (LCU).",
-          placement = "left"
-        )
-      )
-    })
-
-    output$chart_area <- shiny::renderUI({
-      switch(
-        input$display_mode,
-        headcount = bslib::card(
+      # plot 1. headcount
+      shiny::conditionalPanel(
+        condition = sprintf("input['%s'] == 'headcount'", ns("display_mode")),
+        bslib::card(
           full_screen = TRUE,
           bslib::card_header("Headcount"),
           bslib::card_body(
-            plotly::plotlyOutput(session$ns("plot_headcount"), height = "420px")
+            plotly::plotlyOutput(ns("plot_headcount"), height = "450px")
           )
-        ),
-        wagebill = bslib::card(
+        )
+      ),
+
+      # plot 2. wage bill
+      shiny::conditionalPanel(
+        condition = sprintf("input['%s'] == 'wagebill'", ns("display_mode")),
+        bslib::card(
           full_screen = TRUE,
           bslib::card_header("Wage Bill"),
           bslib::card_body(
-            plotly::plotlyOutput(session$ns("plot_wagebill"), height = "420px")
+            plotly::plotlyOutput(ns("plot_wagebill"), height = "450px")
           )
-        ),
-        integrated = bslib::card(
+        )
+      ),
+
+      # plot 3. integrated
+      shiny::conditionalPanel(
+        condition = sprintf("input['%s'] == 'integrated'", ns("display_mode")),
+        bslib::card(
           full_screen = TRUE,
           bslib::card_header(
             "Integrated: Headcount and Wage Bill",
@@ -168,85 +103,151 @@ overview_server <- function(id, workforce_data, wagebill_data, cache) {
             class = "d-flex justify-content-between"
           ),
           bslib::card_body(
-            plotly::plotlyOutput(session$ns("plot_integrated"), height = "420px")
+            plotly::plotlyOutput(ns("plot_integrated"), height = "450px")
           )
         )
       )
-    })
+    )
+  )
+}
 
-    # plot option 1. headcount
+#' Overview Server
+#'
+#' Renders the headline headcount and wage bill indicators and the three
+#' summary charts, all read from the analytics cache.
+#'
+#' @param id Character. Module namespace ID.
+#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#'
+#' @return A Shiny module server function.
+#'
+#' @importFrom dplyr arrange bind_rows filter first mutate pull
+#' @importFrom ggplot2 aes geom_hline geom_line geom_point ggplot labs scale_color_manual scale_y_continuous
+#' @importFrom plotly ggplotly renderPlotly
+#' @importFrom purrr pluck
+#' @importFrom scales cut_short_scale label_number
+#' @importFrom shiny moduleServer renderText req
+#' @export
+overview_server <- function(id, cache) {
+  shiny::moduleServer(id, function(input, output, session) {
+    workforce_overview <- cache |>
+      purrr::pluck("workforce", "workforce_overview")
+
+    wagebill_overview <- cache |>
+      purrr::pluck("wagebill", "wagebill_overview")
+
+    latest_ref_date <- max(workforce_overview[["ref_date"]], na.rm = TRUE)
+    date_label <- format(as.Date(latest_ref_date), "%b %Y")
+
+    headcount_val <- workforce_overview |>
+      dplyr::filter(.data[["ref_date"]] == latest_ref_date) |>
+      dplyr::pull(.data[["value"]]) |>
+      scales::comma(accuracy = 1)
+
+    wagebill_val <- wagebill_overview |>
+      dplyr::filter(.data[["ref_date"]] == latest_ref_date) |>
+      dplyr::pull(.data[["value"]]) |>
+      scales::comma(accuracy = 1)
+
+    output$vb_date_label <- shiny::renderText(paste0(
+      "Headcount (",
+      date_label,
+      ")"
+    ))
+    output$vb_wagebill_label <- shiny::renderText(paste0(
+      "Wage Bill (",
+      date_label,
+      ")"
+    ))
+    output$vb_headcount <- shiny::renderText(headcount_val)
+    output$vb_wagebill <- shiny::renderText(wagebill_val)
+
     output$plot_headcount <- plotly::renderPlotly({
-      plot <- cache[["workforce_trend"]] |>
-        ggplot2::ggplot(ggplot2::aes(x = .data[["ref_date"]], y = .data[["value"]])) +
-        ggplot2::geom_point() +
-        ggplot2::geom_line() +
-        ggplot2::scale_y_continuous(
-          labels = scales::label_number(scale_cut = scales::cut_short_scale())
-        ) +
-        ggplot2::labs(x = "Time", y = "Headcount")
+      req(input$display_mode == "headcount")
 
-      plotly::ggplotly(plot)
-    })
-
-    # plot option 2. total wage bill
-    output$plot_wagebill <- plotly::renderPlotly({
-      plot <- cache[["wagebill_trend"]] |>
-        ggplot2::ggplot(ggplot2::aes(x = .data[["ref_date"]], y = .data[["value"]])) +
-        ggplot2::geom_point(colour = "#004181") +
-        ggplot2::geom_line(colour  = "#004181") +
-        ggplot2::scale_y_continuous(
-          labels = scales::label_number(scale_cut = scales::cut_short_scale())
-        ) +
-        ggplot2::labs(x = "Time", y = "Total compensation (LCU)")
-
-      plotly::ggplotly(plot)
-    })
-
-    # plot option 3. integrated
-    output$plot_integrated <- plotly::renderPlotly({
-      index_to_100 <- function(df, label) {
-        df |>
-          dplyr::arrange(.data[["ref_date"]]) |>
-          dplyr::mutate(
-            value  = .data[["value"]] / dplyr::first(.data[["value"]]) * 100,
-            series = label
-          )
-      }
-
-      combined <- dplyr::bind_rows(
-        index_to_100(cache[["workforce_trend"]], "Headcount"),
-        index_to_100(cache[["wagebill_trend"]],  "Total compensation")
+      plotly::ggplotly(
+        workforce_overview |>
+          ggplot2::ggplot(ggplot2::aes(
+            x = .data[["ref_date"]],
+            y = .data[["value"]]
+          )) +
+          ggplot2::geom_point() +
+          ggplot2::geom_line() +
+          ggplot2::scale_y_continuous(
+            labels = scales::label_number(scale_cut = scales::cut_short_scale())
+          ) +
+          ggplot2::labs(x = "Time", y = "Headcount")
       )
+    })
+
+    output$plot_wagebill <- plotly::renderPlotly({
+      req(input$display_mode == "wagebill")
+
+      plotly::ggplotly(
+        wagebill_overview |>
+          ggplot2::ggplot(ggplot2::aes(
+            x = .data[["ref_date"]],
+            y = .data[["value"]]
+          )) +
+          ggplot2::geom_point(colour = "#004181") +
+          ggplot2::geom_line(colour = "#004181") +
+          ggplot2::scale_y_continuous(
+            labels = scales::label_number(scale_cut = scales::cut_short_scale())
+          ) +
+          ggplot2::labs(x = "Time", y = "Total compensation (LCU)")
+      )
+    })
+
+    output$plot_integrated <- plotly::renderPlotly({
+      req(input$display_mode == "integrated")
 
       palette <- c("Headcount" = "#C34729", "Total compensation" = "#004181")
 
-      plot <- combined |>
-        ggplot2::ggplot(
-          ggplot2::aes(
-            x     = .data[["ref_date"]],
-            y     = .data[["value"]],
-            color = .data[["series"]],
-            group = .data[["series"]]
-          )
-        ) +
-        ggplot2::geom_point() +
-        ggplot2::geom_line() +
-        ggplot2::geom_hline(
-          yintercept = 100,
-          linetype   = "dashed",
-          colour     = "grey50"
-        ) +
-        ggplot2::scale_color_manual(values = palette) +
-        ggplot2::scale_y_continuous(
-          labels = scales::label_number(suffix = "")
-        ) +
-        ggplot2::labs(
-          x     = "Time",
-          y     = "Baseline index (earliest period = 100)",
-          color = NULL
+      # index series for the integrated plot only — kept separate, see note below
+      indexed_workforce <- workforce_overview |>
+        dplyr::arrange(.data[["ref_date"]]) |>
+        dplyr::mutate(
+          value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100
         )
 
-      plotly::ggplotly(plot)
+      indexed_wagebill <- wagebill_overview |>
+        dplyr::arrange(.data[["ref_date"]]) |>
+        dplyr::mutate(
+          value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100
+        )
+
+      combined <- dplyr::bind_rows(
+        dplyr::mutate(indexed_workforce, series = "Headcount"),
+        dplyr::mutate(indexed_wagebill, series = "Total compensation")
+      )
+
+      plotly::ggplotly(
+        combined |>
+          ggplot2::ggplot(
+            ggplot2::aes(
+              x = .data[["ref_date"]],
+              y = .data[["value"]],
+              color = .data[["series"]],
+              group = .data[["series"]]
+            )
+          ) +
+          ggplot2::geom_point() +
+          ggplot2::geom_line() +
+          ggplot2::geom_hline(
+            yintercept = 100,
+            linetype = "dashed",
+            colour = "grey50"
+          ) +
+          ggplot2::scale_color_manual(values = palette) +
+          ggplot2::scale_y_continuous(
+            labels = scales::label_number(suffix = "")
+          ) +
+          ggplot2::labs(
+            x = "Time",
+            y = "Baseline index (earliest period = 100)",
+            color = NULL
+          )
+      )
     })
   })
 }

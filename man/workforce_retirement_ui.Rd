@@ -7,13 +7,13 @@
 workforce_retirement_ui(id, .data)
 }
 \arguments{
-\item{id}{A character string specifying the module ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{.data}{A data frame containing personnel data.}
+\item{.data}{Data frame containing personnel data.}
 }
 \value{
-A Shiny UI function for the workforce retirement module.
+A Shiny UI definition.
 }
 \description{
-Workforce Retirement UI
+Sidebar controls and plots for realised and projected retirements.
 }

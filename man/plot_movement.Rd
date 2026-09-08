@@ -4,20 +4,25 @@
 \alias{plot_movement}
 \title{Plot Personnel Movement Over Time}
 \usage{
-plot_movement(.data, movement_type, measurement_type, group_cols)
+plot_movement(.data, movement_type, measurement_type, group_col)
 }
 \arguments{
-\item{.data}{A data frame containing the movement data with columns \code{ref_date}, \code{indicator}, and optionally a grouping column.}
+\item{.data}{Data frame with \code{ref_date}, \code{indicator}, and optionally the
+grouping column.}
 
-\item{movement_type}{A character string indicating the type of movement: "hire", "fire", or "turnover".}
+\item{movement_type}{Character. One of \code{"hire"}, \code{"fire"}, \code{"retirement"} or
+\code{"turnover"}.}
 
-\item{measurement_type}{A character string indicating the measurement type: "count" or "rate".}
+\item{measurement_type}{Character. Either \code{"count"} or \code{"rate"}.}
 
-\item{group_cols}{A character string indicating the grouping column, or "ref_date" for no grouping.}
+\item{group_col}{Character. Column to group by, or \code{"ref_date"} for no
+grouping.}
 }
 \value{
-A plotly object representing the personnel movement over time.
+A ggplot object.
 }
 \description{
-Plot Personnel Movement Over Time
+Draws movement counts or rates over \code{ref_date}, one coloured series per
+group. Turnover is drawn against a dashed replacement-rate reference line
+at 1.
 }

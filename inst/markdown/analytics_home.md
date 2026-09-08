@@ -22,4 +22,5 @@ This module provides a set of standard indicators on the workforce of your gover
 
 * **Overview:** See how the workforce headcount has evolved over time. Identify groups that are responsible for larger or smaller shares of the total workforce, as well as how their relative shares have changed over time.
 * **Movement:** Assess the different types of movements of workers across the public sector. For example, what are the hiring and exit rates, and how do they vary across groups and over time, along with the demographic profile of movers.
+* **Transition:** Follow the transition of workers across different groups in the public sector, giving you a sense of internal labor dynamics. For example, how many workers transition from one ministry to another.
 * **Retirement:** Track retirements over time and project future retirements and their rates, based on a selected retirement threshold age.

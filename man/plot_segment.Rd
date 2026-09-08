@@ -2,43 +2,26 @@
 % Please edit documentation in R/analytics_plots.R
 \name{plot_segment}
 \alias{plot_segment}
-\title{Create a Segment Plot with Jittered Points}
+\title{Plot Value Ranges by Group}
 \usage{
-plot_segment(.data, col, group)
+plot_segment(.data, measure_col, group_col)
 }
 \arguments{
-\item{.data}{A data frame containing the variables to plot.}
+\item{.data}{Data frame containing the variables to plot.}
 
-\item{col}{Character string specifying the name of the numeric column to plot
-on the x-axis.}
+\item{measure_col}{Character. Numeric column to plot on the x-axis.}
 
-\item{group}{Character string specifying the name of the grouping column for
-the y-axis.}
+\item{group_col}{Character. Column to group by, plotted on the y-axis.}
 }
 \value{
-A ggplot2 object displaying:
-\itemize{
-\item Grey horizontal segments showing the range (min to max) for each group
-\item Jittered points showing the distribution of individual observations
-\item Groups ordered by median value (highest to lowest, top to bottom)
-}
+A ggplot2 object.
 }
 \description{
-Produces a ggplot2 visualization showing the range (min to max) and distribution
-of values for a numeric variable across different groups. Groups are ordered by
-their median values in descending order.
-}
-\details{
-The function:
-\itemize{
-\item Computes min, max, and median for each group
-\item Handles infinite values by converting them to NA
-\item Orders groups by median in descending order
-\item Uses hollow circles (shape = 1) for points with 70\% transparency
-\item Applies minimal theme styling
-}
+Draws a grey range segment from each group's minimum to its maximum, overlaid
+with jittered observations. Groups are ordered by mean value, highest at the
+top.
 }
 \examples{
-plot_segment(mtcars, col = "mpg", group = "cyl")
+plot_segment(mtcars, measure_col = "mpg", group_col = "cyl")
 
 }
