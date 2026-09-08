@@ -157,7 +157,16 @@ wagebill_movement_server <- function(id, .data, cache) {
         )
       )
 
-      movement_cost_data <- movement_cost()
+      movement_cost_data <- movement_cost() |>
+        dplyr::group_by(
+          dplyr::across(
+            dplyr::all_of(input$group_filter)
+          )
+        ) |>
+        summarise(
+          movement_cost = sum(movement_cost, na.rm = TRUE),
+          .groups = "drop"
+        )
 
       plotly::ggplotly(
         plot_bar_total(
