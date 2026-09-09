@@ -8,6 +8,7 @@
 #' @param cache List of pre-computed summaries from [build_analytics_cache()].
 #'   Defaults to building one from the supplied data.
 #' @param secure Logical. If `TRUE`, the app will require authentication. Defaults to FALSE.
+#' @param credentials_path Path to the SQLite database containing user credentials for authentication. Defaults to "inst/app/analytics/credentials.sqlite".
 #' @param ... Additional arguments passed to [shiny::shinyApp()].
 #'
 #' @return A Shiny app object.
@@ -31,6 +32,7 @@ run_govhrapp_analytics <- function(
   wagebill_data,
   cache = build_analytics_cache(workforce_data, wagebill_data),
   secure = FALSE,
+  credentials_path = "inst/app/analytics/credentials.sqlite",
   ...
 ) {
   # add path to visual assets (image and css)
@@ -165,7 +167,7 @@ run_govhrapp_analytics <- function(
     if(secure){
       res_auth <- shinymanager::secure_server(
         check_credentials = shinymanager::check_credentials(
-          "inst/app/analytics/credentials.sqlite"
+          credentials_path
         )
       )
     }

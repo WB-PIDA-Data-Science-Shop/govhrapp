@@ -9,6 +9,7 @@ run_govhrapp_analytics(
   wagebill_data,
   cache = build_analytics_cache(workforce_data, wagebill_data),
   secure = FALSE,
+  credentials_path = "inst/app/analytics/credentials.sqlite",
   ...
 )
 }
@@ -22,6 +23,8 @@ run_govhrapp_analytics(
 Defaults to building one from the supplied data.}
 
 \item{secure}{Logical. If \code{TRUE}, the app will require authentication. Defaults to FALSE.}
+
+\item{credentials_path}{Path to the SQLite database containing user credentials for authentication. Defaults to "inst/app/analytics/credentials.sqlite".}
 
 \item{...}{Additional arguments passed to \code{\link[shiny:shinyApp]{shiny::shinyApp()}}.}
 }
