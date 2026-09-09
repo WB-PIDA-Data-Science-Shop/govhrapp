@@ -7,6 +7,7 @@
 #' @param wagebill_data Data frame with contract/salary attributes (wage bill).
 #' @param cache List of pre-computed summaries from [build_analytics_cache()].
 #'   Defaults to building one from the supplied data.
+#' @param secure Logical. If `TRUE`, the app will require authentication. Defaults to FALSE.
 #' @param ... Additional arguments passed to [shiny::shinyApp()].
 #'
 #' @return A Shiny app object.
@@ -28,6 +29,7 @@ run_govhrapp_analytics <- function(
   workforce_data,
   wagebill_data,
   cache = build_analytics_cache(workforce_data, wagebill_data),
+  secure = FALSE,
   ...
 ) {
   # add path to visual assets (image and css)
@@ -154,7 +156,19 @@ run_govhrapp_analytics <- function(
     )
   )
 
+  if(secure){
+    ui <- shinymanager::secure_app(ui, enable_admin = TRUE)
+  }
+
   server <- function(input, output, session) {
+    if(secure){
+      res_auth <- shinymanager::secure_server(
+        check_credentials = shinymanager::check_credentials(
+          "inst/app/analytics/credentials.sqlite"
+        )
+      )
+    }
+
     overview_server("overview", cache = cache)
     wagebill_server(
       "wagebill",

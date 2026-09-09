@@ -51,3 +51,6 @@ rsconnect/
 
 # ignore spielplatz
 spielplatz/
+
+# ignore credentials
+credentials.sqlite
