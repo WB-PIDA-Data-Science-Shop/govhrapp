@@ -24,6 +24,7 @@
 #' @importFrom lubridate year
 #' @importFrom scales label_number cut_short_scale
 #' @importFrom tidyr complete 
+#' @importFrom shinymanager secure_app secure_server check_credentials
 #' @export
 run_govhrapp_analytics <- function(
   workforce_data,

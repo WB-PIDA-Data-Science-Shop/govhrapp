@@ -220,6 +220,11 @@ importFrom(shinyWidgets,
   pickerOptions,
   updatePickerInput
 )
+importFrom(shinymanager,
+  check_credentials,
+  secure_app,
+  secure_server
+)
 importFrom(stats,
   complete.cases,
   median,

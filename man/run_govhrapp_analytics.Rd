@@ -8,6 +8,7 @@ run_govhrapp_analytics(
   workforce_data,
   wagebill_data,
   cache = build_analytics_cache(workforce_data, wagebill_data),
+  secure = FALSE,
   ...
 )
 }
@@ -19,6 +20,8 @@ run_govhrapp_analytics(
 
 \item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.
 Defaults to building one from the supplied data.}
+
+\item{secure}{Logical. If \code{TRUE}, the app will require authentication. Defaults to FALSE.}
 
 \item{...}{Additional arguments passed to \code{\link[shiny:shinyApp]{shiny::shinyApp()}}.}
 }

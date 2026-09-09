@@ -35,6 +35,7 @@ Imports:
     rsconnect,
     scales,
     shiny,
+    shinymanager,
     shinyWidgets,
     stringr,
     thematic,
