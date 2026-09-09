@@ -137,7 +137,7 @@ wagebill_movement_server <- function(id, .data, cache) {
     # plot 1. labor movement costs
     output$wagebill_movement <- plotly::renderPlotly({
       plotly::ggplotly(
-        plot_trend(
+        govhr::plot_trend(
           movement_cost(),
           group_col = input$group_filter,
           toggle_growth = input$toggle_growth,
@@ -169,7 +169,7 @@ wagebill_movement_server <- function(id, .data, cache) {
         )
 
       plotly::ggplotly(
-        plot_bar_total(
+        govhr::plot_bar_total(
           movement_cost_data,
           group_col = input$group_filter,
           x_col = "movement_cost",
@@ -201,7 +201,7 @@ wagebill_movement_server <- function(id, .data, cache) {
       ]
 
       plotly::ggplotly(
-        plot_bar_growth(
+        govhr::plot_bar_growth(
           movement_cost_growth,
           group_col = input$group_filter
         ),

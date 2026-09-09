@@ -122,7 +122,7 @@ workforce_transition_server <- function(id, .data, cache) {
       plotly::ggplotly(
         transition_data() |>
           govhr::fastcount(ref_date, name = "transition") |>
-          plot_trend(
+          govhr::plot_trend(
             group_col = "ref_date",
             y_col = "transition",
             y_label = "Number of Transitions"
@@ -133,7 +133,7 @@ workforce_transition_server <- function(id, .data, cache) {
 
     # plot 2. transition network
     output$transition_network_plot <- ggiraph::renderGirafe({
-      plot_transition_network(transition_data())
+      govhr::plot_transition_network(transition_data())
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })

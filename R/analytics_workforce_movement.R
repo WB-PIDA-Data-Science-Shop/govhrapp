@@ -141,7 +141,7 @@ workforce_movement_server <- function(id, .data, cache) {
 
     # plot 1. hiring counts/rates over time
     output$movement_trend <- plotly::renderPlotly({
-      plot_movement(
+      govhr::plot_movement(
         movement_summary(),
         movement_type = input$movement_type,
         measurement_type = input$measurement_type,
@@ -161,7 +161,7 @@ workforce_movement_server <- function(id, .data, cache) {
         dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]]))
 
       plotly::ggplotly(
-        plot_bar_total(
+        govhr::plot_bar_total(
           cross_section_data,
           group_col = input$group_filter,
           x_col = "indicator",
@@ -186,7 +186,7 @@ workforce_movement_server <- function(id, .data, cache) {
         )
 
       plotly::ggplotly(
-        plot_bar_growth(growth_data, group_col = input$group_filter),
+        govhr::plot_bar_growth(growth_data, group_col = input$group_filter),
         height = scale_plot_height(growth_data)
       )
     }) |>

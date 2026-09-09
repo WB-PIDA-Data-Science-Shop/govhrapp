@@ -114,7 +114,7 @@ wagebill_retirement_server <- function(id, .data, cache) {
       }
 
       plotly::ggplotly(
-        plot_trend(
+        govhr::plot_trend(
           retirement_data,
           group_col = input$group_filter,
           y_col = "movement_cost",
@@ -140,7 +140,7 @@ wagebill_retirement_server <- function(id, .data, cache) {
       }
 
       plotly::ggplotly(
-        plot_trend(
+        govhr::plot_trend(
           retirement_projection_data,
           group_col = input$group_filter,
           y_col = "projected_cost",

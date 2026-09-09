@@ -128,7 +128,7 @@ wagebill_equity_server <- function(id, .data, cache) {
         )
       }
 
-      plot_histogram(
+      govhr::plot_histogram(
         wagebill_density,
         plot_type = input$plot_type,
         group_col = input$group_filter
@@ -149,7 +149,7 @@ wagebill_equity_server <- function(id, .data, cache) {
         )
       }
 
-      plot_decile(wagebill_distribution, group_col = input$group_filter)
+      govhr::plot_decile(wagebill_distribution, group_col = input$group_filter)
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
@@ -165,7 +165,7 @@ wagebill_equity_server <- function(id, .data, cache) {
         )
       }
 
-      plot_compression_ratio(
+      govhr::plot_compression_ratio(
         wagebill_compression_ratio,
         group_col = input$group_filter
       )

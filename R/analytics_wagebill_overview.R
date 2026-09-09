@@ -133,7 +133,7 @@ wagebill_overview_server <- function(id, .data, cache) {
       }
 
       if (input$toggle_growth) {
-        summary <- apply_baseline_index(summary, group_col = input$group_filter)
+        summary <- govhr::apply_baseline_index(summary, group_col = input$group_filter)
       }
 
       summary
@@ -142,7 +142,7 @@ wagebill_overview_server <- function(id, .data, cache) {
     # plot 1. panel
     output$wagebill_panel <- plotly::renderPlotly({
       plotly::ggplotly(
-        plot_trend(
+        govhr::plot_trend(
           wagebill_summary(),
           group_col = input$group_filter,
           toggle_growth = input$toggle_growth,
@@ -207,7 +207,7 @@ wagebill_overview_server <- function(id, .data, cache) {
       )
 
       plotly::ggplotly(
-        plot_bar_total(
+        govhr::plot_bar_total(
           cross_section_data,
           group_col = input$group_filter,
           x_label = "Wage bill"
@@ -233,7 +233,7 @@ wagebill_overview_server <- function(id, .data, cache) {
       )
 
       plotly::ggplotly(
-        plot_bar_growth(change_data, group_col = input$group_filter),
+        govhr::plot_bar_growth(change_data, group_col = input$group_filter),
         height = scale_plot_height(change_data)
       )
     }) |>

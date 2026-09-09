@@ -111,7 +111,7 @@ workforce_retirement_server <- function(id, .data, cache) {
         )
       }
 
-      plot_movement(
+      govhr::plot_movement(
         plot_data,
         movement_type = "retirement",
         measurement_type = input$measurement_type,
@@ -135,7 +135,7 @@ workforce_retirement_server <- function(id, .data, cache) {
           dplyr::rename(ref_date = "retirement_date")
       }
 
-      plot_movement(
+      govhr::plot_movement(
         plot_data,
         movement_type = "retirement",
         measurement_type = input$measurement_type,
