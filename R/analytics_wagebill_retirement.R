@@ -83,7 +83,7 @@ wagebill_retirement_ui <- function(id, .data) {
 #'
 #' @import shiny
 #' @importFrom dplyr rename
-#' @importFrom govhr compute_movement_cost project_retirement
+#' @importFrom govhr compute_movement_cost plot_trend project_retirement
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
 #' @keywords internal

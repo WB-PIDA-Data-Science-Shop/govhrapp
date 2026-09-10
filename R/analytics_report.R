@@ -16,7 +16,7 @@
 #' generate_analytics_report(workforce_data, wagebill_data)
 #' }
 #'
-#' @importFrom govhr fastcount
+#' @importFrom govhr fastcount plot_compression_ratio plot_decile plot_histogram plot_movement plot_trend
 #' @importFrom purrr pluck
 #' @importFrom rmarkdown render
 #' @export
@@ -83,7 +83,7 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
       govhr::plot_trend(group_col = "ref_date", y_label = "Wage Bill"),
 
     wagebill_density = purrr::pluck(cache, "wagebill", "wagebill_equity_percentile") |>
-      govhr::plot_histogram(govhr::plot_type = "histogram", group_col = "ref_date"),
+      govhr::plot_histogram(plot_type = "histogram", group_col = "ref_date"),
 
     wagebill_decile = purrr::pluck(cache, "wagebill", "wagebill_equity_decile") |>
       govhr::plot_decile(group_col = "ref_date"),

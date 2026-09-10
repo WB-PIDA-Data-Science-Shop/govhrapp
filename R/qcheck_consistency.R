@@ -236,6 +236,7 @@ consistency_panel_ui <- function(id, .data) {
 #' @param cache A list of dataframes. Precomputed consistency data for the default grouping (ref_date).
 #'
 #' @import shiny
+#' @importFrom govhr compute_record_consistency compute_value_consistency plot_consistency_heatmap plot_consistency_trend
 #' @importFrom plotly renderPlotly
 #' @importFrom shinyWidgets updatePickerInput pickerOptions
 #' @importFrom dplyr filter
@@ -286,7 +287,7 @@ consistency_panel_server <- function(id, .data, cache) {
         }
         })
 
-      plot_consistency_trend(
+      govhr::plot_consistency_trend(
         data_consistency_panel(),
         id_col = id_col,
         type_plot = input$type_consistency,
@@ -306,7 +307,7 @@ consistency_panel_server <- function(id, .data, cache) {
         "contract" = "contract_id"
       )
 
-      plot_consistency_heatmap(
+      govhr::plot_consistency_heatmap(
         data_filtered(),
         id_col = id_col,
         group = input$group_filter

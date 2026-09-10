@@ -103,7 +103,7 @@ workforce_movement_ui <- function(id, .data) {
 #' @import bslib
 #' @import shiny
 #' @importFrom dplyr all_of mutate select
-#' @importFrom govhr classify_personnel_event compute_workforce_movement
+#' @importFrom govhr classify_personnel_event compute_growth_summary compute_workforce_movement guess_date_frequency plot_bar_growth plot_bar_total plot_movement scale_plot_height
 #' @importFrom gt render_gt
 #' @importFrom gtsummary as_gt modify_header tbl_summary
 #' @importFrom plotly ggplotly renderPlotly
@@ -167,7 +167,7 @@ workforce_movement_server <- function(id, .data, cache) {
           x_col = "indicator",
           x_label = stringr::str_to_title(input$movement_type)
         ),
-        height = scale_plot_height(cross_section_data)
+        height = govhr::scale_plot_height(cross_section_data)
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
@@ -180,14 +180,14 @@ workforce_movement_server <- function(id, .data, cache) {
 
       growth_data <- movement_summary() |>
         stats::na.omit() |>
-        compute_growth_summary(
+        govhr::compute_growth_summary(
           group_col = input$group_filter,
           measure_col = "indicator"
         )
 
       plotly::ggplotly(
         govhr::plot_bar_growth(growth_data, group_col = input$group_filter),
-        height = scale_plot_height(growth_data)
+        height = govhr::scale_plot_height(growth_data)
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
@@ -228,7 +228,7 @@ workforce_movement_server <- function(id, .data, cache) {
             start_date = min(ref_dates),
             end_date = max(ref_dates),
             status_col = "employment_status",
-            freq = guess_date_frequency(movement_data)
+            freq = govhr::guess_date_frequency(movement_data)
           ) |>
             dplyr::mutate(
               age = as.numeric(

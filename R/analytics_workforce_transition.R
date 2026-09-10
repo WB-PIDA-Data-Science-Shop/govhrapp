@@ -82,7 +82,7 @@ workforce_transition_ui <- function(id, .data) {
 #' @return A Shiny module server function.
 #'
 #' @importFrom ggiraph renderGirafe
-#' @importFrom govhr fastcount
+#' @importFrom govhr detect_career_transition fastcount plot_transition_network plot_trend
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
 #' @importFrom shiny bindEvent moduleServer reactive req
@@ -108,7 +108,7 @@ workforce_transition_server <- function(id, .data, cache) {
       if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_transition")
       } else {
-        detect_career_transition(
+        govhr::detect_career_transition(
           workforce_filtered(),
           id_col = input$id_col,
           group_cols = input$group_filter

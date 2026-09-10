@@ -100,7 +100,7 @@ wagebill_overview_ui <- function(id, .data) {
 #' @import shiny
 #' @importFrom dplyr left_join mutate
 #' @importFrom ggplot2 aes geom_line geom_point ggplot scale_y_continuous xlab ylab
-#' @importFrom govhr compute_fastsummary
+#' @importFrom govhr apply_baseline_index compute_cross_section_summary compute_fastsummary compute_growth_summary compute_trend_summary plot_bar_growth plot_bar_total plot_trend scale_plot_height
 #' @importFrom lubridate year
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
@@ -125,7 +125,7 @@ wagebill_overview_server <- function(id, .data, cache) {
       summary <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "wagebill", "wagebill_overview")
       } else {
-        compute_trend_summary(
+        govhr::compute_trend_summary(
           wagebill_filtered(),
           group_col = input$group_filter,
           measure_col = input$wagebill_measure
@@ -200,7 +200,7 @@ wagebill_overview_server <- function(id, .data, cache) {
         )
       )
 
-      cross_section_data <- compute_cross_section_summary(
+      cross_section_data <- govhr::compute_cross_section_summary(
         wagebill_filtered(),
         group_col = input$group_filter,
         measure_col = input$wagebill_measure
@@ -212,7 +212,7 @@ wagebill_overview_server <- function(id, .data, cache) {
           group_col = input$group_filter,
           x_label = "Wage bill"
         ),
-        height = scale_plot_height(cross_section_data)
+        height = govhr::scale_plot_height(cross_section_data)
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
@@ -226,7 +226,7 @@ wagebill_overview_server <- function(id, .data, cache) {
         )
       )
 
-      change_data <- compute_growth_summary(
+      change_data <- govhr::compute_growth_summary(
         wagebill_filtered(),
         group_col = input$group_filter,
         measure_col = input$wagebill_measure
@@ -234,7 +234,7 @@ wagebill_overview_server <- function(id, .data, cache) {
 
       plotly::ggplotly(
         govhr::plot_bar_growth(change_data, group_col = input$group_filter),
-        height = scale_plot_height(change_data)
+        height = govhr::scale_plot_height(change_data)
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)

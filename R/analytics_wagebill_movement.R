@@ -103,6 +103,7 @@ wagebill_movement_ui <- function(id, .data) {
 #' @return A Shiny module server function.
 #'
 #' @import shiny
+#' @importFrom govhr scale_plot_height compute_movement_cost compute_growth plot_trend plot_bar_total plot_bar_growth
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
 #' @keywords internal
@@ -175,7 +176,7 @@ wagebill_movement_server <- function(id, .data, cache) {
           x_col = "movement_cost",
           x_label = "Movement Costs"
         ),
-        height = scale_plot_height(movement_cost_data)
+        height = govhr::scale_plot_height(movement_cost_data)
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
@@ -190,22 +191,19 @@ wagebill_movement_server <- function(id, .data, cache) {
       )
 
       # growth between the first and last reference date, by group
-      movement_cost_growth <- movement_cost()[
-        ref_date %in% range(ref_date),
-        .(
-          growth_rate = (movement_cost[ref_date == max(ref_date)] -
-            movement_cost[ref_date == min(ref_date)]) /
-            movement_cost[ref_date == min(ref_date)]
-        ),
-        by = c(input$group_filter)
-      ]
+      # use gov_hr::compute_growth
+      movement_cost_growth <- movement_cost() |>
+        govhr::compute_growth(
+          group = input$group_filter,
+          measure_col = "movement_cost"
+        )
 
       plotly::ggplotly(
         govhr::plot_bar_growth(
           movement_cost_growth,
           group_col = input$group_filter
         ),
-        height = scale_plot_height(movement_cost_growth)
+        height = govhr::scale_plot_height(movement_cost_growth)
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)

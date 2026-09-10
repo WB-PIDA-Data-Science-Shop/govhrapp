@@ -1,37 +1,3 @@
-#' Guess the Reporting Frequency of the Reference Dates
-#'
-#' Infers the reporting interval of a panel from the median gap between
-#' consecutive distinct reference dates.
-#'
-#' @param .data Data frame containing a `ref_date` column.
-#'
-#' @return A character scalar: `"year"`, `"quarter"`, `"month"`, `"week"` or
-#'   `"day"`.
-#'
-#' @examples
-#' # Monthly reporting dates
-#' data <- data.frame(
-#'   ref_date = seq(as.Date("2020-01-01"), as.Date("2020-12-01"), by = "months")
-#' )
-#'
-#' guess_date_frequency(data)
-#' #> [1] "month"
-#'
-#' @importFrom stats median
-#' @export
-guess_date_frequency <- function(.data) {
-  ref_date <- .data[["ref_date"]] |>
-    unique() |>
-    sort()
-
-  median_days <- stats::median(diff(as.Date(ref_date)), na.rm = TRUE)
-
-  thresholds <- c(year = 360, quarter = 80, month = 27, week = 6)
-  matched <- names(thresholds)[median_days >= thresholds]
-
-  if (length(matched) == 0) "day" else matched[1]
-}
-
 #' Render a Workforce Movement Value Box
 #'
 #' Renders the count and rate of one movement type at the latest reference

@@ -91,6 +91,7 @@ workforce_overview_ui <- function(id, .data) {
 #' @return A Shiny module server function.
 #'
 #' @import shiny
+#' @importFrom govhr apply_baseline_index compute_cross_section_summary compute_growth_summary compute_trend_summary plot_bar_growth plot_bar_total plot_trend scale_plot_height
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
 #' @keywords internal
@@ -111,7 +112,7 @@ workforce_overview_server <- function(id, .data, cache) {
       summary <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_overview")
       } else {
-        compute_trend_summary(
+        govhr::compute_trend_summary(
           workforce_filtered(),
           group_col = input$group_filter
         )
@@ -143,7 +144,7 @@ workforce_overview_server <- function(id, .data, cache) {
         shiny::need(input$group_filter != "ref_date", "Please select a group.")
       )
 
-      cross_section_data <- compute_cross_section_summary(
+      cross_section_data <- govhr::compute_cross_section_summary(
         workforce_filtered(),
         group_col = input$group_filter
       )
@@ -154,7 +155,7 @@ workforce_overview_server <- function(id, .data, cache) {
           group_col = input$group_filter,
           x_label = "Headcount"
         ),
-        height = scale_plot_height(cross_section_data)
+        height = govhr::scale_plot_height(cross_section_data)
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
@@ -165,14 +166,14 @@ workforce_overview_server <- function(id, .data, cache) {
         shiny::need(input$group_filter != "ref_date", "Please select a group.")
       )
 
-      change_data <- compute_growth_summary(
+      change_data <- govhr::compute_growth_summary(
         workforce_filtered(),
         group_col = input$group_filter
       )
 
       plotly::ggplotly(
         govhr::plot_bar_growth(change_data, group_col = input$group_filter),
-        height = scale_plot_height(change_data)
+        height = govhr::scale_plot_height(change_data)
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
