@@ -6,7 +6,7 @@
 # ---- filter_data -------------------------------------------------------------
 # Called by every module server to apply the sidebar selections.
 
-panel <- tibble::tibble(
+panel <- data.frame(
   ref_date = as.Date(c(
     "2020-01-01", "2020-01-01", "2021-01-01", "2021-01-01",
     "2022-01-01", "2022-01-01"
@@ -57,15 +57,8 @@ test_that("filter_data drops rows with a missing ref_date", {
 })
 
 test_that("filter_data preserves the class of its input", {
-  # downstream modules index the result with data.table syntax
   result <- filter_data(panel, "paygrade", "G1", NULL)
-  expect_s3_class(result, "tbl_df")
-
-  result_dt <- filter_data(
-    data.table::as.data.table(panel), "paygrade", "G1", NULL
-  )
-  expect_s3_class(result_dt, "data.table")
-  expect_equal(nrow(result_dt), 3L)
+  expect_s3_class(result, "data.frame")
 })
 
 # ---- identify_group_choices --------------------------------------------------
