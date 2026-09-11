@@ -112,10 +112,12 @@ workforce_overview_server <- function(id, .data, cache) {
       summary <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_overview")
       } else {
-        govhr::compute_trend_summary(
+        govhr::count_entity(
           workforce_filtered(),
-          group_col = input$group_filter
-        )
+          id_col = "personnel_id",
+          group_col = c(input$group_filter, "ref_date")
+        ) |> 
+          dplyr::rename(value = "count")
       }
 
       if (input$toggle_growth) {
@@ -144,10 +146,16 @@ workforce_overview_server <- function(id, .data, cache) {
         shiny::need(input$group_filter != "ref_date", "Please select a group.")
       )
 
-      cross_section_data <- govhr::compute_cross_section_summary(
+      cross_section_data <- govhr::count_entity(
         workforce_filtered(),
-        group_col = input$group_filter
-      )
+        id_col = "personnel_id",
+        group_col = c(input$group_filter, "ref_date")
+      ) |> 
+        dplyr::rename(value = "count") |>
+        # only count last date
+        dplyr::filter(
+          .data[["ref_date"]] == max(.data[["ref_date"]])
+        )
 
       plotly::ggplotly(
         govhr::plot_bar_total(
@@ -166,10 +174,17 @@ workforce_overview_server <- function(id, .data, cache) {
         shiny::need(input$group_filter != "ref_date", "Please select a group.")
       )
 
-      change_data <- govhr::compute_growth_summary(
+      change_data <- govhr::count_entity(
         workforce_filtered(),
-        group_col = input$group_filter
-      )
+        id_col = "personnel_id",
+        group_col = c(input$group_filter, "ref_date")
+      ) |> 
+        dplyr::rename(value = "count") |>
+        # only count last date
+        govhr::compute_growth(
+          group = input$group_filter,
+          measure_col = "value"
+        )
 
       plotly::ggplotly(
         govhr::plot_bar_growth(change_data, group_col = input$group_filter),

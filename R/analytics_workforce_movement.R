@@ -218,6 +218,8 @@ workforce_movement_server <- function(id, .data, cache) {
           class = "d-flex justify-content-between"
         ),
         gt::render_gt({
+          shiny::req(input$movement_type %in% c("hire", "fire"))
+
           movement_data <- data_filtered()
           ref_dates <- movement_data[["ref_date"]]
 
