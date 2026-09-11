@@ -2380,7 +2380,7 @@
     },
     "govhr": {
       "Package": "govhr",
-      "Version": "0.3.4",
+      "Version": "0.3.5",
       "Source": "GitHub",
       "Type": "Package",
       "Title": "Clean and analyze data that informs human resource management",
@@ -2412,7 +2412,12 @@
         "rmarkdown",
         "tidyselect",
         "stringdist",
-        "collapse"
+        "collapse",
+        "plotly",
+        "tidygraph",
+        "ggraph",
+        "ggiraph",
+        "igraph"
       ],
       "Suggests": [
         "forcats",
@@ -2435,7 +2440,7 @@
       "RemoteUsername": "WB-PIDA-Data-Science-Shop",
       "RemoteRepo": "govhr",
       "RemoteRef": "main",
-      "RemoteSha": "0477a645c261b06fd8e7058bdf8ac86ca82b090e"
+      "RemoteSha": "093739d104eb7caf4f44afc56a2bc227a2fe229d"
     },
     "graphlayouts": {
       "Package": "graphlayouts",
@@ -3761,7 +3766,7 @@
       "NeedsCompilation": "no",
       "Author": "Aron Atkins [aut, cre], Toph Allen [aut], Kevin Ushey [aut], Jonathan McPherson [aut], Joe Cheng [aut], JJ Allaire [aut], Posit Software, PBC [cph, fnd]",
       "Maintainer": "Aron Atkins <aron@posit.co>",
-      "Repository": "CRAN"
+      "Repository": "https://packagemanager.posit.co/cran/latest"
     },
     "pillar": {
       "Package": "pillar",
