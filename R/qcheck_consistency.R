@@ -267,7 +267,7 @@ consistency_panel_server <- function(id, .data, cache) {
       # compute and cache the appropriate data for selected plot type
       data_consistency_panel <- shiny::reactive({
         # use cache if default (group filter input is ref_date), otherwise compute on filtered data
-        if (input$type_consistency == "record" && input$group_filter == "ref_date") {
+        if (input$apply_btn == 0) {
           cache
         } else {
           if (input$type_consistency == "record") {
