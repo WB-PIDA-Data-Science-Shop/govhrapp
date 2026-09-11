@@ -274,14 +274,14 @@ consistency_panel_server <- function(id, .data, cache) {
             govhr::compute_record_consistency(
               data_filtered(),
               id_col = id_col,
-              group_cols = input$group_filter
+              group_cols = c(input$group_filter, "ref_date")
             )
           } else {
             govhr::compute_value_consistency(
               data_filtered(),
               id_col = id_col,
               value_col = input$value_col,
-              group_cols = input$group_filter
+              group_cols = c(input$group_filter, "ref_date")
             )
           }
         }
