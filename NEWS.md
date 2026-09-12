@@ -1,3 +1,8 @@
+# govhrapp 0.1.6
+* This patch introduces the following enhancements:
+    * Port all data transformation and visualization functions to `govhr`.
+    * Fixes minor bugs in the `qcheck` `consistency` tab.
+    
 # govhrapp 0.1.5
 
 * This patch introduces the following enhancements:
