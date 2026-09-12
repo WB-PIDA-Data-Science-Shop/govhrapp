@@ -2,7 +2,7 @@
 
 * This patch introduces the following enhancements:
     * Improves the performance of the analytics suite by serving the key indicator boxes from the pre-computed cache and sharing each panel's aggregate across its plots.
-    * Standardizes the documentation and argument names of the analytics functions. This is a breaking change: the data argument is now `.data`, a single grouping column is now `group_col`, and the unused `build_wagebill_group_choices()` is removed.
+    * Standardizes the documentation and argument names of the analytics functions.
     * Adds tests for the helpers shared across the analytics modules.
     * Fixes errors in the wage bill equity and workforce retirement panels.
 
