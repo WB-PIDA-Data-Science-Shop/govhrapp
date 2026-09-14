@@ -180,7 +180,7 @@ summarise_wagebill_box <- function(.data, measure_type) {
 #' @return A named list of pre-computed data frames keyed by panel.
 #'
 #' @importFrom dplyr rename
-#' @importFrom govhr compute_workforce_movement project_retirement
+#' @importFrom govhr compute_trend_summary compute_workforce_movement detect_career_transition project_retirement
 #' @importFrom purrr map set_names
 #' @keywords internal
 build_workforce_cache <- function(workforce_data, wagebill_data) {
@@ -192,11 +192,11 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
 
     # overview module
     workforce_overview = workforce_data |>
-      compute_trend_summary(group_col = "ref_date"),
+      govhr::compute_trend_summary(group_col = "ref_date"),
 
     # transition module
     workforce_transition = wagebill_data |>
-      detect_career_transition(
+      govhr::detect_career_transition(
         id_col = "personnel_id",
         group_cols = "contract_type"
       ),
@@ -237,7 +237,7 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
 #' @return A named list of pre-computed data frames keyed by panel.
 #'
 #' @importFrom dplyr rename
-#' @importFrom govhr compute_compression_ratio compute_movement_cost project_retirement
+#' @importFrom govhr compute_compression_ratio compute_decile compute_movement_cost compute_percentile compute_trend_summary project_retirement
 #' @importFrom purrr map set_names
 #' @keywords internal
 build_wagebill_cache <- function(wagebill_data) {
@@ -249,7 +249,7 @@ build_wagebill_cache <- function(wagebill_data) {
 
     # overview module
     wagebill_overview = wagebill_data |>
-      compute_trend_summary(
+      govhr::compute_trend_summary(
         group_col = "ref_date",
         measure_col = "gross_salary_lcu"
       ),
@@ -270,13 +270,13 @@ build_wagebill_cache <- function(wagebill_data) {
 
     # equity module
     wagebill_equity_percentile = wagebill_data |>
-      compute_percentile(
+      govhr::compute_percentile(
         binwidth = 100,
         measure_col = "gross_salary_lcu",
         latest_measure = FALSE
       ),
     wagebill_equity_decile = wagebill_data |>
-      compute_decile(
+      govhr::compute_decile(
         group_cols = "ref_date",
         measure_col = "gross_salary_lcu",
         latest_measure = TRUE

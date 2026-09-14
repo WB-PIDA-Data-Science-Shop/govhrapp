@@ -16,7 +16,7 @@
 #' generate_analytics_report(workforce_data, wagebill_data)
 #' }
 #'
-#' @importFrom govhr fastcount
+#' @importFrom govhr fastcount plot_compression_ratio plot_decile plot_histogram plot_movement plot_trend
 #' @importFrom purrr pluck
 #' @importFrom rmarkdown render
 #' @export
@@ -44,10 +44,10 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
   # each plot mirrors the call its panel makes against the same cache entry
   plots <- list(
     workforce_overview = purrr::pluck(cache, "workforce", "workforce_overview") |>
-      plot_trend(group_col = "ref_date", y_label = "Headcount"),
+      govhr::plot_trend(group_col = "ref_date", y_label = "Headcount"),
 
     workforce_movement = purrr::pluck(cache, "workforce", "workforce_movement") |>
-      plot_movement(
+      govhr::plot_movement(
         movement_type = "hire",
         measurement_type = "count",
         group_col = "ref_date"
@@ -55,14 +55,14 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
 
     workforce_transition = purrr::pluck(cache, "workforce", "workforce_transition") |>
       govhr::fastcount(ref_date, name = "transition") |>
-      plot_trend(
+      govhr::plot_trend(
         group_col = "ref_date",
         y_col = "transition",
         y_label = "Number of Transitions"
       ),
 
     workforce_retirement = purrr::pluck(cache, "workforce", "workforce_retirement") |>
-      plot_movement(
+      govhr::plot_movement(
         movement_type = "retirement",
         measurement_type = "count",
         group_col = "ref_date"
@@ -73,33 +73,33 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
       "workforce",
       "workforce_retirement_expected"
     ) |>
-      plot_movement(
+      govhr::plot_movement(
         movement_type = "retirement",
         measurement_type = "count",
         group_col = "ref_date"
       ),
 
     wagebill_overview = purrr::pluck(cache, "wagebill", "wagebill_overview") |>
-      plot_trend(group_col = "ref_date", y_label = "Wage Bill"),
+      govhr::plot_trend(group_col = "ref_date", y_label = "Wage Bill"),
 
     wagebill_density = purrr::pluck(cache, "wagebill", "wagebill_equity_percentile") |>
-      plot_histogram(plot_type = "histogram", group_col = "ref_date"),
+      govhr::plot_histogram(plot_type = "histogram", group_col = "ref_date"),
 
     wagebill_decile = purrr::pluck(cache, "wagebill", "wagebill_equity_decile") |>
-      plot_decile(group_col = "ref_date"),
+      govhr::plot_decile(group_col = "ref_date"),
 
     wagebill_compression = purrr::pluck(cache, "wagebill", "wagebill_equity_compression") |>
-      plot_compression_ratio(group_col = "ref_date"),
+      govhr::plot_compression_ratio(group_col = "ref_date"),
 
     wagebill_movement = purrr::pluck(cache, "wagebill", "wagebill_movement") |>
-      plot_trend(
+      govhr::plot_trend(
         group_col = "ref_date",
         y_col = "movement_cost",
         y_label = "Movement Costs"
       ),
 
     wagebill_retirement = purrr::pluck(cache, "wagebill", "wagebill_retirement") |>
-      plot_trend(
+      govhr::plot_trend(
         group_col = "ref_date",
         y_col = "movement_cost",
         y_label = "Retirement Costs"
@@ -110,7 +110,7 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
       "wagebill",
       "wagebill_retirement_expected"
     ) |>
-      plot_trend(
+      govhr::plot_trend(
         group_col = "ref_date",
         y_col = "projected_cost",
         y_label = "Projected Retirement Costs"

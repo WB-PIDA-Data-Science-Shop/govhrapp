@@ -98,7 +98,7 @@ wagebill_equity_ui <- function(id, .data) {
 #' @return A Shiny module server function.
 #'
 #' @import shiny
-#' @importFrom govhr compute_compression_ratio
+#' @importFrom govhr compute_compression_ratio compute_decile compute_percentile
 #' @importFrom plotly renderPlotly
 #' @importFrom purrr pluck
 #' @keywords internal
@@ -120,7 +120,7 @@ wagebill_equity_server <- function(id, .data, cache) {
       wagebill_density <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "wagebill", "wagebill_equity_percentile")
       } else {
-        compute_percentile(
+        govhr::compute_percentile(
           wagebill_filtered(),
           group_col = input$group_filter,
           binwidth = 100,
@@ -128,7 +128,7 @@ wagebill_equity_server <- function(id, .data, cache) {
         )
       }
 
-      plot_histogram(
+      govhr::plot_histogram(
         wagebill_density,
         plot_type = input$plot_type,
         group_col = input$group_filter
@@ -141,7 +141,7 @@ wagebill_equity_server <- function(id, .data, cache) {
       wagebill_distribution <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "wagebill", "wagebill_equity_decile")
       } else {
-        compute_decile(
+        govhr::compute_decile(
           wagebill_filtered(),
           group_cols = input$group_filter,
           measure_col = input$wagebill_measure,
@@ -149,7 +149,7 @@ wagebill_equity_server <- function(id, .data, cache) {
         )
       }
 
-      plot_decile(wagebill_distribution, group_col = input$group_filter)
+      govhr::plot_decile(wagebill_distribution, group_col = input$group_filter)
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
@@ -165,7 +165,7 @@ wagebill_equity_server <- function(id, .data, cache) {
         )
       }
 
-      plot_compression_ratio(
+      govhr::plot_compression_ratio(
         wagebill_compression_ratio,
         group_col = input$group_filter
       )

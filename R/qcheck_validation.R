@@ -45,19 +45,18 @@ validation_ui <- function(id) {
       bslib::card(
         bslib::card_header("Contract Validation Rules"),
         bslib::card_body(
+          fillable = FALSE,
           gt::gt_output(ns("contract_table")),
           shiny::tags$hr(),
-          bslib::layout_columns(
-            col_widths = c(8, 4),
-            shiny::selectInput(
-              ns("contract_rule_select"),
-              label = "Download violations for rule:",
-              choices = NULL
-            ),
-            shiny::tags$div(
-              style = "padding-top: 1.7em;",
-              shiny::downloadButton(ns("contract_download"), "Download (.xlsx)")
-            )
+          shiny::selectInput(
+            ns("contract_rule_select"),
+            label = "Download violations for rule:",
+            choices = NULL
+          ),
+          shiny::downloadButton(
+            ns("contract_download"),
+            "Download records",
+            icon = NULL
           )
         )
       )
@@ -69,22 +68,18 @@ validation_ui <- function(id) {
       bslib::card(
         bslib::card_header("Personnel Validation Rules"),
         bslib::card_body(
+          fillable = FALSE,
           gt::gt_output(ns("personnel_table")),
           shiny::tags$hr(),
-          bslib::layout_columns(
-            col_widths = c(8, 4),
-            shiny::selectInput(
-              ns("personnel_rule_select"),
-              label = "Download violations for rule:",
-              choices = NULL
-            ),
-            shiny::tags$div(
-              style = "padding-top: 1.7em;",
-              shiny::downloadButton(
-                ns("personnel_download"),
-                "Download (.xlsx)"
-              )
-            )
+          shiny::selectInput(
+            ns("personnel_rule_select"),
+            label = "Download violations for rule:",
+            choices = NULL
+          ),
+          shiny::downloadButton(
+            ns("personnel_download"),
+            "Download records",
+            icon = NULL
           )
         )
       )
