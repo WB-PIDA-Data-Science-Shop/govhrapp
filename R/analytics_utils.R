@@ -39,13 +39,9 @@ render_movement_box <- function(.data, movement_type, cache = NULL) {
 
   shiny::renderUI({
     bslib::value_box(
-      title = paste0(
-        stringr::str_to_title(movement_type),
-        " (", format(values[["ref_date"]], "%b %Y"), ")"
-      ),
+      title = stringr::str_to_title(movement_type),
       theme = bslib::value_box_theme(bg = "#C34729", fg = "#ffffff"),
       class = "border",
-      max_height = "150px",
       value = box_value,
       showcase = bsicons::bs_icon(
         switch(
@@ -55,6 +51,12 @@ render_movement_box <- function(.data, movement_type, cache = NULL) {
           retirement = "person-badge-fill",
           turnover = "arrow-repeat"
         )
+      ),
+      p(
+        paste0(
+          "Reference period: ",
+          format(as.Date(values[["ref_date"]]), "%b %Y")
+        ),
       ),
       bslib::popover(
         bsicons::bs_icon("info-circle-fill"),
