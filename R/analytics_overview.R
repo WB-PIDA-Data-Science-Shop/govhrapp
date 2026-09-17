@@ -194,14 +194,14 @@ overview_server <- function(id, cache) {
           ggplot2::scale_y_continuous(
             labels = scales::label_number(scale_cut = scales::cut_short_scale())
           ) +
-          ggplot2::labs(x = "Time", y = "Total compensation (LCU)")
+          ggplot2::labs(x = "Time", y = "Wage Bill (LCU)")
       )
     })
 
     output$plot_integrated <- plotly::renderPlotly({
       req(input$display_mode == "integrated")
 
-      palette <- c("Headcount" = "#C34729", "Total compensation" = "#004181")
+      palette <- c("Headcount" = "#C34729", "Wage Bill" = "#004181")
 
       # index series for the integrated plot only — kept separate, see note below
       indexed_workforce <- workforce_overview |>
