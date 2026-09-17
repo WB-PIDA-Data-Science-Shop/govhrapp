@@ -104,7 +104,7 @@ workforce_retirement_server <- function(id, .data, cache) {
         purrr::pluck(cache, "workforce", "workforce_retirement")
       } else {
         govhr::compute_workforce_movement(
-          .data = data_filtered(),
+          data = data_filtered(),
           movement_type = "retirement",
           measurement_type = input$measurement_type,
           group_cols = input$group_filter
@@ -126,7 +126,7 @@ workforce_retirement_server <- function(id, .data, cache) {
         purrr::pluck(cache, "workforce", "workforce_retirement_expected")
       } else {
         govhr::project_retirement(
-          .data = data_filtered(),
+          data = data_filtered(),
           threshold_age = input$threshold_age,
           birth_col = "birth_date",
           group_cols = input$group_filter,

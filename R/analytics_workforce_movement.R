@@ -126,11 +126,11 @@ workforce_movement_server <- function(id, .data, cache) {
 
     # all three plots read the same aggregate, so compute it once per apply
     movement_summary <- shiny::reactive({
-      if (input$apply_btn == 0) {
+    if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_movement")
       } else {
         govhr::compute_workforce_movement(
-          .data = data_filtered(),
+          data = data_filtered(),
           movement_type = input$movement_type,
           measurement_type = input$measurement_type,
           group_cols = input$group_filter
@@ -224,7 +224,7 @@ workforce_movement_server <- function(id, .data, cache) {
           ref_dates <- movement_data[["ref_date"]]
 
           govhr::classify_personnel_event(
-            .data = movement_data,
+            data = movement_data,
             id_col = "personnel_id",
             event_type = input$movement_type,
             start_date = min(ref_dates),

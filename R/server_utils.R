@@ -106,7 +106,7 @@ filter_data <- function(.data, group_filter, subgroup_filter, date_range) {
 summarise_movement_box <- function(.data, movement_type) {
   latest_indicator <- function(measurement_type) {
     govhr::compute_workforce_movement(
-      .data = .data,
+      data = .data,
       movement_type = movement_type,
       measurement_type = measurement_type,
       group_cols = "ref_date"
@@ -209,8 +209,8 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
         group_cols = "ref_date"
       ),
     workforce_retirement_expected = govhr::project_retirement(
-      .data = workforce_data,
-      threshold_age = 60,
+      data = workforce_data,
+    threshold_age = 60,
       birth_col = "birth_date",
       group_cols = "ref_date",
       simplify_retirement_date = TRUE
