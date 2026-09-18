@@ -123,7 +123,10 @@ wagebill_overview_server <- function(id, .data, cache) {
 
     wagebill_summary <- shiny::reactive({
       summary <- if (input$apply_btn == 0) {
-        purrr::pluck(cache, "wagebill", "wagebill_overview")
+        purrr::pluck(cache, "wagebill", "wagebill_overview") |>
+          filter(
+            .data[["indicator"]] == "gross_salary_lcu_sum"
+          )
       } else {
         govhr::compute_trend_summary(
           wagebill_filtered(),
