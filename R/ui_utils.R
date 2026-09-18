@@ -44,8 +44,12 @@ identify_group_choices <- function(.data) {
       dplyr::filter(
         .data[["variable_id"]] %in% available_cols,
         .data[["variable_class"]] == "character",
+        # exclude id pcolumns that are not suitable for grouping
         !.data[["variable_id"]] %in%
-          c("ref_date", "contract_id", "personnel_id")
+          c("ref_date", "contract_id", "personnel_id"),
+        # exclude est_id in the contract module to avoid est_id duplication with
+        # the estabilshment module
+        !(.data[["variable_id"]] == "est_id" & .data[["module"]] == "Contract")
       ) |>
       nest_choices_by_module()
   )

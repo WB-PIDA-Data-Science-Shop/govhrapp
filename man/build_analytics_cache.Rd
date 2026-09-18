@@ -21,4 +21,3 @@ Pre-computes the summaries each analytics panel shows before the user applies
 any filter, so app start-up and first paint do no aggregation. Built once by
 the app entry point and passed to every module server.
 }
-\keyword{internal}

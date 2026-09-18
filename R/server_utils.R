@@ -156,7 +156,7 @@ summarise_wagebill_box <- function(.data, measure_type) {
     ) |>
     govhr::compute_fastsummary(
       cols = "gross_salary_lcu",
-      groups = "ref_date",
+      group_cols = "ref_date",
       fns = "sum"
     ) |>
     dplyr::pull(.data[["value"]])
@@ -223,7 +223,11 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
         movement_type = "hire",
         measurement_type = "count",
         group_cols = "ref_date"
-      )
+      ),
+
+    # movement profile
+    workforce_movement_profile = workforce_data |>
+      render_movement_profile(movement_type = "hire")
   )
 }
 
@@ -236,7 +240,7 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
 #'
 #' @return A named list of pre-computed data frames keyed by panel.
 #'
-#' @importFrom dplyr rename
+#' @importFrom dplyr rename bind_rows mutate filter arrange
 #' @importFrom govhr compute_compression_ratio compute_decile compute_movement_cost compute_percentile compute_trend_summary project_retirement
 #' @importFrom purrr map set_names
 #' @keywords internal
@@ -252,6 +256,14 @@ build_wagebill_cache <- function(wagebill_data) {
       govhr::compute_trend_summary(
         group_col = "ref_date",
         measure_col = "gross_salary_lcu"
+      ) |>
+      dplyr::bind_rows(
+        wagebill_data |>
+          govhr::compute_fastsummary(
+            cols = "gross_salary_lcu",
+            fns = "mean",
+            group_cols = "ref_date"
+          )
       ),
 
     # retirement module
@@ -310,7 +322,7 @@ build_wagebill_cache <- function(wagebill_data) {
 #' @return A named list with `workforce` and `wagebill` elements, each a list of
 #'   pre-computed data frames keyed by panel.
 #'
-#' @keywords internal
+#' @export
 build_analytics_cache <- function(workforce_data, wagebill_data) {
   list(
     workforce = build_workforce_cache(workforce_data, wagebill_data),

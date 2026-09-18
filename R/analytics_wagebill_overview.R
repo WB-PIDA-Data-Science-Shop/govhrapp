@@ -160,7 +160,7 @@ wagebill_overview_server <- function(id, .data, cache) {
         govhr::compute_fastsummary(
           cols = input$wagebill_measure,
           fns = "sum",
-          groups = c("ref_date", "country_code")
+          group_colss = c("ref_date", "country_code")
         )
     })
 

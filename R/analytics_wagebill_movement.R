@@ -194,7 +194,7 @@ wagebill_movement_server <- function(id, .data, cache) {
       # use gov_hr::compute_growth
       movement_cost_growth <- movement_cost() |>
         govhr::compute_growth(
-          group = input$group_filter,
+          group_col = input$group_filter,
           measure_col = "movement_cost"
         )
 
