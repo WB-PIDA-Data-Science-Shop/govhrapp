@@ -145,7 +145,10 @@ overview_server <- function(id, cache) {
       scales::comma(accuracy = 1)
 
     wagebill_val <- wagebill_overview |>
-      dplyr::filter(.data[["ref_date"]] == latest_ref_date) |>
+      dplyr::filter(
+        .data[["ref_date"]] == latest_ref_date,
+        .data[["indicator"]] == "gross_salary_lcu_sum"
+      ) |>
       dplyr::pull(.data[["value"]]) |>
       scales::comma(accuracy = 1)
 
