@@ -185,6 +185,9 @@ overview_server <- function(id, cache) {
 
       plotly::ggplotly(
         wagebill_overview |>
+          filter(
+            .data[["indicator"]] == "gross_salary_lcu_sum"
+          ) |>
           ggplot2::ggplot(ggplot2::aes(
             x = .data[["ref_date"]],
             y = .data[["value"]]
@@ -201,7 +204,7 @@ overview_server <- function(id, cache) {
     output$plot_integrated <- plotly::renderPlotly({
       req(input$display_mode == "integrated")
 
-      palette <- c("Headcount" = "#C34729", "Wage Bill" = "#004181")
+      palette <- c("Headcount" = "#C34729", "Wage Bill" = "#00070e", "Average Wage" = "#004181")
 
       # index series for the integrated plot only — kept separate, see note below
       indexed_workforce <- workforce_overview |>
@@ -211,6 +214,18 @@ overview_server <- function(id, cache) {
         )
 
       indexed_wagebill <- wagebill_overview |>
+        dplyr::filter(
+          .data[["indicator"]] == "gross_salary_lcu_sum"
+        ) |>
+        dplyr::arrange(.data[["ref_date"]]) |>
+        dplyr::mutate(
+          value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100
+        )
+
+      indexed_average_wage <- wagebill_overview |>
+        filter(
+          .data[["indicator"]] == "gross_salary_lcu_mean"
+        ) |>
         dplyr::arrange(.data[["ref_date"]]) |>
         dplyr::mutate(
           value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100
@@ -218,7 +233,8 @@ overview_server <- function(id, cache) {
 
       combined <- dplyr::bind_rows(
         dplyr::mutate(indexed_workforce, series = "Headcount"),
-        dplyr::mutate(indexed_wagebill, series = "Total compensation")
+        dplyr::mutate(indexed_wagebill, series = "Wage Bill"),
+        dplyr::mutate(indexed_average_wage, series = "Average Wage")
       )
 
       plotly::ggplotly(

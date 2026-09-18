@@ -256,6 +256,14 @@ build_wagebill_cache <- function(wagebill_data) {
       govhr::compute_trend_summary(
         group_col = "ref_date",
         measure_col = "gross_salary_lcu"
+      ) |>
+      dplyr::bind_rows(
+        wagebill_data |>
+          govhr::compute_fastsummary(
+            cols = "gross_salary_lcu",
+            fns = "mean",
+            group_cols = "ref_date"
+          )
       ),
 
     # retirement module
