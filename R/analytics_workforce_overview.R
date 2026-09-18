@@ -182,7 +182,7 @@ workforce_overview_server <- function(id, .data, cache) {
         dplyr::rename(value = "count") |>
         # only count last date
         govhr::compute_growth(
-          group = input$group_filter,
+          group_col = input$group_filter,
           measure_col = "value"
         )
 
