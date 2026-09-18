@@ -105,6 +105,7 @@ wagebill_overview_ui <- function(id, .data) {
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
 #' @importFrom scales percent_format
+#' @importFrom dplyr filter
 #' @keywords internal
 wagebill_overview_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
@@ -123,7 +124,10 @@ wagebill_overview_server <- function(id, .data, cache) {
 
     wagebill_summary <- shiny::reactive({
       summary <- if (input$apply_btn == 0) {
-        purrr::pluck(cache, "wagebill", "wagebill_overview")
+        purrr::pluck(cache, "wagebill", "wagebill_overview") |>
+          dplyr::filter(
+            .data[["indicator"]] == "gross_salary_lcu_sum"
+          )
       } else {
         govhr::compute_trend_summary(
           wagebill_filtered(),
