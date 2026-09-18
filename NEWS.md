@@ -1,3 +1,9 @@
+# govhrapp 0.1.7
+* This patch introduces the following enhancements:
+    * Fixes UI issues described in #47.
+    * Prerenders profile of new hires.
+    * Adds average wages to the Overview tab.
+
 # govhrapp 0.1.6
 * This patch introduces the following enhancements:
     * Port all data transformation and visualization functions to `govhr`.
