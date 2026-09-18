@@ -240,7 +240,7 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
 #'
 #' @return A named list of pre-computed data frames keyed by panel.
 #'
-#' @importFrom dplyr rename
+#' @importFrom dplyr rename bind_rows mutate filter arrange
 #' @importFrom govhr compute_compression_ratio compute_decile compute_movement_cost compute_percentile compute_trend_summary project_retirement
 #' @importFrom purrr map set_names
 #' @keywords internal
