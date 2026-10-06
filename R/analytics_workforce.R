@@ -17,9 +17,9 @@ workforce_ui <- function(id, workforce_data, wagebill_data) {
   # value boxes for workforce movement metrics
   value_boxes <- list(
     shiny::uiOutput(shiny::NS(id, "movement_hire")),
-    shiny::uiOutput(shiny::NS(id, "movement_fire")),
+    shiny::uiOutput(shiny::NS(id, "movement_separation")),
     shiny::uiOutput(shiny::NS(id, "movement_retirement")),
-    shiny::uiOutput(shiny::NS(id, "movement_turnover"))
+    shiny::uiOutput(shiny::NS(id, "movement_replacement"))
   )
 
   bslib::layout_columns(
@@ -57,7 +57,7 @@ workforce_ui <- function(id, workforce_data, wagebill_data) {
         "Workforce: Key Indicators",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Computed as the most recent count or share of hires and fires. For turnover, it is the ratio of hires to fires in the most recent reference period.",
+          "Computed as the most recent count and share of active headcount for hires, separations and retirements. The replacement rate is the ratio of hires to separations.",
           title = "Workforce Overview",
           placement = "left"
         ),
@@ -114,14 +114,14 @@ workforce_server <- function(id, workforce_data, wagebill_data, cache) {
     output$movement_hire <- render_movement_box(
       workforce_data, "hire", cache = cache
     )
-    output$movement_fire <- render_movement_box(
-      workforce_data, "fire", cache = cache
+    output$movement_separation <- render_movement_box(
+      workforce_data, "separation", cache = cache
     )
     output$movement_retirement <- render_movement_box(
       workforce_data, "retirement", cache = cache
     )
-    output$movement_turnover <- render_movement_box(
-      workforce_data, "turnover", cache = cache
+    output$movement_replacement <- render_movement_box(
+      workforce_data, "replacement", cache = cache
     )
 
     # 2. panel servers

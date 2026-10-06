@@ -10,7 +10,7 @@ render_movement_profile(data, movement_type)
 \item{data}{A data frame containing personnel data with columns for ref_date, personnel_id, gender, educat7, employment_status, and birth_date.}
 
 \item{movement_type}{A character string indicating the type of movement to profile (e.g
-"hire" or "fire").}
+"hire" or "separation").}
 }
 \value{
 A gt table summarizing the demographic characteristics of the specified movement type compared to the general population.

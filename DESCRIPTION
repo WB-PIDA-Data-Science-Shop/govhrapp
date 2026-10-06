@@ -4,29 +4,34 @@ Authors@R: c(
     person("Galileu", "Kim", , "galileukim@worldbank.org", role = c("aut", "cre")),
     person("Ifeanyi", "Edochie", , "iedochie@worldbank.org", role = c("aut"))
   )
-Version: 0.1.7
+Version: 0.1.8
 Description: This package is developed by the World Bank. It enables users to quality check, analyze and forecast HR data to inform human resource management.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Suggests:
+    DBI,
+    dbplyr,
     knitr,
     pkgload,
+    RSQLite,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Imports: 
     bsicons,
     bslib,
     collapse,
+    data.table,
     dplyr,
     ggiraph,
     ggplot2,
-    govhr (>= 0.1.3),
+    govhr (>= 0.4.1),
     gt,
     gtsummary,
     lubridate,
     plotly,
     purrr,
+    rlang,
     rmarkdown,
     rsconnect,
     scales,
@@ -38,8 +43,7 @@ Imports:
     tidyr,
     writexl
 Depends: 
-    R (>= 3.5)
-LazyData: true
+    R (>= 4.1.0)
 Remotes: 
     WB-PIDA-Data-Science-Shop/govhr
 Config/roxygen2/version: 8.1.0
