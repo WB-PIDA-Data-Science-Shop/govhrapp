@@ -160,7 +160,8 @@ wagebill_equity_server <- function(id, .data, cache) {
         compute_compression_ratio(
           wagebill_filtered(),
           group_cols = input$group_filter,
-          measure_col = input$wagebill_measure
+          measure_col = input$wagebill_measure,
+          latest_measure = TRUE
         )
       }
 
