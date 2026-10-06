@@ -43,7 +43,7 @@ workforce_retirement_ui <- function(id, .data) {
         "Retirements over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "The number of retirements and rate (retirements / total workforce) over time. The rate is computed as the number of retirements divided by the total workforce at the beginning of each period.",
+          "Retirements are personnel active in a period who are pensioners in the next one. The rate divides retirements by the active headcount in the same period.",
           title = "Retirements over time",
           placement = "left"
         ),
@@ -58,7 +58,7 @@ workforce_retirement_ui <- function(id, .data) {
         "Projected retirements",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "The projected number of retirements and rate (projected retirements / total workforce) based on the selected retirement threshold age.",
+          "Active personnel in the latest period who reach the selected retirement threshold age in each future year. The rate divides them by the active headcount in the latest period.",
           title = "Projected retirements",
           placement = "left"
         ),
@@ -78,8 +78,6 @@ workforce_retirement_ui <- function(id, .data) {
 #' @return A Shiny module server function.
 #'
 #' @import shiny
-#' @importFrom dplyr rename
-#' @importFrom govhr compute_workforce_movement project_retirement
 #' @importFrom plotly renderPlotly
 #' @importFrom purrr pluck
 #' @keywords internal
@@ -103,19 +101,22 @@ workforce_retirement_server <- function(id, .data, cache) {
       plot_data <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_retirement")
       } else {
-        govhr::compute_workforce_movement(
-          data = data_filtered(),
-          movement_type = "retirement",
-          measurement_type = input$measurement_type,
-          group_cols = input$group_filter
+        compute_retirement(
+          data_filtered(),
+          group_cols = group_col_to_null(input$group_filter)
         )
       }
 
-      govhr::plot_movement(
+      plot_movement_trend(
         plot_data,
-        movement_type = "retirement",
-        measurement_type = input$measurement_type,
-        group_col = input$group_filter
+        y_col = movement_measure_col("retirement", input$measurement_type),
+        y_label = if (input$measurement_type == "count") {
+          "Retirements"
+        } else {
+          "Retirement rate"
+        },
+        group_col = input$group_filter,
+        percent = input$measurement_type == "rate"
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
@@ -125,21 +126,27 @@ workforce_retirement_server <- function(id, .data, cache) {
       plot_data <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_retirement_expected")
       } else {
-        govhr::project_retirement(
-          data = data_filtered(),
+        compute_projected_retirement(
+          data_filtered(),
           threshold_age = input$threshold_age,
-          birth_col = "birth_date",
-          group_cols = input$group_filter,
-          simplify_retirement_date = TRUE
-        ) |>
-          dplyr::rename(ref_date = "retirement_date")
+          group_cols = group_col_to_null(input$group_filter)
+        )
       }
 
-      govhr::plot_movement(
+      plot_movement_trend(
         plot_data,
-        movement_type = "retirement",
-        measurement_type = input$measurement_type,
-        group_col = input$group_filter
+        y_col = if (input$measurement_type == "count") {
+          "projected_retirements"
+        } else {
+          "projected_retirement_rate"
+        },
+        y_label = if (input$measurement_type == "count") {
+          "Projected retirements"
+        } else {
+          "Projected retirement rate"
+        },
+        group_col = input$group_filter,
+        percent = input$measurement_type == "rate"
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)

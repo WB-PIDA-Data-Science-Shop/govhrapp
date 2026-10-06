@@ -21,7 +21,11 @@ workforce_movement_ui <- function(id, .data) {
       shiny::selectInput(
         shiny::NS(id, "movement_type"),
         label = "Select type of movement:",
-        choices = c("Recruitment" = "hire", "Separation" = "fire", "Turnover" = "turnover")
+        choices = c(
+          "Recruitment" = "hire",
+          "Separation" = "separation",
+          "Replacement" = "replacement"
+        )
       ),
       shiny::selectInput(
         shiny::NS(id, "measurement_type"),
@@ -42,7 +46,7 @@ workforce_movement_ui <- function(id, .data) {
         "Movements over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Hires and fires are computed as the number of new hires and fires in each period. Turnover is computed as the ratio of hires to fires and retirements. The rate is computed as the number of new hires divided by the total workforce at the beginning of each period.",
+          "Hires are personnel active in a period but not in the previous one. Separations are personnel active in a period but not in the next one, for any reason including retirement. Rates divide hires or separations by the active headcount in the same period. The replacement rate is the ratio of hires to separations: above 1, more personnel join than leave.",
           title = "Movements over time",
           placement = "left"
         ),
@@ -102,13 +106,13 @@ workforce_movement_ui <- function(id, .data) {
 #'
 #' @import bslib
 #' @import shiny
-#' @importFrom dplyr all_of mutate select
-#' @importFrom govhr classify_personnel_event compute_growth_summary compute_workforce_movement guess_date_frequency plot_bar_growth plot_bar_total plot_movement scale_plot_height
+#' @importFrom dplyr all_of filter mutate select
+#' @importFrom ggplot2 geom_hline
+#' @importFrom govhr classify_personnel_event compute_growth_summary compute_movement guess_date_frequency plot_bar_growth plot_bar_total plot_movement scale_plot_height
 #' @importFrom gt render_gt
 #' @importFrom gtsummary as_gt modify_header tbl_summary
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
-#' @importFrom stats na.omit
 #' @importFrom stringr str_to_title
 #' @keywords internal
 workforce_movement_server <- function(id, .data, cache) {
@@ -124,29 +128,55 @@ workforce_movement_server <- function(id, .data, cache) {
       )
     })
 
-    # all three plots read the same aggregate, so compute it once per apply
+    # compute_movement() returns every movement and measurement type at once,
+    # so switching between them reuses this aggregate rather than recomputing
     movement_summary <- shiny::reactive({
-    if (input$apply_btn == 0) {
+      if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_movement")
       } else {
-        govhr::compute_workforce_movement(
-          data = data_filtered(),
-          movement_type = input$movement_type,
-          measurement_type = input$measurement_type,
-          group_cols = input$group_filter
+        govhr::compute_movement(
+          data_filtered(),
+          group_cols = group_col_to_null(input$group_filter)
         )
       }
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
-    # plot 1. hiring counts/rates over time
-    output$movement_trend <- plotly::renderPlotly({
-      govhr::plot_movement(
-        movement_summary(),
-        movement_type = input$movement_type,
-        measurement_type = input$measurement_type,
-        group_col = input$group_filter
+    # the first date has no hires and the last no separations, so plots 2 and 3
+    # drop those dates for the selected measure only
+    measure_summary <- shiny::reactive({
+      measure_col <- movement_measure_col(
+        input$movement_type,
+        input$measurement_type
       )
+
+      movement_summary() |>
+        dplyr::filter(!is.na(.data[[measure_col]]))
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # plot 1. counts/rates over time
+    output$movement_trend <- plotly::renderPlotly({
+      if (input$movement_type == "replacement") {
+        plot_movement_trend(
+          movement_summary(),
+          y_col = "replacement_rate",
+          y_label = "Replacement rate",
+          group_col = input$group_filter
+        ) +
+          ggplot2::geom_hline(
+            yintercept = 1,
+            linetype = "dashed",
+            color = "#004181"
+          )
+      } else {
+        govhr::plot_movement(
+          movement_summary(),
+          movement_type = input$movement_type,
+          measurement_type = input$measurement_type,
+          group_cols = group_col_to_null(input$group_filter)
+        )
+      }
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
@@ -156,15 +186,17 @@ workforce_movement_server <- function(id, .data, cache) {
         shiny::need(input$group_filter != "ref_date", "Please select a group.")
       )
 
-      cross_section_data <- movement_summary() |>
-        stats::na.omit() |>
+      cross_section_data <- measure_summary() |>
         dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]]))
 
       plotly::ggplotly(
         govhr::plot_bar_total(
           cross_section_data,
           group_col = input$group_filter,
-          x_col = "indicator",
+          x_col = movement_measure_col(
+            input$movement_type,
+            input$measurement_type
+          ),
           x_label = stringr::str_to_title(input$movement_type)
         ),
         height = govhr::scale_plot_height(cross_section_data)
@@ -178,11 +210,13 @@ workforce_movement_server <- function(id, .data, cache) {
         shiny::need(input$group_filter != "ref_date", "Please select a group.")
       )
 
-      growth_data <- movement_summary() |>
-        stats::na.omit() |>
+      growth_data <- measure_summary() |>
         govhr::compute_growth_summary(
           group_col = input$group_filter,
-          measure_col = "indicator"
+          measure_col = movement_measure_col(
+            input$movement_type,
+            input$measurement_type
+          )
         )
 
       plotly::ggplotly(
@@ -196,7 +230,7 @@ workforce_movement_server <- function(id, .data, cache) {
     output$movement_profile <- shiny::renderUI({
       shiny::req(input$movement_type)
 
-      if (!input$movement_type %in% c("hire", "fire")) {
+      if (!input$movement_type %in% c("hire", "separation")) {
         return(NULL)
       }
 
@@ -218,7 +252,7 @@ workforce_movement_server <- function(id, .data, cache) {
           class = "d-flex justify-content-between"
         ),
         gt::render_gt({
-          shiny::req(input$movement_type %in% c("hire", "fire"))
+          shiny::req(input$movement_type %in% c("hire", "separation"))
           
           if (input$apply_btn == 0) {
             purrr::pluck(cache, "workforce", "workforce_movement_profile")

@@ -99,3 +99,13 @@ test_that("identify_group_choices tracks the columns of the data it is given", {
   expect_false("gender" %in% unlist(narrow, use.names = FALSE))
 })
 
+# ---- group_col_to_null -------------------------------------------------------
+# Called before every govhr compute function that takes `group_cols`, which
+# reject or misread the sidebar's "ref_date" no-grouping value.
+
+test_that("group_col_to_null maps the no-grouping selection to NULL", {
+  expect_null(group_col_to_null("ref_date"))
+  expect_null(group_col_to_null(NULL))
+  expect_identical(group_col_to_null("gender"), "gender")
+})
+

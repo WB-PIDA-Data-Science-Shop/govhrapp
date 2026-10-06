@@ -122,9 +122,8 @@ wagebill_equity_server <- function(id, .data, cache) {
       } else {
         govhr::compute_percentile(
           wagebill_filtered(),
-          group_col = input$group_filter,
-          binwidth = 100,
-          measure_col = input$wagebill_measure
+          measure_col = input$wagebill_measure,
+          group_cols = group_col_to_null(input$group_filter)
         )
       }
 

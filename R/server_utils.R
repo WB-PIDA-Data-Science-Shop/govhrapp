@@ -88,39 +88,68 @@ filter_data <- function(.data, group_filter, subgroup_filter, date_range) {
   filtered
 }
 
+#' Convert the No-Grouping Selection to `NULL`
+#'
+#' The sidebar group picker uses `"ref_date"` to mean "no grouping". The govhr
+#' plotting functions accept that convention, but the compute functions that
+#' take `group_cols` do not: [govhr::compute_movement()] rejects `"ref_date"`,
+#' and [govhr::compute_percentile()] computes shares within each date, which
+#' stack when plotted. This translates the picker value before it reaches them.
+#'
+#' @param group_col Character or `NULL`. The selected grouping column, such as
+#'   `input$group_filter`.
+#'
+#' @return `NULL` when `group_col` is `NULL` or `"ref_date"`, otherwise
+#'   `group_col` unchanged.
+#'
+#' @examples
+#' \dontrun{
+#' group_col_to_null("ref_date") # NULL
+#' group_col_to_null("gender") # "gender"
+#' }
+#'
+#' @keywords internal
+group_col_to_null <- function(group_col) {
+  if (is.null(group_col) || identical(group_col, "ref_date")) {
+    NULL
+  } else {
+    group_col
+  }
+}
+
 #' Summarise a Movement Value Box
 #'
-#' Computes the latest count and rate for one movement type, used by the
-#' workforce key-indicator boxes. Turnover reports a rate only.
+#' Reads the latest count and rate for one movement type from pre-computed
+#' movement and retirement tables, for the workforce key-indicator boxes. The
+#' replacement box reports a ratio only.
 #'
-#' @param .data Data frame containing personnel data.
-#' @param movement_type Character. One of `"hire"`, `"fire"`, `"retirement"` or
-#'   `"turnover"`.
+#' @param movement Output of [govhr::compute_movement()].
+#' @param retirement Output of [compute_retirement()].
+#' @param movement_type Character. One of `"hire"`, `"separation"`,
+#'   `"retirement"` or `"replacement"`.
 #'
-#' @return A list with `ref_date`, `count` and `rate`.
+#' @return A list with `ref_date` (the date the values are from), `count` and
+#'   `rate`.
 #'
-#' @importFrom dplyr filter pull
-#' @importFrom govhr compute_workforce_movement
-#' @importFrom stats na.omit
+#' @importFrom dplyr filter slice_max
 #' @keywords internal
-summarise_movement_box <- function(.data, movement_type) {
-  latest_indicator <- function(measurement_type) {
-    govhr::compute_workforce_movement(
-      data = .data,
-      movement_type = movement_type,
-      measurement_type = measurement_type,
-      group_cols = "ref_date"
-    ) |>
-      stats::na.omit() |>
-      dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]])) |>
-      dplyr::pull(.data[["indicator"]])
-  }
+summarise_movement_box <- function(movement, retirement, movement_type) {
+  rate_col <- movement_measure_col(movement_type, "rate")
+
+  # hires are undefined on the first date and separations and retirements on
+  # the last, so each box reports the latest date its own measure exists for
+  latest <- (if (movement_type == "retirement") retirement else movement) |>
+    dplyr::filter(!is.na(.data[[rate_col]])) |>
+    dplyr::slice_max(.data[["ref_date"]], n = 1)
 
   list(
-    ref_date = max(.data[["ref_date"]], na.rm = TRUE),
-    # the turnover box shows a ratio only, so its count is never computed
-    count = if (movement_type == "turnover") NA_real_ else latest_indicator("count"),
-    rate = latest_indicator("rate")
+    ref_date = latest[["ref_date"]],
+    count = if (movement_type == "replacement") {
+      NA_real_
+    } else {
+      latest[[movement_measure_col(movement_type, "count")]]
+    },
+    rate = latest[[rate_col]]
   )
 }
 
@@ -179,16 +208,24 @@ summarise_wagebill_box <- function(.data, measure_type) {
 #'
 #' @return A named list of pre-computed data frames keyed by panel.
 #'
-#' @importFrom dplyr rename
-#' @importFrom govhr compute_trend_summary compute_workforce_movement detect_career_transition project_retirement
+#' @importFrom govhr compute_movement compute_transition compute_trend_summary
 #' @importFrom purrr map set_names
 #' @keywords internal
 build_workforce_cache <- function(workforce_data, wagebill_data) {
+  # the value boxes, movement panel and retirement panel all read these, so
+  # each is computed once
+  workforce_movement <- govhr::compute_movement(workforce_data)
+  workforce_retirement <- compute_retirement(workforce_data)
+
   list(
     # key indicator boxes
-    movement_box = c("hire", "fire", "retirement", "turnover") |>
+    movement_box = c("hire", "separation", "retirement", "replacement") |>
       purrr::set_names() |>
-      purrr::map(\(type) summarise_movement_box(workforce_data, type)),
+      purrr::map(
+        \(type) {
+          summarise_movement_box(workforce_movement, workforce_retirement, type)
+        }
+      ),
 
     # overview module
     workforce_overview = workforce_data |>
@@ -196,34 +233,18 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
 
     # transition module
     workforce_transition = wagebill_data |>
-      govhr::detect_career_transition(
+      govhr::compute_transition(
         id_col = "personnel_id",
         group_cols = "contract_type"
       ),
 
     # retirement module
-    workforce_retirement = workforce_data |>
-      govhr::compute_workforce_movement(
-        movement_type = "retirement",
-        measurement_type = "count",
-        group_cols = "ref_date"
-      ),
-    workforce_retirement_expected = govhr::project_retirement(
-      data = workforce_data,
-    threshold_age = 60,
-      birth_col = "birth_date",
-      group_cols = "ref_date",
-      simplify_retirement_date = TRUE
-    ) |>
-      dplyr::rename(ref_date = "retirement_date"),
+    workforce_retirement = workforce_retirement,
+    workforce_retirement_expected = workforce_data |>
+      compute_projected_retirement(threshold_age = 60),
 
     # movement module
-    workforce_movement = workforce_data |>
-      govhr::compute_workforce_movement(
-        movement_type = "hire",
-        measurement_type = "count",
-        group_cols = "ref_date"
-      ),
+    workforce_movement = workforce_movement,
 
     # movement profile
     workforce_movement_profile = workforce_data |>
@@ -283,7 +304,6 @@ build_wagebill_cache <- function(wagebill_data) {
     # equity module
     wagebill_equity_percentile = wagebill_data |>
       govhr::compute_percentile(
-        binwidth = 100,
         measure_col = "gross_salary_lcu",
         latest_measure = FALSE
       ),

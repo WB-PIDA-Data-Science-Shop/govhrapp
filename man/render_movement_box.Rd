@@ -9,8 +9,8 @@ render_movement_box(.data, movement_type, cache = NULL)
 \arguments{
 \item{.data}{Data frame containing personnel data.}
 
-\item{movement_type}{Character. One of \code{"hire"}, \code{"fire"}, \code{"retirement"} or
-\code{"turnover"}.}
+\item{movement_type}{Character. One of \code{"hire"}, \code{"separation"},
+\code{"retirement"} or \code{"replacement"}.}
 
 \item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}},
 or \code{NULL} to compute the values directly.}

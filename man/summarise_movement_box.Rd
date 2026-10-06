@@ -4,19 +4,23 @@
 \alias{summarise_movement_box}
 \title{Summarise a Movement Value Box}
 \usage{
-summarise_movement_box(.data, movement_type)
+summarise_movement_box(movement, retirement, movement_type)
 }
 \arguments{
-\item{.data}{Data frame containing personnel data.}
+\item{movement}{Output of \code{\link[govhr:compute_movement]{govhr::compute_movement()}}.}
 
-\item{movement_type}{Character. One of \code{"hire"}, \code{"fire"}, \code{"retirement"} or
-\code{"turnover"}.}
+\item{retirement}{Output of \code{\link[=compute_retirement]{compute_retirement()}}.}
+
+\item{movement_type}{Character. One of \code{"hire"}, \code{"separation"},
+\code{"retirement"} or \code{"replacement"}.}
 }
 \value{
-A list with \code{ref_date}, \code{count} and \code{rate}.
+A list with \code{ref_date} (the date the values are from), \code{count} and
+\code{rate}.
 }
 \description{
-Computes the latest count and rate for one movement type, used by the
-workforce key-indicator boxes. Turnover reports a rate only.
+Reads the latest count and rate for one movement type from pre-computed
+movement and retirement tables, for the workforce key-indicator boxes. The
+replacement box reports a ratio only.
 }
 \keyword{internal}
