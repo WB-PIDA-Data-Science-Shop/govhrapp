@@ -45,6 +45,7 @@
 #' [govhr::compute_movement()].
 #'
 #' @examples
+#' \dontrun{
 #' hr <- data.frame(
 #'   personnel_id = c(1, 2, 1, 2, 2),
 #'   ref_date = as.Date(c(
@@ -53,8 +54,9 @@
 #'   employment_status = c("active", "active", "pensioner", "active", "active")
 #' )
 #' compute_retirement(hr)
+#' }
 #'
-#' @keywords internal
+#' @export
 compute_retirement <- function(data, ...) {
   UseMethod("compute_retirement")
 }

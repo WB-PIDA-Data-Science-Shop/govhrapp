@@ -3,6 +3,7 @@
 S3method(compute_retirement,data.frame)
 S3method(compute_retirement,tbl_dbi)
 export(build_analytics_cache)
+export(compute_retirement)
 export(deploy_govhrapp)
 export(generate_analytics_report)
 export(overview_server)

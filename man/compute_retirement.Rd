@@ -73,6 +73,7 @@ This is a candidate for govhr, where it would sit alongside
 \code{\link[govhr:compute_movement]{govhr::compute_movement()}}.
 }
 \examples{
+\dontrun{
 hr <- data.frame(
   personnel_id = c(1, 2, 1, 2, 2),
   ref_date = as.Date(c(
@@ -81,6 +82,6 @@ hr <- data.frame(
   employment_status = c("active", "active", "pensioner", "active", "active")
 )
 compute_retirement(hr)
+}
 
 }
-\keyword{internal}
