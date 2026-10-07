@@ -246,13 +246,13 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
 
   # key indicator boxes, read from the collected movement and retirement
   # tables so their queries are not run again for each box
-  cache$movement_box <- c("hire", "separation", "retirement", "replacement") |>
+  cache[["movement_box"]] <- c("hire", "separation", "retirement", "replacement") |>
     purrr::set_names() |>
     purrr::map(
       \(type) {
         summarise_movement_box(
-          cache$workforce_movement,
-          cache$workforce_retirement,
+          cache[["workforce_movement"]],
+          cache[["workforce_retirement"]],
           type
         )
       }

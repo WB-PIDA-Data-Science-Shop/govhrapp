@@ -227,7 +227,7 @@ detect_movement.data.frame <- function(
   )
 
   # previous and next date for each date in the data
-  dates <- sort(unique(person_dates$ref_date))
+  dates <- sort(unique(person_dates[["ref_date"]]))
   calendar <- data.table::data.table(
     ref_date = dates,
     prev_date = data.table::shift(dates),
@@ -933,7 +933,7 @@ project_retirement.data.frame <- function(
   }
 
   dt <- data.table::as.data.table(data)
-  latest_date <- max(dt$ref_date, na.rm = TRUE)
+  latest_date <- max(dt[["ref_date"]], na.rm = TRUE)
   calendar <- data.table::as.data.table(
     retirement_calendar(latest_date, horizon)
   )
@@ -982,7 +982,7 @@ project_retirement.data.frame <- function(
 
   # every group in the current workforce appears in every projected year:
   # grouping by all of headcount's columns repeats each of its rows per year
-  grid <- headcount[, .(ref_date = calendar$ref_date), by = names(headcount)]
+  grid <- headcount[, .(ref_date = calendar[["ref_date"]]), by = names(headcount)]
 
   projection <- projected[grid, on = by_cols]
 
