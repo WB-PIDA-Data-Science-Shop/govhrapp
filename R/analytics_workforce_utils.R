@@ -26,8 +26,9 @@ movement_measure_col <- function(movement_type, measurement_type) {
 #' reach the retirement threshold age, and divides them by the current active
 #' headcount.
 #'
-#' @param data Data frame containing personnel data with `personnel_id`,
-#'   `ref_date`, `employment_status` and `birth_date`.
+#' @param data Data frame or remote database table (`tbl_dbi`) containing
+#'   personnel data with `personnel_id`, `ref_date`, `employment_status` and
+#'   `birth_date`.
 #' @param threshold_age Numeric. Age at which personnel retire. Default `60`.
 #' @param group_cols Character vector of columns to group by, or `NULL`
 #'   (default) for the whole workforce.
@@ -36,9 +37,9 @@ movement_measure_col <- function(movement_type, measurement_type) {
 #'   grouping columns, `projected_retirements`, `headcount` and
 #'   `projected_retirement_rate`.
 #'
-#' @importFrom dplyr all_of cross_join filter left_join mutate n_distinct
-#'   rename summarise
-#' @importFrom govhr project_retirement
+#' @importFrom dplyr all_of collect cross_join filter left_join mutate rename
+#'   select
+#' @importFrom govhr compute_headcount project_retirement
 #' @keywords internal
 compute_projected_retirement <- function(
   data,
@@ -48,18 +49,21 @@ compute_projected_retirement <- function(
   # govhr::project_retirement() projects everyone's last record, including
   # people who left before the latest date. restricting to the current active
   # workforce keeps the projected retirements inside the headcount they are
-  # divided by
+  # divided by. it has no database method, so only this cross-section is
+  # brought into memory
   current_workforce <- data |>
     dplyr::filter(
       .data[["ref_date"]] == max(.data[["ref_date"]], na.rm = TRUE),
       .data[["employment_status"]] == "active"
-    )
+    ) |>
+    dplyr::select(
+      dplyr::all_of(c("personnel_id", "ref_date", "birth_date", group_cols))
+    ) |>
+    dplyr::collect()
 
   headcount <- current_workforce |>
-    dplyr::summarise(
-      headcount = dplyr::n_distinct(.data[["personnel_id"]]),
-      .by = dplyr::all_of(group_cols)
-    )
+    govhr::compute_headcount(group_cols = group_cols) |>
+    dplyr::select(dplyr::all_of(c(group_cols, "headcount")))
 
   projected <- current_workforce |>
     govhr::project_retirement(
@@ -92,7 +96,8 @@ compute_projected_retirement <- function(
 #' [govhr::plot_movement()] does not cover: replacement, retirement and
 #' projected retirement.
 #'
-#' @param data Data frame with `ref_date` and `y_col`.
+#' @param data Data frame or lazy table (`tbl_dbi`) with `ref_date` and
+#'   `y_col`. A lazy table is brought into memory first.
 #' @param y_col Character. Column to plot.
 #' @param y_label Character. y-axis label.
 #' @param group_col Character. Column to draw one line per group, or
@@ -101,7 +106,7 @@ compute_projected_retirement <- function(
 #'
 #' @return A ggplot2 object.
 #'
-#' @importFrom dplyr filter
+#' @importFrom dplyr collect filter
 #' @importFrom ggplot2 scale_y_continuous
 #' @importFrom govhr plot_trend
 #' @importFrom scales label_percent
@@ -114,9 +119,12 @@ plot_movement_trend <- function(
   percent = FALSE
 ) {
   # movement measures are undefined at the first or last date, which ggplot2
-  # would otherwise drop with a "removed rows" warning on every render
+  # would otherwise drop with a "removed rows" warning on every render.
+  # plot_trend() sizes its group colours from `data[[group_col]]`, which is
+  # NULL on a lazy table, hence the collect()
   plot <- data |>
     dplyr::filter(!is.na(.data[[y_col]])) |>
+    dplyr::collect() |>
     govhr::plot_trend(group_col = group_col, y_col = y_col, y_label = y_label)
 
   if (!percent) {

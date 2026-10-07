@@ -7,8 +7,9 @@
 compute_projected_retirement(data, threshold_age = 60, group_cols = NULL)
 }
 \arguments{
-\item{data}{Data frame containing personnel data with \code{personnel_id},
-\code{ref_date}, \code{employment_status} and \code{birth_date}.}
+\item{data}{Data frame or remote database table (\code{tbl_dbi}) containing
+personnel data with \code{personnel_id}, \code{ref_date}, \code{employment_status} and
+\code{birth_date}.}
 
 \item{threshold_age}{Numeric. Age at which personnel retire. Default \code{60}.}
 

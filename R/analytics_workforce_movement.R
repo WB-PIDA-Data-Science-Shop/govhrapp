@@ -106,9 +106,9 @@ workforce_movement_ui <- function(id, .data) {
 #'
 #' @import bslib
 #' @import shiny
-#' @importFrom dplyr all_of filter mutate select
+#' @importFrom dplyr all_of collect filter mutate select
 #' @importFrom ggplot2 geom_hline
-#' @importFrom govhr classify_personnel_event compute_growth_summary compute_movement guess_date_frequency plot_bar_growth plot_bar_total plot_movement scale_plot_height
+#' @importFrom govhr classify_personnel_event compute_growth compute_movement guess_date_frequency plot_bar_growth plot_bar_total plot_movement scale_plot_height
 #' @importFrom gt render_gt
 #' @importFrom gtsummary as_gt modify_header tbl_summary
 #' @importFrom plotly ggplotly renderPlotly
@@ -129,7 +129,9 @@ workforce_movement_server <- function(id, .data, cache) {
     })
 
     # compute_movement() returns every movement and measurement type at once,
-    # so switching between them reuses this aggregate rather than recomputing
+    # so switching between them reuses this collected aggregate rather than
+    # re-running the query. govhr's scale_plot_height() and compute_growth()
+    # also need it in memory
     movement_summary <- shiny::reactive({
       if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_movement")
@@ -137,7 +139,8 @@ workforce_movement_server <- function(id, .data, cache) {
         govhr::compute_movement(
           data_filtered(),
           group_cols = group_col_to_null(input$group_filter)
-        )
+        ) |>
+          dplyr::collect()
       }
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
@@ -211,7 +214,7 @@ workforce_movement_server <- function(id, .data, cache) {
       )
 
       growth_data <- measure_summary() |>
-        govhr::compute_growth_summary(
+        govhr::compute_growth(
           group_col = input$group_filter,
           measure_col = movement_measure_col(
             input$movement_type,

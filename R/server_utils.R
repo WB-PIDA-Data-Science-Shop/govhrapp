@@ -78,10 +78,12 @@ filter_data <- function(.data, group_filter, subgroup_filter, date_range) {
   }
 
   if (!is.null(date_range)) {
+    # injected as values, since dbplyr would translate `date_range[1]` into
+    # SQL over the whole vector
     filtered <- filtered |>
       dplyr::filter(
-        .data[["ref_date"]] >= date_range[1],
-        .data[["ref_date"]] <= date_range[2]
+        .data[["ref_date"]] >= !!date_range[1],
+        .data[["ref_date"]] <= !!date_range[2]
       )
   }
 
@@ -92,9 +94,11 @@ filter_data <- function(.data, group_filter, subgroup_filter, date_range) {
 #'
 #' The sidebar group picker uses `"ref_date"` to mean "no grouping". The govhr
 #' plotting functions accept that convention, but the compute functions that
-#' take `group_cols` do not: [govhr::compute_movement()] rejects `"ref_date"`,
-#' and [govhr::compute_percentile()] computes shares within each date, which
-#' stack when plotted. This translates the picker value before it reaches them.
+#' take `group_cols` do not: [govhr::compute_movement()],
+#' [govhr::compute_headcount()] and [govhr::compute_wagebill()] reject
+#' `"ref_date"`, and [govhr::compute_percentile()] computes shares within each
+#' date, which stack when plotted. This translates the picker value before it
+#' reaches them.
 #'
 #' @param group_col Character or `NULL`. The selected grouping column, such as
 #'   `input$group_filter`.
@@ -131,16 +135,19 @@ group_col_to_null <- function(group_col) {
 #' @return A list with `ref_date` (the date the values are from), `count` and
 #'   `rate`.
 #'
-#' @importFrom dplyr filter slice_max
+#' @importFrom dplyr collect filter slice_max
 #' @keywords internal
 summarise_movement_box <- function(movement, retirement, movement_type) {
   rate_col <- movement_measure_col(movement_type, "rate")
 
   # hires are undefined on the first date and separations and retirements on
-  # the last, so each box reports the latest date its own measure exists for
+  # the last, so each box reports the latest date its own measure exists for.
+  # the values are read with `[[`, which returns NULL on a lazy table, hence
+  # the collect()
   latest <- (if (movement_type == "retirement") retirement else movement) |>
     dplyr::filter(!is.na(.data[[rate_col]])) |>
-    dplyr::slice_max(.data[["ref_date"]], n = 1)
+    dplyr::slice_max(.data[["ref_date"]], n = 1) |>
+    dplyr::collect()
 
   list(
     ref_date = latest[["ref_date"]],
@@ -164,8 +171,8 @@ summarise_movement_box <- function(movement, retirement, movement_type) {
 #'
 #' @return A list with `ref_date` and `total`.
 #'
-#' @importFrom dplyr filter pull
-#' @importFrom govhr compute_fastsummary
+#' @importFrom dplyr filter pull summarise
+#' @importFrom govhr compute_wagebill
 #' @keywords internal
 summarise_wagebill_box <- function(.data, measure_type) {
   status <- switch(
@@ -178,20 +185,20 @@ summarise_wagebill_box <- function(.data, measure_type) {
     )
   )
 
+  latest_date <- .data |>
+    dplyr::summarise(ref_date = max(.data[["ref_date"]], na.rm = TRUE)) |>
+    dplyr::pull(.data[["ref_date"]])
+
   total <- .data |>
     dplyr::filter(
-      .data[["ref_date"]] == max(.data[["ref_date"]]),
+      .data[["ref_date"]] == !!latest_date,
       .data[["employment_status"]] == status
     ) |>
-    govhr::compute_fastsummary(
-      cols = "gross_salary_lcu",
-      group_cols = "ref_date",
-      fns = "sum"
-    ) |>
-    dplyr::pull(.data[["value"]])
+    govhr::compute_wagebill(measure_col = "gross_salary_lcu") |>
+    dplyr::pull(.data[["wagebill"]])
 
   list(
-    ref_date = max(.data[["ref_date"]], na.rm = TRUE),
+    ref_date = latest_date,
     total = total
   )
 }
@@ -208,28 +215,13 @@ summarise_wagebill_box <- function(.data, measure_type) {
 #'
 #' @return A named list of pre-computed data frames keyed by panel.
 #'
-#' @importFrom govhr compute_movement compute_transition compute_trend_summary
+#' @importFrom govhr compute_headcount compute_movement compute_transition
 #' @importFrom purrr map set_names
 #' @keywords internal
 build_workforce_cache <- function(workforce_data, wagebill_data) {
-  # the value boxes, movement panel and retirement panel all read these, so
-  # each is computed once
-  workforce_movement <- govhr::compute_movement(workforce_data)
-  workforce_retirement <- compute_retirement(workforce_data)
-
-  list(
-    # key indicator boxes
-    movement_box = c("hire", "separation", "retirement", "replacement") |>
-      purrr::set_names() |>
-      purrr::map(
-        \(type) {
-          summarise_movement_box(workforce_movement, workforce_retirement, type)
-        }
-      ),
-
+  cache <- list(
     # overview module
-    workforce_overview = workforce_data |>
-      govhr::compute_trend_summary(group_col = "ref_date"),
+    workforce_overview = govhr::compute_headcount(workforce_data),
 
     # transition module
     workforce_transition = wagebill_data |>
@@ -239,17 +231,34 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
       ),
 
     # retirement module
-    workforce_retirement = workforce_retirement,
+    workforce_retirement = compute_retirement(workforce_data),
     workforce_retirement_expected = workforce_data |>
       compute_projected_retirement(threshold_age = 60),
 
     # movement module
-    workforce_movement = workforce_movement,
+    workforce_movement = govhr::compute_movement(workforce_data),
 
     # movement profile
     workforce_movement_profile = workforce_data |>
       render_movement_profile(movement_type = "hire")
-  )
+  ) |>
+    collect_cache()
+
+  # key indicator boxes, read from the collected movement and retirement
+  # tables so their queries are not run again for each box
+  cache$movement_box <- c("hire", "separation", "retirement", "replacement") |>
+    purrr::set_names() |>
+    purrr::map(
+      \(type) {
+        summarise_movement_box(
+          cache$workforce_movement,
+          cache$workforce_retirement,
+          type
+        )
+      }
+    )
+
+  cache
 }
 
 #' Build the Wage Bill Analytics Cache
@@ -261,8 +270,8 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
 #'
 #' @return A named list of pre-computed data frames keyed by panel.
 #'
-#' @importFrom dplyr rename bind_rows mutate filter arrange
-#' @importFrom govhr compute_compression_ratio compute_decile compute_movement_cost compute_percentile compute_trend_summary project_retirement
+#' @importFrom dplyr left_join rename
+#' @importFrom govhr compute_compression_ratio compute_decile compute_movement_cost compute_percentile compute_wage compute_wagebill project_retirement
 #' @importFrom purrr map set_names
 #' @keywords internal
 build_wagebill_cache <- function(wagebill_data) {
@@ -274,17 +283,10 @@ build_wagebill_cache <- function(wagebill_data) {
 
     # overview module
     wagebill_overview = wagebill_data |>
-      govhr::compute_trend_summary(
-        group_col = "ref_date",
-        measure_col = "gross_salary_lcu"
-      ) |>
-      dplyr::bind_rows(
-        wagebill_data |>
-          govhr::compute_fastsummary(
-            cols = "gross_salary_lcu",
-            fns = "mean",
-            group_cols = "ref_date"
-          )
+      govhr::compute_wagebill(measure_col = "gross_salary_lcu") |>
+      dplyr::left_join(
+        govhr::compute_wage(wagebill_data, measure_col = "gross_salary_lcu"),
+        by = "ref_date"
       ),
 
     # retirement module
@@ -326,6 +328,29 @@ build_wagebill_cache <- function(wagebill_data) {
         measure_col = "gross_salary_lcu",
         group_cols = "ref_date"
       )
+  ) |>
+    collect_cache()
+}
+
+#' Collect the Lazy Entries of an Analytics Cache
+#'
+#' Brings every lazy (`tbl_lazy`) entry of a cache list into memory, and leaves
+#' data frames, value-box lists and rendered tables as they are.
+#'
+#' @param cache Named list of pre-computed summaries.
+#'
+#' @return `cache`, with its lazy tables collected.
+#'
+#' @importFrom dplyr collect
+#' @importFrom purrr modify_if
+#' @keywords internal
+collect_cache <- function(cache) {
+  # the cache is built once and shared by every session, so a database query
+  # runs here once instead of on every session's first render
+  purrr::modify_if(
+    cache,
+    \(entry) inherits(entry, "tbl_lazy"),
+    dplyr::collect
   )
 }
 

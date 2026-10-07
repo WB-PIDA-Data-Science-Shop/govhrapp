@@ -13,7 +13,8 @@ plot_movement_trend(
 )
 }
 \arguments{
-\item{data}{Data frame with \code{ref_date} and \code{y_col}.}
+\item{data}{Data frame or lazy table (\code{tbl_dbi}) with \code{ref_date} and
+\code{y_col}. A lazy table is brought into memory first.}
 
 \item{y_col}{Character. Column to plot.}
 

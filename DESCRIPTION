@@ -12,6 +12,7 @@ Roxygen: list(markdown = TRUE)
 Suggests:
     DBI,
     dbplyr,
+    duckdb,
     knitr,
     pkgload,
     RSQLite,
