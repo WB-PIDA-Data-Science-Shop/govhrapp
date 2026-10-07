@@ -21,7 +21,7 @@ wagebill_movement_ui <- function(id, .data) {
       shiny::selectInput(
         shiny::NS(id, "event_type"),
         "Type of Movement:",
-        choices = c("Recruitment" = "hire", "Separation" = "fire"),
+        choices = c("Recruitment" = "hire", "Separation" = "separation"),
         selected = "hire"
       ),
       shiny::selectInput(
@@ -103,7 +103,8 @@ wagebill_movement_ui <- function(id, .data) {
 #' @return A Shiny module server function.
 #'
 #' @import shiny
-#' @importFrom govhr scale_plot_height compute_movement_cost compute_growth plot_trend plot_bar_total plot_bar_growth
+#' @importFrom dplyr collect filter
+#' @importFrom govhr scale_plot_height compute_growth plot_trend plot_bar_total plot_bar_growth
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
 #' @keywords internal
@@ -120,18 +121,25 @@ wagebill_movement_server <- function(id, .data, cache) {
       )
     })
 
-    # all three plots read the same aggregate, so compute it once per apply
+    # all three plots read the same aggregate, so it is computed and collected
+    # once per apply. govhr's grouped plot_trend(), scale_plot_height() and
+    # compute_growth() also need it in memory
     movement_cost <- shiny::reactive({
-      if (input$apply_btn == 0) {
+      cost <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "wagebill", "wagebill_movement")
       } else {
-        govhr::compute_movement_cost(
+        compute_movement_cost(
           wagebill_filtered(),
           event_type = input$event_type,
           measure_col = input$wagebill_measure,
-          group_cols = input$group_filter
-        )
+          group_cols = group_col_to_null(input$group_filter)
+        ) |>
+          dplyr::collect()
       }
+
+      # the cost is NA on the date with nothing to compare with: the first
+      # for hires, the last for separations
+      dplyr::filter(cost, !is.na(.data[["movement_cost"]]))
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
@@ -190,9 +198,10 @@ wagebill_movement_server <- function(id, .data, cache) {
         )
       )
 
-      # growth between the first and last reference date, by group
-      # use gov_hr::compute_growth
+      # growth from a date without movers is infinite, so each group's growth
+      # runs between the first and last dates it had movers
       movement_cost_growth <- movement_cost() |>
+        dplyr::filter(.data[["movement_cost"]] > 0) |>
         govhr::compute_growth(
           group_col = input$group_filter,
           measure_col = "movement_cost"

@@ -34,13 +34,11 @@ bring it into memory).
 \description{
 Flags, for each active person and reference date, whether they leave active
 status by the next date into a pension, i.e. whether their next status
-after leaving is pensioner. These are the person-level events that
-\code{\link[=compute_retirement]{compute_retirement()}} counts.
+after leaving is pensioner.
 }
 \details{
-A retirement is a separation from \code{\link[=detect_movement]{detect_movement()}} whose next status is
-pensioner. A pension drawn alongside an active contract is therefore not a
-retirement.
+A retirement is a separation whose next status is pensioner. A pension
+drawn alongside an active contract is therefore not a retirement.
 
 Pension registration can lag the exit, so the pensioner record may appear
 at any later date, not only the next one. A retirement is dated by the exit,
@@ -65,4 +63,8 @@ hr <- data.frame(
 detect_retirement(hr)
 }
 
+}
+\seealso{
+\code{\link[=compute_retirement]{compute_retirement()}}, which counts these retirements.
+\code{\link[=detect_movement]{detect_movement()}}, which flags the separations they are drawn from.
 }

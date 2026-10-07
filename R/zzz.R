@@ -81,6 +81,8 @@ utils::globalVariables(c(
   "decile",
   "bin",
   "movement_cost",
+  "movement_type",
+  "retirement_cost",
   "to",
   "from",
   "from_date",

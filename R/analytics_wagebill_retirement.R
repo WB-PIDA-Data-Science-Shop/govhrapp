@@ -82,7 +82,6 @@ wagebill_retirement_ui <- function(id, .data) {
 #' @return A Shiny module server function.
 #'
 #' @import shiny
-#' @importFrom govhr compute_movement_cost plot_trend
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
 #' @keywords internal
@@ -104,20 +103,19 @@ wagebill_retirement_server <- function(id, .data, cache) {
       retirement_data <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "wagebill", "wagebill_retirement")
       } else {
-        govhr::compute_movement_cost(
+        compute_retirement_cost(
           wagebill_filtered(),
-          event_type = "retirement",
           measure_col = input$wagebill_measure,
-          group_cols = input$group_filter
+          group_cols = group_col_to_null(input$group_filter)
         )
       }
 
       plotly::ggplotly(
-        govhr::plot_trend(
+        plot_movement_trend(
           retirement_data,
-          group_col = input$group_filter,
-          y_col = "movement_cost",
-          y_label = "Retirement Costs"
+          y_col = "retirement_cost",
+          y_label = "Retirement Costs",
+          group_col = input$group_filter
         )
       )
     }) |>

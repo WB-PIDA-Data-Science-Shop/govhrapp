@@ -30,7 +30,7 @@ A ggplot2 object.
 }
 \description{
 Draws one movement measure with \code{\link[govhr:plot_trend]{govhr::plot_trend()}}, for the measures
-\code{\link[govhr:plot_movement]{govhr::plot_movement()}} does not cover: replacement, retirement and
-projected retirement.
+\code{\link[govhr:plot_movement]{govhr::plot_movement()}} does not cover: replacement, retirement, projected
+retirement and movement costs.
 }
 \keyword{internal}

@@ -23,8 +23,8 @@ movement_measure_col <- function(movement_type, measurement_type) {
 #' Plot a Movement Measure Over Time
 #'
 #' Draws one movement measure with [govhr::plot_trend()], for the measures
-#' [govhr::plot_movement()] does not cover: replacement, retirement and
-#' projected retirement.
+#' [govhr::plot_movement()] does not cover: replacement, retirement, projected
+#' retirement and movement costs.
 #'
 #' @param data Data frame or lazy table (`tbl_dbi`) with `ref_date` and
 #'   `y_col`. A lazy table is brought into memory first.

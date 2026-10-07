@@ -96,18 +96,10 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
       govhr::plot_compression_ratio(group_col = "ref_date"),
 
     wagebill_movement = purrr::pluck(cache, "wagebill", "wagebill_movement") |>
-      govhr::plot_trend(
-        group_col = "ref_date",
-        y_col = "movement_cost",
-        y_label = "Movement Costs"
-      ),
+      plot_movement_trend(y_col = "movement_cost", y_label = "Movement Costs"),
 
     wagebill_retirement = purrr::pluck(cache, "wagebill", "wagebill_retirement") |>
-      govhr::plot_trend(
-        group_col = "ref_date",
-        y_col = "movement_cost",
-        y_label = "Retirement Costs"
-      ),
+      plot_movement_trend(y_col = "retirement_cost", y_label = "Retirement Costs"),
 
     wagebill_retirement_expected = purrr::pluck(
       cache,

@@ -52,9 +52,7 @@ A data.table for data frame input; a lazy table for \code{tbl_dbi} input (use
 \description{
 Counts, for each reference date, how many people are active and how many of
 them leave active status by the next date into a pension, i.e. whose next
-status after leaving is pensioner. Mirrors \code{\link[govhr:compute_movement]{govhr::compute_movement()}}, so
-the two can be read side by side: retirements are a subset of its
-separations, and both rates share the same denominator.
+status after leaving is pensioner.
 }
 \details{
 The next date is the neighbouring date found in the data, so the dates do
@@ -84,4 +82,9 @@ hr <- data.frame(
 compute_retirement(hr)
 }
 
+}
+\seealso{
+\code{\link[govhr:compute_movement]{govhr::compute_movement()}}, whose separations include these
+retirements and whose rates share their denominator.
+\code{\link[=detect_retirement]{detect_retirement()}}, which flags the retirements of each person.
 }

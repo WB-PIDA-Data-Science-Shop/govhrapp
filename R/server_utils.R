@@ -271,7 +271,7 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
 #' @return A named list of pre-computed data frames keyed by panel.
 #'
 #' @importFrom dplyr left_join
-#' @importFrom govhr compute_compression_ratio compute_decile compute_movement_cost compute_percentile compute_wage compute_wagebill
+#' @importFrom govhr compute_compression_ratio compute_decile compute_percentile compute_wage compute_wagebill
 #' @importFrom purrr map set_names
 #' @keywords internal
 build_wagebill_cache <- function(wagebill_data) {
@@ -291,11 +291,7 @@ build_wagebill_cache <- function(wagebill_data) {
 
     # retirement module
     wagebill_retirement = wagebill_data |>
-      govhr::compute_movement_cost(
-        event_type = "retirement",
-        measure_col = "gross_salary_lcu",
-        group_cols = "ref_date"
-      ),
+      compute_retirement_cost(measure_col = "gross_salary_lcu"),
     wagebill_retirement_expected = wagebill_data |>
       project_retirement(measure_col = "gross_salary_lcu"),
 
@@ -319,10 +315,9 @@ build_wagebill_cache <- function(wagebill_data) {
 
     # movement module
     wagebill_movement = wagebill_data |>
-      govhr::compute_movement_cost(
+      compute_movement_cost(
         event_type = "hire",
-        measure_col = "gross_salary_lcu",
-        group_cols = "ref_date"
+        measure_col = "gross_salary_lcu"
       )
   ) |>
     collect_cache()

@@ -39,15 +39,13 @@ A data.table for data frame input; a lazy table for \code{tbl_dbi} input (use
 }
 \description{
 Flags, for each active person and reference date, whether they were hired
-since the previous date and whether they are gone by the next date. These
-are the person-level events that \code{\link[govhr:compute_movement]{govhr::compute_movement()}} counts.
+since the previous date and whether they are gone by the next date.
 }
 \details{
 The previous and next dates are the neighbouring dates found in the data,
 so the dates do not need to be evenly spaced. People with several contracts
 on a date appear once. A separation is any exit from active status,
-including retirement; see \code{\link[=detect_retirement]{detect_retirement()}} for the retirements among
-them.
+including retirement.
 
 This is a candidate for govhr, where \code{\link[govhr:compute_movement]{govhr::compute_movement()}} could be
 built by counting its flags.
@@ -62,4 +60,9 @@ hr <- data.frame(
 detect_movement(hr)
 }
 
+}
+\seealso{
+\code{\link[govhr:compute_movement]{govhr::compute_movement()}}, which counts these hires and
+separations. \code{\link[=detect_retirement]{detect_retirement()}}, which flags the retirements among the
+separations.
 }
