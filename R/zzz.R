@@ -64,7 +64,6 @@ utils::globalVariables(c(
   "consistent_value",
   "type_event", 
   "i.type_event",
-  "retirement_date",
   "hires",
   "separations",
   "personnel_id",
@@ -95,5 +94,9 @@ utils::globalVariables(c(
   "node_id",
   "nodes",
   "x",
-  "y"
+  "y",
+  "retirement_year",
+  "projected_retirements",
+  "projected_retirement_rate",
+  "projected_cost"
 ))

@@ -126,7 +126,7 @@ workforce_retirement_server <- function(id, .data, cache) {
       plot_data <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_retirement_expected")
       } else {
-        compute_projected_retirement(
+        project_retirement(
           data_filtered(),
           threshold_age = input$threshold_age,
           group_cols = group_col_to_null(input$group_filter)
