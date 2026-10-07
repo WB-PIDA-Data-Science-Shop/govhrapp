@@ -98,7 +98,7 @@ wagebill_equity_ui <- function(id, .data) {
 #' @return A Shiny module server function.
 #'
 #' @import shiny
-#' @importFrom govhr compute_compression_ratio compute_percentile
+#' @importFrom govhr compute_percentile
 #' @importFrom plotly renderPlotly
 #' @importFrom purrr pluck
 #' @keywords internal
@@ -159,9 +159,11 @@ wagebill_equity_server <- function(id, .data, cache) {
       } else {
         compute_compression_ratio(
           wagebill_filtered(),
-          group_cols = input$group_filter,
           measure_col = input$wagebill_measure,
-          latest_measure = TRUE
+          group_cols = group_col_to_null(input$group_filter),
+          # ungrouped, each date is drawn as its own range; grouped, the
+          # groups are compared on the latest date
+          latest_measure = input$group_filter != "ref_date"
         )
       }
 

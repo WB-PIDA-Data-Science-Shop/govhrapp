@@ -271,7 +271,7 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
 #' @return A named list of pre-computed data frames keyed by panel.
 #'
 #' @importFrom dplyr left_join
-#' @importFrom govhr compute_compression_ratio compute_percentile compute_wage compute_wagebill
+#' @importFrom govhr compute_percentile compute_wage compute_wagebill
 #' @importFrom purrr map set_names
 #' @keywords internal
 build_wagebill_cache <- function(wagebill_data) {
@@ -307,10 +307,7 @@ build_wagebill_cache <- function(wagebill_data) {
         latest_measure = TRUE
       ),
     wagebill_equity_compression = wagebill_data |>
-      govhr::compute_compression_ratio(
-        group_cols = NULL,
-        measure_col = "gross_salary_lcu"
-      ),
+      compute_compression_ratio(measure_col = "gross_salary_lcu"),
 
     # movement module
     wagebill_movement = wagebill_data |>

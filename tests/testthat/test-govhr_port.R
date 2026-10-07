@@ -456,6 +456,130 @@ test_that("compute_decile gives the same result on a database table", {
   DBI::dbDisconnect(con, shutdown = TRUE)
 })
 
+# two departments with 11 records on each of two dates; for 1:11 the 90th,
+# 50th and 10th percentiles are 10, 6 and 2
+compression_panel <- data.frame(
+  dept = rep(c("A", "B"), each = 22),
+  ref_date = rep(as.Date(c("2020-01-01", "2021-01-01")), each = 11, times = 2),
+  wage = c(1:11, 1:11 * 2, 1:11 * 10, 1:11 * 20)
+)
+
+test_that("compute_compression_ratio returns three percentiles per group and date", {
+  result <- compute_compression_ratio(
+    compression_panel,
+    measure_col = "wage",
+    group_cols = "dept"
+  )
+
+  expect_equal(
+    names(result),
+    c("dept", "ref_date", "percentile_upper", "percentile_50", "percentile_lower")
+  )
+  expect_equal(result[["dept"]], c("A", "A", "B", "B"))
+  expect_equal(result[["percentile_upper"]], c(10, 20, 100, 200))
+  expect_equal(result[["percentile_50"]], c(6, 12, 60, 120))
+  expect_equal(result[["percentile_lower"]], c(2, 4, 20, 40))
+})
+
+test_that("compute_compression_ratio interpolates the requested percentiles", {
+  result <- compression_panel[
+    compression_panel[["dept"]] == "A" &
+      compression_panel[["ref_date"]] == as.Date("2020-01-01"),
+  ] |>
+    compute_compression_ratio(
+      measure_col = "wage",
+      percentiles = c(0.75, 0.5, 0.25)
+    )
+
+  expect_equal(result[["percentile_upper"]], 8.5)
+  expect_equal(result[["percentile_50"]], 6)
+  expect_equal(result[["percentile_lower"]], 3.5)
+})
+
+test_that("compute_compression_ratio keeps the latest date with a measure", {
+  # a later date with only missing wages does not count as the latest
+  hr <- rbind(
+    compression_panel,
+    data.frame(dept = "A", ref_date = as.Date("2022-01-01"), wage = NA)
+  )
+
+  grouped <- compute_compression_ratio(
+    hr,
+    measure_col = "wage",
+    group_cols = "dept",
+    latest_measure = TRUE
+  )
+  expect_equal(grouped[["ref_date"]], as.Date(c("2021-01-01", "2021-01-01")))
+  expect_equal(grouped[["percentile_upper"]], c(20, 200))
+
+  # govhr's version failed when latest_measure was used without groups
+  ungrouped <- compute_compression_ratio(
+    hr[hr[["dept"]] == "A", ],
+    measure_col = "wage",
+    latest_measure = TRUE
+  )
+  expect_equal(ungrouped[["ref_date"]], as.Date("2021-01-01"))
+  expect_equal(ungrouped[["percentile_lower"]], 4)
+})
+
+test_that("compute_compression_ratio rejects ref_date as a group", {
+  expect_error(
+    compute_compression_ratio(
+      compression_panel,
+      measure_col = "wage",
+      group_cols = "ref_date"
+    ),
+    "ref_date"
+  )
+})
+
+test_that("compute_compression_ratio gives the same result on a database table", {
+  skip_if_not_installed("dbplyr")
+  skip_if_not_installed("duckdb")
+
+  # missing wages are dropped and missing groups kept
+  hr <- rbind(
+    compression_panel,
+    data.frame(
+      dept = c("A", NA, NA),
+      ref_date = as.Date("2021-01-01"),
+      wage = c(NA, 5, 15)
+    )
+  )
+
+  con <- DBI::dbConnect(duckdb::duckdb())
+  remote <- dplyr::copy_to(con, hr, "compression_panel")
+
+  for (group_cols in list(NULL, "dept")) {
+    for (latest_measure in c(FALSE, TRUE)) {
+      sort_keys <- c(group_cols, "ref_date")
+
+      expected <- compute_compression_ratio(
+        hr,
+        measure_col = "wage",
+        group_cols = group_cols,
+        latest_measure = latest_measure
+      ) |>
+        dplyr::arrange(dplyr::across(dplyr::all_of(sort_keys))) |>
+        as.data.frame()
+
+      result <- compute_compression_ratio(
+        remote,
+        measure_col = "wage",
+        group_cols = group_cols,
+        latest_measure = latest_measure
+      ) |>
+        dplyr::collect() |>
+        dplyr::arrange(dplyr::across(dplyr::all_of(sort_keys))) |>
+        as.data.frame()
+
+      expect_equal(result, expected, ignore_attr = TRUE)
+    }
+  }
+
+  DBI::dbDisconnect(con, shutdown = TRUE)
+})
+
 # the latest date is 2021-07-01, so the default 10-year horizon projects the
 # year-ends from 2021 to 2030
 # a turns 60 in 2022 and holds two contracts in unit A on the latest date
