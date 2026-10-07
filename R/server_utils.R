@@ -271,7 +271,7 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
 #' @return A named list of pre-computed data frames keyed by panel.
 #'
 #' @importFrom dplyr left_join
-#' @importFrom govhr compute_compression_ratio compute_decile compute_percentile compute_wage compute_wagebill
+#' @importFrom govhr compute_compression_ratio compute_percentile compute_wage compute_wagebill
 #' @importFrom purrr map set_names
 #' @keywords internal
 build_wagebill_cache <- function(wagebill_data) {
@@ -302,8 +302,7 @@ build_wagebill_cache <- function(wagebill_data) {
         latest_measure = FALSE
       ),
     wagebill_equity_decile = wagebill_data |>
-      govhr::compute_decile(
-        group_cols = "ref_date",
+      compute_decile(
         measure_col = "gross_salary_lcu",
         latest_measure = TRUE
       ),

@@ -98,7 +98,7 @@ wagebill_equity_ui <- function(id, .data) {
 #' @return A Shiny module server function.
 #'
 #' @import shiny
-#' @importFrom govhr compute_compression_ratio compute_decile compute_percentile
+#' @importFrom govhr compute_compression_ratio compute_percentile
 #' @importFrom plotly renderPlotly
 #' @importFrom purrr pluck
 #' @keywords internal
@@ -140,10 +140,10 @@ wagebill_equity_server <- function(id, .data, cache) {
       wagebill_distribution <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "wagebill", "wagebill_equity_decile")
       } else {
-        govhr::compute_decile(
+        compute_decile(
           wagebill_filtered(),
-          group_cols = input$group_filter,
           measure_col = input$wagebill_measure,
+          group_cols = group_col_to_null(input$group_filter),
           latest_measure = TRUE
         )
       }

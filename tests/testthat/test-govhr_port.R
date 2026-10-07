@@ -332,6 +332,130 @@ test_that("compute_movement_cost and compute_retirement_cost agree on a database
   DBI::dbDisconnect(con, shutdown = TRUE)
 })
 
+# two departments, each with 20 records on each of two dates, so every decile
+# holds two records
+decile_panel <- data.frame(
+  dept = rep(c("A", "B"), each = 40),
+  ref_date = rep(as.Date(c("2020-01-01", "2021-01-01")), each = 20, times = 2),
+  wage = c(1:20, 21:40, 1:20 * 10, 21:40 * 10)
+)
+
+test_that("compute_decile splits each group and date into ten deciles", {
+  result <- compute_decile(decile_panel, measure_col = "wage", group_cols = "dept")
+
+  expect_equal(
+    names(result),
+    c("dept", "ref_date", "decile", "median_value", "mean_value")
+  )
+  expect_equal(nrow(result), 2L * 2L * 10L)
+
+  a_2020 <- result[
+    result[["dept"]] == "A" & result[["ref_date"]] == as.Date("2020-01-01"),
+  ]
+  expect_equal(a_2020[["decile"]], 1:10)
+  # decile k holds 2k - 1 and 2k
+  expect_equal(a_2020[["median_value"]], seq(1.5, 19.5, by = 2))
+  expect_equal(a_2020[["mean_value"]], seq(1.5, 19.5, by = 2))
+
+  # ranked within the department, not across them
+  b_2020 <- result[
+    result[["dept"]] == "B" & result[["ref_date"]] == as.Date("2020-01-01"),
+  ]
+  expect_equal(b_2020[["median_value"]][1], 15)
+})
+
+test_that("compute_decile drops missing measures before ranking", {
+  hr <- data.frame(
+    ref_date = as.Date("2020-01-01"),
+    wage = c(30, NA, 10, 20, NA)
+  )
+
+  result <- compute_decile(hr, measure_col = "wage")
+
+  # three records fill only the first three deciles
+  expect_equal(result[["decile"]], 1:3)
+  expect_equal(result[["median_value"]], c(10, 20, 30))
+})
+
+test_that("compute_decile keeps the latest date across all groups", {
+  result <- compute_decile(
+    decile_panel,
+    measure_col = "wage",
+    group_cols = "dept",
+    latest_measure = TRUE
+  )
+
+  expect_false("ref_date" %in% names(result))
+  expect_equal(nrow(result), 2L * 10L)
+  # only the 2021 records: 21 to 40 in A
+  expect_equal(
+    result[result[["dept"]] == "A", ][["median_value"]],
+    seq(21.5, 39.5, by = 2)
+  )
+})
+
+test_that("compute_decile leaves a data.table passed in unchanged", {
+  dt <- data.table::as.data.table(decile_panel)
+
+  compute_decile(dt, measure_col = "wage")
+
+  expect_named(dt, names(decile_panel))
+})
+
+test_that("compute_decile rejects ref_date as a group", {
+  expect_error(
+    compute_decile(decile_panel, measure_col = "wage", group_cols = "ref_date"),
+    "ref_date"
+  )
+})
+
+test_that("compute_decile gives the same result on a database table", {
+  skip_if_not_installed("dbplyr")
+  skip_if_not_installed("duckdb")
+
+  # ties straddle decile boundaries, and missing wages and groups are kept
+  tied_panel <- rbind(
+    transform(decile_panel, wage = wage %/% 3 * 3),
+    data.frame(
+      dept = c("A", NA),
+      ref_date = as.Date("2021-01-01"),
+      wage = c(NA, 50)
+    )
+  )
+
+  con <- DBI::dbConnect(duckdb::duckdb())
+  remote <- dplyr::copy_to(con, tied_panel, "tied_panel")
+
+  for (group_cols in list(NULL, "dept")) {
+    for (latest_measure in c(FALSE, TRUE)) {
+      sort_keys <- c(group_cols, if (!latest_measure) "ref_date", "decile")
+
+      expected <- compute_decile(
+        tied_panel,
+        measure_col = "wage",
+        group_cols = group_cols,
+        latest_measure = latest_measure
+      ) |>
+        dplyr::arrange(dplyr::across(dplyr::all_of(sort_keys))) |>
+        as.data.frame()
+
+      result <- compute_decile(
+        remote,
+        measure_col = "wage",
+        group_cols = group_cols,
+        latest_measure = latest_measure
+      ) |>
+        dplyr::collect() |>
+        dplyr::arrange(dplyr::across(dplyr::all_of(sort_keys))) |>
+        as.data.frame()
+
+      expect_equal(result, expected, ignore_attr = TRUE)
+    }
+  }
+
+  DBI::dbDisconnect(con, shutdown = TRUE)
+})
+
 # the latest date is 2021-07-01, so the default 10-year horizon projects the
 # year-ends from 2021 to 2030
 # a turns 60 in 2022 and holds two contracts in unit A on the latest date

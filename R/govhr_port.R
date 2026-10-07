@@ -825,6 +825,145 @@ compute_retirement_cost.tbl_dbi <- function(
     )
 }
 
+#' Compute deciles of a measure
+#'
+#' Splits the records of each group and reference date into ten equally sized
+#' deciles of `measure_col`, and reports the median and mean of the measure in
+#' each decile.
+#'
+#' @param data Data frame or remote database table (`tbl_dbi`) containing
+#'   `ref_date` and the columns named in `measure_col` and `group_cols`.
+#' @param measure_col Character. Numeric column to rank into deciles.
+#' @param group_cols Character vector of columns to group by, or `NULL`
+#'   (default) for no grouping. Must not include `ref_date`.
+#' @param latest_measure Logical. Restrict to the latest reference date and
+#'   drop `ref_date` from the grouping. Default `FALSE`.
+#' @param ... Arguments passed to methods.
+#'
+#' @returns A table with one row per group, reference date and decile,
+#'   containing the grouping columns, `ref_date` (unless `latest_measure` is
+#'   `TRUE`), `decile` (1 to 10), `median_value` and `mean_value`. A
+#'   data.table for data frame input; a lazy table for `tbl_dbi` input (use
+#'   [dplyr::collect()] to bring it into memory).
+#'
+#' @details
+#' Records with a missing `measure_col` are left out before ranking. Decile
+#' sizes differ by at most one record, with the larger deciles first, so a
+#' group with fewer than ten records fills only the first deciles. Records
+#' with the same value may fall on either side of a decile boundary, which
+#' leaves the medians and means unchanged.
+#'
+#' With `latest_measure = TRUE`, the latest date is the latest across all of
+#' `data`, not within each group. Missing groups are kept as their own group.
+#'
+#' This is a candidate to replace [govhr::compute_decile()]. Unlike it, it does
+#' not add a `decile` column to a data.table passed in, rejects `ref_date` in
+#' `group_cols`, and works on database tables.
+#'
+#' @seealso [govhr::compute_percentile()], which bins the measure at a fixed
+#'   width instead. [govhr::plot_decile()], which draws the result.
+#'
+#' @examples
+#' \dontrun{
+#' hr <- data.frame(
+#'   ref_date = as.Date("2020-01-01"),
+#'   wage = 1:20
+#' )
+#' compute_decile(hr, measure_col = "wage")
+#' }
+#'
+#' @export
+compute_decile <- function(data, ...) {
+  UseMethod("compute_decile")
+}
+
+#' @rdname compute_decile
+#' @importFrom data.table := as.data.table setorderv
+#' @importFrom dplyr ntile
+#' @importFrom rlang check_dots_empty
+#' @export
+compute_decile.data.frame <- function(
+  data,
+  measure_col,
+  group_cols = NULL,
+  latest_measure = FALSE,
+  ...
+) {
+  rlang::check_dots_empty()
+
+  if ("ref_date" %in% group_cols) {
+    stop("`ref_date` should not be included in `group_cols`")
+  }
+
+  dt <- data.table::as.data.table(data)
+
+  if (latest_measure) {
+    dt <- dt[ref_date == max(ref_date, na.rm = TRUE)]
+  }
+
+  by_cols <- if (latest_measure) group_cols else c(group_cols, "ref_date")
+
+  # selecting columns copies the data, so the decile column below is never
+  # added by reference to a data.table passed in
+  measured <- dt[
+    !is.na(get(measure_col)),
+    c(by_cols, measure_col),
+    with = FALSE
+  ]
+  measured[, decile := dplyr::ntile(get(measure_col), 10), by = by_cols]
+
+  decile <- measured[
+    , .(
+      median_value = stats::median(get(measure_col)),
+      mean_value = mean(get(measure_col))
+    ),
+    by = c(by_cols, "decile")
+  ]
+
+  data.table::setorderv(decile, c(by_cols, "decile"))
+
+  decile[]
+}
+
+#' @rdname compute_decile
+#' @importFrom dplyr all_of filter mutate ntile summarise
+#' @importFrom rlang .data check_dots_empty
+#' @importFrom stats median
+#' @export
+compute_decile.tbl_dbi <- function(
+  data,
+  measure_col,
+  group_cols = NULL,
+  latest_measure = FALSE,
+  ...
+) {
+  rlang::check_dots_empty()
+
+  if ("ref_date" %in% group_cols) {
+    stop("`ref_date` should not be included in `group_cols`")
+  }
+
+  if (latest_measure) {
+    data <- data |>
+      dplyr::filter(ref_date == max(ref_date, na.rm = TRUE))
+  }
+
+  by_cols <- if (latest_measure) group_cols else c(group_cols, "ref_date")
+
+  data |>
+    # left out before ranking, so missing values do not take up a decile
+    dplyr::filter(!is.na(.data[[measure_col]])) |>
+    dplyr::mutate(
+      decile = dplyr::ntile(.data[[measure_col]], 10),
+      .by = dplyr::all_of(by_cols)
+    ) |>
+    dplyr::summarise(
+      median_value = median(.data[[measure_col]], na.rm = TRUE),
+      mean_value = mean(.data[[measure_col]], na.rm = TRUE),
+      .by = dplyr::all_of(c(by_cols, "decile"))
+    )
+}
+
 #' Project retirements of the current workforce
 #'
 #' Projects, for each year ahead, how many people in the current workforce
