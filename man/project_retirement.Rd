@@ -81,9 +81,8 @@ A data.table for data frame input; a lazy table for \code{tbl_dbi} input (use
 \description{
 Projects, for each year ahead, how many people in the current workforce
 reach the retirement age, what share of the current headcount they make up
-and, optionally, what their retirement costs. The current workforce is
-everyone active on the latest reference date. Mirrors
-\code{\link[=compute_retirement]{compute_retirement()}}, which counts the retirements that already happened.
+and, optionally, what their retirement costs are. The current workforce is
+everyone active on the latest reference date.
 }
 \details{
 Only people active on the latest date are projected: people who left
@@ -118,4 +117,7 @@ hr <- data.frame(
 project_retirement(hr, measure_col = "gross_salary_lcu")
 }
 
+}
+\seealso{
+\code{\link[=compute_retirement]{compute_retirement()}}, which counts the retirements that already happened.
 }

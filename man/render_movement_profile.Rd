@@ -7,7 +7,9 @@
 render_movement_profile(data, movement_type)
 }
 \arguments{
-\item{data}{A data frame containing personnel data with columns for ref_date, personnel_id, gender, educat7, employment_status, and birth_date.}
+\item{data}{A data frame or remote database table (\code{tbl_dbi}) containing
+personnel data with columns for ref_date, personnel_id, gender, educat7,
+employment_status, and birth_date.}
 
 \item{movement_type}{A character string indicating the type of movement to profile (e.g
 "hire" or "separation").}

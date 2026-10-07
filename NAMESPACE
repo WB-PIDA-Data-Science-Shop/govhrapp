@@ -2,11 +2,17 @@
 
 S3method(compute_retirement,data.frame)
 S3method(compute_retirement,tbl_dbi)
+S3method(detect_movement,data.frame)
+S3method(detect_movement,tbl_dbi)
+S3method(detect_retirement,data.frame)
+S3method(detect_retirement,tbl_dbi)
 S3method(project_retirement,data.frame)
 S3method(project_retirement,tbl_dbi)
 export(build_analytics_cache)
 export(compute_retirement)
 export(deploy_govhrapp)
+export(detect_movement)
+export(detect_retirement)
 export(generate_analytics_report)
 export(overview_server)
 export(overview_ui)
@@ -79,6 +85,7 @@ importFrom(dplyr,
   if_else,
   inner_join,
   join_by,
+  lag,
   lead,
   left_join,
   mutate,
@@ -87,6 +94,7 @@ importFrom(dplyr,
   pull,
   rename,
   select,
+  semi_join,
   slice_max,
   summarise
 )
@@ -113,7 +121,6 @@ importFrom(ggplot2,
 )
 importFrom(govhr,
   apply_baseline_index,
-  classify_personnel_event,
   compute_compression_ratio,
   compute_decile,
   compute_global_coverage,
@@ -128,7 +135,6 @@ importFrom(govhr,
   compute_wage,
   compute_wagebill,
   fastcount,
-  guess_date_frequency,
   plot_bar_growth,
   plot_bar_total,
   plot_compression_ratio,

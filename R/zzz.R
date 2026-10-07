@@ -98,5 +98,11 @@ utils::globalVariables(c(
   "retirement_year",
   "projected_retirements",
   "projected_retirement_rate",
-  "projected_cost"
+  "projected_cost",
+  "prev_date",
+  "hire",
+  "hired",
+  "separation",
+  "retirement",
+  "moved"
 ))

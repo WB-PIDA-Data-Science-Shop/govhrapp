@@ -108,7 +108,7 @@ workforce_movement_ui <- function(id, .data) {
 #' @import shiny
 #' @importFrom dplyr all_of collect filter mutate select
 #' @importFrom ggplot2 geom_hline
-#' @importFrom govhr classify_personnel_event compute_growth compute_movement guess_date_frequency plot_bar_growth plot_bar_total plot_movement scale_plot_height
+#' @importFrom govhr compute_growth compute_movement plot_bar_growth plot_bar_total plot_movement scale_plot_height
 #' @importFrom gt render_gt
 #' @importFrom gtsummary as_gt modify_header tbl_summary
 #' @importFrom plotly ggplotly renderPlotly

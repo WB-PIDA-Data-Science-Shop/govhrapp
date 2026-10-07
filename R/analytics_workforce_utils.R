@@ -70,18 +70,20 @@ plot_movement_trend <- function(
 
 #' Render a movement profile table
 #'
-#' @param data A data frame containing personnel data with columns for ref_date, personnel_id, gender, educat7, employment_status, and birth_date.
+#' @param data A data frame or remote database table (`tbl_dbi`) containing
+#'   personnel data with columns for ref_date, personnel_id, gender, educat7,
+#'   employment_status, and birth_date.
 #' @param movement_type A character string indicating the type of movement to profile (e.g
 #' "hire" or "separation").
-#' 
+#'
 #' @return A gt table summarizing the demographic characteristics of the specified movement type compared to the general population.
-#' @importFrom dplyr select mutate
+#' @importFrom dplyr all_of any_of coalesce collect distinct filter if_else
+#'   left_join mutate select semi_join
 #' @importFrom gtsummary tbl_summary modify_header as_gt
-#' @importFrom govhr classify_personnel_event guess_date_frequency
 #' @importFrom stringr str_to_title
 render_movement_profile <- function(data, movement_type) {
-  movement_data <- data |>
-    select(
+  profile_data <- data |>
+    dplyr::select(
       dplyr::any_of(
         c(
           "ref_date",
@@ -94,18 +96,31 @@ render_movement_profile <- function(data, movement_type) {
       )
     )
 
-  ref_dates <- movement_data[["ref_date"]]
+  movers <- detect_movement(profile_data) |>
+    dplyr::select(personnel_id, ref_date, moved = dplyr::all_of(movement_type))
 
-  govhr::classify_personnel_event(
-    data = movement_data,
-    id_col = "personnel_id",
-    # classify_personnel_event() predates govhr's hire/separation vocabulary
-    event_type = if (movement_type == "separation") "fire" else movement_type,
-    start_date = min(ref_dates),
-    end_date = max(ref_dates),
-    status_col = "employment_status",
-    freq = govhr::guess_date_frequency(movement_data)
-  ) |>
+  # the first date has nothing to detect hires against, and the last nothing
+  # to detect separations against, so records on it are left out
+  comparable_dates <- movers |>
+    dplyr::filter(!is.na(moved)) |>
+    dplyr::distinct(ref_date)
+
+  profile_data |>
+    dplyr::semi_join(comparable_dates, by = "ref_date") |>
+    dplyr::left_join(movers, by = c("personnel_id", "ref_date")) |>
+    # pensioner records beside an active one share its flag, so only active
+    # records are labelled as movers
+    dplyr::mutate(
+      type_event = dplyr::if_else(
+        dplyr::coalesce(.data[["employment_status"]] == "active", FALSE) &
+          dplyr::coalesce(moved, FALSE),
+        !!movement_type,
+        "stayed"
+      )
+    ) |>
+    dplyr::select(-moved) |>
+    # tbl_summary() summarises individual records, hence the collect()
+    dplyr::collect() |>
     dplyr::mutate(
       age = as.numeric(
         difftime(Sys.Date(), birth_date, units = "days")
