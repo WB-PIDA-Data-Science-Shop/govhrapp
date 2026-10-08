@@ -206,7 +206,7 @@ coverage_panel_ui <- function(id, .data) {
 #' @param .data Data frame for the panel (e.g., establishment, personnel, or contract).
 #' @param cache A list for caching pre-computed results.
 #'
-#' @importFrom govhr plot_coverage_bar plot_coverage_heatmap plot_coverage_trend
+#' @importFrom govhr plot_coverage_bar plot_coverage_heatmap
 #'
 #' @return A set of Shiny outputs for the coverage panel.
 coverage_panel_server <- function(id, .data, cache) {
@@ -235,15 +235,20 @@ coverage_panel_server <- function(id, .data, cache) {
         }
         data
       } else {
-        data_filtered()
+        compute_coverage(
+          data_filtered(),
+          group_cols = input$group_filter,
+          include_ref_date = TRUE,
+          aggregate = TRUE
+        )
       }
     })
 
     # plot 1. coverage over time
     output$coverage_panel <- plotly::renderPlotly({
-      govhr::plot_coverage_trend(
+      plot_coverage_trend(
         coverage_trend_data(),
-        group = input$group_filter,
+        group_col = input$group_filter,
         toggle_growth = input$toggle_growth
       )
     }) |>

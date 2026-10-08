@@ -59,9 +59,8 @@ run_govhrapp_qcheck <- function(
   coverage_by_date <- purrr::map2(
     c("est", "personnel", "contract"),
     list(est_data, personnel_data, contract_data),
-    ~ govhr::compute_coverage(
+    ~ compute_coverage(
       .y,
-      group = "ref_date",
       include_ref_date = TRUE,
       aggregate = TRUE
     )
