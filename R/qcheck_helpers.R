@@ -11,13 +11,12 @@
 #' @importFrom bslib value_box
 #' @importFrom dplyr case_when
 #' @importFrom bsicons bs_icon
-#' @importFrom govhr compute_global_coverage
 #'
 #' @details Coverage denotes the total number of non-missing records in a dataset, expressed as a percentage of the total records. For example, if a dataset has 10 rows and 10 columns, i.e., 100 records, and 10 of them are available, the coverage would be 10 percent.
 #' @export
 render_coverage_box <- function(.data, title, icon = "table") {
   shiny::renderUI({
-    value_coverage <- govhr::compute_global_coverage(.data)
+    value_coverage <- compute_global_coverage(.data)
 
     theme <- dplyr::case_when(
       value_coverage < 50 ~ "danger",
@@ -62,15 +61,15 @@ render_consistency_box <- function(
   icon = "table"
 ) {
   shiny::renderUI({
-    consistency <- govhr::compute_global_consistency(.data, id_col, value_cols)
+    consistency <- compute_global_consistency(.data, id_col, value_cols)
 
-    consistency_record <- govhr::compute_record_consistency(.data, id_col) |>
+    consistency_record <- compute_record_consistency(.data, id_col) |>
       dplyr::pull(.data[["record_consistency"]])
 
     consistency_value <- purrr::map_dbl(
       value_cols,
       \(value_col) {
-        govhr::compute_value_consistency(.data, id_col, value_col) |>
+        compute_value_consistency(.data, id_col, value_col) |>
           dplyr::pull(.data[["value_consistency"]])
       }
     ) |>

@@ -106,5 +106,7 @@ utils::globalVariables(c(
   "hired",
   "separation",
   "retirement",
-  "moved"
+  "moved",
+  "n_records",
+  "n_values"
 ))

@@ -80,7 +80,7 @@ run_govhrapp_qcheck <- function(
         "contract" = "contract_id"
       )
 
-      govhr::compute_record_consistency(
+      compute_record_consistency(
         .y,
         id_col = id_col,
         group_cols = "ref_date"
@@ -89,7 +89,8 @@ run_govhrapp_qcheck <- function(
   ) |>
     purrr::set_names(
       c("est", "personnel", "contract")
-    )
+    ) |>
+    collect_cache()
 
   ui <- bslib::page_navbar(
     fillable = FALSE,

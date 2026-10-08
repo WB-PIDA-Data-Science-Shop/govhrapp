@@ -8,10 +8,14 @@ S3method(compute_decile,data.frame)
 S3method(compute_decile,tbl_dbi)
 S3method(compute_movement_cost,data.frame)
 S3method(compute_movement_cost,tbl_dbi)
+S3method(compute_record_consistency,data.frame)
+S3method(compute_record_consistency,tbl_dbi)
 S3method(compute_retirement,data.frame)
 S3method(compute_retirement,tbl_dbi)
 S3method(compute_retirement_cost,data.frame)
 S3method(compute_retirement_cost,tbl_dbi)
+S3method(compute_value_consistency,data.frame)
+S3method(compute_value_consistency,tbl_dbi)
 S3method(detect_movement,data.frame)
 S3method(detect_movement,tbl_dbi)
 S3method(detect_retirement,data.frame)
@@ -22,15 +26,23 @@ export(build_analytics_cache)
 export(compute_compression_ratio)
 export(compute_coverage)
 export(compute_decile)
+export(compute_global_consistency)
+export(compute_global_coverage)
 export(compute_movement_cost)
+export(compute_record_consistency)
 export(compute_retirement)
 export(compute_retirement_cost)
+export(compute_value_consistency)
 export(deploy_govhrapp)
 export(detect_movement)
 export(detect_retirement)
 export(generate_analytics_report)
 export(overview_server)
 export(overview_ui)
+export(plot_consistency_heatmap)
+export(plot_consistency_trend)
+export(plot_coverage_bar)
+export(plot_coverage_heatmap)
 export(plot_coverage_trend)
 export(project_retirement)
 export(render_consistency_box)
@@ -101,6 +113,7 @@ importFrom(dplyr,
   case_when,
   coalesce,
   collect,
+  count,
   cross_join,
   distinct,
   filter,
@@ -130,12 +143,15 @@ importFrom(ggiraph,
 importFrom(ggplot2,
   aes,
   element_text,
+  geom_col,
   geom_hline,
   geom_line,
   geom_point,
   ggplot,
   labs,
   scale_color_manual,
+  scale_fill_manual,
+  scale_x_continuous,
   scale_y_continuous,
   theme,
   theme_minimal,
@@ -146,24 +162,17 @@ importFrom(ggplot2,
 )
 importFrom(govhr,
   apply_baseline_index,
-  compute_global_coverage,
   compute_growth,
   compute_headcount,
   compute_movement,
   compute_percentile,
-  compute_record_consistency,
   compute_transition,
-  compute_value_consistency,
   compute_wage,
   compute_wagebill,
   fastcount,
   plot_bar_growth,
   plot_bar_total,
   plot_compression_ratio,
-  plot_consistency_heatmap,
-  plot_consistency_trend,
-  plot_coverage_bar,
-  plot_coverage_heatmap,
   plot_decile,
   plot_histogram,
   plot_movement,
@@ -196,6 +205,8 @@ importFrom(lubridate,
 )
 importFrom(plotly,
   ggplotly,
+  layout,
+  plot_ly,
   plotlyOutput,
   renderPlotly
 )
@@ -267,12 +278,16 @@ importFrom(shinymanager,
   secure_server
 )
 importFrom(stats,
+  as.formula,
   median,
-  quantile
+  quantile,
+  reorder,
+  setNames
 )
 importFrom(stringr,
   str_detect,
-  str_to_title
+  str_to_title,
+  str_wrap
 )
 importFrom(thematic,thematic_shiny)
 importFrom(tidyr,complete)

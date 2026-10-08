@@ -236,15 +236,22 @@ consistency_panel_ui <- function(id, .data) {
 #' @param cache A list of dataframes. Precomputed consistency data for the default grouping (ref_date).
 #'
 #' @import shiny
-#' @importFrom govhr compute_record_consistency compute_value_consistency plot_consistency_heatmap plot_consistency_trend
+#' @importFrom dplyr bind_rows collect mutate
 #' @importFrom plotly renderPlotly
+#' @importFrom purrr map
 #' @importFrom shinyWidgets updatePickerInput pickerOptions
-#' @importFrom dplyr filter
 #'
 #' @return A set of Shiny outputs for the consistency panel.
 consistency_panel_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
+
+    id_col <- switch(
+      id,
+      "est" = "est_id",
+      "personnel" = "personnel_id",
+      "contract" = "contract_id"
+    )
 
     data_filtered <- shiny::reactive({
       filter_data(
@@ -255,44 +262,38 @@ consistency_panel_server <- function(id, .data, cache) {
       )
     })
 
+    # the cache holds record consistency by date, which the default selection
+    # shows before the first apply
+    consistency_trend <- shiny::reactive({
+      if (input$apply_btn == 0) {
+        return(cache)
+      }
+
+      group_cols <- unique(c(input$group_filter, "ref_date"))
+
+      if (input$type_consistency == "record") {
+        compute_record_consistency(
+          data_filtered(),
+          id_col = id_col,
+          group_cols = group_cols
+        )
+      } else {
+        compute_value_consistency(
+          data_filtered(),
+          id_col = id_col,
+          value_col = input$value_col,
+          group_cols = group_cols
+        )
+      }
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
     # plot 1. consistency over time
     output$consistency_panel <- plotly::renderPlotly({
-      id_col <- switch(
-        id,
-        "est" = "est_id",
-        "personnel" = "personnel_id",
-        "contract" = "contract_id"
-      )
-
-      # compute and cache the appropriate data for selected plot type
-      data_consistency_panel <- shiny::reactive({
-        # use cache if default (group filter input is ref_date), otherwise compute on filtered data
-        if (input$apply_btn == 0) {
-          cache
-        } else {
-          if (input$type_consistency == "record") {
-            govhr::compute_record_consistency(
-              data_filtered(),
-              id_col = id_col,
-              group_cols = c(input$group_filter, "ref_date")
-            )
-          } else {
-            govhr::compute_value_consistency(
-              data_filtered(),
-              id_col = id_col,
-              value_col = input$value_col,
-              group_cols = c(input$group_filter, "ref_date")
-            )
-          }
-        }
-        })
-
-      govhr::plot_consistency_trend(
-        data_consistency_panel(),
-        id_col = id_col,
+      plot_consistency_trend(
+        consistency_trend(),
+        group_col = input$group_filter,
         type_plot = input$type_consistency,
-        group = input$group_filter,
-        value_col = input$value_col,
         toggle_growth = input$toggle_growth
       )
     }) |>
@@ -300,17 +301,32 @@ consistency_panel_server <- function(id, .data, cache) {
 
     # plot 2. heatmap consistency by group
     output$consistency_heatmap <- plotly::renderPlotly({
-      id_col <- switch(
-        id,
-        "est" = "est_id",
-        "personnel" = "personnel_id",
-        "contract" = "contract_id"
+      value_cols <- setdiff(
+        colnames(data_filtered()),
+        c(id_col, input$group_filter)
       )
 
-      govhr::plot_consistency_heatmap(
-        data_filtered(),
-        id_col = id_col,
-        group = input$group_filter
+      # the heatmap is drawn in memory, so each column's small summary is
+      # collected and stacked there. stacking lazy tables would instead build
+      # one query whose SQL grows with every column
+      consistency_by_variable <- value_cols |>
+        purrr::map(
+          \(value_col) {
+            compute_value_consistency(
+              data_filtered(),
+              id_col = id_col,
+              value_col = value_col,
+              group_cols = input$group_filter
+            ) |>
+              dplyr::collect() |>
+              dplyr::mutate(variable = value_col)
+          }
+        ) |>
+        dplyr::bind_rows()
+
+      plot_consistency_heatmap(
+        consistency_by_variable,
+        group_col = input$group_filter
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
