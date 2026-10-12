@@ -211,6 +211,9 @@ coverage_panel_ui <- function(id, .data) {
 #'
 #' @importFrom govhr compute_coverage plot_coverage_bar plot_coverage_heatmap
 #'   plot_coverage_trend
+#' @import shiny
+#' @importFrom plotly renderPlotly
+#' @importFrom scales breaks_pretty
 coverage_panel_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
@@ -254,7 +257,7 @@ coverage_panel_server <- function(id, .data, cache) {
         toggle_growth = input$toggle_growth
       ) +
         scale_y_continuous(
-          labels = scales::percent_format(accuracy = 1)
+          breaks = scales::breaks_pretty()
         )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)

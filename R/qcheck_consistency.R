@@ -242,6 +242,7 @@ consistency_panel_ui <- function(id, .data) {
 #' @importFrom plotly renderPlotly
 #' @importFrom purrr map
 #' @importFrom shinyWidgets updatePickerInput pickerOptions
+#' @importFrom scales breaks_pretty
 #'
 #' @return A set of Shiny outputs for the consistency panel.
 consistency_panel_server <- function(id, .data, cache) {
@@ -299,7 +300,7 @@ consistency_panel_server <- function(id, .data, cache) {
         toggle_growth = input$toggle_growth
       ) +
         scale_y_continuous(
-          labels = scales::percent_format(accuracy = 1)
+          breaks = scales::breaks_pretty()
         )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
