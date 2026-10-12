@@ -123,7 +123,9 @@ workforce_transition_server <- function(id, .data, cache) {
 
     # plot 1. transitions over time
     output$transition_trend_plot <- plotly::renderPlotly({
-      validate_transitions()
+      validate_transitions(
+        transition_data()
+      )
 
       plotly::ggplotly(
         transition_data() |>

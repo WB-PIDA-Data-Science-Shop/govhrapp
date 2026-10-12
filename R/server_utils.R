@@ -354,15 +354,18 @@ collect_cache <- function(cache) {
 #' A narrow subgroup or date selection, or deselecting every subgroup, can
 #' leave no moves, which plot_trend() errors on and the network draws blank.
 #' 
+#' @param transition_data Data frame of transitions, such as the output of
+#' [govhr::compute_transition()].
+#' 
 #' @importFrom shiny validate need
 #' 
 #' @return Invisibly, the result of [shiny::validate()].
 #' 
 #' @keywords internal
-validate_transitions <- function() {
+validate_transitions <- function(transition_data) {
   shiny::validate(
     shiny::need(
-      nrow(transition_data()) > 0,
+      nrow(transition_data) > 0,
       "No transitions for the selected groups and dates."
     )
   )
