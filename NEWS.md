@@ -1,4 +1,7 @@
 # govhrapp 0.1.8
+* This patch introduces the following enhancements:
+    * Fully port `govhr` functions, implementing a `dbi` compatible method.
+    * Improve user experience and interface.
 
 # govhrapp 0.1.7
 * This patch introduces the following enhancements:
