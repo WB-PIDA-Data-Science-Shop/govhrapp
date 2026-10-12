@@ -354,6 +354,8 @@ collect_cache <- function(cache) {
 #' A narrow subgroup or date selection, or deselecting every subgroup, can
 #' leave no moves, which plot_trend() errors on and the network draws blank.
 #' 
+#' @importFrom shiny validate need
+#' 
 #' @return Invisibly, the result of [shiny::validate()].
 #' 
 #' @keywords internal
