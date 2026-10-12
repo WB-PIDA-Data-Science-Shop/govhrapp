@@ -178,6 +178,7 @@ importFrom(shiny,
   icon,
   markdown,
   moduleServer,
+  need,
   observe,
   observeEvent,
   p,
@@ -193,7 +194,8 @@ importFrom(shiny,
   textOutput,
   uiOutput,
   updateSelectInput,
-  useBusyIndicators
+  useBusyIndicators,
+  validate
 )
 importFrom(shinyWidgets,
   materialSwitch,

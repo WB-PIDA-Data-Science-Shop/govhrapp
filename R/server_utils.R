@@ -247,7 +247,12 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
 
   # key indicator boxes, read from the collected movement and retirement
   # tables so their queries are not run again for each box
-  cache[["movement_box"]] <- c("hire", "separation", "retirement", "replacement") |>
+  cache[["movement_box"]] <- c(
+    "hire",
+    "separation",
+    "retirement",
+    "replacement"
+  ) |>
     purrr::set_names() |>
     purrr::map(
       \(type) {
@@ -341,6 +346,23 @@ collect_cache <- function(cache) {
     cache,
     \(entry) inherits(entry, "tbl_lazy"),
     dplyr::collect
+  )
+}
+
+#' Validate Transitions Exist
+#' 
+#' A narrow subgroup or date selection, or deselecting every subgroup, can
+#' leave no moves, which plot_trend() errors on and the network draws blank.
+#' 
+#' @return Invisibly, the result of [shiny::validate()].
+#' 
+#' @keywords internal
+validate_transitions <- function() {
+  shiny::validate(
+    shiny::need(
+      nrow(transition_data()) > 0,
+      "No transitions for the selected groups and dates."
+    )
   )
 }
 
