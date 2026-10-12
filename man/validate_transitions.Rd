@@ -4,7 +4,11 @@
 \alias{validate_transitions}
 \title{Validate Transitions Exist}
 \usage{
-validate_transitions()
+validate_transitions(transition_data)
+}
+\arguments{
+\item{transition_data}{Data frame of transitions, such as the output of
+\code{\link[govhr:compute_transition]{govhr::compute_transition()}}.}
 }
 \value{
 Invisibly, the result of \code{\link[shiny:validate]{shiny::validate()}}.

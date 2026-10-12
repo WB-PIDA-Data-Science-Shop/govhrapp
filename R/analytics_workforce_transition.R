@@ -141,7 +141,9 @@ workforce_transition_server <- function(id, .data, cache) {
 
     # plot 2. transition network
     output$transition_network_plot <- ggiraph::renderGirafe({
-      validate_transitions()
+      validate_transitions(
+        transition_data()
+      )
 
       govhr::plot_transition_network(transition_data())
     }) |>
