@@ -19,6 +19,7 @@
 #' @importFrom shiny shinyApp addResourcePath
 #' @importFrom bslib page_navbar nav_panel nav_spacer bs_theme bs_add_rules navbar_options font_google
 #' @importFrom ggplot2 theme_set theme_minimal theme element_text update_geom_defaults
+#' @importFrom govhr compute_coverage compute_record_consistency
 #' @importFrom thematic thematic_shiny
 #' @importFrom lubridate year
 #' @importFrom scales label_number cut_short_scale
@@ -59,7 +60,7 @@ run_govhrapp_qcheck <- function(
   coverage_by_date <- purrr::map2(
     c("est", "personnel", "contract"),
     list(est_data, personnel_data, contract_data),
-    ~ compute_coverage(
+    ~ govhr::compute_coverage(
       .y,
       include_ref_date = TRUE,
       aggregate = TRUE
@@ -80,7 +81,7 @@ run_govhrapp_qcheck <- function(
         "contract" = "contract_id"
       )
 
-      compute_record_consistency(
+      govhr::compute_record_consistency(
         .y,
         id_col = id_col,
         group_cols = "ref_date"

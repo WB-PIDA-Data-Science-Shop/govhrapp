@@ -1,7 +1,7 @@
 #' Name the Column Holding a Movement Measure
 #'
 #' Maps a movement type and measurement type to the column that
-#' [govhr::compute_movement()] or [compute_retirement()] stores it in.
+#' [govhr::compute_movement()] or [govhr::compute_retirement()] stores it in.
 #'
 #' @param movement_type Character. One of `"hire"`, `"separation"`,
 #'   `"retirement"` or `"replacement"`.
@@ -79,6 +79,7 @@ plot_movement_trend <- function(
 #' @return A gt table summarizing the demographic characteristics of the specified movement type compared to the general population.
 #' @importFrom dplyr all_of any_of coalesce collect distinct filter if_else
 #'   left_join mutate select semi_join
+#' @importFrom govhr detect_movement
 #' @importFrom gtsummary tbl_summary modify_header as_gt
 #' @importFrom stringr str_to_title
 render_movement_profile <- function(data, movement_type) {
@@ -96,7 +97,7 @@ render_movement_profile <- function(data, movement_type) {
       )
     )
 
-  movers <- detect_movement(profile_data) |>
+  movers <- govhr::detect_movement(profile_data) |>
     dplyr::select(personnel_id, ref_date, moved = dplyr::all_of(movement_type))
 
   # the first date has nothing to detect hires against, and the last nothing

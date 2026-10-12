@@ -9,7 +9,7 @@ summarise_movement_box(movement, retirement, movement_type)
 \arguments{
 \item{movement}{Output of \code{\link[govhr:compute_movement]{govhr::compute_movement()}}.}
 
-\item{retirement}{Output of \code{\link[=compute_retirement]{compute_retirement()}}.}
+\item{retirement}{Output of \code{\link[govhr:compute_retirement]{govhr::compute_retirement()}}.}
 
 \item{movement_type}{Character. One of \code{"hire"}, \code{"separation"},
 \code{"retirement"} or \code{"replacement"}.}

@@ -208,6 +208,9 @@ coverage_panel_ui <- function(id, .data) {
 #'
 #'
 #' @return A set of Shiny outputs for the coverage panel.
+#'
+#' @importFrom govhr compute_coverage plot_coverage_bar plot_coverage_heatmap
+#'   plot_coverage_trend
 coverage_panel_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
@@ -234,7 +237,7 @@ coverage_panel_server <- function(id, .data, cache) {
         }
         data
       } else {
-        compute_coverage(
+        govhr::compute_coverage(
           data_filtered(),
           group_cols = input$group_filter,
           include_ref_date = TRUE,
@@ -245,7 +248,7 @@ coverage_panel_server <- function(id, .data, cache) {
 
     # plot 1. coverage over time
     output$coverage_panel <- plotly::renderPlotly({
-      plot_coverage_trend(
+      govhr::plot_coverage_trend(
         coverage_trend_data(),
         group_col = input$group_filter,
         toggle_growth = input$toggle_growth
@@ -255,15 +258,15 @@ coverage_panel_server <- function(id, .data, cache) {
 
     # plot 2. coverage by variable
     output$coverage_by_variable <- plotly::renderPlotly({
-      plot_coverage_bar(compute_coverage(data_filtered()))
+      govhr::plot_coverage_bar(govhr::compute_coverage(data_filtered()))
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
     # plot 3. coverage heatmap by group
     output$coverage_heatmap <- plotly::renderPlotly({
       data_filtered() |>
-        compute_coverage(group_cols = input$group_filter) |>
-        plot_coverage_heatmap(group_col = input$group_filter)
+        govhr::compute_coverage(group_cols = input$group_filter) |>
+        govhr::plot_coverage_heatmap(group_col = input$group_filter)
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })

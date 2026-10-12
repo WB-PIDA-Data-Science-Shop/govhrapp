@@ -35,7 +35,7 @@ format_movement_rate <- function(rate, movement_type) {
 #'
 #' @importFrom bsicons bs_icon
 #' @importFrom bslib popover value_box value_box_theme
-#' @importFrom govhr compute_movement
+#' @importFrom govhr compute_movement compute_retirement
 #' @importFrom purrr pluck
 #' @importFrom shiny h5 renderUI tagList
 #' @importFrom stringr str_to_title
@@ -46,7 +46,7 @@ render_movement_box <- function(.data, movement_type, cache = NULL) {
   if (is.null(values)) {
     values <- summarise_movement_box(
       govhr::compute_movement(.data),
-      compute_retirement(.data),
+      govhr::compute_retirement(.data),
       movement_type
     )
   }

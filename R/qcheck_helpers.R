@@ -11,12 +11,13 @@
 #' @importFrom bslib value_box
 #' @importFrom dplyr case_when
 #' @importFrom bsicons bs_icon
+#' @importFrom govhr compute_global_coverage
 #'
 #' @details Coverage denotes the total number of non-missing records in a dataset, expressed as a percentage of the total records. For example, if a dataset has 10 rows and 10 columns, i.e., 100 records, and 10 of them are available, the coverage would be 10 percent.
 #' @export
 render_coverage_box <- function(.data, title, icon = "table") {
   shiny::renderUI({
-    value_coverage <- compute_global_coverage(.data)
+    value_coverage <- govhr::compute_global_coverage(.data)
 
     theme <- dplyr::case_when(
       value_coverage < 50 ~ "danger",
@@ -50,6 +51,8 @@ render_coverage_box <- function(.data, title, icon = "table") {
 #' @importFrom dplyr case_when
 #' @importFrom purrr map_dbl
 #' @importFrom dplyr pull
+#' @importFrom govhr compute_global_consistency compute_record_consistency
+#'   compute_value_consistency
 #'
 #' @details Consistency denotes the proportion of records and values that are consistent across the dataset. A record is considered consistent if it has a unique identifier and all its associated values are consistent. A value is considered consistent if it does not contradict other values for the same record.
 #' @export
@@ -61,15 +64,15 @@ render_consistency_box <- function(
   icon = "table"
 ) {
   shiny::renderUI({
-    consistency <- compute_global_consistency(.data, id_col, value_cols)
+    consistency <- govhr::compute_global_consistency(.data, id_col, value_cols)
 
-    consistency_record <- compute_record_consistency(.data, id_col) |>
+    consistency_record <- govhr::compute_record_consistency(.data, id_col) |>
       dplyr::pull(.data[["record_consistency"]])
 
     consistency_value <- purrr::map_dbl(
       value_cols,
       \(value_col) {
-        compute_value_consistency(.data, id_col, value_col) |>
+        govhr::compute_value_consistency(.data, id_col, value_col) |>
           dplyr::pull(.data[["value_consistency"]])
       }
     ) |>

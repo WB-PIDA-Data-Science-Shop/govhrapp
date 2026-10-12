@@ -19,6 +19,6 @@ A column name, such as \code{"hires"}, \code{"separation_rate"} or
 }
 \description{
 Maps a movement type and measurement type to the column that
-\code{\link[govhr:compute_movement]{govhr::compute_movement()}} or \code{\link[=compute_retirement]{compute_retirement()}} stores it in.
+\code{\link[govhr:compute_movement]{govhr::compute_movement()}} or \code{\link[govhr:compute_retirement]{govhr::compute_retirement()}} stores it in.
 }
 \keyword{internal}

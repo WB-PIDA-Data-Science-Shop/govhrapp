@@ -18,7 +18,6 @@ export(wagebill_ui)
 export(workforce_server)
 export(workforce_transition_server)
 import(bslib)
-import(govhr)
 import(shiny)
 importFrom(bsicons,bs_icon)
 importFrom(bslib,
@@ -89,22 +88,39 @@ importFrom(ggplot2,
 )
 importFrom(govhr,
   apply_baseline_index,
+  compute_compression_ratio,
+  compute_coverage,
+  compute_decile,
+  compute_global_consistency,
+  compute_global_coverage,
   compute_growth,
   compute_headcount,
   compute_movement,
+  compute_movement_cost,
   compute_percentile,
+  compute_record_consistency,
+  compute_retirement,
+  compute_retirement_cost,
   compute_transition,
+  compute_value_consistency,
   compute_wage,
   compute_wagebill,
+  detect_movement,
   fastcount,
   plot_bar_growth,
   plot_bar_total,
   plot_compression_ratio,
+  plot_consistency_heatmap,
+  plot_consistency_trend,
+  plot_coverage_bar,
+  plot_coverage_heatmap,
+  plot_coverage_trend,
   plot_decile,
   plot_histogram,
   plot_movement,
   plot_transition_network,
   plot_trend,
+  project_retirement,
   scale_plot_height,
   validate_data
 )

@@ -128,7 +128,7 @@ group_col_to_null <- function(group_col) {
 #' replacement box reports a ratio only.
 #'
 #' @param movement Output of [govhr::compute_movement()].
-#' @param retirement Output of [compute_retirement()].
+#' @param retirement Output of [govhr::compute_retirement()].
 #' @param movement_type Character. One of `"hire"`, `"separation"`,
 #'   `"retirement"` or `"replacement"`.
 #'
@@ -215,7 +215,8 @@ summarise_wagebill_box <- function(.data, measure_type) {
 #'
 #' @return A named list of pre-computed data frames keyed by panel.
 #'
-#' @importFrom govhr compute_headcount compute_movement compute_transition
+#' @importFrom govhr compute_headcount compute_movement compute_retirement
+#'   compute_transition project_retirement
 #' @importFrom purrr map set_names
 #' @keywords internal
 build_workforce_cache <- function(workforce_data, wagebill_data) {
@@ -231,9 +232,9 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
       ),
 
     # retirement module
-    workforce_retirement = compute_retirement(workforce_data),
+    workforce_retirement = govhr::compute_retirement(workforce_data),
     workforce_retirement_expected = workforce_data |>
-      project_retirement(threshold_age = 60),
+      govhr::project_retirement(threshold_age = 60),
 
     # movement module
     workforce_movement = govhr::compute_movement(workforce_data),
@@ -271,7 +272,9 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
 #' @return A named list of pre-computed data frames keyed by panel.
 #'
 #' @importFrom dplyr left_join
-#' @importFrom govhr compute_percentile compute_wage compute_wagebill
+#' @importFrom govhr compute_compression_ratio compute_decile compute_movement_cost
+#'   compute_percentile compute_retirement_cost compute_wage compute_wagebill
+#'   project_retirement
 #' @importFrom purrr map set_names
 #' @keywords internal
 build_wagebill_cache <- function(wagebill_data) {
@@ -291,9 +294,9 @@ build_wagebill_cache <- function(wagebill_data) {
 
     # retirement module
     wagebill_retirement = wagebill_data |>
-      compute_retirement_cost(measure_col = "gross_salary_lcu"),
+      govhr::compute_retirement_cost(measure_col = "gross_salary_lcu"),
     wagebill_retirement_expected = wagebill_data |>
-      project_retirement(measure_col = "gross_salary_lcu"),
+      govhr::project_retirement(measure_col = "gross_salary_lcu"),
 
     # equity module
     wagebill_equity_percentile = wagebill_data |>
@@ -302,16 +305,16 @@ build_wagebill_cache <- function(wagebill_data) {
         latest_measure = FALSE
       ),
     wagebill_equity_decile = wagebill_data |>
-      compute_decile(
+      govhr::compute_decile(
         measure_col = "gross_salary_lcu",
         latest_measure = TRUE
       ),
     wagebill_equity_compression = wagebill_data |>
-      compute_compression_ratio(measure_col = "gross_salary_lcu"),
+      govhr::compute_compression_ratio(measure_col = "gross_salary_lcu"),
 
     # movement module
     wagebill_movement = wagebill_data |>
-      compute_movement_cost(
+      govhr::compute_movement_cost(
         event_type = "hire",
         measure_col = "gross_salary_lcu"
       )

@@ -237,6 +237,8 @@ consistency_panel_ui <- function(id, .data) {
 #'
 #' @import shiny
 #' @importFrom dplyr bind_rows collect mutate
+#' @importFrom govhr compute_record_consistency compute_value_consistency
+#'   plot_consistency_heatmap plot_consistency_trend
 #' @importFrom plotly renderPlotly
 #' @importFrom purrr map
 #' @importFrom shinyWidgets updatePickerInput pickerOptions
@@ -272,13 +274,13 @@ consistency_panel_server <- function(id, .data, cache) {
       group_cols <- unique(c(input$group_filter, "ref_date"))
 
       if (input$type_consistency == "record") {
-        compute_record_consistency(
+        govhr::compute_record_consistency(
           data_filtered(),
           id_col = id_col,
           group_cols = group_cols
         )
       } else {
-        compute_value_consistency(
+        govhr::compute_value_consistency(
           data_filtered(),
           id_col = id_col,
           value_col = input$value_col,
@@ -290,7 +292,7 @@ consistency_panel_server <- function(id, .data, cache) {
 
     # plot 1. consistency over time
     output$consistency_panel <- plotly::renderPlotly({
-      plot_consistency_trend(
+      govhr::plot_consistency_trend(
         consistency_trend(),
         group_col = input$group_filter,
         type_plot = input$type_consistency,
@@ -312,7 +314,7 @@ consistency_panel_server <- function(id, .data, cache) {
       consistency_by_variable <- value_cols |>
         purrr::map(
           \(value_col) {
-            compute_value_consistency(
+            govhr::compute_value_consistency(
               data_filtered(),
               id_col = id_col,
               value_col = value_col,
@@ -324,7 +326,7 @@ consistency_panel_server <- function(id, .data, cache) {
         ) |>
         dplyr::bind_rows()
 
-      plot_consistency_heatmap(
+      govhr::plot_consistency_heatmap(
         consistency_by_variable,
         group_col = input$group_filter
       )

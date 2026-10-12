@@ -82,6 +82,7 @@ wagebill_retirement_ui <- function(id, .data) {
 #' @return A Shiny module server function.
 #'
 #' @import shiny
+#' @importFrom govhr compute_retirement_cost project_retirement
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
 #' @keywords internal
@@ -103,7 +104,7 @@ wagebill_retirement_server <- function(id, .data, cache) {
       retirement_data <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "wagebill", "wagebill_retirement")
       } else {
-        compute_retirement_cost(
+        govhr::compute_retirement_cost(
           wagebill_filtered(),
           measure_col = input$wagebill_measure,
           group_cols = group_col_to_null(input$group_filter)
@@ -126,7 +127,7 @@ wagebill_retirement_server <- function(id, .data, cache) {
       retirement_projection_data <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "wagebill", "wagebill_retirement_expected")
       } else {
-        project_retirement(
+        govhr::project_retirement(
           wagebill_filtered(),
           threshold_age = input$threshold_age,
           group_cols = group_col_to_null(input$group_filter),

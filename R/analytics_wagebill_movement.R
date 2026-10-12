@@ -104,7 +104,7 @@ wagebill_movement_ui <- function(id, .data) {
 #'
 #' @import shiny
 #' @importFrom dplyr collect filter
-#' @importFrom govhr scale_plot_height compute_growth plot_trend plot_bar_total plot_bar_growth
+#' @importFrom govhr compute_growth compute_movement_cost plot_bar_growth plot_bar_total plot_trend scale_plot_height
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
 #' @keywords internal
@@ -128,7 +128,7 @@ wagebill_movement_server <- function(id, .data, cache) {
       cost <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "wagebill", "wagebill_movement")
       } else {
-        compute_movement_cost(
+        govhr::compute_movement_cost(
           wagebill_filtered(),
           event_type = input$event_type,
           measure_col = input$wagebill_measure,

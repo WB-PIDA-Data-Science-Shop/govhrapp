@@ -79,12 +79,12 @@ test_that("summarise_movement_box reads a database table's movements", {
     expect_equal(
       summarise_movement_box(
         govhr::compute_movement(remote),
-        compute_retirement(remote),
+        govhr::compute_retirement(remote),
         movement_type
       ),
       summarise_movement_box(
         govhr::compute_movement(hr_panel),
-        compute_retirement(hr_panel),
+        govhr::compute_retirement(hr_panel),
         movement_type
       )
     )
