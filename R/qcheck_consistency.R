@@ -297,7 +297,10 @@ consistency_panel_server <- function(id, .data, cache) {
         group_col = input$group_filter,
         type_plot = input$type_consistency,
         toggle_growth = input$toggle_growth
-      )
+      ) +
+        scale_y_continuous(
+          labels = scales::percent_format(accuracy = 1)
+        )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 

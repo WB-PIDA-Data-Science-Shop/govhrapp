@@ -252,7 +252,10 @@ coverage_panel_server <- function(id, .data, cache) {
         coverage_trend_data(),
         group_col = input$group_filter,
         toggle_growth = input$toggle_growth
-      )
+      ) +
+        scale_y_continuous(
+          labels = scales::percent_format(accuracy = 1)
+        )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
