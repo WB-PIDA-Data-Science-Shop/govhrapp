@@ -13,7 +13,8 @@ plot_movement_trend(
 )
 }
 \arguments{
-\item{data}{Data frame with \code{ref_date} and \code{y_col}.}
+\item{data}{Data frame or lazy table (\code{tbl_dbi}) with \code{ref_date} and
+\code{y_col}. A lazy table is brought into memory first.}
 
 \item{y_col}{Character. Column to plot.}
 
@@ -29,7 +30,7 @@ A ggplot2 object.
 }
 \description{
 Draws one movement measure with \code{\link[govhr:plot_trend]{govhr::plot_trend()}}, for the measures
-\code{\link[govhr:plot_movement]{govhr::plot_movement()}} does not cover: replacement, retirement and
-projected retirement.
+\code{\link[govhr:plot_movement]{govhr::plot_movement()}} does not cover: replacement, retirement, projected
+retirement and movement costs.
 }
 \keyword{internal}

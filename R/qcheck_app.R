@@ -19,6 +19,7 @@
 #' @importFrom shiny shinyApp addResourcePath
 #' @importFrom bslib page_navbar nav_panel nav_spacer bs_theme bs_add_rules navbar_options font_google
 #' @importFrom ggplot2 theme_set theme_minimal theme element_text update_geom_defaults
+#' @importFrom govhr compute_coverage compute_record_consistency
 #' @importFrom thematic thematic_shiny
 #' @importFrom lubridate year
 #' @importFrom scales label_number cut_short_scale
@@ -61,7 +62,6 @@ run_govhrapp_qcheck <- function(
     list(est_data, personnel_data, contract_data),
     ~ govhr::compute_coverage(
       .y,
-      group = "ref_date",
       include_ref_date = TRUE,
       aggregate = TRUE
     )
@@ -90,7 +90,8 @@ run_govhrapp_qcheck <- function(
   ) |>
     purrr::set_names(
       c("est", "personnel", "contract")
-    )
+    ) |>
+    collect_cache()
 
   ui <- bslib::page_navbar(
     fillable = FALSE,

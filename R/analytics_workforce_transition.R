@@ -81,11 +81,12 @@ workforce_transition_ui <- function(id, .data) {
 #'
 #' @return A Shiny module server function.
 #'
+#' @importFrom dplyr collect
 #' @importFrom ggiraph renderGirafe
 #' @importFrom govhr compute_transition fastcount plot_transition_network plot_trend
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
-#' @importFrom shiny bindEvent moduleServer reactive req
+#' @importFrom shiny bindEvent moduleServer need reactive req validate
 #'
 #' @export
 workforce_transition_server <- function(id, .data, cache) {
@@ -103,7 +104,9 @@ workforce_transition_server <- function(id, .data, cache) {
       )
     })
 
-    # both plots read the same transitions, so detect them once per apply
+    # both plots read the same transitions, so detect them once per apply. they
+    # are collected so a lazy table's query is not rerun for each plot, and so
+    # nrow() can tell when the selection left no transitions
     transition_data <- shiny::reactive({
       if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_transition")
@@ -112,13 +115,18 @@ workforce_transition_server <- function(id, .data, cache) {
           workforce_filtered(),
           id_col = input$id_col,
           group_cols = input$group_filter
-        )
+        ) |>
+          dplyr::collect()
       }
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
     # plot 1. transitions over time
     output$transition_trend_plot <- plotly::renderPlotly({
+      validate_transitions(
+        transition_data()
+      )
+
       plotly::ggplotly(
         transition_data() |>
           govhr::fastcount(ref_date, name = "transition") |>
@@ -133,6 +141,10 @@ workforce_transition_server <- function(id, .data, cache) {
 
     # plot 2. transition network
     output$transition_network_plot <- ggiraph::renderGirafe({
+      validate_transitions(
+        transition_data()
+      )
+
       govhr::plot_transition_network(transition_data())
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)

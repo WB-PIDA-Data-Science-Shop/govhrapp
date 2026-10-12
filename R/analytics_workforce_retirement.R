@@ -78,6 +78,7 @@ workforce_retirement_ui <- function(id, .data) {
 #' @return A Shiny module server function.
 #'
 #' @import shiny
+#' @importFrom govhr compute_retirement project_retirement
 #' @importFrom plotly renderPlotly
 #' @importFrom purrr pluck
 #' @keywords internal
@@ -101,7 +102,7 @@ workforce_retirement_server <- function(id, .data, cache) {
       plot_data <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_retirement")
       } else {
-        compute_retirement(
+        govhr::compute_retirement(
           data_filtered(),
           group_cols = group_col_to_null(input$group_filter)
         )
@@ -126,7 +127,7 @@ workforce_retirement_server <- function(id, .data, cache) {
       plot_data <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_retirement_expected")
       } else {
-        compute_projected_retirement(
+        govhr::project_retirement(
           data_filtered(),
           threshold_age = input$threshold_age,
           group_cols = group_col_to_null(input$group_filter)

@@ -141,15 +141,12 @@ overview_server <- function(id, cache) {
 
     headcount_val <- workforce_overview |>
       dplyr::filter(.data[["ref_date"]] == latest_ref_date) |>
-      dplyr::pull(.data[["value"]]) |>
+      dplyr::pull(.data[["headcount"]]) |>
       scales::comma(accuracy = 1)
 
     wagebill_val <- wagebill_overview |>
-      dplyr::filter(
-        .data[["ref_date"]] == latest_ref_date,
-        .data[["indicator"]] == "gross_salary_lcu_sum"
-      ) |>
-      dplyr::pull(.data[["value"]]) |>
+      dplyr::filter(.data[["ref_date"]] == latest_ref_date) |>
+      dplyr::pull(.data[["wagebill"]]) |>
       scales::comma(accuracy = 1)
 
     output$vb_date_label <- shiny::renderText(paste0(
@@ -172,7 +169,7 @@ overview_server <- function(id, cache) {
         workforce_overview |>
           ggplot2::ggplot(ggplot2::aes(
             x = .data[["ref_date"]],
-            y = .data[["value"]]
+            y = .data[["headcount"]]
           )) +
           ggplot2::geom_point() +
           ggplot2::geom_line() +
@@ -188,12 +185,9 @@ overview_server <- function(id, cache) {
 
       plotly::ggplotly(
         wagebill_overview |>
-          filter(
-            .data[["indicator"]] == "gross_salary_lcu_sum"
-          ) |>
           ggplot2::ggplot(ggplot2::aes(
             x = .data[["ref_date"]],
-            y = .data[["value"]]
+            y = .data[["wagebill"]]
           )) +
           ggplot2::geom_point(colour = "#004181") +
           ggplot2::geom_line(colour = "#004181") +
@@ -213,25 +207,19 @@ overview_server <- function(id, cache) {
       indexed_workforce <- workforce_overview |>
         dplyr::arrange(.data[["ref_date"]]) |>
         dplyr::mutate(
-          value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100
+          value = .data[["headcount"]] / dplyr::first(.data[["headcount"]]) * 100
         )
 
       indexed_wagebill <- wagebill_overview |>
-        dplyr::filter(
-          .data[["indicator"]] == "gross_salary_lcu_sum"
-        ) |>
         dplyr::arrange(.data[["ref_date"]]) |>
         dplyr::mutate(
-          value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100
+          value = .data[["wagebill"]] / dplyr::first(.data[["wagebill"]]) * 100
         )
 
       indexed_average_wage <- wagebill_overview |>
-        filter(
-          .data[["indicator"]] == "gross_salary_lcu_mean"
-        ) |>
         dplyr::arrange(.data[["ref_date"]]) |>
         dplyr::mutate(
-          value = .data[["value"]] / dplyr::first(.data[["value"]]) * 100
+          value = .data[["wage"]] / dplyr::first(.data[["wage"]]) * 100
         )
 
       combined <- dplyr::bind_rows(

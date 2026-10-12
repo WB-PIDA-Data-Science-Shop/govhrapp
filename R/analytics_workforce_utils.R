@@ -1,7 +1,7 @@
 #' Name the Column Holding a Movement Measure
 #'
 #' Maps a movement type and measurement type to the column that
-#' [govhr::compute_movement()] or [compute_retirement()] stores it in.
+#' [govhr::compute_movement()] or [govhr::compute_retirement()] stores it in.
 #'
 #' @param movement_type Character. One of `"hire"`, `"separation"`,
 #'   `"retirement"` or `"replacement"`.
@@ -20,79 +20,14 @@ movement_measure_col <- function(movement_type, measurement_type) {
   }
 }
 
-#' Project Retirements and Their Rate
-#'
-#' Projects, for each future year, how many of the current active workforce
-#' reach the retirement threshold age, and divides them by the current active
-#' headcount.
-#'
-#' @param data Data frame containing personnel data with `personnel_id`,
-#'   `ref_date`, `employment_status` and `birth_date`.
-#' @param threshold_age Numeric. Age at which personnel retire. Default `60`.
-#' @param group_cols Character vector of columns to group by, or `NULL`
-#'   (default) for the whole workforce.
-#'
-#' @return A data frame with `ref_date` (the projected retirement date), the
-#'   grouping columns, `projected_retirements`, `headcount` and
-#'   `projected_retirement_rate`.
-#'
-#' @importFrom dplyr all_of cross_join filter left_join mutate n_distinct
-#'   rename summarise
-#' @importFrom govhr project_retirement
-#' @keywords internal
-compute_projected_retirement <- function(
-  data,
-  threshold_age = 60,
-  group_cols = NULL
-) {
-  # govhr::project_retirement() projects everyone's last record, including
-  # people who left before the latest date. restricting to the current active
-  # workforce keeps the projected retirements inside the headcount they are
-  # divided by
-  current_workforce <- data |>
-    dplyr::filter(
-      .data[["ref_date"]] == max(.data[["ref_date"]], na.rm = TRUE),
-      .data[["employment_status"]] == "active"
-    )
-
-  headcount <- current_workforce |>
-    dplyr::summarise(
-      headcount = dplyr::n_distinct(.data[["personnel_id"]]),
-      .by = dplyr::all_of(group_cols)
-    )
-
-  projected <- current_workforce |>
-    govhr::project_retirement(
-      threshold_age = threshold_age,
-      birth_col = "birth_date",
-      group_cols = group_cols,
-      simplify_retirement_date = TRUE
-    ) |>
-    dplyr::rename(
-      ref_date = "retirement_date",
-      projected_retirements = "indicator"
-    )
-
-  projected <- if (is.null(group_cols)) {
-    dplyr::cross_join(projected, headcount)
-  } else {
-    dplyr::left_join(projected, headcount, by = group_cols)
-  }
-
-  projected |>
-    dplyr::mutate(
-      projected_retirement_rate = .data[["projected_retirements"]] /
-        .data[["headcount"]]
-    )
-}
-
 #' Plot a Movement Measure Over Time
 #'
 #' Draws one movement measure with [govhr::plot_trend()], for the measures
-#' [govhr::plot_movement()] does not cover: replacement, retirement and
-#' projected retirement.
+#' [govhr::plot_movement()] does not cover: replacement, retirement, projected
+#' retirement and movement costs.
 #'
-#' @param data Data frame with `ref_date` and `y_col`.
+#' @param data Data frame or lazy table (`tbl_dbi`) with `ref_date` and
+#'   `y_col`. A lazy table is brought into memory first.
 #' @param y_col Character. Column to plot.
 #' @param y_label Character. y-axis label.
 #' @param group_col Character. Column to draw one line per group, or
@@ -101,7 +36,7 @@ compute_projected_retirement <- function(
 #'
 #' @return A ggplot2 object.
 #'
-#' @importFrom dplyr filter
+#' @importFrom dplyr collect filter
 #' @importFrom ggplot2 scale_y_continuous
 #' @importFrom govhr plot_trend
 #' @importFrom scales label_percent
@@ -114,9 +49,12 @@ plot_movement_trend <- function(
   percent = FALSE
 ) {
   # movement measures are undefined at the first or last date, which ggplot2
-  # would otherwise drop with a "removed rows" warning on every render
+  # would otherwise drop with a "removed rows" warning on every render.
+  # plot_trend() sizes its group colours from `data[[group_col]]`, which is
+  # NULL on a lazy table, hence the collect()
   plot <- data |>
     dplyr::filter(!is.na(.data[[y_col]])) |>
+    dplyr::collect() |>
     govhr::plot_trend(group_col = group_col, y_col = y_col, y_label = y_label)
 
   if (!percent) {
@@ -132,18 +70,21 @@ plot_movement_trend <- function(
 
 #' Render a movement profile table
 #'
-#' @param data A data frame containing personnel data with columns for ref_date, personnel_id, gender, educat7, employment_status, and birth_date.
+#' @param data A data frame or remote database table (`tbl_dbi`) containing
+#'   personnel data with columns for ref_date, personnel_id, gender, educat7,
+#'   employment_status, and birth_date.
 #' @param movement_type A character string indicating the type of movement to profile (e.g
 #' "hire" or "separation").
-#' 
+#'
 #' @return A gt table summarizing the demographic characteristics of the specified movement type compared to the general population.
-#' @importFrom dplyr select mutate
+#' @importFrom dplyr all_of any_of coalesce collect distinct filter if_else
+#'   left_join mutate select semi_join
+#' @importFrom govhr detect_movement
 #' @importFrom gtsummary tbl_summary modify_header as_gt
-#' @importFrom govhr classify_personnel_event guess_date_frequency
 #' @importFrom stringr str_to_title
 render_movement_profile <- function(data, movement_type) {
-  movement_data <- data |>
-    select(
+  profile_data <- data |>
+    dplyr::select(
       dplyr::any_of(
         c(
           "ref_date",
@@ -156,18 +97,31 @@ render_movement_profile <- function(data, movement_type) {
       )
     )
 
-  ref_dates <- movement_data[["ref_date"]]
+  movers <- govhr::detect_movement(profile_data) |>
+    dplyr::select(personnel_id, ref_date, moved = dplyr::all_of(movement_type))
 
-  govhr::classify_personnel_event(
-    data = movement_data,
-    id_col = "personnel_id",
-    # classify_personnel_event() predates govhr's hire/separation vocabulary
-    event_type = if (movement_type == "separation") "fire" else movement_type,
-    start_date = min(ref_dates),
-    end_date = max(ref_dates),
-    status_col = "employment_status",
-    freq = govhr::guess_date_frequency(movement_data)
-  ) |>
+  # the first date has nothing to detect hires against, and the last nothing
+  # to detect separations against, so records on it are left out
+  comparable_dates <- movers |>
+    dplyr::filter(!is.na(moved)) |>
+    dplyr::distinct(ref_date)
+
+  profile_data |>
+    dplyr::semi_join(comparable_dates, by = "ref_date") |>
+    dplyr::left_join(movers, by = c("personnel_id", "ref_date")) |>
+    # pensioner records beside an active one share its flag, so only active
+    # records are labelled as movers
+    dplyr::mutate(
+      type_event = dplyr::if_else(
+        dplyr::coalesce(.data[["employment_status"]] == "active", FALSE) &
+          dplyr::coalesce(moved, FALSE),
+        !!movement_type,
+        "stayed"
+      )
+    ) |>
+    dplyr::select(-moved) |>
+    # tbl_summary() summarises individual records, hence the collect()
+    dplyr::collect() |>
     dplyr::mutate(
       age = as.numeric(
         difftime(Sys.Date(), birth_date, units = "days")

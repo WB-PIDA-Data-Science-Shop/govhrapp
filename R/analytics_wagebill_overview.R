@@ -98,14 +98,13 @@ wagebill_overview_ui <- function(id, .data) {
 #' @return A Shiny module server function.
 #'
 #' @import shiny
-#' @importFrom dplyr left_join mutate
+#' @importFrom dplyr all_of collect filter left_join mutate rename
 #' @importFrom ggplot2 aes geom_line geom_point ggplot scale_y_continuous xlab ylab
-#' @importFrom govhr apply_baseline_index compute_cross_section_summary compute_fastsummary compute_growth_summary compute_trend_summary plot_bar_growth plot_bar_total plot_trend scale_plot_height
+#' @importFrom govhr apply_baseline_index compute_growth compute_wagebill plot_bar_growth plot_bar_total plot_trend scale_plot_height
 #' @importFrom lubridate year
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
 #' @importFrom scales percent_format
-#' @importFrom dplyr filter
 #' @keywords internal
 wagebill_overview_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
@@ -122,32 +121,45 @@ wagebill_overview_server <- function(id, .data, cache) {
       )
     })
 
+    # the trend, total and growth plots all read this aggregate, so it is
+    # computed and collected once per apply. govhr's grouped plot_trend(),
+    # scale_plot_height() and compute_growth() also need it in memory
     wagebill_summary <- shiny::reactive({
       summary <- if (input$apply_btn == 0) {
-        purrr::pluck(cache, "wagebill", "wagebill_overview") |>
-          dplyr::filter(
-            .data[["indicator"]] == "gross_salary_lcu_sum"
-          )
+        purrr::pluck(cache, "wagebill", "wagebill_overview")
       } else {
-        govhr::compute_trend_summary(
+        govhr::compute_wagebill(
           wagebill_filtered(),
-          group_col = input$group_filter,
-          measure_col = input$wagebill_measure
-        )
+          measure_col = input$wagebill_measure,
+          group_cols = group_col_to_null(input$group_filter)
+        ) |>
+          dplyr::collect()
       }
+
+      # compute_wagebill() gives a group with no records in a period an NA
+      # wagebill. dropping those rows anchors each group's latest total, growth
+      # and baseline on the periods it is observed in
+      dplyr::filter(summary, !is.na(.data[["wagebill"]]))
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    wagebill_trend <- shiny::reactive({
+      # apply_baseline_index() and plot_trend() read the measure from `value`
+      trend <- wagebill_summary() |>
+        dplyr::rename(value = "wagebill")
 
       if (input$toggle_growth) {
-        summary <- govhr::apply_baseline_index(summary, group_col = input$group_filter)
+        trend <- govhr::apply_baseline_index(trend, group_col = input$group_filter)
       }
 
-      summary
+      trend
     })
 
     # plot 1. panel
     output$wagebill_panel <- plotly::renderPlotly({
       plotly::ggplotly(
         govhr::plot_trend(
-          wagebill_summary(),
+          wagebill_trend(),
           group_col = input$group_filter,
           toggle_growth = input$toggle_growth,
           y_label = "Wage Bill"
@@ -160,12 +172,13 @@ wagebill_overview_server <- function(id, .data, cache) {
     # NOTE: not yet wired into wagebill_overview_ui(); the sidebar has no
     # `macroindicator_measure` input, so this output is never rendered.
     wagebill_annual <- shiny::reactive({
+      # collected because it is joined to the in-memory macro_indicators
       wagebill_filtered() |>
-        govhr::compute_fastsummary(
-          cols = input$wagebill_measure,
-          fns = "sum",
-          group_colss = c("ref_date", "country_code")
-        )
+        govhr::compute_wagebill(
+          measure_col = input$wagebill_measure,
+          group_cols = "country_code"
+        ) |>
+        dplyr::collect()
     })
 
     output$wagebill_fiscal <- plotly::renderPlotly({
@@ -176,7 +189,7 @@ wagebill_overview_server <- function(id, .data, cache) {
           by = c("country_code", "year")
         ) |>
         dplyr::mutate(
-          ratio = .data[["value"]] /
+          ratio = .data[["wagebill"]] /
             .data[[input$macroindicator_measure]] *
             100
         ) |>
@@ -204,16 +217,17 @@ wagebill_overview_server <- function(id, .data, cache) {
         )
       )
 
-      cross_section_data <- govhr::compute_cross_section_summary(
-        wagebill_filtered(),
-        group_col = input$group_filter,
-        measure_col = input$wagebill_measure
-      )
+      cross_section_data <- wagebill_summary() |>
+        dplyr::filter(
+          .data[["ref_date"]] == max(.data[["ref_date"]]),
+          .by = dplyr::all_of(input$group_filter)
+        )
 
       plotly::ggplotly(
         govhr::plot_bar_total(
           cross_section_data,
           group_col = input$group_filter,
+          x_col = "wagebill",
           x_label = "Wage bill"
         ),
         height = govhr::scale_plot_height(cross_section_data)
@@ -230,11 +244,11 @@ wagebill_overview_server <- function(id, .data, cache) {
         )
       )
 
-      change_data <- govhr::compute_growth_summary(
-        wagebill_filtered(),
-        group_col = input$group_filter,
-        measure_col = input$wagebill_measure
-      )
+      change_data <- wagebill_summary() |>
+        govhr::compute_growth(
+          group_col = input$group_filter,
+          measure_col = "wagebill"
+        )
 
       plotly::ggplotly(
         govhr::plot_bar_growth(change_data, group_col = input$group_filter),

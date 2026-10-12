@@ -17,9 +17,11 @@ group_col_to_null(group_col)
 \description{
 The sidebar group picker uses \code{"ref_date"} to mean "no grouping". The govhr
 plotting functions accept that convention, but the compute functions that
-take \code{group_cols} do not: \code{\link[govhr:compute_movement]{govhr::compute_movement()}} rejects \code{"ref_date"},
-and \code{\link[govhr:compute_percentile]{govhr::compute_percentile()}} computes shares within each date, which
-stack when plotted. This translates the picker value before it reaches them.
+take \code{group_cols} do not: \code{\link[govhr:compute_movement]{govhr::compute_movement()}},
+\code{\link[govhr:compute_headcount]{govhr::compute_headcount()}} and \code{\link[govhr:compute_wagebill]{govhr::compute_wagebill()}} reject
+\code{"ref_date"}, and \code{\link[govhr:compute_percentile]{govhr::compute_percentile()}} computes shares within each
+date, which stack when plotted. This translates the picker value before it
+reaches them.
 }
 \examples{
 \dontrun{

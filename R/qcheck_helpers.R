@@ -51,6 +51,8 @@ render_coverage_box <- function(.data, title, icon = "table") {
 #' @importFrom dplyr case_when
 #' @importFrom purrr map_dbl
 #' @importFrom dplyr pull
+#' @importFrom govhr compute_global_consistency compute_record_consistency
+#'   compute_value_consistency
 #'
 #' @details Consistency denotes the proportion of records and values that are consistent across the dataset. A record is considered consistent if it has a unique identifier and all its associated values are consistent. A value is considered consistent if it does not contradict other values for the same record.
 #' @export

@@ -82,8 +82,7 @@ wagebill_retirement_ui <- function(id, .data) {
 #' @return A Shiny module server function.
 #'
 #' @import shiny
-#' @importFrom dplyr rename
-#' @importFrom govhr compute_movement_cost plot_trend project_retirement
+#' @importFrom govhr compute_retirement_cost project_retirement
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
 #' @keywords internal
@@ -105,20 +104,19 @@ wagebill_retirement_server <- function(id, .data, cache) {
       retirement_data <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "wagebill", "wagebill_retirement")
       } else {
-        govhr::compute_movement_cost(
+        govhr::compute_retirement_cost(
           wagebill_filtered(),
-          event_type = "retirement",
           measure_col = input$wagebill_measure,
-          group_cols = input$group_filter
+          group_cols = group_col_to_null(input$group_filter)
         )
       }
 
       plotly::ggplotly(
-        govhr::plot_trend(
+        plot_movement_trend(
           retirement_data,
-          group_col = input$group_filter,
-          y_col = "movement_cost",
-          y_label = "Retirement Costs"
+          y_col = "retirement_cost",
+          y_label = "Retirement Costs",
+          group_col = input$group_filter
         )
       )
     }) |>
@@ -130,21 +128,19 @@ wagebill_retirement_server <- function(id, .data, cache) {
         purrr::pluck(cache, "wagebill", "wagebill_retirement_expected")
       } else {
         govhr::project_retirement(
-          data = wagebill_filtered(),
+          wagebill_filtered(),
           threshold_age = input$threshold_age,
-          birth_col = "birth_date",
-          group_cols = input$group_filter,
+          group_cols = group_col_to_null(input$group_filter),
           measure_col = input$wagebill_measure
-        ) |>
-          dplyr::rename(ref_date = "retirement_date")
+        )
       }
 
       plotly::ggplotly(
-        govhr::plot_trend(
+        plot_movement_trend(
           retirement_projection_data,
-          group_col = input$group_filter,
           y_col = "projected_cost",
-          y_label = "Projected Retirement Costs"
+          y_label = "Projected Retirement Costs",
+          group_col = input$group_filter
         )
       )
     }) |>

@@ -91,7 +91,8 @@ workforce_overview_ui <- function(id, .data) {
 #' @return A Shiny module server function.
 #'
 #' @import shiny
-#' @importFrom govhr apply_baseline_index compute_cross_section_summary compute_growth_summary compute_trend_summary plot_bar_growth plot_bar_total plot_trend scale_plot_height
+#' @importFrom dplyr collect filter rename
+#' @importFrom govhr apply_baseline_index compute_growth compute_headcount plot_bar_growth plot_bar_total plot_trend scale_plot_height
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
 #' @keywords internal
@@ -108,30 +109,39 @@ workforce_overview_server <- function(id, .data, cache) {
       )
     })
 
-    workforce_summary <- shiny::reactive({
-      summary <- if (input$apply_btn == 0) {
+    # the trend, total and growth plots all read this aggregate, so it is
+    # computed and collected once per apply. govhr's grouped plot_trend(),
+    # scale_plot_height() and compute_growth() also need it in memory
+    headcount_summary <- shiny::reactive({
+      if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_overview")
       } else {
-        govhr::count_entity(
+        govhr::compute_headcount(
           workforce_filtered(),
-          id_col = "personnel_id",
-          group_col = c(input$group_filter, "ref_date")
-        ) |> 
-          dplyr::rename(value = "count")
+          group_cols = group_col_to_null(input$group_filter)
+        ) |>
+          dplyr::collect()
       }
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    workforce_trend <- shiny::reactive({
+      # apply_baseline_index() and plot_trend() read the measure from `value`
+      trend <- headcount_summary() |>
+        dplyr::rename(value = "headcount")
 
       if (input$toggle_growth) {
-        summary <- govhr::apply_baseline_index(summary, group_col = input$group_filter)
+        trend <- govhr::apply_baseline_index(trend, group_col = input$group_filter)
       }
 
-      summary
+      trend
     })
 
     # plot 1. panel
     output$workforce_panel <- plotly::renderPlotly({
       plotly::ggplotly(
         govhr::plot_trend(
-          workforce_summary(),
+          workforce_trend(),
           group_col = input$group_filter,
           toggle_growth = input$toggle_growth,
           y_label = "Headcount"
@@ -146,21 +156,14 @@ workforce_overview_server <- function(id, .data, cache) {
         shiny::need(input$group_filter != "ref_date", "Please select a group.")
       )
 
-      cross_section_data <- govhr::count_entity(
-        workforce_filtered(),
-        id_col = "personnel_id",
-        group_col = c(input$group_filter, "ref_date")
-      ) |> 
-        dplyr::rename(value = "count") |>
-        # only count last date
-        dplyr::filter(
-          .data[["ref_date"]] == max(.data[["ref_date"]])
-        )
+      cross_section_data <- headcount_summary() |>
+        dplyr::filter(.data[["ref_date"]] == max(.data[["ref_date"]]))
 
       plotly::ggplotly(
         govhr::plot_bar_total(
           cross_section_data,
           group_col = input$group_filter,
+          x_col = "headcount",
           x_label = "Headcount"
         ),
         height = govhr::scale_plot_height(cross_section_data)
@@ -174,16 +177,10 @@ workforce_overview_server <- function(id, .data, cache) {
         shiny::need(input$group_filter != "ref_date", "Please select a group.")
       )
 
-      change_data <- govhr::count_entity(
-        workforce_filtered(),
-        id_col = "personnel_id",
-        group_col = c(input$group_filter, "ref_date")
-      ) |> 
-        dplyr::rename(value = "count") |>
-        # only count last date
+      change_data <- headcount_summary() |>
         govhr::compute_growth(
           group_col = input$group_filter,
-          measure_col = "value"
+          measure_col = "headcount"
         )
 
       plotly::ggplotly(

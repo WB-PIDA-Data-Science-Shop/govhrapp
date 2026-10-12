@@ -142,8 +142,8 @@ wagebill_equity_server <- function(id, .data, cache) {
       } else {
         govhr::compute_decile(
           wagebill_filtered(),
-          group_cols = input$group_filter,
           measure_col = input$wagebill_measure,
+          group_cols = group_col_to_null(input$group_filter),
           latest_measure = TRUE
         )
       }
@@ -157,11 +157,13 @@ wagebill_equity_server <- function(id, .data, cache) {
       wagebill_compression_ratio <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "wagebill", "wagebill_equity_compression")
       } else {
-        compute_compression_ratio(
+        govhr::compute_compression_ratio(
           wagebill_filtered(),
-          group_cols = input$group_filter,
           measure_col = input$wagebill_measure,
-          latest_measure = TRUE
+          group_cols = group_col_to_null(input$group_filter),
+          # ungrouped, each date is drawn as its own range; grouped, the
+          # groups are compared on the latest date
+          latest_measure = input$group_filter != "ref_date"
         )
       }
 

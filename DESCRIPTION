@@ -12,6 +12,7 @@ Roxygen: list(markdown = TRUE)
 Suggests:
     DBI,
     dbplyr,
+    duckdb,
     knitr,
     pkgload,
     RSQLite,
@@ -21,7 +22,6 @@ Imports:
     bsicons,
     bslib,
     collapse,
-    data.table,
     dplyr,
     ggiraph,
     ggplot2,
@@ -31,7 +31,6 @@ Imports:
     lubridate,
     plotly,
     purrr,
-    rlang,
     rmarkdown,
     rsconnect,
     scales,

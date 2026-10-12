@@ -34,6 +34,12 @@ test_that("build_analytics_cache builds every panel from the sample data", {
     c("hire", "separation", "retirement", "replacement")
   )
   expect_true(all(
+    c("ref_date", "headcount") %in% names(cache$workforce$workforce_overview)
+  ))
+  expect_true(all(
+    c("ref_date", "wagebill", "wage") %in% names(cache$wagebill$wagebill_overview)
+  ))
+  expect_true(all(
     c("hires", "separations", "replacement_rate") %in%
       names(cache$workforce$workforce_movement)
   ))

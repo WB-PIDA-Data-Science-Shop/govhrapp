@@ -49,7 +49,11 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
   # each plot mirrors the call its panel makes against the same cache entry
   plots <- list(
     workforce_overview = purrr::pluck(cache, "workforce", "workforce_overview") |>
-      govhr::plot_trend(group_col = "ref_date", y_label = "Headcount"),
+      govhr::plot_trend(
+        group_col = "ref_date",
+        y_col = "headcount",
+        y_label = "Headcount"
+      ),
 
     workforce_movement = purrr::pluck(cache, "workforce", "workforce_movement") |>
       govhr::plot_movement(movement_type = "hire", measurement_type = "count"),
@@ -76,7 +80,11 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
       ),
 
     wagebill_overview = purrr::pluck(cache, "wagebill", "wagebill_overview") |>
-      govhr::plot_trend(group_col = "ref_date", y_label = "Wage Bill"),
+      govhr::plot_trend(
+        group_col = "ref_date",
+        y_col = "wagebill",
+        y_label = "Wage Bill"
+      ),
 
     wagebill_density = purrr::pluck(cache, "wagebill", "wagebill_equity_percentile") |>
       govhr::plot_histogram(plot_type = "histogram"),
@@ -88,18 +96,10 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
       govhr::plot_compression_ratio(group_col = "ref_date"),
 
     wagebill_movement = purrr::pluck(cache, "wagebill", "wagebill_movement") |>
-      govhr::plot_trend(
-        group_col = "ref_date",
-        y_col = "movement_cost",
-        y_label = "Movement Costs"
-      ),
+      plot_movement_trend(y_col = "movement_cost", y_label = "Movement Costs"),
 
     wagebill_retirement = purrr::pluck(cache, "wagebill", "wagebill_retirement") |>
-      govhr::plot_trend(
-        group_col = "ref_date",
-        y_col = "movement_cost",
-        y_label = "Retirement Costs"
-      ),
+      plot_movement_trend(y_col = "retirement_cost", y_label = "Retirement Costs"),
 
     wagebill_retirement_expected = purrr::pluck(
       cache,
