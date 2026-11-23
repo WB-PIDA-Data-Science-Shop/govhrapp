@@ -83,7 +83,7 @@ workforce_transition_ui <- function(id, .data) {
 #'
 #' @importFrom dplyr collect
 #' @importFrom ggiraph renderGirafe
-#' @importFrom govhr compute_transition fastcount plot_transition_network plot_trend
+#' @importFrom govhr compute_transition fastcount plot_transition plot_trend
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
 #' @importFrom shiny bindEvent moduleServer need reactive req validate
@@ -114,7 +114,7 @@ workforce_transition_server <- function(id, .data, cache) {
         govhr::compute_transition(
           workforce_filtered(),
           id_col = input$id_col,
-          group_cols = input$group_filter
+          group_col = input$group_filter
         ) |>
           dplyr::collect()
       }
@@ -127,9 +127,11 @@ workforce_transition_server <- function(id, .data, cache) {
         transition_data()
       )
 
+      # compute_transition() returns one row per origin, destination and date,
+      # so moves are summed from `transitions` rather than counted by row
       plotly::ggplotly(
         transition_data() |>
-          govhr::fastcount(ref_date, name = "transition") |>
+          govhr::fastcount(ref_date, wt = transitions, name = "transition") |>
           govhr::plot_trend(
             group_col = "ref_date",
             y_col = "transition",
@@ -145,7 +147,11 @@ workforce_transition_server <- function(id, .data, cache) {
         transition_data()
       )
 
-      govhr::plot_transition_network(transition_data())
+      govhr::plot_transition(
+        transition_data(),
+        weight_col = "transitions",
+        interactive = TRUE
+      )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })

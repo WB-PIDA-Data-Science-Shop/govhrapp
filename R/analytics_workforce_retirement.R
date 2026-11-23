@@ -43,7 +43,7 @@ workforce_retirement_ui <- function(id, .data) {
         "Retirements over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Retirements are personnel active in a period who are pensioners in the next one. The rate divides retirements by the active headcount in the same period.",
+          "Retirements are personnel active in the previous period who are no longer active in this one and are recorded as pensioners. The rate divides retirements by the active headcount in the previous period.",
           title = "Retirements over time",
           placement = "left"
         ),

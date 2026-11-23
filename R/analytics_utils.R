@@ -5,11 +5,18 @@
 #'   `"retirement"` or `"replacement"`.
 #'
 #' @return Character. A percentage such as `"3.1%"`, or for `"replacement"` a
-#'   ratio such as `"1.49"`.
+#'   ratio such as `"1.49"`, or `"No separations"` when there were hires but
+#'   no separations.
 #'
 #' @importFrom scales label_number label_percent
 #' @keywords internal
 format_movement_rate <- function(rate, movement_type) {
+  # retirements are not separations, so a period with hires and no other
+  # exits is common enough in small groups that "Inf" would otherwise show
+  if (movement_type == "replacement" && is.infinite(rate)) {
+    return("No separations")
+  }
+
   # the replacement rate compares hires with separations rather than with
   # headcount, so a percentage would misread a ratio of 1.49 as 149% of staff
   if (movement_type == "replacement") {
@@ -53,7 +60,12 @@ render_movement_box <- function(.data, movement_type, cache = NULL) {
 
   rate <- format_movement_rate(values[["rate"]], movement_type)
 
-  box_value <- if (movement_type == "replacement") {
+  box_value <- if (movement_type == "replacement" && is.infinite(values[["rate"]])) {
+    shiny::tagList(
+      shiny::h5("Hires with"),
+      shiny::h5("no separations")
+    )
+  } else if (movement_type == "replacement") {
     shiny::tagList(
       shiny::h5("Ratio of Hires"),
       shiny::h5(paste("to Separations:", rate))
@@ -91,10 +103,10 @@ render_movement_box <- function(.data, movement_type, cache = NULL) {
         placement = "left",
         switch(
           movement_type,
-          hire = "Number of personnel active in the most recent reference period but not in the previous one, and their share of active headcount.",
-          separation = "Number of personnel active in the reference period but no longer active in the next one, for any reason including retirement, and their share of active headcount.",
-          retirement = "Number of personnel active in the reference period who are pensioners in the next one, and their share of active headcount.",
-          replacement = "Ratio of hires to separations (including retirements). Above 1, more personnel join than leave."
+          hire = "Number of personnel active in the reference period but not in the previous one, and their share of the previous period's active headcount.",
+          separation = "Number of personnel active in the previous period but no longer active in the reference period, other than retirees, and their share of the previous period's active headcount.",
+          retirement = "Number of personnel active in the previous period who are no longer active in the reference period and are recorded as pensioners, and their share of the previous period's active headcount.",
+          replacement = "Ratio of hires to separations. Retirements are not separations, so they are left out. Above 1, hires outnumber separations."
         )
       )
     )

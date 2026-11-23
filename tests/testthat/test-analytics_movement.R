@@ -54,3 +54,18 @@ test_that("format_movement_rate shows rates as percentages", {
   expect_identical(format_movement_rate(0.0314, "hire"), "3.1%")
   expect_identical(format_movement_rate(1.4932, "replacement"), "1.49")
 })
+
+test_that("format_movement_rate names hires without separations", {
+  expect_identical(format_movement_rate(Inf, "replacement"), "No separations")
+})
+
+test_that("summarise_movement_box skips a date with no hires or separations", {
+  # 0 hires over 0 separations is NaN, which is undefined rather than a ratio
+  idle_last_date <- movement
+  idle_last_date[["replacement_rate"]] <- c(NA, Inf, NaN)
+
+  box <- summarise_movement_box(idle_last_date, retirement, "replacement")
+
+  expect_equal(box$ref_date, as.Date("2021-01-01"))
+  expect_identical(format_movement_rate(box$rate, "replacement"), "No separations")
+})

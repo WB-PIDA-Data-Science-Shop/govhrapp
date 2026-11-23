@@ -59,7 +59,7 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
       govhr::plot_movement(movement_type = "hire", measurement_type = "count"),
 
     workforce_transition = purrr::pluck(cache, "workforce", "workforce_transition") |>
-      govhr::fastcount(ref_date, name = "transition") |>
+      govhr::fastcount(ref_date, wt = transitions, name = "transition") |>
       govhr::plot_trend(
         group_col = "ref_date",
         y_col = "transition",

@@ -137,8 +137,8 @@ wagebill_movement_server <- function(id, .data, cache) {
           dplyr::collect()
       }
 
-      # the cost is NA on the date with nothing to compare with: the first
-      # for hires, the last for separations
+      # the cost is NA on the first date, which has nothing to compare with,
+      # and for separations from a group with nobody active on the previous date
       dplyr::filter(cost, !is.na(.data[["movement_cost"]]))
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)

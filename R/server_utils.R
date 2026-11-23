@@ -140,14 +140,14 @@ group_col_to_null <- function(group_col) {
 summarise_movement_box <- function(movement, retirement, movement_type) {
   rate_col <- movement_measure_col(movement_type, "rate")
 
-  # hires are undefined on the first date and separations and retirements on
-  # the last, so each box reports the latest date its own measure exists for.
-  # the values are read with `[[`, which returns NULL on a lazy table, hence
-  # the collect()
+  # each box reports the latest date its own measure is defined for. a date
+  # with no hires and no separations has a 0/0 = NaN replacement rate, which
+  # R's is.na() drops but SQL's IS NOT NULL keeps, so the table is collected
+  # before filtering. it holds one row per date, so collecting first is cheap
   latest <- (if (movement_type == "retirement") retirement else movement) |>
+    dplyr::collect() |>
     dplyr::filter(!is.na(.data[[rate_col]])) |>
-    dplyr::slice_max(.data[["ref_date"]], n = 1) |>
-    dplyr::collect()
+    dplyr::slice_max(.data[["ref_date"]], n = 1)
 
   list(
     ref_date = latest[["ref_date"]],
@@ -228,7 +228,7 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
     workforce_transition = wagebill_data |>
       govhr::compute_transition(
         id_col = "personnel_id",
-        group_cols = "contract_type"
+        group_col = "contract_type"
       ),
 
     # retirement module

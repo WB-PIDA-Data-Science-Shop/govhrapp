@@ -57,7 +57,7 @@ workforce_ui <- function(id, workforce_data, wagebill_data) {
         "Workforce: Key Indicators",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Computed as the most recent count and share of active headcount for hires, separations and retirements. The replacement rate is the ratio of hires to separations.",
+          "Computed as the most recent count and share of the previous period's active headcount for hires, separations and retirements. Separations exclude retirements. The replacement rate is the ratio of hires to separations.",
           title = "Workforce Overview",
           placement = "left"
         ),

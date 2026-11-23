@@ -46,7 +46,7 @@ workforce_movement_ui <- function(id, .data) {
         "Movements over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Hires are personnel active in a period but not in the previous one. Separations are personnel active in a period but not in the next one, for any reason including retirement. Rates divide hires or separations by the active headcount in the same period. The replacement rate is the ratio of hires to separations: above 1, more personnel join than leave.",
+          "Hires are personnel active in a period but not in the previous one. Separations are personnel active in the previous period but not in this one, other than retirees, who are shown in the Retirement tab. Rates divide hires or separations by the active headcount in the previous period. The replacement rate is the ratio of hires to separations: above 1, hires outnumber separations.",
           title = "Movements over time",
           placement = "left"
         ),
@@ -145,8 +145,9 @@ workforce_movement_server <- function(id, .data, cache) {
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
-    # the first date has no hires and the last no separations, so plots 2 and 3
-    # drop those dates for the selected measure only
+    # the first date has no earlier date to count hires and separations
+    # against, and a group with nobody active on the previous date has no
+    # separations, so plots 2 and 3 drop the rows missing the selected measure
     measure_summary <- shiny::reactive({
       measure_col <- movement_measure_col(
         input$movement_type,
@@ -177,7 +178,7 @@ workforce_movement_server <- function(id, .data, cache) {
           movement_summary(),
           movement_type = input$movement_type,
           measurement_type = input$measurement_type,
-          group_cols = group_col_to_null(input$group_filter)
+          group_col = group_col_to_null(input$group_filter)
         )
       }
     }) |>
