@@ -1,6 +1,7 @@
 # govhrapp (development version)
 * This patch introduces the following enhancements:
     * Supports govhr 0.4.4, including its new movement definitions and trend charts.
+    * Adds the number of pensioners and pension payments over time to the retirement panels.
     * Checks the data for required columns before the analytics app starts.
     * Standardizes the function documentation.
     * Rewrites the app text with consistent terms and clearer chart descriptions. "Total pension liabilities" is now "Pension payments".

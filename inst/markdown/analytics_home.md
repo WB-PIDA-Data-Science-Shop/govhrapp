@@ -14,7 +14,7 @@ This module provides a set of standard indicators on the workforce of your gover
 * **Overview:** See how the headcount has evolved over time. Identify groups that are responsible for larger or smaller shares of the total workforce, as well as how their relative shares have changed over time.
 * **Movement:** Assess hires and separations across the public sector. For example, what are the hire and separation rates, how do they vary across groups and over time, and what is the demographic profile of hires and separations.
 * **Transitions:** Follow the moves of workers between groups in the public sector, giving you a sense of internal labor dynamics. For example, how many workers move from one ministry to another.
-* **Retirement:** Track retirements over time and project future retirements and their rates, based on a selected retirement age.
+* **Retirement:** Track the number of pensioners and retirements over time, and project future retirements and their rates, based on a selected retirement age.
 
 
 💵 **Wage bill analytics**
@@ -23,4 +23,4 @@ This module provides a set of standard indicators on the wage bill of your gover
 * **Overview:** See how the wage bill has evolved over time. Identify groups that are responsible for larger or smaller shares of the total wage bill, as well as how they have changed over time.
 * **Equity:** Examine how pay is distributed across the workforce, using histograms, deciles and percentiles, to assess dispersion and equity across groups.
 * **Movement:** Assess the cost of hires and separations (movement cost), and how it evolves over time and varies across groups.
-* **Retirement:** Estimate the cost of past and projected retirements, based on a selected retirement age.
+* **Retirement:** Track pension payments over time, and estimate the cost of past and projected retirements, based on a selected retirement age.

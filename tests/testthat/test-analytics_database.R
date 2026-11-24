@@ -67,6 +67,27 @@ test_that("filter_active drops pensioners from a database table", {
   expect_true(all(result[["employment_status"]] == "active"))
 })
 
+test_that("filter_pensioners keeps only pensioners of a database table", {
+  skip_if_not_installed("dbplyr")
+  skip_if_not_installed("duckdb")
+
+  con <- DBI::dbConnect(duckdb::duckdb())
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+  remote <- dplyr::copy_to(con, hr_panel, "hr_panel")
+
+  result <- filter_pensioners(remote) |>
+    dplyr::collect() |>
+    dplyr::arrange(.data[["ref_date"]], .data[["personnel_id"]])
+
+  expected <- filter_pensioners(hr_panel) |>
+    dplyr::arrange(.data[["ref_date"]], .data[["personnel_id"]])
+
+  expect_equal(result, expected, ignore_attr = TRUE)
+  # p4 throughout, and p2 from 2021
+  expect_equal(nrow(result), 5L)
+  expect_true(all(result[["employment_status"]] == "pensioner"))
+})
+
 test_that("summarize_wagebill_box gives the same totals on a database table", {
   skip_if_not_installed("dbplyr")
   skip_if_not_installed("duckdb")

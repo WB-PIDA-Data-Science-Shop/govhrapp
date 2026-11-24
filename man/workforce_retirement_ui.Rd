@@ -16,6 +16,7 @@ workforce_retirement_ui(id, .data)
 A Shiny UI definition.
 }
 \description{
-Sidebar controls and plots of past and projected retirements.
+Sidebar controls and plots of pensioners and of past and projected
+retirements.
 }
 \keyword{internal}

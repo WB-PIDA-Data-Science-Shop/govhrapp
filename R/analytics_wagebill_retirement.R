@@ -1,6 +1,7 @@
 #' Wage bill retirement panel UI
 #'
-#' Sidebar controls and plots of past and projected retirement costs.
+#' Sidebar controls and plots of pension payments and of past and projected
+#' retirement costs.
 #'
 #' @param id Character. Module namespace ID.
 #' @param .data Contract data, as `wagebill_data` in
@@ -38,7 +39,24 @@ wagebill_retirement_ui <- function(id, .data) {
         icon = shiny::icon("play")
       )
     ),
-    # plot 1. retirement costs
+    # plot 1. pension payments
+    bslib::card(
+      full_screen = TRUE,
+      bslib::card_header(
+        "Pension payments over time",
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Total pay of personnel recorded as pensioners on each reference date. Select a group to compare subgroups.",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
+      ),
+      plotly::plotlyOutput(
+        shiny::NS(id, "wagebill_pensions"),
+        height = "350px"
+      )
+    ),
+    # plot 2. retirement costs
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
@@ -55,7 +73,7 @@ wagebill_retirement_ui <- function(id, .data) {
         height = "350px"
       )
     ),
-    # plot 2. projected retirement costs
+    # plot 3. projected retirement costs
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
@@ -86,7 +104,8 @@ wagebill_retirement_ui <- function(id, .data) {
 #' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @import shiny
-#' @importFrom govhr compute_retirement_cost project_retirement
+#' @importFrom dplyr collect
+#' @importFrom govhr compute_retirement_cost compute_wagebill project_retirement
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
 #' @keywords internal
@@ -103,7 +122,41 @@ wagebill_retirement_server <- function(id, .data, cache) {
       )
     })
 
-    # plot 1. retirement costs
+    # plot 1. pension payments
+    output$wagebill_pensions <- plotly::renderPlotly({
+      pension_data <- if (input$apply_btn == 0) {
+        purrr::pluck(cache, "wagebill", "wagebill_pensions")
+      } else {
+        wagebill_filtered() |>
+          filter_pensioners() |>
+          govhr::compute_wagebill(
+            measure_col = input$wagebill_measure,
+            group_cols = group_col_to_null(input$group_filter)
+          ) |>
+          dplyr::collect()
+      }
+
+      # pensioner records can lack contract details, so a contract grouping
+      # may leave none, and plotly cannot draw an empty chart
+      shiny::validate(
+        shiny::need(
+          any(!is.na(pension_data[["wagebill"]])),
+          "No pensioners for the selected groups and dates."
+        )
+      )
+
+      plotly::ggplotly(
+        plot_movement_trend(
+          pension_data,
+          y_col = "wagebill",
+          y_label = "Pension payments",
+          group_col = input$group_filter
+        )
+      )
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # plot 2. retirement costs
     output$wagebill_retirement <- plotly::renderPlotly({
       retirement_data <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "wagebill", "wagebill_retirement")
@@ -126,7 +179,7 @@ wagebill_retirement_server <- function(id, .data, cache) {
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
-    # plot 2. projected retirement costs
+    # plot 3. projected retirement costs
     output$wagebill_retirement_projection <- plotly::renderPlotly({
       retirement_projection_data <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "wagebill", "wagebill_retirement_expected")

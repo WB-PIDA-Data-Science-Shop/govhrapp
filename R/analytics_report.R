@@ -26,12 +26,12 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
   movement_box <- purrr::pluck(cache, "workforce", "movement_box")
   workforce_indicators <- data.frame(
     Movement = c("Hires", "Separations", "Retirements", "Replacement rate"),
-    Count = vapply(movement_box, \(box) as_scalar(box$count), numeric(1)),
+    Count = vapply(movement_box, \(box) as_scalar(box[["count"]]), numeric(1)),
     # formatted as text because the column mixes percentages with the
     # replacement ratio
     Rate = purrr::imap_chr(
       movement_box,
-      \(box, type) format_movement_rate(as_scalar(box$rate), type)
+      \(box, type) format_movement_rate(as_scalar(box[["rate"]]), type)
     ),
     row.names = NULL
   )
@@ -39,7 +39,7 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
   total_box <- purrr::pluck(cache, "wagebill", "total_box")
   wagebill_indicators <- data.frame(
     Indicator = c("Wage bill", "Pension payments"),
-    Total = vapply(total_box, \(box) as_scalar(box$total), numeric(1)),
+    Total = vapply(total_box, \(box) as_scalar(box[["total"]]), numeric(1)),
     row.names = NULL
   )
 
@@ -62,6 +62,9 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
         y_col = "transition",
         y_label = "Transitions"
       ),
+
+    workforce_pensioners = purrr::pluck(cache, "workforce", "workforce_pensioners") |>
+      plot_movement_trend(y_col = "headcount", y_label = "Pensioners"),
 
     workforce_retirement = purrr::pluck(cache, "workforce", "workforce_retirement") |>
       plot_movement_trend(y_col = "retirements", y_label = "Retirements"),
@@ -94,6 +97,9 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
 
     wagebill_movement = purrr::pluck(cache, "wagebill", "wagebill_movement") |>
       plot_movement_trend(y_col = "movement_cost", y_label = "Movement cost"),
+
+    wagebill_pensions = purrr::pluck(cache, "wagebill", "wagebill_pensions") |>
+      plot_movement_trend(y_col = "wagebill", y_label = "Pension payments"),
 
     wagebill_retirement = purrr::pluck(cache, "wagebill", "wagebill_retirement") |>
       plot_movement_trend(y_col = "retirement_cost", y_label = "Retirement cost"),

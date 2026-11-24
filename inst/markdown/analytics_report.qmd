@@ -74,6 +74,14 @@ show_plot("workforce_transition")
 
 ## Retirement
 
+Pensioners:
+
+```{r}
+show_plot("workforce_pensioners")
+```
+
+Retirements:
+
 ```{r}
 show_plot("workforce_retirement")
 ```
@@ -116,7 +124,15 @@ show_plot("wagebill_compression")
 show_plot("wagebill_movement")
 ```
 
-## Retirement cost
+## Retirement
+
+Pension payments:
+
+```{r}
+show_plot("wagebill_pensions")
+```
+
+Retirement cost:
 
 ```{r}
 show_plot("wagebill_retirement")

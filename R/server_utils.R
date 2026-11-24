@@ -135,6 +135,23 @@ filter_active <- function(.data) {
   dplyr::filter(.data, .data[["employment_status"]] == "active")
 }
 
+#' Keep only pensioners
+#'
+#' Retirees stay in the data as records with an `employment_status` of
+#' `"pensioner"`, so their headcount and pension payments are read from those
+#' records alone.
+#'
+#' @inheritParams filter_active
+#'
+#' @returns `.data` restricted to rows whose `employment_status` is
+#'   `"pensioner"`, of the same class as `.data`.
+#'
+#' @importFrom dplyr filter
+#' @keywords internal
+filter_pensioners <- function(.data) {
+  dplyr::filter(.data, .data[["employment_status"]] == "pensioner")
+}
+
 #' Convert the no-grouping selection to `NULL`
 #'
 #' The sidebar group picker uses `"ref_date"` to mean "no grouping". The govhr
@@ -277,6 +294,9 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
       ),
 
     # retirement module
+    workforce_pensioners = workforce_data |>
+      filter_pensioners() |>
+      govhr::compute_headcount(),
     workforce_retirement = govhr::compute_retirement(workforce_data),
     workforce_retirement_expected = workforce_data |>
       govhr::project_retirement(threshold_age = 60),
@@ -345,6 +365,9 @@ build_wagebill_cache <- function(wagebill_data) {
       ),
 
     # retirement module
+    wagebill_pensions = wagebill_data |>
+      filter_pensioners() |>
+      govhr::compute_wagebill(measure_col = "gross_salary_lcu"),
     wagebill_retirement = wagebill_data |>
       govhr::compute_retirement_cost(measure_col = "gross_salary_lcu"),
     wagebill_retirement_expected = wagebill_data |>

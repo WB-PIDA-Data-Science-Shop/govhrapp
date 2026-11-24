@@ -75,6 +75,26 @@ test_that("build_analytics_cache builds every panel from the sample data", {
 
   expect_equal(overview_headcount[["headcount"]], active_people)
 
+  # the retirement panels' pension payments match the key indicator box, and
+  # their pensioner headcount counts each pensioner once
+  pension_box <- cache[["wagebill"]][["total_box"]][["total_pension_liabilities"]]
+  latest_pensions <- cache[["wagebill"]][["wagebill_pensions"]] |>
+    dplyr::filter(.data[["ref_date"]] == pension_box[["ref_date"]])
+
+  expect_equal(latest_pensions[["wagebill"]], pension_box[["total"]])
+
+  latest_pensioners <- cache[["workforce"]][["workforce_pensioners"]] |>
+    dplyr::filter(.data[["ref_date"]] == latest_date)
+  pensioner_people <- workforce_data |>
+    dplyr::filter(
+      .data[["ref_date"]] == latest_date,
+      .data[["employment_status"]] == "pensioner"
+    ) |>
+    dplyr::pull(.data[["personnel_id"]]) |>
+    dplyr::n_distinct(na.rm = TRUE)
+
+  expect_equal(latest_pensioners[["headcount"]], pensioner_people)
+
   # pensions are not pay, so the equity summaries leave pensioners out
   expect_equal(
     cache[["wagebill"]][["wagebill_equity_compression"]],

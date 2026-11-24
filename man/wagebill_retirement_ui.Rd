@@ -16,6 +16,7 @@ wagebill_retirement_ui(id, .data)
 A Shiny UI definition.
 }
 \description{
-Sidebar controls and plots of past and projected retirement costs.
+Sidebar controls and plots of pension payments and of past and projected
+retirement costs.
 }
 \keyword{internal}

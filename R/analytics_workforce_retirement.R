@@ -1,6 +1,7 @@
 #' Workforce retirement panel UI
 #'
-#' Sidebar controls and plots of past and projected retirements.
+#' Sidebar controls and plots of pensioners and of past and projected
+#' retirements.
 #'
 #' @param id Character. Module namespace ID.
 #' @param .data Personnel data, as `workforce_data` in
@@ -39,7 +40,22 @@ workforce_retirement_ui <- function(id, .data) {
       )
     ),
 
-    # plot 1. retirement counts/rates over time
+    # plot 1. pensioners over time
+    bslib::card(
+      bslib::card_header(
+        "Pensioners over time",
+        bslib::popover(
+          bsicons::bs_icon("info-circle-fill"),
+          "Number of personnel recorded as pensioners on each reference date. Select a group to compare subgroups.",
+          title = "Pensioners over time",
+          placement = "left"
+        ),
+        class = "d-flex justify-content-between"
+      ),
+      plotly::plotlyOutput(shiny::NS(id, "pensioner_plot"))
+    ),
+
+    # plot 2. retirement counts/rates over time
     bslib::card(
       bslib::card_header(
         "Retirements over time",
@@ -54,7 +70,7 @@ workforce_retirement_ui <- function(id, .data) {
       plotly::plotlyOutput(shiny::NS(id, "retirement_plot"))
     ),
 
-    # plot 2. projected retirements
+    # plot 3. projected retirements
     bslib::card(
       bslib::card_header(
         "Projected retirements",
@@ -82,7 +98,8 @@ workforce_retirement_ui <- function(id, .data) {
 #' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @import shiny
-#' @importFrom govhr compute_retirement project_retirement
+#' @importFrom dplyr collect
+#' @importFrom govhr compute_headcount compute_retirement project_retirement
 #' @importFrom plotly renderPlotly
 #' @importFrom purrr pluck
 #' @keywords internal
@@ -101,7 +118,38 @@ workforce_retirement_server <- function(id, .data, cache) {
       )
     })
 
-    # plot 1. retirement counts/rates over time
+    # plot 1. pensioners over time
+    output$pensioner_plot <- plotly::renderPlotly({
+      plot_data <- if (input$apply_btn == 0) {
+        purrr::pluck(cache, "workforce", "workforce_pensioners")
+      } else {
+        data_filtered() |>
+          filter_pensioners() |>
+          govhr::compute_headcount(
+            group_cols = group_col_to_null(input$group_filter)
+          ) |>
+          dplyr::collect()
+      }
+
+      # pensioner records can lack contract details, so a contract grouping
+      # may leave none, and plotly cannot draw an empty chart
+      shiny::validate(
+        shiny::need(
+          nrow(plot_data) > 0,
+          "No pensioners for the selected groups and dates."
+        )
+      )
+
+      plot_movement_trend(
+        plot_data,
+        y_col = "headcount",
+        y_label = "Pensioners",
+        group_col = input$group_filter
+      )
+    }) |>
+      shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    # plot 2. retirement counts/rates over time
     output$retirement_plot <- plotly::renderPlotly({
       plot_data <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_retirement")
@@ -126,7 +174,7 @@ workforce_retirement_server <- function(id, .data, cache) {
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
-    # plot 2. projected retirements
+    # plot 3. projected retirements
     output$retirement_expected_plot <- plotly::renderPlotly({
       plot_data <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_retirement_expected")
