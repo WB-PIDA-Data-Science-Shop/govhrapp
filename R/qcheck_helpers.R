@@ -1,11 +1,15 @@
-#' Render a Data Coverage Value Box
+#' Render a coverage value box
 #'
-#' @param .data Data frame. A dataframe to compute the coverage on.
-#' @param title String. Value box title.
-#' @param icon String. Icon name. Defaults to `"table"`.
+#' Shows the coverage of a table, colored by how complete it is.
 #'
-#' @return A [shiny::renderUI()] producing a [bslib::value_box()] themed
-#'   `"danger"` (<50%), `"warning"` (50–79%), or `"success"` (≥80%).
+#' @param .data Data frame or database table (`tbl_dbi`) to measure.
+#' @param title Character. Value box title.
+#' @param icon Character. Name of a Bootstrap icon, as in
+#'   [bsicons::bs_icon()]. Default `"table"`.
+#'
+#' @returns A [shiny::renderUI()] producing a [bslib::value_box()], colored
+#'   `"danger"` below 50%, `"warning"` from 50% to below 80%, and `"success"`
+#'   from 80%.
 #'
 #' @importFrom shiny renderUI
 #' @importFrom bslib value_box
@@ -13,7 +17,11 @@
 #' @importFrom bsicons bs_icon
 #' @importFrom govhr compute_global_coverage
 #'
-#' @details Coverage denotes the total number of non-missing records in a dataset, expressed as a percentage of the total records. For example, if a dataset has 10 rows and 10 columns, i.e., 100 records, and 10 of them are available, the coverage would be 10 percent.
+#' @details Coverage is the share of cells in the table that are not missing,
+#'   as computed by [govhr::compute_global_coverage()]. For example, a table
+#'   with 10 rows and 10 columns has 100 cells; if 10 of them hold a value, its
+#'   coverage is 10%.
+#'
 #' @export
 render_coverage_box <- function(.data, title, icon = "table") {
   shiny::renderUI({
@@ -34,16 +42,21 @@ render_coverage_box <- function(.data, title, icon = "table") {
   })
 }
 
-#' Render a Data Consistency Value Box
+#' Render a consistency value box
 #'
-#' @param .data Data frame. A dataframe to compute the consistency on.
-#' @param title String. Value box title.
-#' @param id_col String. The name of the column that uniquely identifies records (e.g., "personnel_id" or "contract_id").
-#' @param value_cols Character vector. The names of the columns whose values are to be checked for consistency.
-#' @param icon String. Icon name. Defaults to `"table"`.
+#' Shows the consistency of a table, colored by how consistent it is, with its
+#' record and value consistency underneath.
 #'
-#' @return A [shiny::renderUI()] producing a [bslib::value_box()] themed
-#'   `"danger"` (<50%), `"warning"` (50–79%), or `"success"` (≥80%).
+#' @param .data Data frame or database table (`tbl_dbi`) to measure.
+#' @param id_col Character. Column identifying each entity, such as
+#'   `"personnel_id"` or `"contract_id"`.
+#' @param value_cols Character vector. Columns whose value should stay the
+#'   same for each identifier, such as `"birth_date"`.
+#' @inheritParams render_coverage_box
+#'
+#' @returns A [shiny::renderUI()] producing a [bslib::value_box()], colored
+#'   `"danger"` below 50%, `"warning"` from 50% to below 80%, and `"success"`
+#'   from 80%.
 #'
 #' @importFrom shiny renderUI p
 #' @importFrom bslib value_box
@@ -54,7 +67,14 @@ render_coverage_box <- function(.data, title, icon = "table") {
 #' @importFrom govhr compute_global_consistency compute_record_consistency
 #'   compute_value_consistency
 #'
-#' @details Consistency denotes the proportion of records and values that are consistent across the dataset. A record is considered consistent if it has a unique identifier and all its associated values are consistent. A value is considered consistent if it does not contradict other values for the same record.
+#' @details Consistency is the average of two shares, as computed by
+#'   [govhr::compute_global_consistency()]:
+#'
+#'   * Record consistency: the share of identifiers that appear in exactly one
+#'     record on each reference date.
+#'   * Value consistency: the share of identifiers that keep a single value of
+#'     each column in `value_cols`, averaged across those columns.
+#'
 #' @export
 render_consistency_box <- function(
   .data,
@@ -95,14 +115,19 @@ render_consistency_box <- function(
   })
 }
 
-#' Render a Data Validation Value Box
+#' Render a validation value box
 #'
-#' @param validation_data Data frame. A dataframe containing the validation results, including the number of passes and total records.
-#' @param title String. Value box title.
-#' @param icon String. Icon name. Defaults to `"table"`.
+#' Shows the share of checks a table passes across all validation rules,
+#' colored by how many pass.
 #'
-#' @return A [shiny::renderUI()] producing a [bslib::value_box()] themed
-#'   `"danger"` (<50%), `"warning"` (50–79%), or `"success"` (≥80%).
+#' @param validation_data Data frame. The validation report, with one row per
+#'   rule and `Passes` and `Total Records` columns, as in the report returned by
+#'   [govhr::validate_data()].
+#' @inheritParams render_coverage_box
+#'
+#' @returns A [shiny::renderUI()] producing a [bslib::value_box()], colored
+#'   `"danger"` below 50%, `"warning"` from 50% to below 80%, and `"success"`
+#'   from 80%.
 #'
 #' @importFrom shiny renderUI
 #' @importFrom bslib value_box
@@ -112,9 +137,8 @@ render_consistency_box <- function(
 #' @export
 render_validation_box <- function(validation_data, title, icon = "table") {
   shiny::renderUI({
-    df <- validation_data
-    total_passes <- sum(df$Passes, na.rm = TRUE)
-    total_records <- sum(df$`Total Records`, na.rm = TRUE)
+    total_passes <- sum(validation_data[["Passes"]], na.rm = TRUE)
+    total_records <- sum(validation_data[["Total Records"]], na.rm = TRUE)
 
     pass_rate <- round(total_passes / total_records * 100, 2)
 

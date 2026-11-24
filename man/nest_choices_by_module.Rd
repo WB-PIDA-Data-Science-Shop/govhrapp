@@ -2,7 +2,7 @@
 % Please edit documentation in R/ui_utils.R
 \name{nest_choices_by_module}
 \alias{nest_choices_by_module}
-\title{Nest Dictionary Variables by Module}
+\title{Nest dictionary variables by module}
 \usage{
 nest_choices_by_module(dictionary_rows)
 }
@@ -12,10 +12,10 @@ nest_choices_by_module(dictionary_rows)
 }
 \value{
 A named list keyed by module, each element a named character vector
-of variable IDs labelled by variable name.
+of variable IDs labeled by variable name.
 }
 \description{
 Collapses dictionary rows into the named list of named vectors that Shiny
-select inputs use to render optgroups.
+select inputs use to render option groups.
 }
 \keyword{internal}

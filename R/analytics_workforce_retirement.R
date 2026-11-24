@@ -1,15 +1,17 @@
-#' Workforce Retirement UI
+#' Workforce retirement panel UI
 #'
-#' Sidebar controls and plots for realised and projected retirements.
+#' Sidebar controls and plots of past and projected retirements.
 #'
 #' @param id Character. Module namespace ID.
-#' @param .data Data frame containing personnel data.
+#' @param .data Personnel data, as `workforce_data` in
+#'   [run_govhrapp_analytics()].
 #'
-#' @return A Shiny UI definition.
+#' @returns A Shiny UI definition.
 #'
 #' @import bslib
 #' @import shiny
 #' @importFrom plotly plotlyOutput
+#' @keywords internal
 workforce_retirement_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
@@ -17,7 +19,7 @@ workforce_retirement_ui <- function(id, .data) {
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      !!!default_ui_controls(.data, id),
+      !!!default_ui_controls(id, .data),
       shiny::numericInput(
         shiny::NS(id, "threshold_age"),
         label = "Select retirement threshold age:",
@@ -69,13 +71,15 @@ workforce_retirement_ui <- function(id, .data) {
   )
 }
 
-#' Workforce Retirement Server
+#' Workforce retirement panel server
 #'
-#' @param id Character. Module namespace ID.
-#' @param .data Data frame containing personnel data.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' Renders the retirement plots, from the cache until the user applies a
+#' selection.
 #'
-#' @return A Shiny module server function.
+#' @inheritParams workforce_retirement_ui
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
+#'
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @import shiny
 #' @importFrom govhr compute_retirement project_retirement

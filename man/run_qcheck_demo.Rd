@@ -2,10 +2,21 @@
 % Please edit documentation in R/demo.R
 \name{run_qcheck_demo}
 \alias{run_qcheck_demo}
-\title{Demo app for quality check suite}
+\title{Run the quality check app on sample data}
 \usage{
 run_qcheck_demo()
 }
+\value{
+A Shiny app object.
+}
 \description{
-Demo app for quality check suite
+Launches \code{\link[=run_govhrapp_qcheck]{run_govhrapp_qcheck()}} on the sample Brazilian establishment,
+personnel and contract data shipped with govhr, validated against govhr's
+standard rules.
+}
+\examples{
+\dontrun{
+run_qcheck_demo()
+}
+
 }

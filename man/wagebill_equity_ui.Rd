@@ -2,18 +2,21 @@
 % Please edit documentation in R/analytics_wagebill_equity.R
 \name{wagebill_equity_ui}
 \alias{wagebill_equity_ui}
-\title{Wage Bill Equity UI}
+\title{Wage bill equity panel UI}
 \usage{
 wagebill_equity_ui(id, .data)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame containing wage bill data.}
+\item{.data}{Contract data, as \code{wagebill_data} in
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}.}
 }
 \value{
 A Shiny UI definition.
 }
 \description{
-Sidebar controls and plots for wage distribution, deciles and compression.
+Sidebar controls and plots of the pay distribution, average pay by decile,
+and pay compression.
 }
+\keyword{internal}

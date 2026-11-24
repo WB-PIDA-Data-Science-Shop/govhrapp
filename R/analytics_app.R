@@ -1,17 +1,33 @@
-#' Run the govhr Shiny Dashboard Application
+#' Run the analytics app
 #'
-#' Launches an interactive Shiny dashboard for govhr data visualization and analysis.
+#' Launches the govhr analytics app, which shows the size, movements and cost
+#' of the public sector workforce, with tabs for an overview, the workforce and
+#' the wage bill.
 #'
-#' @param workforce_data Data frame with workforce/personnel attributes
-#'   (headcount).
-#' @param wagebill_data Data frame with contract/salary attributes (wage bill).
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
-#'   Defaults to building one from the supplied data.
-#' @param secure Logical. If `TRUE`, the app will require authentication. Defaults to FALSE.
-#' @param credentials_path Path to the SQLite database containing user credentials for authentication. Defaults to "inst/app/analytics/credentials.sqlite".
+#' @param workforce_data Personnel data, one row per person and reference date:
+#'   a data frame. Must contain `ref_date`, `personnel_id`, `employment_status`
+#'   (`"active"` or `"pensioner"`), `birth_date`, `gender` and `educat7`. Other
+#'   categorical columns listed in `govhr::dictionary` become grouping options.
+#' @param wagebill_data Contract data, one row per contract and reference date:
+#'   a data frame. Must contain `ref_date`, `personnel_id`, `employment_status`,
+#'   `birth_date`, `contract_type` and `gross_salary_lcu`. Other pay columns
+#'   listed in `govhr::dictionary` become pay measure options.
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
+#'   Default builds one from `workforce_data` and `wagebill_data`.
+#' @param secure Logical. Require users to log in. Default `FALSE`.
+#' @param credentials_path Character. Path to the SQLite database of user
+#'   credentials, used when `secure = TRUE`. The default is relative to the
+#'   working directory and only exists when running from the govhrapp source,
+#'   so pass your own path otherwise.
 #' @param ... Additional arguments passed to [shiny::shinyApp()].
 #'
-#' @return A Shiny app object.
+#' @returns A Shiny app object.
+#'
+#' @details
+#' Both inputs are checked for their required columns before the app starts,
+#' and an error names any that are missing.
+#'
+#' @seealso [run_analytics_demo()] to try the app on sample data.
 #'
 #' @examples
 #' \dontrun{
@@ -35,6 +51,10 @@ run_govhrapp_analytics <- function(
   credentials_path = "inst/app/analytics/credentials.sqlite",
   ...
 ) {
+  # checked before `cache` is first used, since its default builds from the
+  # same inputs
+  check_analytics_data(workforce_data, wagebill_data)
+
   # add path to visual assets (image and css)
   shiny::addResourcePath("assets", system.file("www", package = "govhrapp"))
 

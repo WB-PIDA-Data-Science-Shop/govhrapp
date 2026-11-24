@@ -2,14 +2,14 @@
 % Please edit documentation in R/ui_utils.R
 \name{default_ui_controls}
 \alias{default_ui_controls}
-\title{Default Sidebar Filter Controls}
+\title{Default sidebar filter controls}
 \usage{
-default_ui_controls(.data, id)
+default_ui_controls(id, .data)
 }
 \arguments{
-\item{.data}{Data frame to be filtered.}
-
 \item{id}{Character. Module namespace ID.}
+
+\item{.data}{Data frame to be filtered.}
 }
 \value{
 A list of Shiny UI elements.

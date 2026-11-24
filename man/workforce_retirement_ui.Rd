@@ -2,18 +2,20 @@
 % Please edit documentation in R/analytics_workforce_retirement.R
 \name{workforce_retirement_ui}
 \alias{workforce_retirement_ui}
-\title{Workforce Retirement UI}
+\title{Workforce retirement panel UI}
 \usage{
 workforce_retirement_ui(id, .data)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame containing personnel data.}
+\item{.data}{Personnel data, as \code{workforce_data} in
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}.}
 }
 \value{
 A Shiny UI definition.
 }
 \description{
-Sidebar controls and plots for realised and projected retirements.
+Sidebar controls and plots of past and projected retirements.
 }
+\keyword{internal}

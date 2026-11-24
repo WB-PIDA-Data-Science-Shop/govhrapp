@@ -1,10 +1,10 @@
-#' Format a Movement Rate for Display
+#' Format a movement rate for display
 #'
 #' @param rate Numeric. A rate as a proportion, or the replacement ratio.
 #' @param movement_type Character. One of `"hire"`, `"separation"`,
 #'   `"retirement"` or `"replacement"`.
 #'
-#' @return Character. A percentage such as `"3.1%"`, or for `"replacement"` a
+#' @returns Character. A percentage such as `"3.1%"`, or for `"replacement"` a
 #'   ratio such as `"1.49"`, or `"No separations"` when there were hires but
 #'   no separations.
 #'
@@ -26,19 +26,20 @@ format_movement_rate <- function(rate, movement_type) {
   }
 }
 
-#' Render a Workforce Movement Value Box
+#' Render a workforce movement value box
 #'
 #' Renders the count and rate of one movement type at the latest reference
-#' period. Values are read from the analytics cache when available and computed
+#' date. Values are read from the analytics cache when available and computed
 #' from `.data` otherwise.
 #'
-#' @param .data Data frame containing personnel data.
+#' @param .data Personnel data, as `workforce_data` in
+#'   [run_govhrapp_analytics()].
 #' @param movement_type Character. One of `"hire"`, `"separation"`,
 #'   `"retirement"` or `"replacement"`.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()],
-#'   or `NULL` to compute the values directly.
+#' @param cache List of precomputed summaries from [build_analytics_cache()],
+#'   or `NULL` (default) to compute the values from `.data`.
 #'
-#' @return A Shiny render function producing the value box.
+#' @returns A Shiny render function producing the value box.
 #'
 #' @importFrom bsicons bs_icon
 #' @importFrom bslib popover value_box value_box_theme
@@ -51,7 +52,7 @@ render_movement_box <- function(.data, movement_type, cache = NULL) {
   values <- purrr::pluck(cache, "workforce", "movement_box", movement_type)
 
   if (is.null(values)) {
-    values <- summarise_movement_box(
+    values <- summarize_movement_box(
       govhr::compute_movement(.data),
       govhr::compute_retirement(.data),
       movement_type

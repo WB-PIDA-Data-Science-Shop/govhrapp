@@ -1,17 +1,20 @@
-#' Workforce Transition UI
+#' Workforce transition panel UI
 #'
-#' Sidebar controls, a transition trend plot and an interactive transition
-#' network.
+#' Sidebar controls, a trend of transitions between groups, and an interactive
+#' network of the transitions.
 #'
 #' @param id Character. Module namespace ID.
-#' @param .data Data frame containing wage bill data.
+#' @param .data Contract data, as `wagebill_data` in
+#'   [run_govhrapp_analytics()]. Transitions are counted between personnel or
+#'   contract groups, such as `contract_type`, which only contract data holds.
 #'
-#' @return A Shiny UI definition.
+#' @returns A Shiny UI definition.
 #'
 #' @importFrom bslib card card_header layout_sidebar popover sidebar
 #' @importFrom ggiraph girafeOutput
 #' @importFrom plotly plotlyOutput
 #' @importFrom shiny NS actionButton selectInput
+#' @keywords internal
 workforce_transition_ui <- function(id, .data) {
   choices <- identify_group_choices(.data)[c("Personnel", "Contract")]
 
@@ -73,13 +76,15 @@ workforce_transition_ui <- function(id, .data) {
   )
 }
 
-#' Workforce Transition Server
+#' Workforce transition panel server
 #'
-#' @param id Character. Module namespace ID.
-#' @param .data Data frame containing wage bill data.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' Renders the transition trend and network, from the cache until the user
+#' applies a selection.
 #'
-#' @return A Shiny module server function.
+#' @inheritParams workforce_transition_ui
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
+#'
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @importFrom dplyr collect
 #' @importFrom ggiraph renderGirafe
@@ -88,7 +93,7 @@ workforce_transition_ui <- function(id, .data) {
 #' @importFrom purrr pluck
 #' @importFrom shiny bindEvent moduleServer need reactive req validate
 #'
-#' @export
+#' @keywords internal
 workforce_transition_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
     update_group_filter_controls(.data, input, session)
@@ -157,16 +162,18 @@ workforce_transition_server <- function(id, .data, cache) {
   })
 }
 
-#' Launch the Workforce Transition Module Standalone
+#' Run the workforce transition panel on its own
 #'
-#' @param .data Data frame containing wage bill data.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' Launches the transition panel of the workforce tab by itself, for developing
+#' and testing it.
 #'
-#' @return A Shiny app object.
+#' @inheritParams workforce_transition_server
+#'
+#' @returns A Shiny app object.
 #'
 #' @importFrom shiny shinyApp
 #' @keywords internal
-workforce_transition_app <- function(.data, cache) {
+run_workforce_transition_app <- function(.data, cache) {
   shiny::shinyApp(
     ui = workforce_transition_ui("transition", .data),
     server = function(input, output, session) {

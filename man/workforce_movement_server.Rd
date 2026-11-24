@@ -2,21 +2,23 @@
 % Please edit documentation in R/analytics_workforce_movement.R
 \name{workforce_movement_server}
 \alias{workforce_movement_server}
-\title{Workforce Movement Server}
+\title{Workforce movement panel server}
 \usage{
 workforce_movement_server(id, .data, cache)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame containing personnel data.}
+\item{.data}{Personnel data, as \code{workforce_data} in
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}.}
 
-\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
+\item{cache}{List of precomputed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
 }
 \value{
-A Shiny module server function.
+Called for its side effect of rendering the module's outputs.
 }
 \description{
-Workforce Movement Server
+Renders the movement plots and profile table, from the cache until the user
+applies a selection.
 }
 \keyword{internal}

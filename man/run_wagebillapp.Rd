@@ -2,7 +2,7 @@
 % Please edit documentation in R/analytics_wagebill.R
 \name{run_wagebillapp}
 \alias{run_wagebillapp}
-\title{Run the Wage Bill Shiny Application}
+\title{Run the wage bill app (deprecated)}
 \usage{
 run_wagebillapp(
   wagebill_data,
@@ -11,13 +11,15 @@ run_wagebillapp(
 )
 }
 \arguments{
-\item{wagebill_data}{Data frame containing wage bill data. Requires
-\code{ref_date}, \code{personnel_id}, \code{employment_status}, \code{birth_date} and at least
-one salary column (\code{gross_salary_lcu} is used for the key indicators);
-categorical columns present in \code{govhr::dictionary} become grouping options.}
+\item{wagebill_data}{Contract data, one row per contract and reference date:
+a data frame. Must contain \code{ref_date}, \code{personnel_id}, \code{employment_status}
+(\code{"active"} or \code{"pensioner"}), \code{birth_date} and \code{gross_salary_lcu}. Other pay columns listed in
+\code{govhr::dictionary} become pay measure options, and its categorical
+columns become grouping options.}
 
-\item{cache}{List of pre-computed summaries from \code{\link[=build_wagebill_cache]{build_wagebill_cache()}}.
-Defaults to building one from \code{wagebill_data}.}
+\item{cache}{List of precomputed summaries, with the wage bill summaries in
+its \code{wagebill} element as in \code{\link[=build_analytics_cache]{build_analytics_cache()}}. Default builds
+them from \code{wagebill_data}.}
 
 \item{...}{Additional arguments passed to \code{\link[shiny:shinyApp]{shiny::shinyApp()}}.}
 }
@@ -25,13 +27,7 @@ Defaults to building one from \code{wagebill_data}.}
 A Shiny app object.
 }
 \description{
-Launches the wage bill analytics app on its own, outside the full govhr
-dashboard. Panels cover overview trends, pay equity, movement costs and
-retirement costs.
+\code{run_wagebillapp()} was renamed to \code{\link[=run_wagebill_app]{run_wagebill_app()}}, to match the names
+of the other app launchers.
 }
-\examples{
-\dontrun{
-run_wagebillapp(wagebill_data = govhr::bra_hrmis_contract)
-}
-
-}
+\keyword{internal}

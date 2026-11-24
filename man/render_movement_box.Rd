@@ -2,25 +2,26 @@
 % Please edit documentation in R/analytics_utils.R
 \name{render_movement_box}
 \alias{render_movement_box}
-\title{Render a Workforce Movement Value Box}
+\title{Render a workforce movement value box}
 \usage{
 render_movement_box(.data, movement_type, cache = NULL)
 }
 \arguments{
-\item{.data}{Data frame containing personnel data.}
+\item{.data}{Personnel data, as \code{workforce_data} in
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}.}
 
 \item{movement_type}{Character. One of \code{"hire"}, \code{"separation"},
 \code{"retirement"} or \code{"replacement"}.}
 
-\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}},
-or \code{NULL} to compute the values directly.}
+\item{cache}{List of precomputed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}},
+or \code{NULL} (default) to compute the values from \code{.data}.}
 }
 \value{
 A Shiny render function producing the value box.
 }
 \description{
 Renders the count and rate of one movement type at the latest reference
-period. Values are read from the analytics cache when available and computed
+date. Values are read from the analytics cache when available and computed
 from \code{.data} otherwise.
 }
 \keyword{internal}

@@ -1,13 +1,12 @@
-#' coverage UI Module
+#' Coverage tab UI
 #'
-#' UI components for the coverage section of the quality control dashboard.
+#' Coverage boxes for each table, and a coverage panel for each of the
+#' establishment, personnel and contract tables.
 #'
-#' @param id Character string. The module namespace ID.
-#' @param est_data Data frame. The establishment-level data.
-#' @param personnel_data Data frame. The personnel-level data.
-#' @param contract_data Data frame. The contract-level data.
+#' @param id Character. Module namespace ID.
+#' @inheritParams run_govhrapp_qcheck
 #'
-#' @return A Shiny UI object containing coverage analysis cards.
+#' @returns A Shiny UI definition.
 #'
 #' @import shiny
 #' @import bslib
@@ -67,17 +66,17 @@ coverage_ui <- function(id, est_data, personnel_data, contract_data) {
   )
 }
 
-#' Coverage Server Module
+#' Coverage tab server
 #'
-#' Server logic for the coverage section, processing and visualizing missing data patterns.
+#' Renders the coverage boxes and runs a coverage panel server for each table.
 #'
-#' @param id Character string. The module namespace ID.
-#' @param est_data Data frame. The establishment-level data.
-#' @param personnel_data Data frame. The personnel-level data.
-#' @param contract_data Data frame. The contract-level data.
-#' @param cache A list of dataframes. It caches pre-computed coverage results. Passed on to `coverage_panel_server()`.
+#' @param id Character. Module namespace ID.
+#' @inheritParams run_govhrapp_qcheck
+#' @param cache List of precomputed coverage by reference date, with elements
+#'   `est`, `personnel` and `contract`, as in the `coverage` element of
+#'   [build_qcheck_cache()].
 #'
-#' @return None. Called for side effects (renders Shiny outputs).
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @import shiny
 #'
@@ -104,25 +103,31 @@ coverage_server <- function(id, est_data, personnel_data, contract_data, cache) 
     )
 
     # per-dataset panel sub-modules
-    coverage_panel_server("est",       est_data,        cache = cache$est)
-    coverage_panel_server("personnel", personnel_data,  cache = cache$personnel)
-    coverage_panel_server("contract",  contract_data,   cache = cache$contract)
+    coverage_panel_server("est",       est_data,        cache = cache[["est"]])
+    coverage_panel_server("personnel", personnel_data,  cache = cache[["personnel"]])
+    coverage_panel_server("contract",  contract_data,   cache = cache[["contract"]])
   })
 }
 
-#' Coverage Panel UI
+#' Coverage panel UI
 #'
-#' @param id Character string. The module namespace ID.
-#' @param .data Data frame. The data to be used in the coverage panel.
+#' Sidebar controls and coverage plots over time, by variable and by group, for
+#' one table.
 #'
-#' @return A Shiny UI object representing the coverage panel.
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame. The establishment, personnel or contract table the
+#'   panel describes.
+#'
+#' @returns A Shiny UI definition.
+#'
+#' @keywords internal
 coverage_panel_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      !!!default_ui_controls(.data, id),
+      !!!default_ui_controls(id, .data),
       shinyWidgets::materialSwitch(
         shiny::NS(id, "toggle_growth"),
         label = "Switch to baseline index",
@@ -197,17 +202,19 @@ coverage_panel_ui <- function(id, .data) {
   )
 }
 
-#' Coverage Panel Server
+#' Coverage panel server
 #'
-#' Server logic for individual coverage panels.
+#' Renders the coverage plots of one table, from the cache until the user
+#' applies a filter.
 #'
-#' @param id Character string. Sub-module ID matching the one used in
+#' @param id Character. Module namespace ID, matching the one passed to
 #'   [coverage_panel_ui()].
-#' @param .data Data frame for the panel (e.g., establishment, personnel, or contract).
-#' @param cache A list for caching pre-computed results.
+#' @inheritParams coverage_panel_ui
+#' @param cache Data frame. Precomputed coverage of `.data` by reference date.
 #'
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
-#' @return A set of Shiny outputs for the coverage panel.
+#' @keywords internal
 #'
 #' @importFrom govhr compute_coverage plot_coverage_bar plot_coverage_heatmap
 #'   plot_coverage_trend
@@ -278,16 +285,35 @@ coverage_panel_server <- function(id, .data, cache) {
   })
 }
 
-run_coverageapp <- function(
+#' Run the coverage tab on its own
+#'
+#' Launches the coverage tab of the quality check app by itself, for
+#' developing and testing it.
+#'
+#' @inheritParams run_govhrapp_qcheck
+#'
+#' @returns A Shiny app object.
+#'
+#' @importFrom shiny shinyApp
+#' @keywords internal
+run_coverage_app <- function(
   est_data,
   personnel_data,
   contract_data,
   ...
 ) {
-  ui <- coverage_ui("test", est_data, contract_data, personnel_data)
+  cache <- build_qcheck_cache(est_data, personnel_data, contract_data)
+
+  ui <- coverage_ui("coverage", est_data, personnel_data, contract_data)
 
   server <- function(input, output, session) {
-    coverage_server("test", est_data, contract_data, personnel_data)
+    coverage_server(
+      "coverage",
+      est_data,
+      personnel_data,
+      contract_data,
+      cache = cache[["coverage"]]
+    )
   }
 
   shiny::shinyApp(ui, server, ...)

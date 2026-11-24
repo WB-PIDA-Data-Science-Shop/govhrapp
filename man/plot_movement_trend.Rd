@@ -2,7 +2,7 @@
 % Please edit documentation in R/analytics_workforce_utils.R
 \name{plot_movement_trend}
 \alias{plot_movement_trend}
-\title{Plot a Movement Measure Over Time}
+\title{Plot a movement measure over time}
 \usage{
 plot_movement_trend(
   data,

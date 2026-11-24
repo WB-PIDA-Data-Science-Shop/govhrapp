@@ -2,28 +2,40 @@
 % Please edit documentation in R/qcheck_helpers.R
 \name{render_consistency_box}
 \alias{render_consistency_box}
-\title{Render a Data Consistency Value Box}
+\title{Render a consistency value box}
 \usage{
 render_consistency_box(.data, id_col, value_cols, title, icon = "table")
 }
 \arguments{
-\item{.data}{Data frame. A dataframe to compute the consistency on.}
+\item{.data}{Data frame or database table (\code{tbl_dbi}) to measure.}
 
-\item{id_col}{String. The name of the column that uniquely identifies records (e.g., "personnel_id" or "contract_id").}
+\item{id_col}{Character. Column identifying each entity, such as
+\code{"personnel_id"} or \code{"contract_id"}.}
 
-\item{value_cols}{Character vector. The names of the columns whose values are to be checked for consistency.}
+\item{value_cols}{Character vector. Columns whose value should stay the
+same for each identifier, such as \code{"birth_date"}.}
 
-\item{title}{String. Value box title.}
+\item{title}{Character. Value box title.}
 
-\item{icon}{String. Icon name. Defaults to \code{"table"}.}
+\item{icon}{Character. Name of a Bootstrap icon, as in
+\code{\link[bsicons:bs_icon]{bsicons::bs_icon()}}. Default \code{"table"}.}
 }
 \value{
-A \code{\link[shiny:renderUI]{shiny::renderUI()}} producing a \code{\link[bslib:value_box]{bslib::value_box()}} themed
-\code{"danger"} (<50\%), \code{"warning"} (50–79\%), or \code{"success"} (≥80\%).
+A \code{\link[shiny:renderUI]{shiny::renderUI()}} producing a \code{\link[bslib:value_box]{bslib::value_box()}}, colored
+\code{"danger"} below 50\%, \code{"warning"} from 50\% to below 80\%, and \code{"success"}
+from 80\%.
 }
 \description{
-Render a Data Consistency Value Box
+Shows the consistency of a table, colored by how consistent it is, with its
+record and value consistency underneath.
 }
 \details{
-Consistency denotes the proportion of records and values that are consistent across the dataset. A record is considered consistent if it has a unique identifier and all its associated values are consistent. A value is considered consistent if it does not contradict other values for the same record.
+Consistency is the average of two shares, as computed by
+\code{\link[govhr:compute_global_consistency]{govhr::compute_global_consistency()}}:
+\itemize{
+\item Record consistency: the share of identifiers that appear in exactly one
+record on each reference date.
+\item Value consistency: the share of identifiers that keep a single value of
+each column in \code{value_cols}, averaged across those columns.
+}
 }

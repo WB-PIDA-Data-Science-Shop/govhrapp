@@ -2,7 +2,7 @@
 % Please edit documentation in R/ui_utils.R
 \name{date_ui}
 \alias{date_ui}
-\title{Date Range Filter Input}
+\title{Date range filter input}
 \usage{
 date_ui(id, .data)
 }
@@ -15,6 +15,6 @@ date_ui(id, .data)
 A Shiny date range input.
 }
 \description{
-Date Range Filter Input
+Date range filter input
 }
 \keyword{internal}

@@ -1,13 +1,13 @@
-#' Update Subgroup Filter Choices
+#' Update the subgroup filter choices
 #'
-#' Repopulates the subgroup picker whenever the selected grouping column
-#' changes. Distinct values are scanned once per column and reused thereafter.
+#' Refills the subgroup picker whenever the selected grouping column changes.
+#' The distinct values of each column are read once and reused afterward.
 #'
 #' @param .data Data frame holding the columns available for grouping.
 #' @param input Shiny input object carrying `group_filter`.
 #' @param session Shiny session object.
 #'
-#' @return Invisibly, the observer created for the picker. Called for its side
+#' @returns Invisibly, the observer created for the picker. Called for its side
 #'   effect on the UI.
 #'
 #' @importFrom collapse funique
@@ -52,20 +52,20 @@ update_group_filter_controls <- function(.data, input, session) {
   })
 }
 
-#' Filter Data by Group, Subgroup and Date Range
+#' Filter data by group, subgroup and date range
 #'
 #' Applies the sidebar selections to the panel data. Each selection is optional:
-#' a `"ref_date"` or `NULL` `group_filter` skips the subgroup step, and a `NULL`
-#' `date_range` skips the date step.
+#' a `group_filter` of `"ref_date"` or `NULL` skips the subgroup step, and a
+#' `NULL` `date_range` skips the date step.
 #'
-#' @param .data Data frame to filter.
+#' @param .data Data frame or database table (`tbl_dbi`) to filter.
 #' @param group_filter Character. Grouping column to filter on, or `"ref_date"`
-#'   / `NULL` to skip subgroup filtering.
+#'   or `NULL` to skip subgroup filtering.
 #' @param subgroup_filter Character vector of subgroup values to keep.
 #' @param date_range Length-two vector of dates bounding `ref_date`, or `NULL`
 #'   to skip date filtering.
 #'
-#' @return A filtered data frame of the same class as `.data`.
+#' @returns A filtered data frame of the same class as `.data`.
 #'
 #' @importFrom dplyr filter
 #' @keywords internal
@@ -90,7 +90,7 @@ filter_data <- function(.data, group_filter, subgroup_filter, date_range) {
   filtered
 }
 
-#' Convert the No-Grouping Selection to `NULL`
+#' Convert the no-grouping selection to `NULL`
 #'
 #' The sidebar group picker uses `"ref_date"` to mean "no grouping". The govhr
 #' plotting functions accept that convention, but the compute functions that
@@ -103,7 +103,7 @@ filter_data <- function(.data, group_filter, subgroup_filter, date_range) {
 #' @param group_col Character or `NULL`. The selected grouping column, such as
 #'   `input$group_filter`.
 #'
-#' @return `NULL` when `group_col` is `NULL` or `"ref_date"`, otherwise
+#' @returns `NULL` when `group_col` is `NULL` or `"ref_date"`, otherwise
 #'   `group_col` unchanged.
 #'
 #' @examples
@@ -121,10 +121,10 @@ group_col_to_null <- function(group_col) {
   }
 }
 
-#' Summarise a Movement Value Box
+#' Summarize a movement value box
 #'
-#' Reads the latest count and rate for one movement type from pre-computed
-#' movement and retirement tables, for the workforce key-indicator boxes. The
+#' Reads the latest count and rate for one movement type from precomputed
+#' movement and retirement tables, for the workforce key indicator boxes. The
 #' replacement box reports a ratio only.
 #'
 #' @param movement Output of [govhr::compute_movement()].
@@ -132,12 +132,12 @@ group_col_to_null <- function(group_col) {
 #' @param movement_type Character. One of `"hire"`, `"separation"`,
 #'   `"retirement"` or `"replacement"`.
 #'
-#' @return A list with `ref_date` (the date the values are from), `count` and
+#' @returns A list with `ref_date` (the date the values are from), `count` and
 #'   `rate`.
 #'
 #' @importFrom dplyr collect filter slice_max
 #' @keywords internal
-summarise_movement_box <- function(movement, retirement, movement_type) {
+summarize_movement_box <- function(movement, retirement, movement_type) {
   rate_col <- movement_measure_col(movement_type, "rate")
 
   # each box reports the latest date its own measure is defined for. a date
@@ -160,21 +160,22 @@ summarise_movement_box <- function(movement, retirement, movement_type) {
   )
 }
 
-#' Summarise a Wage Bill Value Box
+#' Summarize a wage bill value box
 #'
 #' Totals gross salary at the latest reference date for one employment status,
-#' used by the wage bill key-indicator boxes.
+#' for the wage bill key indicator boxes.
 #'
-#' @param .data Data frame containing wage bill data.
-#' @param measure_type Character. Either `"total_wagebill"` (active personnel)
-#'   or `"total_pension_liabilities"` (pensioners).
+#' @param .data Contract data, as `wagebill_data` in
+#'   [run_govhrapp_analytics()].
+#' @param measure_type Character. `"total_wagebill"` (active personnel) or
+#'   `"total_pension_liabilities"` (pensioners).
 #'
-#' @return A list with `ref_date` and `total`.
+#' @returns A list with `ref_date` and `total`.
 #'
 #' @importFrom dplyr filter pull summarise
 #' @importFrom govhr compute_wagebill
 #' @keywords internal
-summarise_wagebill_box <- function(.data, measure_type) {
+summarize_wagebill_box <- function(.data, measure_type) {
   status <- switch(
     measure_type,
     total_wagebill = "active",
@@ -203,17 +204,14 @@ summarise_wagebill_box <- function(.data, measure_type) {
   )
 }
 
-#' Build the Workforce Analytics Cache
+#' Build the workforce analytics cache
 #'
-#' Pre-computes the summaries the workforce panels show before the user applies
-#' any filter.
+#' Precomputes the summaries the workforce panels show before the user applies
+#' a filter.
 #'
-#' @param workforce_data Data frame with workforce/personnel attributes
-#'   (headcount).
-#' @param wagebill_data Data frame with contract/salary attributes, used for the
-#'   career transition network.
+#' @inheritParams workforce_ui
 #'
-#' @return A named list of pre-computed data frames keyed by panel.
+#' @returns A named list of precomputed data frames, keyed by panel.
 #'
 #' @importFrom govhr compute_headcount compute_movement compute_retirement
 #'   compute_transition project_retirement
@@ -256,7 +254,7 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
     purrr::set_names() |>
     purrr::map(
       \(type) {
-        summarise_movement_box(
+        summarize_movement_box(
           cache[["workforce_movement"]],
           cache[["workforce_retirement"]],
           type
@@ -267,14 +265,14 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
   cache
 }
 
-#' Build the Wage Bill Analytics Cache
+#' Build the wage bill analytics cache
 #'
-#' Pre-computes the summaries the wage bill panels show before the user applies
-#' any filter.
+#' Precomputes the summaries the wage bill panels show before the user applies
+#' a filter.
 #'
-#' @param wagebill_data Data frame with contract/salary attributes (wage bill).
+#' @inheritParams wagebill_ui
 #'
-#' @return A named list of pre-computed data frames keyed by panel.
+#' @returns A named list of precomputed data frames, keyed by panel.
 #'
 #' @importFrom dplyr left_join
 #' @importFrom govhr compute_compression_ratio compute_decile compute_movement_cost
@@ -287,7 +285,7 @@ build_wagebill_cache <- function(wagebill_data) {
     # key indicator boxes
     total_box = c("total_wagebill", "total_pension_liabilities") |>
       purrr::set_names() |>
-      purrr::map(\(type) summarise_wagebill_box(wagebill_data, type)),
+      purrr::map(\(type) summarize_wagebill_box(wagebill_data, type)),
 
     # overview module
     wagebill_overview = wagebill_data |>
@@ -327,14 +325,14 @@ build_wagebill_cache <- function(wagebill_data) {
     collect_cache()
 }
 
-#' Collect the Lazy Entries of an Analytics Cache
+#' Collect the lazy entries of a cache
 #'
 #' Brings every lazy (`tbl_lazy`) entry of a cache list into memory, and leaves
-#' data frames, value-box lists and rendered tables as they are.
+#' data frames, value box lists and rendered tables as they are.
 #'
-#' @param cache Named list of pre-computed summaries.
+#' @param cache Named list of precomputed summaries.
 #'
-#' @return `cache`, with its lazy tables collected.
+#' @returns `cache`, with its lazy tables collected.
 #'
 #' @importFrom dplyr collect
 #' @importFrom purrr modify_if
@@ -349,17 +347,19 @@ collect_cache <- function(cache) {
   )
 }
 
-#' Validate Transitions Exist
-#' 
-#' A narrow subgroup or date selection, or deselecting every subgroup, can
-#' leave no moves, which plot_trend() errors on and the network draws blank.
-#' 
-#' @param transition_data Data frame of transitions, such as the output of
-#' [govhr::compute_transition()].
-#' 
+#' Check that there are transitions to plot
+#'
+#' Shows a message in place of the transition plots when the selection leaves
+#' no transitions. A narrow subgroup or date selection, or deselecting every
+#' subgroup, can leave none, which [govhr::plot_trend()] errors on and the
+#' network draws blank.
+#'
+#' @param transition_data Data frame of transitions, as returned by
+#'   [govhr::compute_transition()].
+#'
 #' @importFrom shiny validate need
 #' 
-#' @return Invisibly, the result of [shiny::validate()].
+#' @returns Invisibly, the result of [shiny::validate()].
 #' 
 #' @keywords internal
 validate_transitions <- function(transition_data) {
@@ -371,21 +371,28 @@ validate_transitions <- function(transition_data) {
   )
 }
 
-#' Build the Analytics Cache
+#' Build the analytics cache
 #'
-#' Pre-computes the summaries each analytics panel shows before the user applies
-#' any filter, so app start-up and first paint do no aggregation. Built once by
-#' the app entry point and passed to every module server.
+#' Precomputes the summaries each panel of the analytics app shows before the
+#' user applies a filter, so the app starts without aggregating anything. Build
+#' it once and pass it to [run_govhrapp_analytics()], for example when several
+#' apps or reports share the same data.
 #'
-#' @param workforce_data Data frame with workforce/personnel attributes
-#'   (headcount).
-#' @param wagebill_data Data frame with contract/salary attributes (wage bill).
+#' @inheritParams run_govhrapp_analytics
 #'
-#' @return A named list with `workforce` and `wagebill` elements, each a list of
-#'   pre-computed data frames keyed by panel.
+#' @returns A named list with `workforce` and `wagebill` elements, each a list of
+#'   precomputed data frames keyed by panel.
+#'
+#' @examples
+#' \dontrun{
+#' cache <- build_analytics_cache(workforce_data, wagebill_data)
+#' run_govhrapp_analytics(workforce_data, wagebill_data, cache = cache)
+#' }
 #'
 #' @export
 build_analytics_cache <- function(workforce_data, wagebill_data) {
+  check_analytics_data(workforce_data, wagebill_data)
+
   list(
     workforce = build_workforce_cache(workforce_data, wagebill_data),
     wagebill = build_wagebill_cache(wagebill_data)

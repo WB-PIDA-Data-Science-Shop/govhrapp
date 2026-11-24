@@ -2,7 +2,7 @@
 % Please edit documentation in R/analytics_utils.R
 \name{format_movement_rate}
 \alias{format_movement_rate}
-\title{Format a Movement Rate for Display}
+\title{Format a movement rate for display}
 \usage{
 format_movement_rate(rate, movement_type)
 }
@@ -18,6 +18,6 @@ ratio such as \code{"1.49"}, or \code{"No separations"} when there were hires bu
 no separations.
 }
 \description{
-Format a Movement Rate for Display
+Format a movement rate for display
 }
 \keyword{internal}

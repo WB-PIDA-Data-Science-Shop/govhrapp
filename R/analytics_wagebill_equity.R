@@ -1,23 +1,26 @@
-#' Wage Bill Equity UI
+#' Wage bill equity panel UI
 #'
-#' Sidebar controls and plots for wage distribution, deciles and compression.
+#' Sidebar controls and plots of the pay distribution, average pay by decile,
+#' and pay compression.
 #'
 #' @param id Character. Module namespace ID.
-#' @param .data Data frame containing wage bill data.
+#' @param .data Contract data, as `wagebill_data` in
+#'   [run_govhrapp_analytics()].
 #'
-#' @return A Shiny UI definition.
+#' @returns A Shiny UI definition.
 #'
 #' @import bslib
 #' @import shiny
 #' @importFrom bsicons bs_icon
 #' @importFrom plotly plotlyOutput
+#' @keywords internal
 wagebill_equity_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      !!!default_ui_controls(.data, id),
+      !!!default_ui_controls(id, .data),
       shiny::selectInput(
         shiny::NS(id, "wagebill_measure"),
         "Type of Wage:",
@@ -89,13 +92,15 @@ wagebill_equity_ui <- function(id, .data) {
   )
 }
 
-#' Wage Bill Equity Server
+#' Wage bill equity panel server
 #'
-#' @param id Character. Module namespace ID.
-#' @param .data Data frame containing wage bill data.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' Renders the pay distribution plots, from the cache until the user applies a
+#' selection.
 #'
-#' @return A Shiny module server function.
+#' @inheritParams wagebill_equity_ui
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
+#'
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @import shiny
 #' @importFrom govhr compute_compression_ratio compute_decile compute_percentile

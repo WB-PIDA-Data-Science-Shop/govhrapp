@@ -2,19 +2,22 @@
 % Please edit documentation in R/analytics_workforce_movement.R
 \name{workforce_movement_ui}
 \alias{workforce_movement_ui}
-\title{Workforce Movement UI}
+\title{Workforce movement panel UI}
 \usage{
 workforce_movement_ui(id, .data)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame containing personnel data.}
+\item{.data}{Personnel data, as \code{workforce_data} in
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}.}
 }
 \value{
 A Shiny UI definition.
 }
 \description{
-Sidebar controls, trend and by-group plots, and a mover profile table for
-recruitment, separation and turnover.
+Sidebar controls, a trend and by-group plots of hires, separations or the
+replacement rate, and a table comparing hires or separations with the whole
+workforce.
 }
+\keyword{internal}

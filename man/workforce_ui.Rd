@@ -2,22 +2,26 @@
 % Please edit documentation in R/analytics_workforce.R
 \name{workforce_ui}
 \alias{workforce_ui}
-\title{Workforce UI}
+\title{Workforce tab UI}
 \usage{
 workforce_ui(id, workforce_data, wagebill_data)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{workforce_data}{Data frame containing personnel data.}
+\item{workforce_data}{Personnel data, one row per person and reference date:
+a data frame. Must contain \code{ref_date}, \code{personnel_id}, \code{employment_status}
+(\code{"active"} or \code{"pensioner"}), \code{birth_date}, \code{gender} and \code{educat7}. Other
+categorical columns listed in \code{govhr::dictionary} become grouping options.}
 
-\item{wagebill_data}{Data frame containing wage bill data, used by the
-overview and transition panels.}
+\item{wagebill_data}{Contract data, as in \code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}. The
+workforce tab uses it only in the transition panel, which counts moves
+between contract-level groups such as \code{contract_type}.}
 }
 \value{
 A Shiny UI definition.
 }
 \description{
-Top-level workforce tab: guidance, key indicator boxes, and the overview,
-movement, transition and retirement panels.
+Guidance, key indicator boxes, and the overview, movement, transition and
+retirement panels of the workforce tab.
 }

@@ -2,19 +2,21 @@
 % Please edit documentation in R/analytics_wagebill_overview.R
 \name{wagebill_overview_ui}
 \alias{wagebill_overview_ui}
-\title{Wage Bill Overview UI}
+\title{Wage bill overview panel UI}
 \usage{
 wagebill_overview_ui(id, .data)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame containing wage bill data.}
+\item{.data}{Contract data, as \code{wagebill_data} in
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}.}
 }
 \value{
 A Shiny UI definition.
 }
 \description{
-Sidebar controls, a wage bill time trend, and totals and growth rates by
+Sidebar controls, a wage bill trend, and the wage bill and its growth by
 group.
 }
+\keyword{internal}

@@ -2,22 +2,24 @@
 % Please edit documentation in R/qcheck_validation.R
 \name{validation_server}
 \alias{validation_server}
-\title{Validation Rules Server Module}
+\title{Validation tab server}
 \usage{
 validation_server(id, personnel_validation, contract_validation)
 }
 \arguments{
-\item{id}{Character string. The module namespace ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{personnel_validation}{List. The personnel validation results, including reports and violations.}
+\item{personnel_validation}{List. Validation results for \code{personnel_data},
+as returned by \code{\link[govhr:validate_data]{govhr::validate_data()}}.}
 
-\item{contract_validation}{List. The contract validation results, including reports and violations.}
+\item{contract_validation}{List. Validation results for \code{contract_data}, as
+returned by \code{\link[govhr:validate_data]{govhr::validate_data()}}.}
 }
 \value{
-None. Called for side effects (renders Shiny outputs).
+Called for its side effect of rendering the module's outputs.
 }
 \description{
-Server logic for the Validation Rules section, rendering pass/fail tables
-for contract and personnel validation rules.
+Renders the pass rate boxes and rule tables, and serves the downloads of
+failing records.
 }
 \keyword{internal}

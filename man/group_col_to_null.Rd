@@ -2,7 +2,7 @@
 % Please edit documentation in R/server_utils.R
 \name{group_col_to_null}
 \alias{group_col_to_null}
-\title{Convert the No-Grouping Selection to \code{NULL}}
+\title{Convert the no-grouping selection to \code{NULL}}
 \usage{
 group_col_to_null(group_col)
 }

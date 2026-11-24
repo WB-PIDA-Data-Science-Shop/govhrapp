@@ -2,19 +2,21 @@
 % Please edit documentation in R/server_utils.R
 \name{validate_transitions}
 \alias{validate_transitions}
-\title{Validate Transitions Exist}
+\title{Check that there are transitions to plot}
 \usage{
 validate_transitions(transition_data)
 }
 \arguments{
-\item{transition_data}{Data frame of transitions, such as the output of
+\item{transition_data}{Data frame of transitions, as returned by
 \code{\link[govhr:compute_transition]{govhr::compute_transition()}}.}
 }
 \value{
 Invisibly, the result of \code{\link[shiny:validate]{shiny::validate()}}.
 }
 \description{
-A narrow subgroup or date selection, or deselecting every subgroup, can
-leave no moves, which plot_trend() errors on and the network draws blank.
+Shows a message in place of the transition plots when the selection leaves
+no transitions. A narrow subgroup or date selection, or deselecting every
+subgroup, can leave none, which \code{\link[govhr:plot_trend]{govhr::plot_trend()}} errors on and the
+network draws blank.
 }
 \keyword{internal}

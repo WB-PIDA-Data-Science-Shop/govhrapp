@@ -2,15 +2,15 @@
 % Please edit documentation in R/server_utils.R
 \name{filter_data}
 \alias{filter_data}
-\title{Filter Data by Group, Subgroup and Date Range}
+\title{Filter data by group, subgroup and date range}
 \usage{
 filter_data(.data, group_filter, subgroup_filter, date_range)
 }
 \arguments{
-\item{.data}{Data frame to filter.}
+\item{.data}{Data frame or database table (\code{tbl_dbi}) to filter.}
 
 \item{group_filter}{Character. Grouping column to filter on, or \code{"ref_date"}
-/ \code{NULL} to skip subgroup filtering.}
+or \code{NULL} to skip subgroup filtering.}
 
 \item{subgroup_filter}{Character vector of subgroup values to keep.}
 
@@ -22,7 +22,7 @@ A filtered data frame of the same class as \code{.data}.
 }
 \description{
 Applies the sidebar selections to the panel data. Each selection is optional:
-a \code{"ref_date"} or \code{NULL} \code{group_filter} skips the subgroup step, and a \code{NULL}
-\code{date_range} skips the date step.
+a \code{group_filter} of \code{"ref_date"} or \code{NULL} skips the subgroup step, and a
+\code{NULL} \code{date_range} skips the date step.
 }
 \keyword{internal}

@@ -1,10 +1,11 @@
-#' Overview UI
+#' Overview tab UI
 #'
-#' Summary dashboard tab combining headline wage bill and headcount indicators.
+#' Headline boxes for the latest headcount and wage bill, and a chart of
+#' headcount, wage bill or both indexed to the first reference date.
 #'
 #' @param id Character. Module namespace ID.
 #'
-#' @return A Shiny UI definition.
+#' @returns A Shiny UI definition.
 #'
 #' @importFrom bsicons bs_icon
 #' @importFrom bslib card card_body card_header layout_columns layout_sidebar popover sidebar value_box value_box_theme
@@ -111,15 +112,15 @@ overview_ui <- function(id) {
   )
 }
 
-#' Overview Server
+#' Overview tab server
 #'
-#' Renders the headline headcount and wage bill indicators and the three
-#' summary charts, all read from the analytics cache.
+#' Renders the headline headcount and wage bill boxes and the three summary
+#' charts, all read from the analytics cache.
 #'
 #' @param id Character. Module namespace ID.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
 #'
-#' @return A Shiny module server function.
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @importFrom dplyr bind_rows filter mutate pull select
 #' @importFrom ggplot2 aes labs scale_color_manual
@@ -180,7 +181,7 @@ overview_server <- function(id, cache) {
       req(input$display_mode == "wagebill")
 
       # plot_trend() takes the app-wide orange line default, so the wage bill
-      # is set to the blue of its value box. I() keeps the colour literal, so
+      # is set to the blue of its value box. I() keeps the color literal, so
       # it adds no scale or legend
       plotly::ggplotly(
         govhr::plot_trend(
@@ -197,7 +198,7 @@ overview_server <- function(id, cache) {
       req(input$display_mode == "integrated")
 
       # plot_trend() would shade the series as an orange gradient, which reads
-      # as an ordering; distinct colours tie each series to its value box
+      # as an ordering; distinct colors tie each series to its value box
       palette <- c(
         "Headcount" = "#C34729",
         "Wage Bill" = "#00070e",
@@ -217,7 +218,7 @@ overview_server <- function(id, cache) {
       ) |>
         govhr::apply_baseline_index(group_col = "series")
 
-      # replacing plot_trend()'s colour scale is intended, so ggplot2's
+      # replacing plot_trend()'s color scale is intended, so ggplot2's
       # scale-replacement message is noise
       integrated_plot <- suppressMessages(
         govhr::plot_trend(

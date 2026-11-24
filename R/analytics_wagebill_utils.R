@@ -1,17 +1,19 @@
-#' Identify Available Wage Measure Choices
+#' Identify the available pay measures
 #'
-#' Lists the salary and allowance variables present in the data, nested by
-#' dictionary module, for the "Type of Wage" select input.
+#' Lists the salary and allowance columns present in the data, nested by
+#' dictionary module, for the pay measure picker.
 #'
-#' @param .data Data frame containing wage bill data.
+#' @param .data Contract data, as `wagebill_data` in
+#'   [run_govhrapp_analytics()].
 #'
-#' @return A named list of wage measure choices, keyed by module.
+#' @returns A named list of pay measure choices, keyed by module.
 #'
 #' @importFrom dplyr filter
 #' @importFrom stringr str_detect
 #' @keywords internal
 identify_wagebill_choices <- function(.data) {
-  available_cols <- names(.data)
+  # colnames() rather than names(), which does not list a tbl_dbi's columns
+  available_cols <- colnames(.data)
 
   govhr::dictionary |>
     dplyr::filter(
@@ -21,19 +23,20 @@ identify_wagebill_choices <- function(.data) {
     nest_choices_by_module()
 }
 
-#' Render a Wage Bill Value Box
+#' Render a wage bill value box
 #'
 #' Renders the total wage bill or total pension liabilities at the latest
 #' reference date. Values are read from the analytics cache when available and
 #' computed from `.data` otherwise.
 #'
-#' @param .data Data frame containing wage bill data.
-#' @param measure_type Character. Either `"total_wagebill"` or
+#' @param .data Contract data, as `wagebill_data` in
+#'   [run_govhrapp_analytics()].
+#' @param measure_type Character. `"total_wagebill"` or
 #'   `"total_pension_liabilities"`.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()],
-#'   or `NULL` to compute the values directly.
+#' @param cache List of precomputed summaries from [build_analytics_cache()],
+#'   or `NULL` (default) to compute the values from `.data`.
 #'
-#' @return A Shiny render function producing the value box.
+#' @returns A Shiny render function producing the value box.
 #'
 #' @importFrom bsicons bs_icon
 #' @importFrom bslib value_box value_box_theme
@@ -45,7 +48,7 @@ render_wagebill_box <- function(.data, measure_type, cache = NULL) {
   values <- purrr::pluck(cache, "wagebill", "total_box", measure_type)
 
   if (is.null(values)) {
-    values <- summarise_wagebill_box(.data, measure_type)
+    values <- summarize_wagebill_box(.data, measure_type)
   }
 
   label <- switch(

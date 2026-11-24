@@ -2,21 +2,23 @@
 % Please edit documentation in R/analytics_workforce_retirement.R
 \name{workforce_retirement_server}
 \alias{workforce_retirement_server}
-\title{Workforce Retirement Server}
+\title{Workforce retirement panel server}
 \usage{
 workforce_retirement_server(id, .data, cache)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame containing personnel data.}
+\item{.data}{Personnel data, as \code{workforce_data} in
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}.}
 
-\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
+\item{cache}{List of precomputed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
 }
 \value{
-A Shiny module server function.
+Called for its side effect of rendering the module's outputs.
 }
 \description{
-Workforce Retirement Server
+Renders the retirement plots, from the cache until the user applies a
+selection.
 }
 \keyword{internal}

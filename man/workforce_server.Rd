@@ -2,24 +2,28 @@
 % Please edit documentation in R/analytics_workforce.R
 \name{workforce_server}
 \alias{workforce_server}
-\title{Workforce Server}
+\title{Workforce tab server}
 \usage{
 workforce_server(id, workforce_data, wagebill_data, cache)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{workforce_data}{Data frame containing personnel data.}
+\item{workforce_data}{Personnel data, one row per person and reference date:
+a data frame. Must contain \code{ref_date}, \code{personnel_id}, \code{employment_status}
+(\code{"active"} or \code{"pensioner"}), \code{birth_date}, \code{gender} and \code{educat7}. Other
+categorical columns listed in \code{govhr::dictionary} become grouping options.}
 
-\item{wagebill_data}{Data frame containing wage bill data, used by the
-overview and transition panels.}
+\item{wagebill_data}{Contract data, as in \code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}. The
+workforce tab uses it only in the transition panel, which counts moves
+between contract-level groups such as \code{contract_type}.}
 
-\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
+\item{cache}{List of precomputed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
 }
 \value{
-A Shiny module server function.
+Called for its side effect of rendering the module's outputs.
 }
 \description{
-Renders the key indicator boxes and delegates to the overview, movement,
-transition and retirement panel servers.
+Renders the key indicator boxes and runs the overview, movement, transition
+and retirement panel servers.
 }

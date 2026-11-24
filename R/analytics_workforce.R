@@ -1,18 +1,20 @@
-#' Workforce UI
+#' Workforce tab UI
 #'
-#' Top-level workforce tab: guidance, key indicator boxes, and the overview,
-#' movement, transition and retirement panels.
+#' Guidance, key indicator boxes, and the overview, movement, transition and
+#' retirement panels of the workforce tab.
 #'
 #' @param id Character. Module namespace ID.
-#' @param workforce_data Data frame containing personnel data.
-#' @param wagebill_data Data frame containing wage bill data, used by the
-#'   overview and transition panels.
+#' @inheritParams run_govhrapp_analytics
+#' @param wagebill_data Contract data, as in [run_govhrapp_analytics()]. The
+#'   workforce tab uses it only in the transition panel, which counts moves
+#'   between contract-level groups such as `contract_type`.
 #'
-#' @return A Shiny UI definition.
+#' @returns A Shiny UI definition.
 #'
 #' @importFrom bslib accordion accordion_panel card card_body card_header layout_column_wrap layout_columns nav_panel navset_underline popover
 #' @importFrom bsicons bs_icon
 #' @importFrom shiny NS icon markdown uiOutput
+#' @export
 workforce_ui <- function(id, workforce_data, wagebill_data) {
   # value boxes for workforce movement metrics
   value_boxes <- list(
@@ -93,18 +95,16 @@ workforce_ui <- function(id, workforce_data, wagebill_data) {
   )
 }
 
-#' Workforce Server
+#' Workforce tab server
 #'
-#' Renders the key indicator boxes and delegates to the overview, movement,
-#' transition and retirement panel servers.
+#' Renders the key indicator boxes and runs the overview, movement, transition
+#' and retirement panel servers.
 #'
 #' @param id Character. Module namespace ID.
-#' @param workforce_data Data frame containing personnel data.
-#' @param wagebill_data Data frame containing wage bill data, used by the
-#'   overview and transition panels.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' @inheritParams workforce_ui
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
 #'
-#' @return A Shiny module server function.
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @importFrom shiny moduleServer
 #' @export
@@ -125,9 +125,6 @@ workforce_server <- function(id, workforce_data, wagebill_data, cache) {
     )
 
     # 2. panel servers
-    # NOTE: the overview panel's UI is built from wagebill_data while its
-    # server filters workforce_data. Wiring preserved as-is; see the audit note
-    # on the headcount source mismatch.
     workforce_overview_server("overview", workforce_data, cache = cache)
     workforce_movement_server("movement", workforce_data, cache = cache)
     workforce_transition_server("transition", wagebill_data, cache = cache)
@@ -135,27 +132,34 @@ workforce_server <- function(id, workforce_data, wagebill_data, cache) {
   })
 }
 
-#' Run the Workforce Shiny Application
+#' Run the workforce app
 #'
-#' Launches the workforce analytics app on its own, outside the full govhr
-#' dashboard.
+#' Launches the workforce tab of the analytics app on its own.
 #'
-#' @param workforce_data Data frame containing personnel data.
-#' @param wagebill_data Data frame containing wage bill data.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
-#'   Defaults to building one from the supplied data.
+#' @inheritParams workforce_ui
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
+#'   Default builds one from `workforce_data` and `wagebill_data`.
 #' @param ... Additional arguments passed to [shiny::shinyApp()].
 #'
-#' @return A Shiny app object.
+#' @returns A Shiny app object.
+#'
+#' @seealso [run_govhrapp_analytics()] for the full analytics app.
+#'
+#' @examples
+#' \dontrun{
+#' run_workforce_app(workforce_data, wagebill_data)
+#' }
 #'
 #' @importFrom shiny shinyApp
-#' @keywords internal
+#' @export
 run_workforce_app <- function(
   workforce_data,
   wagebill_data,
   cache = build_analytics_cache(workforce_data, wagebill_data),
   ...
 ) {
+  check_analytics_data(workforce_data, wagebill_data)
+
   ui <- workforce_ui("workforce", workforce_data, wagebill_data)
 
   server <- function(input, output, session) {

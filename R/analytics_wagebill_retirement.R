@@ -1,22 +1,24 @@
-#' Wage Bill Retirement UI
+#' Wage bill retirement panel UI
 #'
-#' Sidebar controls and plots for realised and projected retirement costs.
+#' Sidebar controls and plots of past and projected retirement costs.
 #'
 #' @param id Character. Module namespace ID.
-#' @param .data Data frame containing wage bill data.
+#' @param .data Contract data, as `wagebill_data` in
+#'   [run_govhrapp_analytics()].
 #'
-#' @return A Shiny UI definition.
+#' @returns A Shiny UI definition.
 #'
 #' @import bslib
 #' @import shiny
 #' @importFrom plotly plotlyOutput
+#' @keywords internal
 wagebill_retirement_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      !!!default_ui_controls(.data, id),
+      !!!default_ui_controls(id, .data),
       shiny::numericInput(
         shiny::NS(id, "threshold_age"),
         label = "Select retirement threshold age:",
@@ -73,13 +75,15 @@ wagebill_retirement_ui <- function(id, .data) {
   )
 }
 
-#' Wage Bill Retirement Server
+#' Wage bill retirement panel server
 #'
-#' @param id Character. Module namespace ID.
-#' @param .data Data frame containing wage bill data.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' Renders the retirement cost plots, from the cache until the user applies a
+#' selection.
 #'
-#' @return A Shiny module server function.
+#' @inheritParams wagebill_retirement_ui
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
+#'
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @import shiny
 #' @importFrom govhr compute_retirement_cost project_retirement

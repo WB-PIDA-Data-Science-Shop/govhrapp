@@ -2,51 +2,43 @@
 % Please edit documentation in R/deploy.R
 \name{deploy_govhrapp}
 \alias{deploy_govhrapp}
-\title{Deploy govhrapp to Posit Connect}
+\title{Deploy an app to Posit Connect}
 \usage{
 deploy_govhrapp(suite, type = c("dev", "prod"))
 }
 \arguments{
-\item{suite}{Character string specifying which app suite to deploy.
-Must be one of:
-\describe{
-\item{\code{"qcheck"}}{Deploys the qcheck control dashboard.
-Uses the \code{govhrapp_qcheck_guid} environment variable.}
-\item{\code{"analytics"}}{Deploys the analytics dashboard.
-Uses the \code{govhrapp_analytics_guid} environment variable.}
-}}
+\item{suite}{Character. The app to deploy: \code{"analytics"} for the analytics
+app, or \code{"qcheck"} for the quality check app.}
 
-\item{type}{Character string specifying the deployment type ("dev" or "prod").}
+\item{type}{Character. The content item to deploy to: \code{"dev"} (default) for
+the development copy, or \code{"prod"} for the one users see.}
 }
 \value{
-Invisibly returns the deployment information from
-\code{\link[rsconnect]{deployApp}}.
+The value of \code{\link[rsconnect:deployApp]{rsconnect::deployApp()}}.
 }
 \description{
-Deploys the govhrapp Shiny application to Posit Connect using stored
-application GUIDs from environment variables.
+Deploys the analytics or quality check app to an existing Posit Connect
+content item, whose GUID is read from an environment variable.
 }
 \details{
-This function requires environment variables to be set with the Posit Connect
-application GUIDs:
+Run it from the root of the govhrapp source, as it deploys the app script in
+\verb{inst/app/<suite>/}. The GUID of each content item is read from an
+environment variable named \verb{govhrapp_<suite>_<type>_guid}:
 \itemize{
-\item \code{govhrapp_qcheck_guid} - GUID for the qcheck suite
-\item \code{govhrapp_analytics_guid} - GUID for the analytics suite
+\item \code{govhrapp_analytics_dev_guid}
+\item \code{govhrapp_analytics_prod_guid}
+\item \code{govhrapp_qcheck_dev_guid}
+\item \code{govhrapp_qcheck_prod_guid}
 }
 
-These can be set in your \code{.Renviron} file or through
-\code{Sys.setenv()}.
+Set them in your \code{.Renviron} file or with \code{\link[=Sys.setenv]{Sys.setenv()}}.
 }
 \examples{
 \dontrun{
-# Set environment variables first
-Sys.setenv(govhrapp_analytics_guid = "your-guid-here")
+Sys.setenv(govhrapp_analytics_dev_guid = "your-guid-here")
 
-# Deploy the analytics suite
 deploy_govhrapp("analytics")
-
-# Deploy the qcheck suite
-deploy_govhrapp("qcheck")
+deploy_govhrapp("analytics", type = "prod")
 }
 
 }

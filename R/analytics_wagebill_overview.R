@@ -1,25 +1,27 @@
-#' Wage Bill Overview UI
+#' Wage bill overview panel UI
 #'
-#' Sidebar controls, a wage bill time trend, and totals and growth rates by
+#' Sidebar controls, a wage bill trend, and the wage bill and its growth by
 #' group.
 #'
 #' @param id Character. Module namespace ID.
-#' @param .data Data frame containing wage bill data.
+#' @param .data Contract data, as `wagebill_data` in
+#'   [run_govhrapp_analytics()].
 #'
-#' @return A Shiny UI definition.
+#' @returns A Shiny UI definition.
 #'
 #' @import bslib
 #' @import shiny
 #' @importFrom bsicons bs_icon
 #' @importFrom plotly plotlyOutput
 #' @importFrom shinyWidgets materialSwitch
+#' @keywords internal
 wagebill_overview_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      !!!default_ui_controls(.data, id),
+      !!!default_ui_controls(id, .data),
       # conditionally allow user to select wagebill measure if available
       shiny::selectInput(
         shiny::NS(id, "wagebill_measure"),
@@ -89,13 +91,15 @@ wagebill_overview_ui <- function(id, .data) {
   )
 }
 
-#' Wage Bill Overview Server
+#' Wage bill overview panel server
 #'
-#' @param id Character. Module namespace ID.
-#' @param .data Data frame containing wage bill data.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' Renders the wage bill plots, from the cache until the user applies a
+#' selection.
 #'
-#' @return A Shiny module server function.
+#' @inheritParams wagebill_overview_ui
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
+#'
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @import shiny
 #' @importFrom dplyr all_of collect filter left_join mutate rename

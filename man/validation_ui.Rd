@@ -2,17 +2,18 @@
 % Please edit documentation in R/qcheck_validation.R
 \name{validation_ui}
 \alias{validation_ui}
-\title{Validation Rules UI Module}
+\title{Validation tab UI}
 \usage{
 validation_ui(id)
 }
 \arguments{
-\item{id}{Character string. The module namespace ID.}
+\item{id}{Character. Module namespace ID.}
 }
 \value{
-A Shiny UI object containing validation rule cards.
+A Shiny UI definition.
 }
 \description{
-UI components for the Validation Rules section of the quality control dashboard.
+Pass rate boxes and rule tables for the personnel and contract validation
+rules, with downloads of the records that fail each rule.
 }
 \keyword{internal}

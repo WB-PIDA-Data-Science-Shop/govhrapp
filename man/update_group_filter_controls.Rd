@@ -2,7 +2,7 @@
 % Please edit documentation in R/server_utils.R
 \name{update_group_filter_controls}
 \alias{update_group_filter_controls}
-\title{Update Subgroup Filter Choices}
+\title{Update the subgroup filter choices}
 \usage{
 update_group_filter_controls(.data, input, session)
 }
@@ -18,7 +18,7 @@ Invisibly, the observer created for the picker. Called for its side
 effect on the UI.
 }
 \description{
-Repopulates the subgroup picker whenever the selected grouping column
-changes. Distinct values are scanned once per column and reused thereafter.
+Refills the subgroup picker whenever the selected grouping column changes.
+The distinct values of each column are read once and reused afterward.
 }
 \keyword{internal}

@@ -26,9 +26,9 @@ test_that("movement_measure_col names the compute_movement() columns", {
   expect_identical(movement_measure_col("replacement", "count"), "replacement_rate")
 })
 
-test_that("summarise_movement_box reads the latest date its measure exists for", {
-  hire <- summarise_movement_box(movement, retirement, "hire")
-  separation <- summarise_movement_box(movement, retirement, "separation")
+test_that("summarize_movement_box reads the latest date its measure exists for", {
+  hire <- summarize_movement_box(movement, retirement, "hire")
+  separation <- summarize_movement_box(movement, retirement, "separation")
 
   expect_equal(hire$ref_date, as.Date("2022-01-01"))
   expect_equal(hire$count, 15L)
@@ -36,15 +36,15 @@ test_that("summarise_movement_box reads the latest date its measure exists for",
   expect_equal(separation$rate, 5 / 110)
 })
 
-test_that("summarise_movement_box reads retirements from the retirement table", {
-  box <- summarise_movement_box(movement, retirement, "retirement")
+test_that("summarize_movement_box reads retirements from the retirement table", {
+  box <- summarize_movement_box(movement, retirement, "retirement")
 
   expect_equal(box$count, 3L)
   expect_equal(box$rate, 3 / 110)
 })
 
-test_that("summarise_movement_box reports replacement as a ratio only", {
-  box <- summarise_movement_box(movement, retirement, "replacement")
+test_that("summarize_movement_box reports replacement as a ratio only", {
+  box <- summarize_movement_box(movement, retirement, "replacement")
 
   expect_true(is.na(box$count))
   expect_equal(box$rate, 4)
@@ -59,12 +59,12 @@ test_that("format_movement_rate names hires without separations", {
   expect_identical(format_movement_rate(Inf, "replacement"), "No separations")
 })
 
-test_that("summarise_movement_box skips a date with no hires or separations", {
+test_that("summarize_movement_box skips a date with no hires or separations", {
   # 0 hires over 0 separations is NaN, which is undefined rather than a ratio
   idle_last_date <- movement
   idle_last_date[["replacement_rate"]] <- c(NA, Inf, NaN)
 
-  box <- summarise_movement_box(idle_last_date, retirement, "replacement")
+  box <- summarize_movement_box(idle_last_date, retirement, "replacement")
 
   expect_equal(box$ref_date, as.Date("2021-01-01"))
   expect_identical(format_movement_rate(box$rate, "replacement"), "No separations")

@@ -1,3 +1,19 @@
+# govhrapp (development version)
+* This patch introduces the following enhancements:
+    * Supports govhr 0.4.4: the workforce transition panel counts moves from `compute_transition()`'s new totals, and the Overview tab draws its charts with `govhr::plot_trend()`.
+    * Updates the movement help text: separations no longer include retirements, and rates divide by the previous period's headcount.
+    * Shows "No separations" instead of "Inf" when the replacement rate has no separations to divide by.
+    * Checks that the data has the columns the analytics app needs before it starts, and names any that are missing.
+    * Rewrites the function documentation in American English with sentence-case titles, and lists the required columns of each input.
+* Breaking changes:
+    * `run_wagebillapp()` is renamed `run_wagebill_app()`. The old name still works, with a deprecation warning.
+    * `run_workforce_app()` and `workforce_ui()` are now exported, to match `run_wagebill_app()` and `wagebill_ui()`.
+    * `workforce_transition_server()` is no longer exported, like the other panel servers.
+* Bug fixes:
+    * The movement value boxes report the same date for data frames and database tables.
+    * The standalone coverage, consistency and validation apps pass their data and cache correctly.
+    * The pay measure and grouping pickers read the column names of database tables.
+
 # govhrapp 0.1.8
 * This patch introduces the following enhancements:
     * Fully port `govhr` functions, implementing a `dbi` compatible method.

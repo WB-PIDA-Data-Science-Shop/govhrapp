@@ -1,24 +1,25 @@
-#' Workforce Overview UI
+#' Workforce overview panel UI
 #'
-#' Sidebar controls, a headcount time trend, and totals and growth rates by
-#' group.
+#' Sidebar controls, a headcount trend, and headcount and its growth by group.
 #'
 #' @param id Character. Module namespace ID.
-#' @param .data Data frame containing workforce data.
+#' @param .data Personnel data, as `workforce_data` in
+#'   [run_govhrapp_analytics()].
 #'
-#' @return A Shiny UI definition.
+#' @returns A Shiny UI definition.
 #'
 #' @import bslib
 #' @import shiny
 #' @importFrom plotly plotlyOutput
 #' @importFrom shinyWidgets materialSwitch
+#' @keywords internal
 workforce_overview_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      !!!default_ui_controls(.data, id),
+      !!!default_ui_controls(id, .data),
       shinyWidgets::materialSwitch(
         shiny::NS(id, "toggle_growth"),
         label = "Switch to baseline index",
@@ -82,13 +83,15 @@ workforce_overview_ui <- function(id, .data) {
   )
 }
 
-#' Workforce Overview Server
+#' Workforce overview panel server
 #'
-#' @param id Character. Module namespace ID.
-#' @param .data Data frame containing workforce data.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' Renders the headcount plots, from the cache until the user applies a
+#' selection.
 #'
-#' @return A Shiny module server function.
+#' @inheritParams workforce_overview_ui
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
+#'
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @import shiny
 #' @importFrom dplyr collect filter rename

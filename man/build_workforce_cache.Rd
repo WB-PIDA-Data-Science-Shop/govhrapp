@@ -2,22 +2,25 @@
 % Please edit documentation in R/server_utils.R
 \name{build_workforce_cache}
 \alias{build_workforce_cache}
-\title{Build the Workforce Analytics Cache}
+\title{Build the workforce analytics cache}
 \usage{
 build_workforce_cache(workforce_data, wagebill_data)
 }
 \arguments{
-\item{workforce_data}{Data frame with workforce/personnel attributes
-(headcount).}
+\item{workforce_data}{Personnel data, one row per person and reference date:
+a data frame. Must contain \code{ref_date}, \code{personnel_id}, \code{employment_status}
+(\code{"active"} or \code{"pensioner"}), \code{birth_date}, \code{gender} and \code{educat7}. Other
+categorical columns listed in \code{govhr::dictionary} become grouping options.}
 
-\item{wagebill_data}{Data frame with contract/salary attributes, used for the
-career transition network.}
+\item{wagebill_data}{Contract data, as in \code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}. The
+workforce tab uses it only in the transition panel, which counts moves
+between contract-level groups such as \code{contract_type}.}
 }
 \value{
-A named list of pre-computed data frames keyed by panel.
+A named list of precomputed data frames, keyed by panel.
 }
 \description{
-Pre-computes the summaries the workforce panels show before the user applies
-any filter.
+Precomputes the summaries the workforce panels show before the user applies
+a filter.
 }
 \keyword{internal}

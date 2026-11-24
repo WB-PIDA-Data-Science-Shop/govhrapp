@@ -2,19 +2,22 @@
 % Please edit documentation in R/analytics_workforce_transition.R
 \name{workforce_transition_ui}
 \alias{workforce_transition_ui}
-\title{Workforce Transition UI}
+\title{Workforce transition panel UI}
 \usage{
 workforce_transition_ui(id, .data)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame containing wage bill data.}
+\item{.data}{Contract data, as \code{wagebill_data} in
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}. Transitions are counted between personnel or
+contract groups, such as \code{contract_type}, which only contract data holds.}
 }
 \value{
 A Shiny UI definition.
 }
 \description{
-Sidebar controls, a transition trend plot and an interactive transition
-network.
+Sidebar controls, a trend of transitions between groups, and an interactive
+network of the transitions.
 }
+\keyword{internal}

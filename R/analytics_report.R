@@ -1,15 +1,12 @@
-#' Generate the Standard Analytics Report
+#' Generate the standard analytics report
 #'
-#' Renders a Word document from the same pre-computed summaries the analytics
-#' app serves. Every figure is drawn from [build_analytics_cache()] at its
-#' default (`ref_date`) grouping, so the report reproduces exactly what each
-#' panel shows before the user applies a filter.
+#' Renders a Word document from the same precomputed summaries the analytics
+#' app shows. Every figure covers the whole workforce, without grouping, so the
+#' report reproduces what each panel shows before the user applies a filter.
 #'
-#' @param workforce_data Data frame with workforce/personnel attributes
-#'   (headcount).
-#' @param wagebill_data Data frame with contract/salary attributes (wage bill).
+#' @inheritParams run_govhrapp_analytics
 #'
-#' @return Character path to the generated Word document.
+#' @returns Character. Path to the generated Word document.
 #'
 #' @examples
 #' \dontrun{
@@ -23,7 +20,7 @@
 generate_analytics_report <- function(workforce_data, wagebill_data) {
   cache <- build_analytics_cache(workforce_data, wagebill_data)
 
-  # the value-box summarisers pull a column, so an empty result is length 0
+  # the value box summarizers pull a column, so an empty result is length 0
   as_scalar <- function(x) if (length(x) == 1) as.numeric(x) else NA_real_
 
   movement_box <- purrr::pluck(cache, "workforce", "movement_box")

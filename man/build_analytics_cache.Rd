@@ -2,22 +2,35 @@
 % Please edit documentation in R/server_utils.R
 \name{build_analytics_cache}
 \alias{build_analytics_cache}
-\title{Build the Analytics Cache}
+\title{Build the analytics cache}
 \usage{
 build_analytics_cache(workforce_data, wagebill_data)
 }
 \arguments{
-\item{workforce_data}{Data frame with workforce/personnel attributes
-(headcount).}
+\item{workforce_data}{Personnel data, one row per person and reference date:
+a data frame. Must contain \code{ref_date}, \code{personnel_id}, \code{employment_status}
+(\code{"active"} or \code{"pensioner"}), \code{birth_date}, \code{gender} and \code{educat7}. Other
+categorical columns listed in \code{govhr::dictionary} become grouping options.}
 
-\item{wagebill_data}{Data frame with contract/salary attributes (wage bill).}
+\item{wagebill_data}{Contract data, one row per contract and reference date:
+a data frame. Must contain \code{ref_date}, \code{personnel_id}, \code{employment_status},
+\code{birth_date}, \code{contract_type} and \code{gross_salary_lcu}. Other pay columns
+listed in \code{govhr::dictionary} become pay measure options.}
 }
 \value{
 A named list with \code{workforce} and \code{wagebill} elements, each a list of
-pre-computed data frames keyed by panel.
+precomputed data frames keyed by panel.
 }
 \description{
-Pre-computes the summaries each analytics panel shows before the user applies
-any filter, so app start-up and first paint do no aggregation. Built once by
-the app entry point and passed to every module server.
+Precomputes the summaries each panel of the analytics app shows before the
+user applies a filter, so the app starts without aggregating anything. Build
+it once and pass it to \code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}, for example when several
+apps or reports share the same data.
+}
+\examples{
+\dontrun{
+cache <- build_analytics_cache(workforce_data, wagebill_data)
+run_govhrapp_analytics(workforce_data, wagebill_data, cache = cache)
+}
+
 }

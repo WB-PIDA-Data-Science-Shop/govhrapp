@@ -2,7 +2,7 @@
 % Please edit documentation in R/analytics_workforce.R
 \name{run_workforce_app}
 \alias{run_workforce_app}
-\title{Run the Workforce Shiny Application}
+\title{Run the workforce app}
 \usage{
 run_workforce_app(
   workforce_data,
@@ -12,12 +12,17 @@ run_workforce_app(
 )
 }
 \arguments{
-\item{workforce_data}{Data frame containing personnel data.}
+\item{workforce_data}{Personnel data, one row per person and reference date:
+a data frame. Must contain \code{ref_date}, \code{personnel_id}, \code{employment_status}
+(\code{"active"} or \code{"pensioner"}), \code{birth_date}, \code{gender} and \code{educat7}. Other
+categorical columns listed in \code{govhr::dictionary} become grouping options.}
 
-\item{wagebill_data}{Data frame containing wage bill data.}
+\item{wagebill_data}{Contract data, as in \code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}. The
+workforce tab uses it only in the transition panel, which counts moves
+between contract-level groups such as \code{contract_type}.}
 
-\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.
-Defaults to building one from the supplied data.}
+\item{cache}{List of precomputed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.
+Default builds one from \code{workforce_data} and \code{wagebill_data}.}
 
 \item{...}{Additional arguments passed to \code{\link[shiny:shinyApp]{shiny::shinyApp()}}.}
 }
@@ -25,7 +30,14 @@ Defaults to building one from the supplied data.}
 A Shiny app object.
 }
 \description{
-Launches the workforce analytics app on its own, outside the full govhr
-dashboard.
+Launches the workforce tab of the analytics app on its own.
 }
-\keyword{internal}
+\examples{
+\dontrun{
+run_workforce_app(workforce_data, wagebill_data)
+}
+
+}
+\seealso{
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}} for the full analytics app.
+}

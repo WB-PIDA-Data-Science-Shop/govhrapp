@@ -1,42 +1,33 @@
-#' Deploy govhrapp to Posit Connect
+#' Deploy an app to Posit Connect
 #'
-#' Deploys the govhrapp Shiny application to Posit Connect using stored
-#' application GUIDs from environment variables.
+#' Deploys the analytics or quality check app to an existing Posit Connect
+#' content item, whose GUID is read from an environment variable.
 #'
-#' @param suite Character string specifying which app suite to deploy.
-#'   Must be one of:
-#'   \describe{
-#'     \item{\code{"qcheck"}}{Deploys the qcheck control dashboard.
-#'       Uses the \code{govhrapp_qcheck_guid} environment variable.}
-#'     \item{\code{"analytics"}}{Deploys the analytics dashboard.
-#'       Uses the \code{govhrapp_analytics_guid} environment variable.}
-#'   }
-#' @param type Character string specifying the deployment type ("dev" or "prod").
+#' @param suite Character. The app to deploy: `"analytics"` for the analytics
+#'   app, or `"qcheck"` for the quality check app.
+#' @param type Character. The content item to deploy to: `"dev"` (default) for
+#'   the development copy, or `"prod"` for the one users see.
 #'
-#' @return Invisibly returns the deployment information from
-#'   \code{\link[rsconnect]{deployApp}}.
+#' @returns The value of [rsconnect::deployApp()].
 #'
 #' @details
-#' This function requires environment variables to be set with the Posit Connect
-#' application GUIDs:
-#' \itemize{
-#'   \item \code{govhrapp_qcheck_guid} - GUID for the qcheck suite
-#'   \item \code{govhrapp_analytics_guid} - GUID for the analytics suite
-#' }
+#' Run it from the root of the govhrapp source, as it deploys the app script in
+#' `inst/app/<suite>/`. The GUID of each content item is read from an
+#' environment variable named `govhrapp_<suite>_<type>_guid`:
 #'
-#' These can be set in your \code{.Renviron} file or through
-#' \code{Sys.setenv()}.
+#' * `govhrapp_analytics_dev_guid`
+#' * `govhrapp_analytics_prod_guid`
+#' * `govhrapp_qcheck_dev_guid`
+#' * `govhrapp_qcheck_prod_guid`
+#'
+#' Set them in your `.Renviron` file or with [Sys.setenv()].
 #'
 #' @examples
 #' \dontrun{
-#' # Set environment variables first
-#' Sys.setenv(govhrapp_analytics_guid = "your-guid-here")
+#' Sys.setenv(govhrapp_analytics_dev_guid = "your-guid-here")
 #'
-#' # Deploy the analytics suite
 #' deploy_govhrapp("analytics")
-#'
-#' # Deploy the qcheck suite
-#' deploy_govhrapp("qcheck")
+#' deploy_govhrapp("analytics", type = "prod")
 #' }
 #'
 #' @importFrom rsconnect deployApp

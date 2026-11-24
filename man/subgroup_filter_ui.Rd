@@ -2,7 +2,7 @@
 % Please edit documentation in R/ui_utils.R
 \name{subgroup_filter_ui}
 \alias{subgroup_filter_ui}
-\title{Subgroup Filter Input}
+\title{Subgroup filter input}
 \usage{
 subgroup_filter_ui(id)
 }
@@ -14,7 +14,7 @@ A Shiny conditional panel wrapping a picker input.
 }
 \description{
 Renders the subgroup picker, shown only once a grouping column other than
-\code{ref_date} is selected. Choices are populated server-side by
+\code{ref_date} is selected. Its choices are filled in on the server by
 \code{\link[=update_group_filter_controls]{update_group_filter_controls()}}.
 }
 \keyword{internal}

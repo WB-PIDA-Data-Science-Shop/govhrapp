@@ -12,11 +12,13 @@ export(run_analytics_demo)
 export(run_govhrapp_analytics)
 export(run_govhrapp_qcheck)
 export(run_qcheck_demo)
+export(run_wagebill_app)
 export(run_wagebillapp)
+export(run_workforce_app)
 export(wagebill_server)
 export(wagebill_ui)
 export(workforce_server)
-export(workforce_transition_server)
+export(workforce_ui)
 import(bslib)
 import(shiny)
 importFrom(bsicons,bs_icon)
@@ -146,9 +148,9 @@ importFrom(plotly,
   renderPlotly
 )
 importFrom(purrr,
+  imap,
   imap_chr,
   map,
-  map2,
   map_dbl,
   modify_if,
   pluck,

@@ -2,18 +2,19 @@
 % Please edit documentation in R/analytics_wagebill_utils.R
 \name{render_wagebill_box}
 \alias{render_wagebill_box}
-\title{Render a Wage Bill Value Box}
+\title{Render a wage bill value box}
 \usage{
 render_wagebill_box(.data, measure_type, cache = NULL)
 }
 \arguments{
-\item{.data}{Data frame containing wage bill data.}
+\item{.data}{Contract data, as \code{wagebill_data} in
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}.}
 
-\item{measure_type}{Character. Either \code{"total_wagebill"} or
+\item{measure_type}{Character. \code{"total_wagebill"} or
 \code{"total_pension_liabilities"}.}
 
-\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}},
-or \code{NULL} to compute the values directly.}
+\item{cache}{List of precomputed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}},
+or \code{NULL} (default) to compute the values from \code{.data}.}
 }
 \value{
 A Shiny render function producing the value box.

@@ -2,21 +2,26 @@
 % Please edit documentation in R/qcheck_helpers.R
 \name{render_validation_box}
 \alias{render_validation_box}
-\title{Render a Data Validation Value Box}
+\title{Render a validation value box}
 \usage{
 render_validation_box(validation_data, title, icon = "table")
 }
 \arguments{
-\item{validation_data}{Data frame. A dataframe containing the validation results, including the number of passes and total records.}
+\item{validation_data}{Data frame. The validation report, with one row per
+rule and \code{Passes} and \verb{Total Records} columns, as in the report returned by
+\code{\link[govhr:validate_data]{govhr::validate_data()}}.}
 
-\item{title}{String. Value box title.}
+\item{title}{Character. Value box title.}
 
-\item{icon}{String. Icon name. Defaults to \code{"table"}.}
+\item{icon}{Character. Name of a Bootstrap icon, as in
+\code{\link[bsicons:bs_icon]{bsicons::bs_icon()}}. Default \code{"table"}.}
 }
 \value{
-A \code{\link[shiny:renderUI]{shiny::renderUI()}} producing a \code{\link[bslib:value_box]{bslib::value_box()}} themed
-\code{"danger"} (<50\%), \code{"warning"} (50–79\%), or \code{"success"} (≥80\%).
+A \code{\link[shiny:renderUI]{shiny::renderUI()}} producing a \code{\link[bslib:value_box]{bslib::value_box()}}, colored
+\code{"danger"} below 50\%, \code{"warning"} from 50\% to below 80\%, and \code{"success"}
+from 80\%.
 }
 \description{
-Render a Data Validation Value Box
+Shows the share of checks a table passes across all validation rules,
+colored by how many pass.
 }

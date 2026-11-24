@@ -2,21 +2,25 @@
 % Please edit documentation in R/analytics_wagebill.R
 \name{wagebill_server}
 \alias{wagebill_server}
-\title{Wage Bill Server}
+\title{Wage bill tab server}
 \usage{
 wagebill_server(id, wagebill_data, cache)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{wagebill_data}{Data frame containing wage bill data.}
+\item{wagebill_data}{Contract data, one row per contract and reference date:
+a data frame. Must contain \code{ref_date}, \code{personnel_id}, \code{employment_status}
+(\code{"active"} or \code{"pensioner"}), \code{birth_date} and \code{gross_salary_lcu}. Other pay columns listed in
+\code{govhr::dictionary} become pay measure options, and its categorical
+columns become grouping options.}
 
-\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
+\item{cache}{List of precomputed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
 }
 \value{
-A Shiny module server function.
+Called for its side effect of rendering the module's outputs.
 }
 \description{
-Renders the key indicator boxes and delegates to the overview, equity,
-movement and retirement panel servers.
+Renders the key indicator boxes and runs the overview, equity, movement and
+retirement panel servers.
 }

@@ -46,7 +46,7 @@ test_that("filter_data filters a database table by subgroup and date range", {
   DBI::dbDisconnect(con, shutdown = TRUE)
 })
 
-test_that("summarise_wagebill_box gives the same totals on a database table", {
+test_that("summarize_wagebill_box gives the same totals on a database table", {
   skip_if_not_installed("dbplyr")
   skip_if_not_installed("duckdb")
 
@@ -55,20 +55,20 @@ test_that("summarise_wagebill_box gives the same totals on a database table", {
 
   for (measure_type in c("total_wagebill", "total_pension_liabilities")) {
     expect_equal(
-      summarise_wagebill_box(remote, measure_type),
-      summarise_wagebill_box(hr_panel, measure_type)
+      summarize_wagebill_box(remote, measure_type),
+      summarize_wagebill_box(hr_panel, measure_type)
     )
   }
 
   expect_equal(
-    summarise_wagebill_box(remote, "total_wagebill"),
+    summarize_wagebill_box(remote, "total_wagebill"),
     list(ref_date = as.Date("2022-01-01"), total = 600)
   )
 
   DBI::dbDisconnect(con, shutdown = TRUE)
 })
 
-test_that("summarise_movement_box reads a database table's movements", {
+test_that("summarize_movement_box reads a database table's movements", {
   skip_if_not_installed("dbplyr")
   skip_if_not_installed("duckdb")
 
@@ -77,12 +77,12 @@ test_that("summarise_movement_box reads a database table's movements", {
 
   for (movement_type in c("hire", "separation", "retirement", "replacement")) {
     expect_equal(
-      summarise_movement_box(
+      summarize_movement_box(
         govhr::compute_movement(remote),
         govhr::compute_retirement(remote),
         movement_type
       ),
-      summarise_movement_box(
+      summarize_movement_box(
         govhr::compute_movement(hr_panel),
         govhr::compute_retirement(hr_panel),
         movement_type

@@ -2,25 +2,31 @@
 % Please edit documentation in R/qcheck_consistency.R
 \name{consistency_server}
 \alias{consistency_server}
-\title{Consistency Server Module}
+\title{Consistency tab server}
 \usage{
 consistency_server(id, est_data, personnel_data, contract_data, cache)
 }
 \arguments{
-\item{id}{Character string. The module namespace ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{est_data}{Data frame. The establishment-level data.}
+\item{est_data}{Establishment data, one row per establishment and reference
+date: a data frame.}
 
-\item{personnel_data}{Data frame. The personnel-level data.}
+\item{personnel_data}{Personnel data, one row per person and reference
+date: a data frame.}
 
-\item{contract_data}{Data frame. The contract-level data.}
+\item{contract_data}{Contract data, one row per contract and reference date:
+a data frame.}
 
-\item{cache}{A list of data frames. Precomputed consistency data for the default grouping (ref_date).}
+\item{cache}{List of precomputed record consistency by reference date, with
+elements \code{est}, \code{personnel} and \code{contract}, as in the \code{consistency}
+element of \code{\link[=build_qcheck_cache]{build_qcheck_cache()}}.}
 }
 \value{
-None. Called for side effects (renders Shiny outputs).
+Called for its side effect of rendering the module's outputs.
 }
 \description{
-Server logic for the consistency section, processing and visualizing whether data is consistent.
+Renders the consistency boxes and runs a consistency panel server for each
+table.
 }
 \keyword{internal}

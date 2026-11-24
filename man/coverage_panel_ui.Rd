@@ -2,18 +2,21 @@
 % Please edit documentation in R/qcheck_coverage.R
 \name{coverage_panel_ui}
 \alias{coverage_panel_ui}
-\title{Coverage Panel UI}
+\title{Coverage panel UI}
 \usage{
 coverage_panel_ui(id, .data)
 }
 \arguments{
-\item{id}{Character string. The module namespace ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame. The data to be used in the coverage panel.}
+\item{.data}{Data frame. The establishment, personnel or contract table the
+panel describes.}
 }
 \value{
-A Shiny UI object representing the coverage panel.
+A Shiny UI definition.
 }
 \description{
-Coverage Panel UI
+Sidebar controls and coverage plots over time, by variable and by group, for
+one table.
 }
+\keyword{internal}

@@ -2,20 +2,25 @@
 % Please edit documentation in R/qcheck_consistency.R
 \name{consistency_panel_server}
 \alias{consistency_panel_server}
-\title{Consistency Panel Server}
+\title{Consistency panel server}
 \usage{
 consistency_panel_server(id, .data, cache)
 }
 \arguments{
-\item{id}{Character string. Sub-module ID.}
+\item{id}{Character. Module namespace ID, matching the one passed to
+\code{\link[=consistency_panel_ui]{consistency_panel_ui()}}.}
 
-\item{.data}{A dataframe. Input dataset for the sub-module.}
+\item{.data}{Data frame. The establishment, personnel or contract table the
+panel describes.}
 
-\item{cache}{A list of dataframes. Precomputed consistency data for the default grouping (ref_date).}
+\item{cache}{Data frame. Precomputed record consistency of \code{.data} by
+reference date.}
 }
 \value{
-A set of Shiny outputs for the consistency panel.
+Called for its side effect of rendering the module's outputs.
 }
 \description{
-Consistency Panel Server
+Renders the consistency plots of one table, from the cache until the user
+applies a filter.
 }
+\keyword{internal}
