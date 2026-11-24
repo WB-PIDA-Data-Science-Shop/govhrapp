@@ -30,8 +30,8 @@ workforce_transition_ui <- function(id, .data) {
       subgroup_filter_ui(id),
       shiny::selectInput(
         shiny::NS(id, "id_col"),
-        "Identifier",
-        choices = c("Personnel" = "personnel_id", "Contract" = "contract_id"),
+        "Count moves of",
+        choices = c("Personnel" = "personnel_id", "Contracts" = "contract_id"),
         selected = "personnel_id"
       ),
       shiny::actionButton(
@@ -48,7 +48,7 @@ workforce_transition_ui <- function(id, .data) {
         "Transitions over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "The number of internal transitions over time. This is computed as the number of internal transitions over the entire time period, considering as a transition a movement of personnel across groups between each reference date.",
+          "Number of moves from one subgroup to another since the previous reference date, counting personnel or contracts as chosen in the sidebar.",
           title = "Transitions over time",
           placement = "left"
         ),
@@ -62,11 +62,11 @@ workforce_transition_ui <- function(id, .data) {
       height = "600px",
       full_screen = TRUE,
       bslib::card_header(
-        "Transition Network",
+        "Transition network",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "The number of internal transitions over time. This is computed as the number of internal transitions over the entire time period, considering as a transition a movement of personnel across groups between each reference date.",
-          title = "Transition Network",
+          "Moves between subgroups, added up over the selected date range.",
+          title = "Transition network",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -140,7 +140,7 @@ workforce_transition_server <- function(id, .data, cache) {
           govhr::plot_trend(
             group_col = "ref_date",
             y_col = "transition",
-            y_label = "Number of Transitions"
+            y_label = "Transitions"
           )
       )
     }) |>

@@ -22,7 +22,7 @@ workforce_overview_ui <- function(id, .data) {
       !!!default_ui_controls(id, .data),
       shinyWidgets::materialSwitch(
         shiny::NS(id, "toggle_growth"),
-        label = "Switch to baseline index",
+        label = "Show as index (first date = 100)",
         value = FALSE
       ),
       shiny::actionButton(
@@ -34,10 +34,10 @@ workforce_overview_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Headcount",
+        "Headcount over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Headcount trends over time. Choosing a group will add new trend lines, by group.",
+          "Number of active personnel on each reference date. Select a group to compare subgroups.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -53,10 +53,10 @@ workforce_overview_ui <- function(id, .data) {
         full_screen = TRUE,
         fillable = FALSE,
         bslib::card_header(
-          "Total by group",
+          "Headcount by group",
           bslib::popover(
             bsicons::bs_icon("info-circle-fill"),
-            "Headcount total, by group. Total refers to the latest available year in the selected time frame.",
+            "Headcount on the latest reference date in the selected date range, by subgroup.",
             placement = "left"
           ),
           class = "d-flex justify-content-between"
@@ -68,10 +68,10 @@ workforce_overview_ui <- function(id, .data) {
         full_screen = TRUE,
         fillable = FALSE,
         bslib::card_header(
-          "Growth rate by group",
+          "Growth in headcount by group",
           bslib::popover(
             bsicons::bs_icon("info-circle-fill"),
-            "Growth rate with respect to first reference date, by group.",
+            "Percentage change in headcount from the first to the last reference date in the selected date range, by subgroup.",
             placement = "left"
           ),
           class = "d-flex justify-content-between"
@@ -119,10 +119,11 @@ workforce_overview_server <- function(id, .data, cache) {
       if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_overview")
       } else {
-        govhr::compute_headcount(
-          workforce_filtered(),
-          group_cols = group_col_to_null(input$group_filter)
-        ) |>
+        workforce_filtered() |>
+          filter_active() |>
+          govhr::compute_headcount(
+            group_cols = group_col_to_null(input$group_filter)
+          ) |>
           dplyr::collect()
       }
     }) |>
@@ -156,7 +157,7 @@ workforce_overview_server <- function(id, .data, cache) {
     # plot 2. total by group
     output$workforce_cross_section <- plotly::renderPlotly({
       shiny::validate(
-        shiny::need(input$group_filter != "ref_date", "Please select a group.")
+        shiny::need(input$group_filter != "ref_date", "Select a group to see this chart.")
       )
 
       cross_section_data <- headcount_summary() |>
@@ -177,7 +178,7 @@ workforce_overview_server <- function(id, .data, cache) {
     # plot 3. growth rate by group
     output$workforce_growth <- plotly::renderPlotly({
       shiny::validate(
-        shiny::need(input$group_filter != "ref_date", "Please select a group.")
+        shiny::need(input$group_filter != "ref_date", "Select a group to see this chart.")
       )
 
       change_data <- headcount_summary() |>

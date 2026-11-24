@@ -23,12 +23,12 @@ wagebill_equity_ui <- function(id, .data) {
       !!!default_ui_controls(id, .data),
       shiny::selectInput(
         shiny::NS(id, "wagebill_measure"),
-        "Type of Wage:",
+        "Pay measure",
         choices = identify_wagebill_choices(.data)
       ),
       shiny::radioButtons(
         inputId = shiny::NS(id, "plot_type"),
-        label = "Type of wage distribution",
+        label = "Distribution",
         choices = c("Histogram" = "histogram", "Cumulative" = "cumulative"),
         selected = "histogram"
       ),
@@ -42,10 +42,10 @@ wagebill_equity_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Wage Distribution",
+        "Pay distribution",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Wage density distribution. Choosing a group will add new trend lines, by group.",
+          "Share of active personnel's records in each pay range, pooling every reference date in the selected date range. Select a group to compare subgroups.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -59,10 +59,10 @@ wagebill_equity_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Wage by Decile",
+        "Pay by decile",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Wage distribution by decile. Choosing a group will add new trend lines, by group.",
+          "Average pay of active personnel in each tenth of the pay distribution, from lowest to highest paid, on the latest reference date. Select a group to compare subgroups.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -76,10 +76,10 @@ wagebill_equity_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Wage Compression Ratio (10th to 90th Percentile)",
+        "Pay compression (10th to 90th percentile)",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Wage compression ratio between the 10th and 90th percentile. Choosing a group will add new trend lines, by group.",
+          "The 10th, 50th and 90th percentiles of active personnel's pay. The wider the gap between the 10th and 90th, the less compressed pay is. Without a group, each reference date is shown; with a group, subgroups are compared on the latest reference date.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -117,7 +117,8 @@ wagebill_equity_server <- function(id, .data, cache) {
         group_filter = input$group_filter,
         subgroup_filter = input$subgroup_filter,
         date_range = input$date_range
-      )
+      ) |>
+        filter_active()
     })
 
     # plot 1. wage density

@@ -21,14 +21,14 @@ wagebill_retirement_ui <- function(id, .data) {
       !!!default_ui_controls(id, .data),
       shiny::numericInput(
         shiny::NS(id, "threshold_age"),
-        label = "Select retirement threshold age:",
+        label = "Retirement age",
         value = 60,
         min = 50,
         max = 70
       ),
       shiny::selectInput(
         shiny::NS(id, "wagebill_measure"),
-        "Type of Wage:",
+        "Pay measure",
         choices = identify_wagebill_choices(.data),
         selected = "gross_salary_lcu"
       ),
@@ -42,10 +42,10 @@ wagebill_retirement_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Retirement Costs",
+        "Retirement cost over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Retirement costs over time. Choosing a group will add new trend lines, by group.",
+          "Pay of retirees on their last active date, added up for each reference date. Select a group to compare subgroups.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -59,10 +59,10 @@ wagebill_retirement_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Projected Retirement Costs",
+        "Projected retirement cost",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Projected retirement costs over time. Choosing a group will add new trend lines, by group.",
+          "Estimated pension cost of personnel active on the latest reference date who reach the retirement age in each of the next 10 years: their current pay times 0.6. Select a group to compare subgroups.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -119,7 +119,7 @@ wagebill_retirement_server <- function(id, .data, cache) {
         plot_movement_trend(
           retirement_data,
           y_col = "retirement_cost",
-          y_label = "Retirement Costs",
+          y_label = "Retirement cost",
           group_col = input$group_filter
         )
       )
@@ -143,7 +143,7 @@ wagebill_retirement_server <- function(id, .data, cache) {
         plot_movement_trend(
           retirement_projection_data,
           y_col = "projected_cost",
-          y_label = "Projected Retirement Costs",
+          y_label = "Projected retirement cost",
           group_col = input$group_filter
         )
       )

@@ -159,7 +159,7 @@ run_govhrapp_analytics <- function(
 
     # panel 4: wage bill
     bslib::nav_panel(
-      "Wage Bill",
+      "Wage bill",
       icon = shiny::icon("money-bill"),
       wagebill_ui("wagebill", wagebill_data)
     ),

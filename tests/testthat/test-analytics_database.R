@@ -46,6 +46,27 @@ test_that("filter_data filters a database table by subgroup and date range", {
   DBI::dbDisconnect(con, shutdown = TRUE)
 })
 
+test_that("filter_active drops pensioners from a database table", {
+  skip_if_not_installed("dbplyr")
+  skip_if_not_installed("duckdb")
+
+  con <- DBI::dbConnect(duckdb::duckdb())
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+  remote <- dplyr::copy_to(con, hr_panel, "hr_panel")
+
+  result <- filter_active(remote) |>
+    dplyr::collect() |>
+    dplyr::arrange(.data[["ref_date"]], .data[["personnel_id"]])
+
+  expected <- filter_active(hr_panel) |>
+    dplyr::arrange(.data[["ref_date"]], .data[["personnel_id"]])
+
+  expect_equal(result, expected, ignore_attr = TRUE)
+  # 3 active in 2020, then 3 in each of 2021 and 2022
+  expect_equal(nrow(result), 9L)
+  expect_true(all(result[["employment_status"]] == "active"))
+})
+
 test_that("summarize_wagebill_box gives the same totals on a database table", {
   skip_if_not_installed("dbplyr")
   skip_if_not_installed("duckdb")

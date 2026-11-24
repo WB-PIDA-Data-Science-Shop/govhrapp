@@ -130,7 +130,7 @@ coverage_panel_ui <- function(id, .data) {
       !!!default_ui_controls(id, .data),
       shinyWidgets::materialSwitch(
         shiny::NS(id, "toggle_growth"),
-        label = "Switch to baseline index",
+        label = "Show as index (first date = 100)",
         value = FALSE
       ),
       shiny::actionButton(

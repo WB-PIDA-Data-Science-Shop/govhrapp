@@ -22,14 +22,14 @@ workforce_retirement_ui <- function(id, .data) {
       !!!default_ui_controls(id, .data),
       shiny::numericInput(
         shiny::NS(id, "threshold_age"),
-        label = "Select retirement threshold age:",
+        label = "Retirement age",
         value = 60,
         min = 50,
         max = 70
       ),
       shiny::selectInput(
         shiny::NS(id, "measurement_type"),
-        label = "Select type of measurement:",
+        label = "Measure",
         choices = c("Count" = "count", "Rate" = "rate")
       ),
       shiny::actionButton(
@@ -45,7 +45,7 @@ workforce_retirement_ui <- function(id, .data) {
         "Retirements over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Retirements are personnel active in the previous period who are no longer active in this one and are recorded as pensioners. The rate divides retirements by the active headcount in the previous period.",
+          "Personnel active on the previous reference date who are recorded as pensioners on this one. The rate divides retirements by the previous reference date's active headcount. Select a group to compare subgroups.",
           title = "Retirements over time",
           placement = "left"
         ),
@@ -60,7 +60,7 @@ workforce_retirement_ui <- function(id, .data) {
         "Projected retirements",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Active personnel in the latest period who reach the selected retirement threshold age in each future year. The rate divides them by the active headcount in the latest period.",
+          "Personnel active on the latest reference date who reach the retirement age in each of the next 10 years. The rate divides them by that date's active headcount. Select a group to compare subgroups.",
           title = "Projected retirements",
           placement = "left"
         ),

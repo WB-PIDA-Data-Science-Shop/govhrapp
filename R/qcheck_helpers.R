@@ -35,7 +35,7 @@ render_coverage_box <- function(.data, title, icon = "table") {
 
     bslib::value_box(
       title = title,
-      value = paste(value_coverage, "%"),
+      value = paste0(value_coverage, "%"),
       showcase = bsicons::bs_icon(icon),
       theme = theme
     )

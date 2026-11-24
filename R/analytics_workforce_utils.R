@@ -88,7 +88,6 @@ plot_movement_trend <- function(
 #'   left_join mutate select semi_join
 #' @importFrom govhr detect_movement
 #' @importFrom gtsummary tbl_summary modify_header as_gt
-#' @importFrom stringr str_to_title
 #' @keywords internal
 render_movement_profile <- function(data, movement_type) {
   profile_data <- data |>
@@ -142,18 +141,15 @@ render_movement_profile <- function(data, movement_type) {
       include = c("age", "gender", "educat7", "employment_status"),
       label = list(
         "gender" = "Gender",
-        "educat7" = "Education Level",
-        "employment_status" = "Employment Status",
-        "age" = "Age"
+        "educat7" = "Education level",
+        "employment_status" = "Employment status",
+        "age" = "Age today"
       )
     ) |>
     gtsummary::modify_header(
-      label = "**Variable**",
-      stat_1 = sprintf(
-        "**New %ss**",
-        stringr::str_to_title(movement_type)
-      ),
-      stat_2 = "**General Population**"
+      label = "**Characteristic**",
+      stat_1 = sprintf("**%s**", movement_labels[[movement_type]]),
+      stat_2 = "**Everyone else**"
     ) |>
     gtsummary::as_gt()
 }

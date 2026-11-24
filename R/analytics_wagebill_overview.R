@@ -25,12 +25,12 @@ wagebill_overview_ui <- function(id, .data) {
       # conditionally allow user to select wagebill measure if available
       shiny::selectInput(
         shiny::NS(id, "wagebill_measure"),
-        "Type of Wage:",
+        "Pay measure",
         choices = identify_wagebill_choices(.data)
       ),
       shinyWidgets::materialSwitch(
         shiny::NS(id, "toggle_growth"),
-        label = "Switch to baseline index",
+        label = "Show as index (first date = 100)",
         value = FALSE
       ),
       shiny::actionButton(
@@ -42,10 +42,10 @@ wagebill_overview_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Wage Bill Time Trends",
+        "Wage bill over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Wage bill trends over time. Choosing a group will add new trend lines, by group.",
+          "Total pay of active personnel on each reference date. Select a group to compare subgroups.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -61,10 +61,10 @@ wagebill_overview_ui <- function(id, .data) {
         full_screen = TRUE,
         fillable = FALSE,
         bslib::card_header(
-          "Total by group",
+          "Wage bill by group",
           bslib::popover(
             bsicons::bs_icon("info-circle-fill"),
-            "Total amount, by group. Total refers to the latest available year in the selected time frame.",
+            "Wage bill on the latest reference date in the selected date range, by subgroup.",
             placement = "left"
           ),
           class = "d-flex justify-content-between"
@@ -76,10 +76,10 @@ wagebill_overview_ui <- function(id, .data) {
         full_screen = TRUE,
         fillable = FALSE,
         bslib::card_header(
-          "Growth rate by group",
+          "Growth in wage bill by group",
           bslib::popover(
             bsicons::bs_icon("info-circle-fill"),
-            "Growth rate with respect to first reference date, by group.",
+            "Percentage change in the wage bill from the first to the last reference date in the selected date range, by subgroup.",
             placement = "left"
           ),
           class = "d-flex justify-content-between"
@@ -132,11 +132,12 @@ wagebill_overview_server <- function(id, .data, cache) {
       summary <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "wagebill", "wagebill_overview")
       } else {
-        govhr::compute_wagebill(
-          wagebill_filtered(),
-          measure_col = input$wagebill_measure,
-          group_cols = group_col_to_null(input$group_filter)
-        ) |>
+        wagebill_filtered() |>
+          filter_active() |>
+          govhr::compute_wagebill(
+            measure_col = input$wagebill_measure,
+            group_cols = group_col_to_null(input$group_filter)
+          ) |>
           dplyr::collect()
       }
 
@@ -166,7 +167,7 @@ wagebill_overview_server <- function(id, .data, cache) {
           wagebill_trend(),
           group_col = input$group_filter,
           toggle_growth = input$toggle_growth,
-          y_label = "Wage Bill"
+          y_label = "Wage bill"
         )
       )
     }) |>
@@ -217,7 +218,7 @@ wagebill_overview_server <- function(id, .data, cache) {
       shiny::validate(
         shiny::need(
           input$group_filter != "ref_date",
-          "Please select a group."
+          "Select a group to see this chart."
         )
       )
 
@@ -244,7 +245,7 @@ wagebill_overview_server <- function(id, .data, cache) {
       shiny::validate(
         shiny::need(
           input$group_filter != "ref_date",
-          "Please select a group."
+          "Select a group to see this chart."
         )
       )
 

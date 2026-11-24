@@ -23,7 +23,7 @@ validation_ui <- function(id) {
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
           "Validation rules are applied to the personnel and contract datasets to identify potential data quality issues. The pass rate indicates the percentage of records that meet the validation criteria.",
-          title = "Validation Rules Overview",
+          title = "Pass rate",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -44,14 +44,14 @@ validation_ui <- function(id) {
     bslib::layout_columns(
       col_widths = c(12),
       bslib::card(
-        bslib::card_header("Contract Validation Rules"),
+        bslib::card_header("Contract validation rules"),
         bslib::card_body(
           fillable = FALSE,
           gt::gt_output(ns("contract_table")),
           shiny::tags$hr(),
           shiny::selectInput(
             ns("contract_rule_select"),
-            label = "Download violations for rule:",
+            label = "Download violations for rule",
             choices = NULL
           ),
           shiny::downloadButton(
@@ -67,14 +67,14 @@ validation_ui <- function(id) {
     bslib::layout_columns(
       col_widths = c(12),
       bslib::card(
-        bslib::card_header("Personnel Validation Rules"),
+        bslib::card_header("Personnel validation rules"),
         bslib::card_body(
           fillable = FALSE,
           gt::gt_output(ns("personnel_table")),
           shiny::tags$hr(),
           shiny::selectInput(
             ns("personnel_rule_select"),
-            label = "Download violations for rule:",
+            label = "Download violations for rule",
             choices = NULL
           ),
           shiny::downloadButton(
@@ -114,13 +114,13 @@ validation_server <- function(id, personnel_validation, contract_validation) {
     # value boxes
     output$validation_personnel <- render_validation_box(
       personnel_report,
-      "Personnel Validation Rate",
+      "Personnel pass rate",
       "people-fill"
     )
 
     output$validation_contract <- render_validation_box(
       contract_report,
-      "Contract Validation Rate",
+      "Contract pass rate",
       "file-text-fill"
     )
 

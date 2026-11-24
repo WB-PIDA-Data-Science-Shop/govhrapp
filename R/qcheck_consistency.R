@@ -135,25 +135,22 @@ consistency_server <- function(id, est_data, personnel_data, contract_data, cach
 #'
 #' @keywords internal
 consistency_panel_ui <- function(id, .data) {
-  accordion_controls <- bslib::accordion(
-    accordion_panel(
-      "Filters",
-      icon = bsicons::bs_icon("filter"),
-      !!!default_ui_controls(id, .data)
-    ),
-    accordion_panel(
-      "Additional controls",
-      icon = bsicons::bs_icon("bar-chart"),
+  bslib::layout_sidebar(
+    fillable = FALSE,
+    sidebar = bslib::sidebar(
+      title = "Controls",
+      width = "300px",
+      !!!default_ui_controls(id, .data),
       shiny::selectInput(
         shiny::NS(id, "type_consistency"),
-        "Select type of consistency:",
+        "Consistency type",
         choices = c(
           "Record" = "record",
           "Value" = "value"
         ),
         selected = "record"
       ),
-      # conditionally show the value column selection only when "Value" plot type is selected
+      # the column only matters for value consistency
       shiny::conditionalPanel(
         condition = sprintf(
           "input['%s'] === 'value'",
@@ -161,25 +158,16 @@ consistency_panel_ui <- function(id, .data) {
         ),
         shiny::selectInput(
           shiny::NS(id, "value_col"),
-          "Select value column:",
+          "Column",
           choices = identify_group_choices(.data),
           selected = identify_group_choices(.data)[1]
         )
       ),
       shinyWidgets::materialSwitch(
         shiny::NS(id, "toggle_growth"),
-        label = "Switch to baseline index",
+        label = "Show as index (first date = 100)",
         value = FALSE
-      )
-    )
-  )
-
-  bslib::layout_sidebar(
-    fillable = FALSE,
-    sidebar = bslib::sidebar(
-      title = "Controls",
-      width = "300px",
-      accordion_controls,
+      ),
       shiny::actionButton(
         shiny::NS(id, "apply_btn"),
         "Apply selection",

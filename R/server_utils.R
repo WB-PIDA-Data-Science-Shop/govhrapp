@@ -117,6 +117,24 @@ filter_data <- function(.data, group_filter, subgroup_filter, date_range) {
   filtered
 }
 
+#' Keep only active personnel
+#'
+#' The headcount, wage bill and pay distribution describe the current
+#' workforce, so pensioners are dropped before people are counted or their pay
+#' is summarized, as in the wage bill key indicator box.
+#'
+#' @param .data Data frame or database table (`tbl_dbi`) with an
+#'   `employment_status` column.
+#'
+#' @returns `.data` restricted to rows whose `employment_status` is
+#'   `"active"`, of the same class as `.data`.
+#'
+#' @importFrom dplyr filter
+#' @keywords internal
+filter_active <- function(.data) {
+  dplyr::filter(.data, .data[["employment_status"]] == "active")
+}
+
 #' Convert the no-grouping selection to `NULL`
 #'
 #' The sidebar group picker uses `"ref_date"` to mean "no grouping". The govhr
@@ -247,7 +265,9 @@ summarize_wagebill_box <- function(.data, measure_type) {
 build_workforce_cache <- function(workforce_data, wagebill_data) {
   cache <- list(
     # overview module
-    workforce_overview = govhr::compute_headcount(workforce_data),
+    workforce_overview = workforce_data |>
+      filter_active() |>
+      govhr::compute_headcount(),
 
     # transition module
     workforce_transition = wagebill_data |>
@@ -308,6 +328,8 @@ build_workforce_cache <- function(workforce_data, wagebill_data) {
 #' @importFrom purrr map set_names
 #' @keywords internal
 build_wagebill_cache <- function(wagebill_data) {
+  active_contracts <- filter_active(wagebill_data)
+
   list(
     # key indicator boxes
     total_box = c("total_wagebill", "total_pension_liabilities") |>
@@ -315,10 +337,10 @@ build_wagebill_cache <- function(wagebill_data) {
       purrr::map(\(type) summarize_wagebill_box(wagebill_data, type)),
 
     # overview module
-    wagebill_overview = wagebill_data |>
+    wagebill_overview = active_contracts |>
       govhr::compute_wagebill(measure_col = "gross_salary_lcu") |>
       dplyr::left_join(
-        govhr::compute_wage(wagebill_data, measure_col = "gross_salary_lcu"),
+        govhr::compute_wage(active_contracts, measure_col = "gross_salary_lcu"),
         by = "ref_date"
       ),
 
@@ -329,17 +351,17 @@ build_wagebill_cache <- function(wagebill_data) {
       govhr::project_retirement(measure_col = "gross_salary_lcu"),
 
     # equity module
-    wagebill_equity_percentile = wagebill_data |>
+    wagebill_equity_percentile = active_contracts |>
       govhr::compute_percentile(
         measure_col = "gross_salary_lcu",
         latest_measure = FALSE
       ),
-    wagebill_equity_decile = wagebill_data |>
+    wagebill_equity_decile = active_contracts |>
       govhr::compute_decile(
         measure_col = "gross_salary_lcu",
         latest_measure = TRUE
       ),
-    wagebill_equity_compression = wagebill_data |>
+    wagebill_equity_compression = active_contracts |>
       govhr::compute_compression_ratio(measure_col = "gross_salary_lcu"),
 
     # movement module

@@ -18,7 +18,7 @@
 #' @importFrom shiny NS icon markdown uiOutput
 #' @export
 wagebill_ui <- function(id, wagebill_data) {
-  # value boxes for total wage bill and pension liabilities
+  # value boxes for the wage bill and pension payments
   value_boxes <- list(
     shiny::uiOutput(shiny::NS(id, "total_wagebill")),
     shiny::uiOutput(shiny::NS(id, "total_pension_liabilities"))
@@ -29,7 +29,7 @@ wagebill_ui <- function(id, wagebill_data) {
     col_widths = 12,
 
     bslib::card(
-      bslib::card_header("Wage Bill Analytics"),
+      bslib::card_header("Wage bill analytics"),
       bslib::card_body(
         shiny::markdown(
           readLines(system.file(
@@ -41,7 +41,7 @@ wagebill_ui <- function(id, wagebill_data) {
     ),
     bslib::accordion(
       bslib::accordion_panel(
-        title = "Guidance Questions",
+        title = "Guiding questions",
         icon = shiny::icon("question-circle"),
         shiny::markdown(
           readLines(system.file(
@@ -56,11 +56,11 @@ wagebill_ui <- function(id, wagebill_data) {
     # value boxes
     bslib::card(
       bslib::card_header(
-        "Wagebill: Key Indicators",
+        "Key indicators",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Computed as the most recent wagebill (active workers) and pension liability (pensioners).",
-          title = "Wagebill Overview",
+          "Total gross salary on the latest reference date: of active personnel for the wage bill, and of pensioners for pension payments.",
+          title = "Key indicators",
           placement = "left"
         ),
         class = "d-flex justify-content-between"

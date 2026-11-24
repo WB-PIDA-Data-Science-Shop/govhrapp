@@ -1,14 +1,15 @@
 # govhrapp (development version)
 * This patch introduces the following enhancements:
     * Supports govhr 0.4.4, including its new movement definitions and trend charts.
-    * Shows "No separations" instead of `Inf` in the replacement rate box.
     * Checks the data for required columns before the analytics app starts.
     * Standardizes the function documentation.
+    * Rewrites the app text with consistent terms and clearer chart descriptions. "Total pension liabilities" is now "Pension payments".
 * Breaking changes:
     * Renames `run_wagebillapp()` to `run_wagebill_app()`. The old name is deprecated.
     * Exports `run_workforce_app()` and `workforce_ui()`, and no longer exports `workforce_transition_server()`.
 * Bug fixes:
-    * Fixes the sidebar filters and movement value boxes on database tables.
+    * The Overview tab, the overview panels and the equity panel count only active personnel, so pensions no longer inflate the wage bill or the pay distribution.
+    * Fixes the sidebar filters and movement value boxes on database tables. Values also render correctly if `Inf`.
     * Fixes the standalone coverage, consistency and validation apps.
 
 # govhrapp 0.1.8

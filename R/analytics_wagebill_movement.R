@@ -23,18 +23,18 @@ wagebill_movement_ui <- function(id, .data) {
       !!!default_ui_controls(id, .data),
       shiny::selectInput(
         shiny::NS(id, "event_type"),
-        "Type of Movement:",
-        choices = c("Recruitment" = "hire", "Separation" = "separation"),
+        "Movement",
+        choices = c("Hires" = "hire", "Separations" = "separation"),
         selected = "hire"
       ),
       shiny::selectInput(
         shiny::NS(id, "wagebill_measure"),
-        "Type of Wage:",
+        "Pay measure",
         choices = identify_wagebill_choices(.data)
       ),
       shinyWidgets::materialSwitch(
         shiny::NS(id, "toggle_growth"),
-        label = "Switch to baseline index",
+        label = "Show as index (first date = 100)",
         value = FALSE
       ),
       shiny::actionButton(
@@ -47,10 +47,10 @@ wagebill_movement_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Labor Movement Costs",
+        "Movement cost over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Labor movement costs over time. Choosing a group will add new trend lines, by group.",
+          "Pay of hires on the date they were hired, or of separations on their last active date, added up for each reference date. Select a group to compare subgroups.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -64,10 +64,10 @@ wagebill_movement_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Labor Movement Costs by Group",
+        "Movement cost by group",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Labor movement costs by group. Choosing a group will add new trend lines, by group.",
+          "Movement cost added up over the selected date range, by subgroup.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -81,10 +81,10 @@ wagebill_movement_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Growth in Labor Movement Costs by Group",
+        "Growth in movement cost by group",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Growth in labor movement costs by group. Choosing a group will add new trend lines, by group.",
+          "Percentage change in movement cost from the first to the last reference date with movers in the selected date range, by subgroup.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -156,7 +156,7 @@ wagebill_movement_server <- function(id, .data, cache) {
           group_col = input$group_filter,
           toggle_growth = input$toggle_growth,
           y_col = "movement_cost",
-          y_label = "Movement Costs"
+          y_label = "Movement cost"
         )
       )
     }) |>
@@ -167,7 +167,7 @@ wagebill_movement_server <- function(id, .data, cache) {
       shiny::validate(
         shiny::need(
           input$group_filter != "ref_date",
-          "Please select a group."
+          "Select a group to see this chart."
         )
       )
 
@@ -187,7 +187,7 @@ wagebill_movement_server <- function(id, .data, cache) {
           movement_cost_data,
           group_col = input$group_filter,
           x_col = "movement_cost",
-          x_label = "Movement Costs"
+          x_label = "Movement cost"
         ),
         height = govhr::scale_plot_height(movement_cost_data)
       )
@@ -199,7 +199,7 @@ wagebill_movement_server <- function(id, .data, cache) {
       shiny::validate(
         shiny::need(
           input$group_filter != "ref_date",
-          "Please select a group."
+          "Select a group to see this chart."
         )
       )
 

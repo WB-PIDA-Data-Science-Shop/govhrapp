@@ -1,4 +1,4 @@
 - How has the total public sector workforce evolved over time?
 - Which establishments or sectors have experienced the most significant growth or decline?
 - Are there differences in workforce composition across contract types, occupations, or demographic groups?
-- What are the recent hiring or attrition trends across different segments of the public sector?
+- What are the recent trends in hires and separations across different segments of the public sector?

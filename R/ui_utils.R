@@ -100,7 +100,7 @@ date_ui <- function(id, .data) {
 
   shiny::dateRangeInput(
     shiny::NS(id, "date_range"),
-    "Select date range:",
+    "Date range",
     start = date_range[1],
     end = date_range[2],
     min = date_range[1],
@@ -133,7 +133,7 @@ group_filter_ui <- function(
 
   shiny::selectInput(
     shiny::NS(id, "group_filter"),
-    "Select group:",
+    "Group",
     selected = selected,
     choices = group_choices
   )
@@ -161,7 +161,7 @@ subgroup_filter_ui <- function(id) {
     ),
     shinyWidgets::pickerInput(
       shiny::NS(id, "subgroup_filter"),
-      "Select subgroups:",
+      "Subgroups",
       choices = NULL,
       multiple = TRUE,
       options = shinyWidgets::pickerOptions(

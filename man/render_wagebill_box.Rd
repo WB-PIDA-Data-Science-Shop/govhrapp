@@ -20,7 +20,7 @@ or \code{NULL} (default) to compute the values from \code{.data}.}
 A Shiny render function producing the value box.
 }
 \description{
-Renders the total wage bill or total pension liabilities at the latest
+Renders the wage bill or the pension payments at the latest
 reference date. Values are read from the analytics cache when available and
 computed from \code{.data} otherwise.
 }

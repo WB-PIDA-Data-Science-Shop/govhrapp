@@ -29,7 +29,7 @@ workforce_ui <- function(id, workforce_data, wagebill_data) {
     col_widths = 12,
 
     bslib::card(
-      bslib::card_header("Workforce: Overview"),
+      bslib::card_header("Workforce analytics"),
       bslib::card_body(
         shiny::markdown(
           readLines(system.file(
@@ -41,7 +41,7 @@ workforce_ui <- function(id, workforce_data, wagebill_data) {
     ),
     bslib::accordion(
       bslib::accordion_panel(
-        title = "Guidance Questions",
+        title = "Guiding questions",
         icon = shiny::icon("question-circle"),
         shiny::markdown(
           readLines(system.file(
@@ -56,11 +56,11 @@ workforce_ui <- function(id, workforce_data, wagebill_data) {
     # 1. value boxes for coverage metrics in the same row
     bslib::card(
       bslib::card_header(
-        "Workforce: Key Indicators",
+        "Key indicators",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Computed as the most recent count and share of the previous period's active headcount for hires, separations and retirements. Separations exclude retirements. The replacement rate is the ratio of hires to separations.",
-          title = "Workforce Overview",
+          "Hires, separations and retirements on the latest reference date, as counts and as shares of the previous reference date's active headcount. Separations exclude retirements. The replacement rate is hires per separation.",
+          title = "Key indicators",
           placement = "left"
         ),
         class = "d-flex justify-content-between"

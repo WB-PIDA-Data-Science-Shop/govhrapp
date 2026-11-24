@@ -1,3 +1,12 @@
+# shared by the value boxes, charts and profile table, so each movement is
+# named the same way wherever it appears
+movement_labels <- c(
+  hire = "Hires",
+  separation = "Separations",
+  retirement = "Retirements",
+  replacement = "Replacement rate"
+)
+
 #' Format a movement rate for display
 #'
 #' @param rate Numeric. A rate as a proportion, or the replacement ratio.
@@ -46,7 +55,6 @@ format_movement_rate <- function(rate, movement_type) {
 #' @importFrom govhr compute_movement compute_retirement
 #' @importFrom purrr pluck
 #' @importFrom shiny h5 renderUI tagList
-#' @importFrom stringr str_to_title
 #' @keywords internal
 render_movement_box <- function(.data, movement_type, cache = NULL) {
   values <- purrr::pluck(cache, "workforce", "movement_box", movement_type)
@@ -62,15 +70,9 @@ render_movement_box <- function(.data, movement_type, cache = NULL) {
   rate <- format_movement_rate(values[["rate"]], movement_type)
 
   box_value <- if (movement_type == "replacement" && is.infinite(values[["rate"]])) {
-    shiny::tagList(
-      shiny::h5("Hires with"),
-      shiny::h5("no separations")
-    )
+    shiny::h5("Hires but no separations")
   } else if (movement_type == "replacement") {
-    shiny::tagList(
-      shiny::h5("Ratio of Hires"),
-      shiny::h5(paste("to Separations:", rate))
-    )
+    shiny::h5(paste(rate, "hires per separation"))
   } else {
     shiny::tagList(
       shiny::h5(paste("Count:", values[["count"]])),
@@ -80,7 +82,7 @@ render_movement_box <- function(.data, movement_type, cache = NULL) {
 
   shiny::renderUI({
     bslib::value_box(
-      title = stringr::str_to_title(movement_type),
+      title = movement_labels[[movement_type]],
       theme = bslib::value_box_theme(bg = "#C34729", fg = "#ffffff"),
       class = "border",
       value = box_value,
@@ -95,7 +97,7 @@ render_movement_box <- function(.data, movement_type, cache = NULL) {
       ),
       p(
         paste0(
-          "Reference period: ",
+          "Reference date: ",
           format(as.Date(values[["ref_date"]]), "%b %Y")
         ),
       ),
@@ -104,10 +106,10 @@ render_movement_box <- function(.data, movement_type, cache = NULL) {
         placement = "left",
         switch(
           movement_type,
-          hire = "Number of personnel active in the reference period but not in the previous one, and their share of the previous period's active headcount.",
-          separation = "Number of personnel active in the previous period but no longer active in the reference period, other than retirees, and their share of the previous period's active headcount.",
-          retirement = "Number of personnel active in the previous period who are no longer active in the reference period and are recorded as pensioners, and their share of the previous period's active headcount.",
-          replacement = "Ratio of hires to separations. Retirements are not separations, so they are left out. Above 1, hires outnumber separations."
+          hire = "Personnel active on the reference date but not on the previous one, as a count and as a share of the previous reference date's active headcount.",
+          separation = "Personnel active on the previous reference date but not on this one, other than retirees, as a count and as a share of the previous reference date's active headcount.",
+          retirement = "Personnel active on the previous reference date who are recorded as pensioners on this one, as a count and as a share of the previous reference date's active headcount.",
+          replacement = "Hires per separation. Retirements are not counted as separations. Above 1, hires outnumber separations."
         )
       )
     )

@@ -25,7 +25,7 @@ identify_wagebill_choices <- function(.data) {
 
 #' Render a wage bill value box
 #'
-#' Renders the total wage bill or total pension liabilities at the latest
+#' Renders the wage bill or the pension payments at the latest
 #' reference date. Values are read from the analytics cache when available and
 #' computed from `.data` otherwise.
 #'
@@ -53,13 +53,18 @@ render_wagebill_box <- function(.data, measure_type, cache = NULL) {
 
   label <- switch(
     measure_type,
-    total_wagebill = "Total Wage Bill",
-    total_pension_liabilities = "Total Pension Liabilities"
+    total_wagebill = "Wage bill",
+    total_pension_liabilities = "Pension payments"
   )
 
   shiny::renderUI({
     bslib::value_box(
-      title = paste0(label, " (", values[["ref_date"]], ")"),
+      title = paste0(
+        label,
+        " (",
+        format(as.Date(values[["ref_date"]]), "%b %Y"),
+        ")"
+      ),
       value = scales::comma(values[["total"]], accuracy = 1),
       showcase = bsicons::bs_icon(
         switch(

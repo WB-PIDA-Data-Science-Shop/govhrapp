@@ -209,10 +209,7 @@ importFrom(shinymanager,
   secure_app,
   secure_server
 )
-importFrom(stringr,
-  str_detect,
-  str_to_title
-)
+importFrom(stringr,str_detect)
 importFrom(thematic,thematic_shiny)
 importFrom(tidyr,complete)
 importFrom(writexl,write_xlsx)

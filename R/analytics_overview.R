@@ -37,7 +37,7 @@ overview_ui <- function(id) {
               "info-circle-fill",
               style = "font-size: 0.75em; margin-left: 4px;"
             ),
-            "Gross salary in local currency units (LCU).",
+            "Total gross salary of active personnel on the latest reference date, in local currency units (LCU).",
             placement = "left"
           )
         ),
@@ -57,9 +57,9 @@ overview_ui <- function(id) {
           ns("display_mode"),
           label = NULL,
           choices = list(
-            "Workforce" = "headcount",
-            "Wage Bill" = "wagebill",
-            "Integrated" = "integrated"
+            "Headcount" = "headcount",
+            "Wage bill" = "wagebill",
+            "Both, indexed" = "integrated"
           ),
           selected = "headcount"
         )
@@ -82,7 +82,7 @@ overview_ui <- function(id) {
         condition = sprintf("input['%s'] == 'wagebill'", ns("display_mode")),
         bslib::card(
           full_screen = TRUE,
-          bslib::card_header("Wage Bill"),
+          bslib::card_header("Wage bill"),
           bslib::card_body(
             plotly::plotlyOutput(ns("plot_wagebill"), height = "450px")
           )
@@ -95,10 +95,10 @@ overview_ui <- function(id) {
         bslib::card(
           full_screen = TRUE,
           bslib::card_header(
-            "Integrated: Headcount and Wage Bill",
+            "Headcount and wage bill, indexed",
             bslib::popover(
               bsicons::bs_icon("info-circle-fill"),
-              "Both series are indexed to 100 for the earliest reference date.",
+              "Headcount, wage bill and average wage, each indexed to 100 on the first reference date.",
               placement = "left"
             ),
             class = "d-flex justify-content-between"
@@ -157,7 +157,7 @@ overview_server <- function(id, cache) {
       ")"
     ))
     output$vb_wagebill_label <- shiny::renderText(paste0(
-      "Wage Bill (",
+      "Wage bill (",
       date_label,
       ")"
     ))
@@ -188,7 +188,7 @@ overview_server <- function(id, cache) {
           wagebill_overview,
           group_col = "ref_date",
           y_col = "wagebill",
-          y_label = "Wage Bill (LCU)"
+          y_label = "Wage bill (LCU)"
         ) +
           ggplot2::aes(colour = I("#004181"))
       )
@@ -201,8 +201,8 @@ overview_server <- function(id, cache) {
       # as an ordering; distinct colors tie each series to its value box
       palette <- c(
         "Headcount" = "#C34729",
-        "Wage Bill" = "#00070e",
-        "Average Wage" = "#004181"
+        "Wage bill" = "#00070e",
+        "Average wage" = "#004181"
       )
 
       series <- dplyr::bind_rows(
@@ -211,10 +211,10 @@ overview_server <- function(id, cache) {
           dplyr::mutate(series = "Headcount"),
         wagebill_overview |>
           dplyr::select("ref_date", value = "wagebill") |>
-          dplyr::mutate(series = "Wage Bill"),
+          dplyr::mutate(series = "Wage bill"),
         wagebill_overview |>
           dplyr::select("ref_date", value = "wage") |>
-          dplyr::mutate(series = "Average Wage")
+          dplyr::mutate(series = "Average wage")
       ) |>
         govhr::apply_baseline_index(group_col = "series")
 

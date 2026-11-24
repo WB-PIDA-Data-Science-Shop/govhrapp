@@ -53,4 +53,35 @@ test_that("build_analytics_cache builds every panel from the sample data", {
   )
   expect_true(all(c("from", "to") %in% names(cache$workforce$workforce_transition)))
   expect_false("ref_date" %in% names(cache$wagebill$wagebill_equity_percentile))
+
+  # the Overview tab and the key indicator box both count only active
+  # personnel, so they report the same wage bill for the latest date
+  wagebill_box <- cache[["wagebill"]][["total_box"]][["total_wagebill"]]
+  overview_wagebill <- cache[["wagebill"]][["wagebill_overview"]] |>
+    dplyr::filter(.data[["ref_date"]] == wagebill_box[["ref_date"]])
+
+  expect_equal(overview_wagebill[["wagebill"]], wagebill_box[["total"]])
+
+  latest_date <- max(workforce_data[["ref_date"]])
+  overview_headcount <- cache[["workforce"]][["workforce_overview"]] |>
+    dplyr::filter(.data[["ref_date"]] == latest_date)
+  active_people <- workforce_data |>
+    dplyr::filter(
+      .data[["ref_date"]] == latest_date,
+      .data[["employment_status"]] == "active"
+    ) |>
+    dplyr::pull(.data[["personnel_id"]]) |>
+    dplyr::n_distinct(na.rm = TRUE)
+
+  expect_equal(overview_headcount[["headcount"]], active_people)
+
+  # pensions are not pay, so the equity summaries leave pensioners out
+  expect_equal(
+    cache[["wagebill"]][["wagebill_equity_compression"]],
+    wagebill_data |>
+      dplyr::filter(.data[["employment_status"]] == "active") |>
+      govhr::compute_compression_ratio(measure_col = "gross_salary_lcu") |>
+      dplyr::collect(),
+    ignore_attr = TRUE
+  )
 })

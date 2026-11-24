@@ -25,7 +25,7 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
 
   movement_box <- purrr::pluck(cache, "workforce", "movement_box")
   workforce_indicators <- data.frame(
-    Movement = c("Hires", "Separations", "Retirements", "Replacement"),
+    Movement = c("Hires", "Separations", "Retirements", "Replacement rate"),
     Count = vapply(movement_box, \(box) as_scalar(box$count), numeric(1)),
     # formatted as text because the column mixes percentages with the
     # replacement ratio
@@ -38,7 +38,7 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
 
   total_box <- purrr::pluck(cache, "wagebill", "total_box")
   wagebill_indicators <- data.frame(
-    Indicator = c("Total wage bill", "Total pension liabilities"),
+    Indicator = c("Wage bill", "Pension payments"),
     Total = vapply(total_box, \(box) as_scalar(box$total), numeric(1)),
     row.names = NULL
   )
@@ -60,7 +60,7 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
       govhr::plot_trend(
         group_col = "ref_date",
         y_col = "transition",
-        y_label = "Number of Transitions"
+        y_label = "Transitions"
       ),
 
     workforce_retirement = purrr::pluck(cache, "workforce", "workforce_retirement") |>
@@ -80,7 +80,7 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
       govhr::plot_trend(
         group_col = "ref_date",
         y_col = "wagebill",
-        y_label = "Wage Bill"
+        y_label = "Wage bill"
       ),
 
     wagebill_density = purrr::pluck(cache, "wagebill", "wagebill_equity_percentile") |>
@@ -93,10 +93,10 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
       govhr::plot_compression_ratio(group_col = "ref_date"),
 
     wagebill_movement = purrr::pluck(cache, "wagebill", "wagebill_movement") |>
-      plot_movement_trend(y_col = "movement_cost", y_label = "Movement Costs"),
+      plot_movement_trend(y_col = "movement_cost", y_label = "Movement cost"),
 
     wagebill_retirement = purrr::pluck(cache, "wagebill", "wagebill_retirement") |>
-      plot_movement_trend(y_col = "retirement_cost", y_label = "Retirement Costs"),
+      plot_movement_trend(y_col = "retirement_cost", y_label = "Retirement cost"),
 
     wagebill_retirement_expected = purrr::pluck(
       cache,
@@ -106,7 +106,7 @@ generate_analytics_report <- function(workforce_data, wagebill_data) {
       govhr::plot_trend(
         group_col = "ref_date",
         y_col = "projected_cost",
-        y_label = "Projected Retirement Costs"
+        y_label = "Projected retirement cost"
       )
   )
 
