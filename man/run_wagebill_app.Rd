@@ -12,8 +12,9 @@ run_wagebill_app(
 }
 \arguments{
 \item{wagebill_data}{Contract data, one row per contract and reference date:
-a data frame. Must contain \code{ref_date}, \code{personnel_id}, \code{employment_status}
-(\code{"active"} or \code{"pensioner"}), \code{birth_date} and \code{gross_salary_lcu}. Other pay columns listed in
+a data frame or a database table (\code{tbl_dbi}). Must contain \code{ref_date},
+\code{personnel_id}, \code{employment_status} (\code{"active"} or \code{"pensioner"}),
+\code{birth_date} and \code{gross_salary_lcu}. Other pay columns listed in
 \code{govhr::dictionary} become pay measure options, and its categorical
 columns become grouping options.}
 

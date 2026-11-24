@@ -8,14 +8,16 @@ generate_analytics_report(workforce_data, wagebill_data)
 }
 \arguments{
 \item{workforce_data}{Personnel data, one row per person and reference date:
-a data frame. Must contain \code{ref_date}, \code{personnel_id}, \code{employment_status}
-(\code{"active"} or \code{"pensioner"}), \code{birth_date}, \code{gender} and \code{educat7}. Other
-categorical columns listed in \code{govhr::dictionary} become grouping options.}
+a data frame or a database table (\code{tbl_dbi}). Must contain \code{ref_date},
+\code{personnel_id}, \code{employment_status} (\code{"active"} or \code{"pensioner"}),
+\code{birth_date}, \code{gender} and \code{educat7}. Other categorical columns listed in
+\code{govhr::dictionary} become grouping options.}
 
 \item{wagebill_data}{Contract data, one row per contract and reference date:
-a data frame. Must contain \code{ref_date}, \code{personnel_id}, \code{employment_status},
-\code{birth_date}, \code{contract_type} and \code{gross_salary_lcu}. Other pay columns
-listed in \code{govhr::dictionary} become pay measure options.}
+a data frame or a database table (\code{tbl_dbi}). Must contain \code{ref_date},
+\code{personnel_id}, \code{employment_status}, \code{birth_date}, \code{contract_type} and
+\code{gross_salary_lcu}. Other pay columns listed in \code{govhr::dictionary}
+become pay measure options.}
 }
 \value{
 Character. Path to the generated Word document.

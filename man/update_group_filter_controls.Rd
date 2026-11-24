@@ -7,7 +7,8 @@
 update_group_filter_controls(.data, input, session)
 }
 \arguments{
-\item{.data}{Data frame holding the columns available for grouping.}
+\item{.data}{Data frame or database table (\code{tbl_dbi}) holding the columns
+available for grouping.}
 
 \item{input}{Shiny input object carrying \code{group_filter}.}
 

@@ -5,8 +5,9 @@
 #'
 #' @param id Character. Module namespace ID.
 #' @param wagebill_data Contract data, one row per contract and reference date:
-#'   a data frame. Must contain `ref_date`, `personnel_id`, `employment_status`
-#'   (`"active"` or `"pensioner"`), `birth_date` and `gross_salary_lcu`. Other pay columns listed in
+#'   a data frame or a database table (`tbl_dbi`). Must contain `ref_date`,
+#'   `personnel_id`, `employment_status` (`"active"` or `"pensioner"`),
+#'   `birth_date` and `gross_salary_lcu`. Other pay columns listed in
 #'   `govhr::dictionary` become pay measure options, and its categorical
 #'   columns become grouping options.
 #'

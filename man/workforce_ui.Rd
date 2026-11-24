@@ -10,9 +10,10 @@ workforce_ui(id, workforce_data, wagebill_data)
 \item{id}{Character. Module namespace ID.}
 
 \item{workforce_data}{Personnel data, one row per person and reference date:
-a data frame. Must contain \code{ref_date}, \code{personnel_id}, \code{employment_status}
-(\code{"active"} or \code{"pensioner"}), \code{birth_date}, \code{gender} and \code{educat7}. Other
-categorical columns listed in \code{govhr::dictionary} become grouping options.}
+a data frame or a database table (\code{tbl_dbi}). Must contain \code{ref_date},
+\code{personnel_id}, \code{employment_status} (\code{"active"} or \code{"pensioner"}),
+\code{birth_date}, \code{gender} and \code{educat7}. Other categorical columns listed in
+\code{govhr::dictionary} become grouping options.}
 
 \item{wagebill_data}{Contract data, as in \code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}. The
 workforce tab uses it only in the transition panel, which counts moves

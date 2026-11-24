@@ -92,3 +92,52 @@ test_that("summarize_movement_box reads a database table's movements", {
 
   DBI::dbDisconnect(con, shutdown = TRUE)
 })
+
+test_that("read_date_range reads a database table's dates", {
+  skip_if_not_installed("dbplyr")
+  skip_if_not_installed("duckdb")
+
+  con <- DBI::dbConnect(duckdb::duckdb())
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+  remote <- dplyr::copy_to(con, hr_panel, "hr_panel")
+
+  expected <- as.Date(c("2020-01-01", "2022-01-01"))
+
+  expect_equal(read_date_range(remote), expected)
+  expect_equal(read_date_range(hr_panel), expected)
+})
+
+test_that("read_distinct_values reads a database table's values", {
+  skip_if_not_installed("dbplyr")
+  skip_if_not_installed("duckdb")
+
+  con <- DBI::dbConnect(duckdb::duckdb())
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+
+  with_missing <- hr_panel
+  with_missing[["gender"]][1] <- NA
+  remote <- dplyr::copy_to(con, with_missing, "hr_panel")
+
+  expect_identical(read_distinct_values(remote, "gender"), c("F", "M"))
+  expect_identical(
+    read_distinct_values(remote, "gender"),
+    read_distinct_values(with_missing, "gender")
+  )
+})
+
+test_that("the sidebar controls are built from a database table", {
+  skip_if_not_installed("dbplyr")
+  skip_if_not_installed("duckdb")
+
+  con <- DBI::dbConnect(duckdb::duckdb())
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+  remote <- dplyr::copy_to(con, hr_panel, "hr_panel")
+
+  controls <- as.character(shiny::tagList(default_ui_controls("panel", remote)))
+
+  # the date picker is bounded by the table's dates, not by Inf
+  expect_match(controls, "2020-01-01", fixed = TRUE)
+  expect_match(controls, "2022-01-01", fixed = TRUE)
+  expect_no_match(controls, "Inf", fixed = TRUE)
+  expect_match(controls, "gender", fixed = TRUE)
+})

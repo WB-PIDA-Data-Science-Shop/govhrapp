@@ -1,29 +1,56 @@
+#' Read the distinct values of a column
+#'
+#' Lists the non-missing values of one column, sorted, for the subgroup picker.
+#'
+#' @param .data Data frame or database table (`tbl_dbi`).
+#' @param column Character. Name of the column to read.
+#'
+#' @returns A sorted character vector of the distinct non-missing values.
+#'
+#' @importFrom collapse funique
+#' @importFrom dplyr all_of collect distinct select
+#' @keywords internal
+read_distinct_values <- function(.data, column) {
+  values <- if (inherits(.data, "tbl_lazy")) {
+    # `[[` cannot read a lazy table's column, and the database returns only
+    # the distinct values rather than every row
+    distinct_rows <- .data |>
+      dplyr::select(dplyr::all_of(column)) |>
+      dplyr::distinct() |>
+      dplyr::collect()
+
+    distinct_rows[[column]]
+  } else {
+    collapse::funique(.data[[column]])
+  }
+
+  sort(as.character(values[!is.na(values)]))
+}
+
 #' Update the subgroup filter choices
 #'
 #' Refills the subgroup picker whenever the selected grouping column changes.
 #' The distinct values of each column are read once and reused afterward.
 #'
-#' @param .data Data frame holding the columns available for grouping.
+#' @param .data Data frame or database table (`tbl_dbi`) holding the columns
+#'   available for grouping.
 #' @param input Shiny input object carrying `group_filter`.
 #' @param session Shiny session object.
 #'
 #' @returns Invisibly, the observer created for the picker. Called for its side
 #'   effect on the UI.
 #'
-#' @importFrom collapse funique
 #' @importFrom shiny observe
 #' @importFrom shinyWidgets updatePickerInput
 #' @keywords internal
 update_group_filter_controls <- function(.data, input, session) {
-  # distinct values are stable for the session, so scan each column only once
+  # distinct values are stable for the session, so each column is read only
+  # once, which on a database table saves a query each time the group changes
   subgroup_cache <- new.env(parent = emptyenv())
 
   subgroup_choices <- function(variable) {
     if (is.null(subgroup_cache[[variable]])) {
-      values <- .data[[variable]]
-      subgroup_cache[[variable]] <- sort(
-        as.character(collapse::funique(values[!is.na(values)]))
-      )
+      subgroup_cache[[variable]] <- read_distinct_values(.data, variable)
     }
 
     subgroup_cache[[variable]]

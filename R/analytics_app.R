@@ -5,13 +5,15 @@
 #' the wage bill.
 #'
 #' @param workforce_data Personnel data, one row per person and reference date:
-#'   a data frame. Must contain `ref_date`, `personnel_id`, `employment_status`
-#'   (`"active"` or `"pensioner"`), `birth_date`, `gender` and `educat7`. Other
-#'   categorical columns listed in `govhr::dictionary` become grouping options.
+#'   a data frame or a database table (`tbl_dbi`). Must contain `ref_date`,
+#'   `personnel_id`, `employment_status` (`"active"` or `"pensioner"`),
+#'   `birth_date`, `gender` and `educat7`. Other categorical columns listed in
+#'   `govhr::dictionary` become grouping options.
 #' @param wagebill_data Contract data, one row per contract and reference date:
-#'   a data frame. Must contain `ref_date`, `personnel_id`, `employment_status`,
-#'   `birth_date`, `contract_type` and `gross_salary_lcu`. Other pay columns
-#'   listed in `govhr::dictionary` become pay measure options.
+#'   a data frame or a database table (`tbl_dbi`). Must contain `ref_date`,
+#'   `personnel_id`, `employment_status`, `birth_date`, `contract_type` and
+#'   `gross_salary_lcu`. Other pay columns listed in `govhr::dictionary`
+#'   become pay measure options.
 #' @param cache List of precomputed summaries from [build_analytics_cache()].
 #'   Default builds one from `workforce_data` and `wagebill_data`.
 #' @param secure Logical. Require users to log in. Default `FALSE`.
@@ -26,6 +28,10 @@
 #' @details
 #' Both inputs are checked for their required columns before the app starts,
 #' and an error names any that are missing.
+#'
+#' With database tables, every summary is computed in the database and only
+#' its result is brought into memory, as are the date range and the distinct
+#' values offered by the sidebar pickers.
 #'
 #' @seealso [run_analytics_demo()] to try the app on sample data.
 #'

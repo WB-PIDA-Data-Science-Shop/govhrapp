@@ -56,17 +56,47 @@ identify_group_choices <- function(.data) {
   )
 }
 
+#' Read the range of reference dates
+#'
+#' @param .data Data frame or database table (`tbl_dbi`) with a `ref_date`
+#'   column.
+#'
+#' @returns A Date vector of the earliest and latest `ref_date`.
+#'
+#' @importFrom dplyr collect summarise
+#' @keywords internal
+read_date_range <- function(.data) {
+  if (inherits(.data, "tbl_lazy")) {
+    bounds <- .data |>
+      dplyr::summarise(
+        first_date = min(.data[["ref_date"]], na.rm = TRUE),
+        last_date = max(.data[["ref_date"]], na.rm = TRUE)
+      ) |>
+      dplyr::collect()
+
+    # some databases return dates as text or day counts rather than as Dates
+    as.Date(
+      c(bounds[["first_date"]], bounds[["last_date"]])
+    )
+  } else {
+    return(
+      range(.data[["ref_date"]], na.rm = TRUE)
+    )
+  }
+}
+
 #' Date range filter input
 #'
 #' @param id Character. Module namespace ID.
-#' @param .data Data frame whose `ref_date` column bounds the selectable range.
+#' @param .data Data frame or database table (`tbl_dbi`) whose `ref_date`
+#'   column bounds the selectable range.
 #'
 #' @returns A Shiny date range input.
 #'
 #' @importFrom shiny NS dateRangeInput
 #' @keywords internal
 date_ui <- function(id, .data) {
-  date_range <- range(.data[["ref_date"]], na.rm = TRUE)
+  date_range <- read_date_range(.data)
 
   shiny::dateRangeInput(
     shiny::NS(id, "date_range"),

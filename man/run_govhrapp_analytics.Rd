@@ -15,14 +15,16 @@ run_govhrapp_analytics(
 }
 \arguments{
 \item{workforce_data}{Personnel data, one row per person and reference date:
-a data frame. Must contain \code{ref_date}, \code{personnel_id}, \code{employment_status}
-(\code{"active"} or \code{"pensioner"}), \code{birth_date}, \code{gender} and \code{educat7}. Other
-categorical columns listed in \code{govhr::dictionary} become grouping options.}
+a data frame or a database table (\code{tbl_dbi}). Must contain \code{ref_date},
+\code{personnel_id}, \code{employment_status} (\code{"active"} or \code{"pensioner"}),
+\code{birth_date}, \code{gender} and \code{educat7}. Other categorical columns listed in
+\code{govhr::dictionary} become grouping options.}
 
 \item{wagebill_data}{Contract data, one row per contract and reference date:
-a data frame. Must contain \code{ref_date}, \code{personnel_id}, \code{employment_status},
-\code{birth_date}, \code{contract_type} and \code{gross_salary_lcu}. Other pay columns
-listed in \code{govhr::dictionary} become pay measure options.}
+a data frame or a database table (\code{tbl_dbi}). Must contain \code{ref_date},
+\code{personnel_id}, \code{employment_status}, \code{birth_date}, \code{contract_type} and
+\code{gross_salary_lcu}. Other pay columns listed in \code{govhr::dictionary}
+become pay measure options.}
 
 \item{cache}{List of precomputed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.
 Default builds one from \code{workforce_data} and \code{wagebill_data}.}
@@ -47,6 +49,10 @@ the wage bill.
 \details{
 Both inputs are checked for their required columns before the app starts,
 and an error names any that are missing.
+
+With database tables, every summary is computed in the database and only
+its result is brought into memory, as are the date range and the distinct
+values offered by the sidebar pickers.
 }
 \examples{
 \dontrun{

@@ -9,7 +9,8 @@ date_ui(id, .data)
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame whose \code{ref_date} column bounds the selectable range.}
+\item{.data}{Data frame or database table (\code{tbl_dbi}) whose \code{ref_date}
+column bounds the selectable range.}
 }
 \value{
 A Shiny date range input.
