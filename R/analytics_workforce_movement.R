@@ -49,7 +49,7 @@ workforce_movement_ui <- function(id, .data) {
         "Movements over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Hires are personnel active on a reference date but not on the previous one. Separations are personnel active on the previous reference date but not on this one, other than retirees, who are shown in the Retirement tab. Rates divide hires or separations by the previous reference date's active headcount. The replacement rate is hires per separation: above 1, hires outnumber separations. Select a group to compare subgroups.",
+          "Hires are personnel active on a reference date but not on the previous one. Separations are personnel active on the previous reference date but not on this one, other than retirees, who are shown in the Retirement tab. Rates divide hires or separations by the previous reference date's active headcount. The replacement rate is the ratio of hires to separation: above 1, hires outnumber separations. Select a group to compare subgroups.",
           title = "Movements over time",
           placement = "left"
         ),

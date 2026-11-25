@@ -170,7 +170,7 @@ run_govhrapp_analytics <- function(
       icon = shiny::icon("github"),
       bslib::nav_item(
         shiny::tags$a(
-          "govhr dashboard",
+          "govhrapp",
           href = "https://github.com/WB-PIDA-Data-Science-Shop/govhrapp",
           target = "_blank"
         )

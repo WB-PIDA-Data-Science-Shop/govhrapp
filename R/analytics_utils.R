@@ -72,7 +72,7 @@ render_movement_box <- function(.data, movement_type, cache = NULL) {
   box_value <- if (movement_type == "replacement" && is.infinite(values[["rate"]])) {
     shiny::h5("Hires but no separations")
   } else if (movement_type == "replacement") {
-    shiny::h5(paste(rate, "hires per separation"))
+    shiny::h5(rate)
   } else {
     shiny::tagList(
       shiny::h5(paste("Count:", values[["count"]])),
