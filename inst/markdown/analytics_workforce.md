@@ -1,1 +1,1 @@
-Monitor public sector headcount trends, track hiring and separation movements, and analyze growth across various groups.
+Analyze the workforce in your public sector by looking at historical trends in headcount, movements, transitions and retirements. You can also compare groups in size and growth trends.

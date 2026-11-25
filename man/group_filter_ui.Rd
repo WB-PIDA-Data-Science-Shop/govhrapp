@@ -2,7 +2,7 @@
 % Please edit documentation in R/ui_utils.R
 \name{group_filter_ui}
 \alias{group_filter_ui}
-\title{Group Filter Input}
+\title{Group filter input}
 \usage{
 group_filter_ui(id, .data, selected = "ref_date", group_choices = NULL)
 }
@@ -11,16 +11,16 @@ group_filter_ui(id, .data, selected = "ref_date", group_choices = NULL)
 
 \item{.data}{Data frame whose columns bound the available choices.}
 
-\item{selected}{Character. Grouping column selected by default. Default
-\code{"ref_date"}.}
+\item{selected}{Character. Grouping column selected at first. Default
+\code{"ref_date"}, for no grouping.}
 
-\item{group_choices}{Named list of grouping choices. Default \code{NULL}, which
-derives them from \code{.data} via \code{\link[=identify_group_choices]{identify_group_choices()}}.}
+\item{group_choices}{Named list of grouping choices, or \code{NULL} (default) to
+derive them from \code{.data} with \code{\link[=identify_group_choices]{identify_group_choices()}}.}
 }
 \value{
 A Shiny select input.
 }
 \description{
-Group Filter Input
+Group filter input
 }
 \keyword{internal}

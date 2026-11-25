@@ -2,7 +2,7 @@
 % Please edit documentation in R/qcheck_app.R
 \name{run_govhrapp_qcheck}
 \alias{run_govhrapp_qcheck}
-\title{Run the govhr Shiny Dashboard Application}
+\title{Run the quality check app}
 \usage{
 run_govhrapp_qcheck(
   est_data,
@@ -10,31 +10,62 @@ run_govhrapp_qcheck(
   contract_data,
   personnel_validation,
   contract_validation,
+  secure = FALSE,
+  credentials_path = "inst/app/qcheck/credentials.sqlite",
   ...
 )
 }
 \arguments{
-\item{est_data}{Data frame with establishment attributes.}
+\item{est_data}{Establishment data, one row per establishment and reference
+date: a data frame.}
 
-\item{personnel_data}{Data frame with personnel attributes.}
+\item{personnel_data}{Personnel data, one row per person and reference
+date: a data frame.}
 
-\item{contract_data}{Data frame with contract attributes.}
+\item{contract_data}{Contract data, one row per contract and reference date:
+a data frame.}
 
-\item{personnel_validation}{List. The personnel validation results, including reports and violations.}
+\item{personnel_validation}{List. Validation results for \code{personnel_data},
+as returned by \code{\link[govhr:validate_data]{govhr::validate_data()}}.}
 
-\item{contract_validation}{List. The contract validation results, including reports and violations.}
+\item{contract_validation}{List. Validation results for \code{contract_data}, as
+returned by \code{\link[govhr:validate_data]{govhr::validate_data()}}.}
 
-\item{...}{Additional arguments passed to \code{\link[shiny]{shinyApp}}.}
+\item{secure}{Logical. Require users to log in. Default \code{FALSE}.}
+
+\item{credentials_path}{Character. Path to the SQLite database of user
+credentials, used when \code{secure = TRUE}. The default is relative to the
+working directory, so pass your own path when running elsewhere, or the
+analytics app's database to share its users.}
+
+\item{...}{Additional arguments passed to \code{\link[shiny:shinyApp]{shiny::shinyApp()}}.}
 }
 \value{
 A Shiny app object.
 }
 \description{
-Launches an interactive Shiny dashboard for govhr data quality check.
+Launches the govhr quality check app, which shows how complete and
+consistent the establishment, personnel and contract data are, and which
+validation rules they pass.
 }
 \examples{
 \dontrun{
-run_govhrapp_qcheck(est_data, personnel_data, contract_data)
+run_govhrapp_qcheck(
+  est_data,
+  personnel_data,
+  contract_data,
+  personnel_validation = govhr::validate_data(
+    personnel_data,
+    govhr::personnel_rules
+  ),
+  contract_validation = govhr::validate_data(
+    contract_data,
+    govhr::contract_rules
+  )
+)
 }
 
+}
+\seealso{
+\code{\link[=run_qcheck_demo]{run_qcheck_demo()}} to try the app on sample data.
 }

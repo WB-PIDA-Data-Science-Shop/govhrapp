@@ -1,29 +1,53 @@
-#' Run the govhr Shiny Dashboard Application
+#' Run the quality check app
 #'
-#' Launches an interactive Shiny dashboard for govhr data quality check.
+#' Launches the govhr quality check app, which shows how complete and
+#' consistent the establishment, personnel and contract data are, and which
+#' validation rules they pass.
 #'
-#' @param est_data Data frame with establishment attributes.
-#' @param personnel_data Data frame with personnel attributes.
-#' @param contract_data Data frame with contract attributes.
-#' @param personnel_validation List. The personnel validation results, including reports and violations.
-#' @param contract_validation List. The contract validation results, including reports and violations.
-#' @param ... Additional arguments passed to \code{\link[shiny]{shinyApp}}.
+#' @param est_data Establishment data, one row per establishment and reference
+#'   date: a data frame.
+#' @param personnel_data Personnel data, one row per person and reference
+#'   date: a data frame.
+#' @param contract_data Contract data, one row per contract and reference date:
+#'   a data frame.
+#' @param personnel_validation List. Validation results for `personnel_data`,
+#'   as returned by [govhr::validate_data()].
+#' @param contract_validation List. Validation results for `contract_data`, as
+#'   returned by [govhr::validate_data()].
+#' @param secure Logical. Require users to log in. Default `FALSE`.
+#' @param credentials_path Character. Path to the SQLite database of user
+#'   credentials, used when `secure = TRUE`. The default is relative to the
+#'   working directory, so pass your own path when running elsewhere, or the
+#'   analytics app's database to share its users.
+#' @param ... Additional arguments passed to [shiny::shinyApp()].
 #'
-#' @return A Shiny app object.
+#' @returns A Shiny app object.
+#'
+#' @seealso [run_qcheck_demo()] to try the app on sample data.
 #'
 #' @examples
 #' \dontrun{
-#' run_govhrapp_qcheck(est_data, personnel_data, contract_data)
+#' run_govhrapp_qcheck(
+#'   est_data,
+#'   personnel_data,
+#'   contract_data,
+#'   personnel_validation = govhr::validate_data(
+#'     personnel_data,
+#'     govhr::personnel_rules
+#'   ),
+#'   contract_validation = govhr::validate_data(
+#'     contract_data,
+#'     govhr::contract_rules
+#'   )
+#' )
 #' }
 #'
 #' @importFrom shiny shinyApp addResourcePath
 #' @importFrom bslib page_navbar nav_panel nav_spacer bs_theme bs_add_rules navbar_options font_google
 #' @importFrom ggplot2 theme_set theme_minimal theme element_text update_geom_defaults
-#' @importFrom govhr compute_coverage compute_record_consistency
 #' @importFrom thematic thematic_shiny
 #' @importFrom lubridate year
 #' @importFrom scales label_number cut_short_scale
-#' @importFrom purrr map2 set_names
 #' @export
 run_govhrapp_qcheck <- function(
   est_data,
@@ -31,6 +55,8 @@ run_govhrapp_qcheck <- function(
   contract_data,
   personnel_validation,
   contract_validation,
+  secure = FALSE,
+  credentials_path = "inst/app/qcheck/credentials.sqlite",
   ...
 ) {
   # add path to visual assets (image and css)
@@ -54,44 +80,7 @@ run_govhrapp_qcheck <- function(
   ggplot2::update_geom_defaults("line", list(colour = "#C34729"))
   ggplot2::update_geom_defaults("col", list(fill = "#C34729"))
 
-  # cache
-
-  # precompute static meso tables once per deployment (default "ref_date" grouping)
-  coverage_by_date <- purrr::map2(
-    c("est", "personnel", "contract"),
-    list(est_data, personnel_data, contract_data),
-    ~ govhr::compute_coverage(
-      .y,
-      include_ref_date = TRUE,
-      aggregate = TRUE
-    )
-  ) |>
-    purrr::set_names(
-      c("est", "personnel", "contract")
-    )
-
-  consistency_by_date <- purrr::map2(
-    c("est", "personnel", "contract"),
-    list(est_data, personnel_data, contract_data),
-    \(.x, .y) {
-      id_col <- switch(
-        .x,
-        "est" = "est_id",
-        "personnel" = "personnel_id",
-        "contract" = "contract_id"
-      )
-
-      govhr::compute_record_consistency(
-        .y,
-        id_col = id_col,
-        group_cols = "ref_date"
-      )
-    }
-  ) |>
-    purrr::set_names(
-      c("est", "personnel", "contract")
-    ) |>
-    collect_cache()
+  cache <- build_qcheck_cache(est_data, personnel_data, contract_data)
 
   ui <- bslib::page_navbar(
     fillable = FALSE,
@@ -191,17 +180,73 @@ run_govhrapp_qcheck <- function(
       est_data,
       personnel_data,
       contract_data,
-      cache = coverage_by_date
+      cache = cache[["coverage"]]
     )
     consistency_server(
       "consistency",
       est_data,
       personnel_data,
       contract_data,
-      cache = consistency_by_date
+      cache = cache[["consistency"]]
     )
     validation_server("validation", personnel_validation, contract_validation)
   }
 
-  shiny::shinyApp(ui, server, ...)
+  shiny_app_with_login(ui, server, secure, credentials_path, ...)
+}
+
+#' Build the quality check cache
+#'
+#' Precomputes the coverage and record consistency of each table by reference
+#' date, which the coverage and consistency tabs show before the user applies
+#' a filter.
+#'
+#' @inheritParams run_govhrapp_qcheck
+#'
+#' @returns A list with `coverage` and `consistency` elements, each a list of
+#'   data frames named `est`, `personnel` and `contract`.
+#'
+#' @importFrom govhr compute_coverage compute_record_consistency
+#' @importFrom purrr imap map
+#' @keywords internal
+build_qcheck_cache <- function(est_data, personnel_data, contract_data) {
+  tables <- list(
+    est = est_data,
+    personnel = personnel_data,
+    contract = contract_data
+  )
+
+  id_cols <- c(
+    est = "est_id",
+    personnel = "personnel_id",
+    contract = "contract_id"
+  )
+
+  coverage <- tables |>
+    purrr::map(
+      \(table) {
+        govhr::compute_coverage(
+          table,
+          include_ref_date = TRUE,
+          aggregate = TRUE
+        )
+      }
+    )
+
+  consistency <- tables |>
+    purrr::imap(
+      \(table, name) {
+        govhr::compute_record_consistency(
+          table,
+          id_col = id_cols[[name]],
+          group_cols = "ref_date"
+        )
+      }
+    ) |>
+    collect_cache()
+
+  list(
+    coverage = coverage,
+    consistency = consistency
+  )
 }

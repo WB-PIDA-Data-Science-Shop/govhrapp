@@ -1,27 +1,29 @@
-#' Workforce Overview UI
+#' Workforce overview panel UI
 #'
-#' Sidebar controls, a headcount time trend, and totals and growth rates by
-#' group.
+#' Sidebar controls, a headcount trend, and headcount and its growth by group.
 #'
 #' @param id Character. Module namespace ID.
-#' @param .data Data frame containing workforce data.
+#' @param .data Personnel data, as `workforce_data` in
+#'   [run_govhrapp_analytics()].
 #'
-#' @return A Shiny UI definition.
+#' @returns A Shiny UI definition.
 #'
 #' @import bslib
 #' @import shiny
 #' @importFrom plotly plotlyOutput
 #' @importFrom shinyWidgets materialSwitch
+#' @keywords internal
 workforce_overview_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      !!!default_ui_controls(.data, id),
+      !!!default_ui_controls(id, .data),
+      breakdown_filter_ui(id, .data),
       shinyWidgets::materialSwitch(
         shiny::NS(id, "toggle_growth"),
-        label = "Switch to baseline index",
+        label = "Show as index (first date = 100)",
         value = FALSE
       ),
       shiny::actionButton(
@@ -33,10 +35,10 @@ workforce_overview_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Headcount",
+        "Headcount over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Headcount trends over time. Choosing a group will add new trend lines, by group.",
+          "Number of active personnel on each reference date. Select a group to compare subgroups.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -52,10 +54,10 @@ workforce_overview_ui <- function(id, .data) {
         full_screen = TRUE,
         fillable = FALSE,
         bslib::card_header(
-          "Total by group",
+          "Headcount by group",
           bslib::popover(
             bsicons::bs_icon("info-circle-fill"),
-            "Headcount total, by group. Total refers to the latest available year in the selected time frame.",
+            "Headcount on the latest reference date in the selected date range, by subgroup.",
             placement = "left"
           ),
           class = "d-flex justify-content-between"
@@ -67,10 +69,10 @@ workforce_overview_ui <- function(id, .data) {
         full_screen = TRUE,
         fillable = FALSE,
         bslib::card_header(
-          "Growth rate by group",
+          "Growth in headcount by group",
           bslib::popover(
             bsicons::bs_icon("info-circle-fill"),
-            "Growth rate with respect to first reference date, by group.",
+            "Percentage change in headcount from the first to the last reference date in the selected date range, by subgroup.",
             placement = "left"
           ),
           class = "d-flex justify-content-between"
@@ -78,17 +80,20 @@ workforce_overview_ui <- function(id, .data) {
         plotly::plotlyOutput(shiny::NS(id, "workforce_growth")),
         min_height = "450px"
       )
-    )
+    ),
+    composition_ui(shiny::NS(id, "composition"))
   )
 }
 
-#' Workforce Overview Server
+#' Workforce overview panel server
 #'
-#' @param id Character. Module namespace ID.
-#' @param .data Data frame containing workforce data.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' Renders the headcount plots, from the cache until the user applies a
+#' selection.
 #'
-#' @return A Shiny module server function.
+#' @inheritParams workforce_overview_ui
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
+#'
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @import shiny
 #' @importFrom dplyr collect filter rename
@@ -98,15 +103,10 @@ workforce_overview_ui <- function(id, .data) {
 #' @keywords internal
 workforce_overview_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
-    update_group_filter_controls(.data, input, session)
+    update_filter_controls(.data, input, session)
 
     workforce_filtered <- shiny::reactive({
-      filter_data(
-        .data,
-        group_filter = input$group_filter,
-        subgroup_filter = input$subgroup_filter,
-        date_range = input$date_range
-      )
+      apply_sidebar_filters(.data, input)
     })
 
     # the trend, total and growth plots all read this aggregate, so it is
@@ -116,10 +116,11 @@ workforce_overview_server <- function(id, .data, cache) {
       if (input$apply_btn == 0) {
         purrr::pluck(cache, "workforce", "workforce_overview")
       } else {
-        govhr::compute_headcount(
-          workforce_filtered(),
-          group_cols = group_col_to_null(input$group_filter)
-        ) |>
+        workforce_filtered() |>
+          filter_active() |>
+          govhr::compute_headcount(
+            group_cols = group_col_to_null(input$group_filter)
+          ) |>
           dplyr::collect()
       }
     }) |>
@@ -153,7 +154,7 @@ workforce_overview_server <- function(id, .data, cache) {
     # plot 2. total by group
     output$workforce_cross_section <- plotly::renderPlotly({
       shiny::validate(
-        shiny::need(input$group_filter != "ref_date", "Please select a group.")
+        shiny::need(input$group_filter != "ref_date", "Select a group to see this chart.")
       )
 
       cross_section_data <- headcount_summary() |>
@@ -174,7 +175,7 @@ workforce_overview_server <- function(id, .data, cache) {
     # plot 3. growth rate by group
     output$workforce_growth <- plotly::renderPlotly({
       shiny::validate(
-        shiny::need(input$group_filter != "ref_date", "Please select a group.")
+        shiny::need(input$group_filter != "ref_date", "Select a group to see this chart.")
       )
 
       change_data <- headcount_summary() |>
@@ -189,5 +190,18 @@ workforce_overview_server <- function(id, .data, cache) {
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    composition_server(
+      "composition",
+      filtered = \() filter_active(workforce_filtered()),
+      group_col = \() input$group_filter,
+      breakdown_col = \() input$breakdown_filter,
+      apply = \() input$apply_btn,
+      measure = \() list(
+        compute = govhr::compute_headcount,
+        value_col = "headcount",
+        label = "headcount"
+      )
+    )
   })
 }

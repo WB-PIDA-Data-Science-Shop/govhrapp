@@ -2,21 +2,23 @@
 % Please edit documentation in R/analytics_wagebill_overview.R
 \name{wagebill_overview_server}
 \alias{wagebill_overview_server}
-\title{Wage Bill Overview Server}
+\title{Wage bill overview panel server}
 \usage{
 wagebill_overview_server(id, .data, cache)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame containing wage bill data.}
+\item{.data}{Contract data, as \code{wagebill_data} in
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}.}
 
-\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
+\item{cache}{List of precomputed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
 }
 \value{
-A Shiny module server function.
+Called for its side effect of rendering the module's outputs.
 }
 \description{
-Wage Bill Overview Server
+Renders the wage bill plots, from the cache until the user applies a
+selection.
 }
 \keyword{internal}

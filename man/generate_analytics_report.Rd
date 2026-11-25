@@ -2,24 +2,30 @@
 % Please edit documentation in R/analytics_report.R
 \name{generate_analytics_report}
 \alias{generate_analytics_report}
-\title{Generate the Standard Analytics Report}
+\title{Generate the standard analytics report}
 \usage{
 generate_analytics_report(workforce_data, wagebill_data)
 }
 \arguments{
-\item{workforce_data}{Data frame with workforce/personnel attributes
-(headcount).}
+\item{workforce_data}{Personnel data, one row per person and reference date:
+a data frame or a database table (\code{tbl_dbi}). Must contain \code{ref_date},
+\code{personnel_id}, \code{employment_status} (\code{"active"} or \code{"pensioner"}),
+\code{birth_date}, \code{gender} and \code{educat7}. Other categorical columns listed in
+\code{govhr::dictionary} become grouping options.}
 
-\item{wagebill_data}{Data frame with contract/salary attributes (wage bill).}
+\item{wagebill_data}{Contract data, one row per contract and reference date:
+a data frame or a database table (\code{tbl_dbi}). Must contain \code{ref_date},
+\code{personnel_id}, \code{employment_status}, \code{birth_date}, \code{contract_type} and
+\code{gross_salary_lcu}. Other pay columns listed in \code{govhr::dictionary}
+become pay measure options.}
 }
 \value{
-Character path to the generated Word document.
+Character. Path to the generated Word document.
 }
 \description{
-Renders a Word document from the same pre-computed summaries the analytics
-app serves. Every figure is drawn from \code{\link[=build_analytics_cache]{build_analytics_cache()}} at its
-default (\code{ref_date}) grouping, so the report reproduces exactly what each
-panel shows before the user applies a filter.
+Renders a Word document from the same precomputed summaries the analytics
+app shows. Every figure covers the whole workforce, without grouping, so the
+report reproduces what each panel shows before the user applies a filter.
 }
 \examples{
 \dontrun{

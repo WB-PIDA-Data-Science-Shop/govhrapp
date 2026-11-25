@@ -2,21 +2,23 @@
 % Please edit documentation in R/analytics_workforce_overview.R
 \name{workforce_overview_server}
 \alias{workforce_overview_server}
-\title{Workforce Overview Server}
+\title{Workforce overview panel server}
 \usage{
 workforce_overview_server(id, .data, cache)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame containing workforce data.}
+\item{.data}{Personnel data, as \code{workforce_data} in
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}.}
 
-\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
+\item{cache}{List of precomputed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.}
 }
 \value{
-A Shiny module server function.
+Called for its side effect of rendering the module's outputs.
 }
 \description{
-Workforce Overview Server
+Renders the headcount plots, from the cache until the user applies a
+selection.
 }
 \keyword{internal}

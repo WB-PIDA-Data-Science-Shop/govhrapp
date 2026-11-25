@@ -2,7 +2,7 @@
 % Please edit documentation in R/analytics_workforce_utils.R
 \name{movement_measure_col}
 \alias{movement_measure_col}
-\title{Name the Column Holding a Movement Measure}
+\title{Name the column holding a movement measure}
 \usage{
 movement_measure_col(movement_type, measurement_type)
 }

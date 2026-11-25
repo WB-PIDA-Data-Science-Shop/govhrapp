@@ -1,5 +1,16 @@
-#' Demo app for quality check suite
-#' 
+#' Run the quality check app on sample data
+#'
+#' Launches [run_govhrapp_qcheck()] on the sample Brazilian establishment,
+#' personnel and contract data shipped with govhr, validated against govhr's
+#' standard rules.
+#'
+#' @returns A Shiny app object.
+#'
+#' @examples
+#' \dontrun{
+#' run_qcheck_demo()
+#' }
+#'
 #' @export
 run_qcheck_demo <- function(){
   est_data <- govhr::bra_hrmis_est
@@ -27,8 +38,20 @@ run_qcheck_demo <- function(){
   )
 }
 
-#' Demo app for standard analytics suite
-#' 
+#' Run the analytics app on sample data
+#'
+#' Launches [run_govhrapp_analytics()] on the sample Brazilian personnel and
+#' contract data shipped with govhr, up to 2017. The contract data takes
+#' `employment_status`, `birth_date` and the other personnel columns from the
+#' personnel data, which is how to prepare your own data for the app.
+#'
+#' @returns A Shiny app object.
+#'
+#' @examples
+#' \dontrun{
+#' run_analytics_demo()
+#' }
+#'
 #' @export
 run_analytics_demo <- function(){
   workforce_data <- govhr::bra_hrmis_personnel |>

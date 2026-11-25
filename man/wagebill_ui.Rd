@@ -2,19 +2,24 @@
 % Please edit documentation in R/analytics_wagebill.R
 \name{wagebill_ui}
 \alias{wagebill_ui}
-\title{Wage Bill UI}
+\title{Wage bill tab UI}
 \usage{
 wagebill_ui(id, wagebill_data)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{wagebill_data}{Data frame containing wage bill data.}
+\item{wagebill_data}{Contract data, one row per contract and reference date:
+a data frame or a database table (\code{tbl_dbi}). Must contain \code{ref_date},
+\code{personnel_id}, \code{employment_status} (\code{"active"} or \code{"pensioner"}),
+\code{birth_date} and \code{gross_salary_lcu}. Other pay columns listed in
+\code{govhr::dictionary} become pay measure options, and its categorical
+columns become grouping options.}
 }
 \value{
 A Shiny UI definition.
 }
 \description{
-Top-level wage bill tab: guidance, key indicator boxes, and the overview,
-equity, movement and retirement panels.
+Guidance, key indicator boxes, and the overview, equity, movement and
+retirement panels of the wage bill tab.
 }

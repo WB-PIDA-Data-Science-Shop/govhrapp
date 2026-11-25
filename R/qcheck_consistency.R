@@ -1,13 +1,12 @@
-#' Consistency UI Module
+#' Consistency tab UI
 #'
-#' UI components for the consistency section of the quality control dashboard.
+#' Consistency boxes for each table, and a consistency panel for each of the
+#' establishment, personnel and contract tables.
 #'
-#' @param id Character string. The module namespace ID.
-#' @param est_data Data frame. The establishment-level data.
-#' @param personnel_data Data frame. The personnel-level data.
-#' @param contract_data Data frame. The contract-level data.
+#' @param id Character. Module namespace ID.
+#' @inheritParams run_govhrapp_qcheck
 #'
-#' @return A Shiny UI object containing coverage analysis cards.
+#' @returns A Shiny UI definition.
 #'
 #' @import shiny
 #' @import bslib
@@ -67,24 +66,25 @@ consistency_ui <- function(id, est_data, personnel_data, contract_data) {
   )
 }
 
-#' Consistency Server Module
+#' Consistency tab server
 #'
-#' Server logic for the consistency section, processing and visualizing whether data is consistent.
+#' Renders the consistency boxes and runs a consistency panel server for each
+#' table.
 #'
-#' @param id Character string. The module namespace ID.
-#' @param est_data Data frame. The establishment-level data.
-#' @param personnel_data Data frame. The personnel-level data.
-#' @param contract_data Data frame. The contract-level data.
-#' @param cache A list of data frames. Precomputed consistency data for the default grouping (ref_date).
+#' @param id Character. Module namespace ID.
+#' @inheritParams run_govhrapp_qcheck
+#' @param cache List of precomputed record consistency by reference date, with
+#'   elements `est`, `personnel` and `contract`, as in the `consistency`
+#'   element of [build_qcheck_cache()].
 #'
-#' @return None. Called for side effects (renders Shiny outputs).
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @import shiny
 #'
 #' @keywords internal
 consistency_server <- function(id, est_data, personnel_data, contract_data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
-    # 1. value boxes for coverage metrics
+    # 1. value boxes for consistency metrics
     output$consistency_est <- render_consistency_box(
       est_data,
       id_col = "est_id",
@@ -110,44 +110,47 @@ consistency_server <- function(id, est_data, personnel_data, contract_data, cach
     )
 
     # per-dataset panel sub-modules
-    consistency_panel_server("est", est_data, cache = cache$est)
-    consistency_panel_server("personnel", personnel_data, cache = cache$personnel)
-    consistency_panel_server("contract",  contract_data, cache = cache$contract)
+    consistency_panel_server("est", est_data, cache = cache[["est"]])
+    consistency_panel_server("personnel", personnel_data, cache = cache[["personnel"]])
+    consistency_panel_server("contract",  contract_data, cache = cache[["contract"]])
   })
 }
 
 
-#' Consistency Panel UI
+#' Consistency panel UI
 #'
-#' @param id Character string. The module namespace ID.
-#' @param .data Data frame. The data to be used in the consistency panel.
+#' Sidebar controls and consistency plots over time and by variable, for one
+#' table.
+#'
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame. The establishment, personnel or contract table the
+#'   panel describes.
 #'
 #' @import shiny
 #' @importFrom bslib layout_sidebar sidebar card card_header tooltip
 #' @importFrom bsicons bs_icon
 #' @importFrom shinyWidgets materialSwitch
 #'
-#' @return A Shiny UI object representing the consistency panel.
+#' @returns A Shiny UI definition.
+#'
+#' @keywords internal
 consistency_panel_ui <- function(id, .data) {
-  accordion_controls <- bslib::accordion(
-    accordion_panel(
-      "Filters",
-      icon = bsicons::bs_icon("filter"),
-      !!!default_ui_controls(.data, id)
-    ),
-    accordion_panel(
-      "Additional controls",
-      icon = bsicons::bs_icon("bar-chart"),
+  bslib::layout_sidebar(
+    fillable = FALSE,
+    sidebar = bslib::sidebar(
+      title = "Controls",
+      width = "300px",
+      !!!default_ui_controls(id, .data),
       shiny::selectInput(
         shiny::NS(id, "type_consistency"),
-        "Select type of consistency:",
+        "Consistency type",
         choices = c(
           "Record" = "record",
           "Value" = "value"
         ),
         selected = "record"
       ),
-      # conditionally show the value column selection only when "Value" plot type is selected
+      # the column only matters for value consistency
       shiny::conditionalPanel(
         condition = sprintf(
           "input['%s'] === 'value'",
@@ -155,25 +158,16 @@ consistency_panel_ui <- function(id, .data) {
         ),
         shiny::selectInput(
           shiny::NS(id, "value_col"),
-          "Select value column:",
+          "Column",
           choices = identify_group_choices(.data),
           selected = identify_group_choices(.data)[1]
         )
       ),
       shinyWidgets::materialSwitch(
         shiny::NS(id, "toggle_growth"),
-        label = "Switch to baseline index",
+        label = "Show as index (first date = 100)",
         value = FALSE
-      )
-    )
-  )
-
-  bslib::layout_sidebar(
-    fillable = FALSE,
-    sidebar = bslib::sidebar(
-      title = "Controls",
-      width = "300px",
-      accordion_controls,
+      ),
       shiny::actionButton(
         shiny::NS(id, "apply_btn"),
         "Apply selection",
@@ -229,11 +223,16 @@ consistency_panel_ui <- function(id, .data) {
   )
 }
 
-#' Consistency Panel Server
+#' Consistency panel server
 #'
-#' @param id Character string. Sub-module ID.
-#' @param .data A dataframe. Input dataset for the sub-module.
-#' @param cache A list of dataframes. Precomputed consistency data for the default grouping (ref_date).
+#' Renders the consistency plots of one table, from the cache until the user
+#' applies a filter.
+#'
+#' @param id Character. Module namespace ID, matching the one passed to
+#'   [consistency_panel_ui()].
+#' @inheritParams consistency_panel_ui
+#' @param cache Data frame. Precomputed record consistency of `.data` by
+#'   reference date.
 #'
 #' @import shiny
 #' @importFrom dplyr bind_rows collect mutate
@@ -244,10 +243,12 @@ consistency_panel_ui <- function(id, .data) {
 #' @importFrom shinyWidgets updatePickerInput pickerOptions
 #' @importFrom scales breaks_pretty
 #'
-#' @return A set of Shiny outputs for the consistency panel.
+#' @returns Called for its side effect of rendering the module's outputs.
+#'
+#' @keywords internal
 consistency_panel_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
-    update_group_filter_controls(.data, input, session)
+    update_filter_controls(.data, input, session)
 
     id_col <- switch(
       id,
@@ -257,12 +258,7 @@ consistency_panel_server <- function(id, .data, cache) {
     )
 
     data_filtered <- shiny::reactive({
-      filter_data(
-        .data,
-        group_filter = input$group_filter,
-        subgroup_filter = input$subgroup_filter,
-        date_range = input$date_range
-      )
+      apply_sidebar_filters(.data, input)
     })
 
     # the cache holds record consistency by date, which the default selection
@@ -339,20 +335,35 @@ consistency_panel_server <- function(id, .data, cache) {
   })
 }
 
+#' Run the consistency tab on its own
+#'
+#' Launches the consistency tab of the quality check app by itself, for
+#' developing and testing it.
+#'
+#' @inheritParams run_govhrapp_qcheck
+#'
+#' @returns A Shiny app object.
+#'
+#' @importFrom shiny shinyApp
+#' @keywords internal
 run_consistency_app <- function(
   est_data,
   personnel_data,
   contract_data,
   ...
 ) {
-  theme = bslib::bs_theme(
-    bootswatch = "litera"
-  )
+  cache <- build_qcheck_cache(est_data, personnel_data, contract_data)
 
-  ui <- consistency_ui("test", est_data, personnel_data, contract_data)
+  ui <- consistency_ui("consistency", est_data, personnel_data, contract_data)
 
   server <- function(input, output, session) {
-    consistency_server("test", est_data, personnel_data, contract_data)
+    consistency_server(
+      "consistency",
+      est_data,
+      personnel_data,
+      contract_data,
+      cache = cache[["consistency"]]
+    )
   }
 
   shiny::shinyApp(ui, server, ...)

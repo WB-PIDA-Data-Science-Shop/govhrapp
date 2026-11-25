@@ -1,37 +1,41 @@
-#' Wage Bill Movement UI
+#' Wage bill movement panel UI
 #'
-#' Sidebar controls and plots for the cost of recruitment and separation.
+#' Sidebar controls and plots of the cost of hires or separations, over time and
+#' by group.
 #'
 #' @param id Character. Module namespace ID.
-#' @param .data Data frame containing wage bill data.
+#' @param .data Contract data, as `wagebill_data` in
+#'   [run_govhrapp_analytics()].
 #'
-#' @return A Shiny UI definition.
+#' @returns A Shiny UI definition.
 #'
 #' @import bslib
 #' @import shiny
 #' @importFrom bsicons bs_icon
 #' @importFrom plotly plotlyOutput
+#' @keywords internal
 wagebill_movement_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      !!!default_ui_controls(.data, id),
+      !!!default_ui_controls(id, .data),
+      breakdown_filter_ui(id, .data),
       shiny::selectInput(
         shiny::NS(id, "event_type"),
-        "Type of Movement:",
-        choices = c("Recruitment" = "hire", "Separation" = "separation"),
+        "Movement",
+        choices = c("Hires" = "hire", "Separations" = "separation"),
         selected = "hire"
       ),
       shiny::selectInput(
         shiny::NS(id, "wagebill_measure"),
-        "Type of Wage:",
+        "Pay measure",
         choices = identify_wagebill_choices(.data)
       ),
       shinyWidgets::materialSwitch(
         shiny::NS(id, "toggle_growth"),
-        label = "Switch to baseline index",
+        label = "Show as index (first date = 100)",
         value = FALSE
       ),
       shiny::actionButton(
@@ -44,10 +48,10 @@ wagebill_movement_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Labor Movement Costs",
+        "Movement cost over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Labor movement costs over time. Choosing a group will add new trend lines, by group.",
+          "Pay of hires on the date they were hired, or of separations on their last active date, added up for each reference date. Select a group to compare subgroups.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -61,10 +65,10 @@ wagebill_movement_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Labor Movement Costs by Group",
+        "Movement cost by group",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Labor movement costs by group. Choosing a group will add new trend lines, by group.",
+          "Movement cost added up over the selected date range, by subgroup.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -78,10 +82,10 @@ wagebill_movement_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Growth in Labor Movement Costs by Group",
+        "Growth in movement cost by group",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Growth in labor movement costs by group. Choosing a group will add new trend lines, by group.",
+          "Percentage change in movement cost from the first to the last reference date with movers in the selected date range, by subgroup.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -90,17 +94,20 @@ wagebill_movement_ui <- function(id, .data) {
         shiny::NS(id, "wagebill_movement_growth"),
         height = "350px"
       )
-    )
+    ),
+    composition_ui(shiny::NS(id, "composition"))
   )
 }
 
-#' Wage Bill Movement Server
+#' Wage bill movement panel server
 #'
-#' @param id Character. Module namespace ID.
-#' @param .data Data frame containing wage bill data.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' Renders the movement cost plots, from the cache until the user applies a
+#' selection.
 #'
-#' @return A Shiny module server function.
+#' @inheritParams wagebill_movement_ui
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
+#'
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @import shiny
 #' @importFrom dplyr collect filter
@@ -110,15 +117,10 @@ wagebill_movement_ui <- function(id, .data) {
 #' @keywords internal
 wagebill_movement_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
-    update_group_filter_controls(.data, input, session)
+    update_filter_controls(.data, input, session)
 
     wagebill_filtered <- shiny::reactive({
-      filter_data(
-        .data,
-        group_filter = input$group_filter,
-        subgroup_filter = input$subgroup_filter,
-        date_range = input$date_range
-      )
+      apply_sidebar_filters(.data, input)
     })
 
     # all three plots read the same aggregate, so it is computed and collected
@@ -137,8 +139,8 @@ wagebill_movement_server <- function(id, .data, cache) {
           dplyr::collect()
       }
 
-      # the cost is NA on the date with nothing to compare with: the first
-      # for hires, the last for separations
+      # the cost is NA on the first date, which has nothing to compare with,
+      # and for separations from a group with nobody active on the previous date
       dplyr::filter(cost, !is.na(.data[["movement_cost"]]))
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
@@ -151,7 +153,7 @@ wagebill_movement_server <- function(id, .data, cache) {
           group_col = input$group_filter,
           toggle_growth = input$toggle_growth,
           y_col = "movement_cost",
-          y_label = "Movement Costs"
+          y_label = "Movement cost"
         )
       )
     }) |>
@@ -162,7 +164,7 @@ wagebill_movement_server <- function(id, .data, cache) {
       shiny::validate(
         shiny::need(
           input$group_filter != "ref_date",
-          "Please select a group."
+          "Select a group to see this chart."
         )
       )
 
@@ -182,7 +184,7 @@ wagebill_movement_server <- function(id, .data, cache) {
           movement_cost_data,
           group_col = input$group_filter,
           x_col = "movement_cost",
-          x_label = "Movement Costs"
+          x_label = "Movement cost"
         ),
         height = govhr::scale_plot_height(movement_cost_data)
       )
@@ -194,7 +196,7 @@ wagebill_movement_server <- function(id, .data, cache) {
       shiny::validate(
         shiny::need(
           input$group_filter != "ref_date",
-          "Please select a group."
+          "Select a group to see this chart."
         )
       )
 
@@ -216,5 +218,25 @@ wagebill_movement_server <- function(id, .data, cache) {
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    composition_server(
+      "composition",
+      filtered = \() wagebill_filtered(),
+      group_col = \() input$group_filter,
+      breakdown_col = \() input$breakdown_filter,
+      apply = \() input$apply_btn,
+      measure = \() list(
+        compute = \(.data, group_cols) {
+          govhr::compute_movement_cost(
+            .data,
+            event_type = input$event_type,
+            measure_col = input$wagebill_measure,
+            group_cols = group_cols
+          )
+        },
+        value_col = "movement_cost",
+        label = paste("cost of", tolower(movement_labels[[input$event_type]]))
+      )
+    )
   })
 }

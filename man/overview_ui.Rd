@@ -2,7 +2,7 @@
 % Please edit documentation in R/analytics_overview.R
 \name{overview_ui}
 \alias{overview_ui}
-\title{Overview UI}
+\title{Overview tab UI}
 \usage{
 overview_ui(id)
 }
@@ -13,5 +13,6 @@ overview_ui(id)
 A Shiny UI definition.
 }
 \description{
-Summary dashboard tab combining headline wage bill and headcount indicators.
+Headline boxes for the latest headcount and wage bill, and a chart of
+headcount, wage bill or both indexed to the first reference date.
 }

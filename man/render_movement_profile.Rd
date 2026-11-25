@@ -7,16 +7,22 @@
 render_movement_profile(data, movement_type)
 }
 \arguments{
-\item{data}{A data frame or remote database table (\code{tbl_dbi}) containing
-personnel data with columns for ref_date, personnel_id, gender, educat7,
-employment_status, and birth_date.}
+\item{data}{Personnel data, as \code{workforce_data} in
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}.}
 
-\item{movement_type}{A character string indicating the type of movement to profile (e.g
-"hire" or "separation").}
+\item{movement_type}{Character. \code{"hire"} or \code{"separation"}.}
 }
 \value{
-A gt table summarizing the demographic characteristics of the specified movement type compared to the general population.
+A gt table with one column for the movers and one for everyone
+else.
 }
 \description{
-Render a movement profile table
+Compares the age, gender, education and employment status of hires or
+separations with the rest of the workforce, pooling every reference date
+the movement can be detected on.
 }
+\details{
+Age is measured on the day the table is rendered, not on each
+reference date.
+}
+\keyword{internal}

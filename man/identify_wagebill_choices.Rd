@@ -2,18 +2,19 @@
 % Please edit documentation in R/analytics_wagebill_utils.R
 \name{identify_wagebill_choices}
 \alias{identify_wagebill_choices}
-\title{Identify Available Wage Measure Choices}
+\title{Identify the available pay measures}
 \usage{
 identify_wagebill_choices(.data)
 }
 \arguments{
-\item{.data}{Data frame containing wage bill data.}
+\item{.data}{Contract data, as \code{wagebill_data} in
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}.}
 }
 \value{
-A named list of wage measure choices, keyed by module.
+A named list of pay measure choices, keyed by module.
 }
 \description{
-Lists the salary and allowance variables present in the data, nested by
-dictionary module, for the "Type of Wage" select input.
+Lists the salary and allowance columns present in the data, nested by
+dictionary module, for the pay measure picker.
 }
 \keyword{internal}

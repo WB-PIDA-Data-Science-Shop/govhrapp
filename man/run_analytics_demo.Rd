@@ -2,10 +2,22 @@
 % Please edit documentation in R/demo.R
 \name{run_analytics_demo}
 \alias{run_analytics_demo}
-\title{Demo app for standard analytics suite}
+\title{Run the analytics app on sample data}
 \usage{
 run_analytics_demo()
 }
+\value{
+A Shiny app object.
+}
 \description{
-Demo app for standard analytics suite
+Launches \code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}} on the sample Brazilian personnel and
+contract data shipped with govhr, up to 2017. The contract data takes
+\code{employment_status}, \code{birth_date} and the other personnel columns from the
+personnel data, which is how to prepare your own data for the app.
+}
+\examples{
+\dontrun{
+run_analytics_demo()
+}
+
 }

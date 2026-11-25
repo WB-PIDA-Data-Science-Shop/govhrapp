@@ -1,10 +1,11 @@
-#' Validation Rules UI Module
+#' Validation tab UI
 #'
-#' UI components for the Validation Rules section of the quality control dashboard.
+#' Pass rate boxes and rule tables for the personnel and contract validation
+#' rules, with downloads of the records that fail each rule.
 #'
-#' @param id Character string. The module namespace ID.
+#' @param id Character. Module namespace ID.
 #'
-#' @return A Shiny UI object containing validation rule cards.
+#' @returns A Shiny UI definition.
 #'
 #' @importFrom shiny NS tagList textOutput selectInput downloadButton p tags
 #' @importFrom bslib layout_columns card card_header card_body value_box
@@ -22,7 +23,7 @@ validation_ui <- function(id) {
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
           "Validation rules are applied to the personnel and contract datasets to identify potential data quality issues. The pass rate indicates the percentage of records that meet the validation criteria.",
-          title = "Validation Rules Overview",
+          title = "Pass rate",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -43,14 +44,14 @@ validation_ui <- function(id) {
     bslib::layout_columns(
       col_widths = c(12),
       bslib::card(
-        bslib::card_header("Contract Validation Rules"),
+        bslib::card_header("Contract validation rules"),
         bslib::card_body(
           fillable = FALSE,
           gt::gt_output(ns("contract_table")),
           shiny::tags$hr(),
           shiny::selectInput(
             ns("contract_rule_select"),
-            label = "Download violations for rule:",
+            label = "Download violations for rule",
             choices = NULL
           ),
           shiny::downloadButton(
@@ -66,14 +67,14 @@ validation_ui <- function(id) {
     bslib::layout_columns(
       col_widths = c(12),
       bslib::card(
-        bslib::card_header("Personnel Validation Rules"),
+        bslib::card_header("Personnel validation rules"),
         bslib::card_body(
           fillable = FALSE,
           gt::gt_output(ns("personnel_table")),
           shiny::tags$hr(),
           shiny::selectInput(
             ns("personnel_rule_select"),
-            label = "Download violations for rule:",
+            label = "Download violations for rule",
             choices = NULL
           ),
           shiny::downloadButton(
@@ -87,16 +88,15 @@ validation_ui <- function(id) {
   )
 }
 
-#' Validation Rules Server Module
+#' Validation tab server
 #'
-#' Server logic for the Validation Rules section, rendering pass/fail tables
-#' for contract and personnel validation rules.
+#' Renders the pass rate boxes and rule tables, and serves the downloads of
+#' failing records.
 #'
-#' @param id Character string. The module namespace ID.
-#' @param personnel_validation List. The personnel validation results, including reports and violations.
-#' @param contract_validation List. The contract validation results, including reports and violations.
+#' @param id Character. Module namespace ID.
+#' @inheritParams run_govhrapp_qcheck
 #'
-#' @return None. Called for side effects (renders Shiny outputs).
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @importFrom shiny moduleServer renderText observeEvent updateSelectInput downloadHandler req
 #' @importFrom gt render_gt gt fmt_number fmt_markdown cols_align tab_style cell_fill opt_table_outline opt_row_striping
@@ -114,13 +114,13 @@ validation_server <- function(id, personnel_validation, contract_validation) {
     # value boxes
     output$validation_personnel <- render_validation_box(
       personnel_report,
-      "Personnel Validation Rate",
+      "Personnel pass rate",
       "people-fill"
     )
 
     output$validation_contract <- render_validation_box(
       contract_report,
-      "Contract Validation Rate",
+      "Contract pass rate",
       "file-text-fill"
     )
 
@@ -217,8 +217,8 @@ validation_server <- function(id, personnel_validation, contract_validation) {
       )
     })
 
-    # Helper: sanitise data.frame — strip illegal XML chars from character cols
-    sanitise_df <- function(df) {
+    # Helper: sanitize data.frame — strip illegal XML chars from character cols
+    sanitize_df <- function(df) {
       df <- as.data.frame(df)
       char_cols <- vapply(df, is.character, logical(1))
       df[char_cols] <- lapply(df[char_cols], function(x) {
@@ -240,7 +240,7 @@ validation_server <- function(id, personnel_validation, contract_validation) {
         rule <- shiny::req(input$contract_rule_select)
         dt <- contract_violation[[rule]]
         shiny::req(!is.null(dt), nrow(dt) > 0)
-        writexl::write_xlsx(sanitise_df(dt), file)
+        writexl::write_xlsx(sanitize_df(dt), file)
       }
     )
 
@@ -255,26 +255,32 @@ validation_server <- function(id, personnel_validation, contract_validation) {
         rule <- shiny::req(input$personnel_rule_select)
         dt <- personnel_violation[[rule]]
         shiny::req(!is.null(dt), nrow(dt) > 0)
-        writexl::write_xlsx(sanitise_df(dt), file)
+        writexl::write_xlsx(sanitize_df(dt), file)
       }
     )
   })
 }
 
+#' Run the validation tab on its own
+#'
+#' Launches the validation tab of the quality check app by itself, for
+#' developing and testing it.
+#'
+#' @inheritParams run_govhrapp_qcheck
+#'
+#' @returns A Shiny app object.
+#'
+#' @importFrom shiny shinyApp
+#' @keywords internal
 run_validation_app <- function(
-  est_data,
-  personnel_data,
-  contract_data,
+  personnel_validation,
+  contract_validation,
   ...
 ) {
-  theme <- bslib::bs_theme(
-    bootswatch = "litera"
-  )
-
-  ui <- validation_ui("test")
+  ui <- validation_ui("validation")
 
   server <- function(input, output, session) {
-    validation_server("test", personnel_data, contract_data)
+    validation_server("validation", personnel_validation, contract_validation)
   }
 
   shiny::shinyApp(ui, server, ...)

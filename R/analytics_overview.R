@@ -1,10 +1,11 @@
-#' Overview UI
+#' Overview tab UI
 #'
-#' Summary dashboard tab combining headline wage bill and headcount indicators.
+#' Headline boxes for the latest headcount and wage bill, and a chart of
+#' headcount, wage bill or both indexed to the first reference date.
 #'
 #' @param id Character. Module namespace ID.
 #'
-#' @return A Shiny UI definition.
+#' @returns A Shiny UI definition.
 #'
 #' @importFrom bsicons bs_icon
 #' @importFrom bslib card card_body card_header layout_columns layout_sidebar popover sidebar value_box value_box_theme
@@ -36,7 +37,7 @@ overview_ui <- function(id) {
               "info-circle-fill",
               style = "font-size: 0.75em; margin-left: 4px;"
             ),
-            "Gross salary in local currency units (LCU).",
+            "Total gross salary of active personnel on the latest reference date, in local currency units (LCU).",
             placement = "left"
           )
         ),
@@ -56,9 +57,9 @@ overview_ui <- function(id) {
           ns("display_mode"),
           label = NULL,
           choices = list(
-            "Workforce" = "headcount",
-            "Wage Bill" = "wagebill",
-            "Integrated" = "integrated"
+            "Headcount" = "headcount",
+            "Wage bill" = "wagebill",
+            "Both, indexed" = "integrated"
           ),
           selected = "headcount"
         )
@@ -81,7 +82,7 @@ overview_ui <- function(id) {
         condition = sprintf("input['%s'] == 'wagebill'", ns("display_mode")),
         bslib::card(
           full_screen = TRUE,
-          bslib::card_header("Wage Bill"),
+          bslib::card_header("Wage bill"),
           bslib::card_body(
             plotly::plotlyOutput(ns("plot_wagebill"), height = "450px")
           )
@@ -94,10 +95,10 @@ overview_ui <- function(id) {
         bslib::card(
           full_screen = TRUE,
           bslib::card_header(
-            "Integrated: Headcount and Wage Bill",
+            "Headcount and wage bill, indexed",
             bslib::popover(
               bsicons::bs_icon("info-circle-fill"),
-              "Both series are indexed to 100 for the earliest reference date.",
+              "Headcount, wage bill and average wage, each indexed to 100 on the first reference date.",
               placement = "left"
             ),
             class = "d-flex justify-content-between"
@@ -111,21 +112,22 @@ overview_ui <- function(id) {
   )
 }
 
-#' Overview Server
+#' Overview tab server
 #'
-#' Renders the headline headcount and wage bill indicators and the three
-#' summary charts, all read from the analytics cache.
+#' Renders the headline headcount and wage bill boxes and the three summary
+#' charts, all read from the analytics cache.
 #'
 #' @param id Character. Module namespace ID.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
 #'
-#' @return A Shiny module server function.
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
-#' @importFrom dplyr arrange bind_rows filter first mutate pull
-#' @importFrom ggplot2 aes geom_hline geom_line geom_point ggplot labs scale_color_manual scale_y_continuous
+#' @importFrom dplyr bind_rows filter mutate pull select
+#' @importFrom ggplot2 aes labs scale_color_manual
+#' @importFrom govhr apply_baseline_index plot_trend
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
-#' @importFrom scales cut_short_scale label_number
+#' @importFrom scales comma
 #' @importFrom shiny moduleServer renderText req
 #' @export
 overview_server <- function(id, cache) {
@@ -155,7 +157,7 @@ overview_server <- function(id, cache) {
       ")"
     ))
     output$vb_wagebill_label <- shiny::renderText(paste0(
-      "Wage Bill (",
+      "Wage bill (",
       date_label,
       ")"
     ))
@@ -166,95 +168,69 @@ overview_server <- function(id, cache) {
       req(input$display_mode == "headcount")
 
       plotly::ggplotly(
-        workforce_overview |>
-          ggplot2::ggplot(ggplot2::aes(
-            x = .data[["ref_date"]],
-            y = .data[["headcount"]]
-          )) +
-          ggplot2::geom_point() +
-          ggplot2::geom_line() +
-          ggplot2::scale_y_continuous(
-            labels = scales::label_number(scale_cut = scales::cut_short_scale())
-          ) +
-          ggplot2::labs(x = "Time", y = "Headcount")
+        govhr::plot_trend(
+          workforce_overview,
+          group_col = "ref_date",
+          y_col = "headcount",
+          y_label = "Headcount"
+        )
       )
     })
 
     output$plot_wagebill <- plotly::renderPlotly({
       req(input$display_mode == "wagebill")
 
+      # plot_trend() takes the app-wide orange line default, so the wage bill
+      # is set to the blue of its value box. I() keeps the color literal, so
+      # it adds no scale or legend
       plotly::ggplotly(
-        wagebill_overview |>
-          ggplot2::ggplot(ggplot2::aes(
-            x = .data[["ref_date"]],
-            y = .data[["wagebill"]]
-          )) +
-          ggplot2::geom_point(colour = "#004181") +
-          ggplot2::geom_line(colour = "#004181") +
-          ggplot2::scale_y_continuous(
-            labels = scales::label_number(scale_cut = scales::cut_short_scale())
-          ) +
-          ggplot2::labs(x = "Time", y = "Wage Bill (LCU)")
+        govhr::plot_trend(
+          wagebill_overview,
+          group_col = "ref_date",
+          y_col = "wagebill",
+          y_label = "Wage bill (LCU)"
+        ) +
+          ggplot2::aes(colour = I("#004181"))
       )
     })
 
     output$plot_integrated <- plotly::renderPlotly({
       req(input$display_mode == "integrated")
 
-      palette <- c("Headcount" = "#C34729", "Wage Bill" = "#00070e", "Average Wage" = "#004181")
-
-      # index series for the integrated plot only — kept separate, see note below
-      indexed_workforce <- workforce_overview |>
-        dplyr::arrange(.data[["ref_date"]]) |>
-        dplyr::mutate(
-          value = .data[["headcount"]] / dplyr::first(.data[["headcount"]]) * 100
-        )
-
-      indexed_wagebill <- wagebill_overview |>
-        dplyr::arrange(.data[["ref_date"]]) |>
-        dplyr::mutate(
-          value = .data[["wagebill"]] / dplyr::first(.data[["wagebill"]]) * 100
-        )
-
-      indexed_average_wage <- wagebill_overview |>
-        dplyr::arrange(.data[["ref_date"]]) |>
-        dplyr::mutate(
-          value = .data[["wage"]] / dplyr::first(.data[["wage"]]) * 100
-        )
-
-      combined <- dplyr::bind_rows(
-        dplyr::mutate(indexed_workforce, series = "Headcount"),
-        dplyr::mutate(indexed_wagebill, series = "Wage Bill"),
-        dplyr::mutate(indexed_average_wage, series = "Average Wage")
+      # plot_trend() would shade the series as an orange gradient, which reads
+      # as an ordering; distinct colors tie each series to its value box
+      palette <- c(
+        "Headcount" = "#C34729",
+        "Wage bill" = "#00070e",
+        "Average wage" = "#004181"
       )
 
-      plotly::ggplotly(
-        combined |>
-          ggplot2::ggplot(
-            ggplot2::aes(
-              x = .data[["ref_date"]],
-              y = .data[["value"]],
-              color = .data[["series"]],
-              group = .data[["series"]]
-            )
-          ) +
-          ggplot2::geom_point() +
-          ggplot2::geom_line() +
-          ggplot2::geom_hline(
-            yintercept = 100,
-            linetype = "dashed",
-            colour = "grey50"
-          ) +
+      series <- dplyr::bind_rows(
+        workforce_overview |>
+          dplyr::select("ref_date", value = "headcount") |>
+          dplyr::mutate(series = "Headcount"),
+        wagebill_overview |>
+          dplyr::select("ref_date", value = "wagebill") |>
+          dplyr::mutate(series = "Wage bill"),
+        wagebill_overview |>
+          dplyr::select("ref_date", value = "wage") |>
+          dplyr::mutate(series = "Average wage")
+      ) |>
+        govhr::apply_baseline_index(group_col = "series")
+
+      # replacing plot_trend()'s color scale is intended, so ggplot2's
+      # scale-replacement message is noise
+      integrated_plot <- suppressMessages(
+        govhr::plot_trend(
+          series,
+          group_col = "series",
+          toggle_growth = TRUE
+        ) +
           ggplot2::scale_color_manual(values = palette) +
-          ggplot2::scale_y_continuous(
-            labels = scales::label_number(suffix = "")
-          ) +
-          ggplot2::labs(
-            x = "Time",
-            y = "Baseline index (earliest period = 100)",
-            color = NULL
-          )
+          ggplot2::labs(color = NULL)
       )
+
+      plotly::ggplotly(integrated_plot)
     })
   })
 }

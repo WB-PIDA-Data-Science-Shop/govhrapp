@@ -2,24 +2,29 @@
 % Please edit documentation in R/qcheck_helpers.R
 \name{render_coverage_box}
 \alias{render_coverage_box}
-\title{Render a Data Coverage Value Box}
+\title{Render a coverage value box}
 \usage{
 render_coverage_box(.data, title, icon = "table")
 }
 \arguments{
-\item{.data}{Data frame. A dataframe to compute the coverage on.}
+\item{.data}{Data frame or database table (\code{tbl_dbi}) to measure.}
 
-\item{title}{String. Value box title.}
+\item{title}{Character. Value box title.}
 
-\item{icon}{String. Icon name. Defaults to \code{"table"}.}
+\item{icon}{Character. Name of a Bootstrap icon, as in
+\code{\link[bsicons:bs_icon]{bsicons::bs_icon()}}. Default \code{"table"}.}
 }
 \value{
-A \code{\link[shiny:renderUI]{shiny::renderUI()}} producing a \code{\link[bslib:value_box]{bslib::value_box()}} themed
-\code{"danger"} (<50\%), \code{"warning"} (50–79\%), or \code{"success"} (≥80\%).
+A \code{\link[shiny:renderUI]{shiny::renderUI()}} producing a \code{\link[bslib:value_box]{bslib::value_box()}}, colored
+\code{"danger"} below 50\%, \code{"warning"} from 50\% to below 80\%, and \code{"success"}
+from 80\%.
 }
 \description{
-Render a Data Coverage Value Box
+Shows the coverage of a table, colored by how complete it is.
 }
 \details{
-Coverage denotes the total number of non-missing records in a dataset, expressed as a percentage of the total records. For example, if a dataset has 10 rows and 10 columns, i.e., 100 records, and 10 of them are available, the coverage would be 10 percent.
+Coverage is the share of cells in the table that are not missing,
+as computed by \code{\link[govhr:compute_global_coverage]{govhr::compute_global_coverage()}}. For example, a table
+with 10 rows and 10 columns has 100 cells; if 10 of them hold a value, its
+coverage is 10\%.
 }

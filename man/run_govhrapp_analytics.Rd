@@ -2,7 +2,7 @@
 % Please edit documentation in R/analytics_app.R
 \name{run_govhrapp_analytics}
 \alias{run_govhrapp_analytics}
-\title{Run the govhr Shiny Dashboard Application}
+\title{Run the analytics app}
 \usage{
 run_govhrapp_analytics(
   workforce_data,
@@ -14,17 +14,27 @@ run_govhrapp_analytics(
 )
 }
 \arguments{
-\item{workforce_data}{Data frame with workforce/personnel attributes
-(headcount).}
+\item{workforce_data}{Personnel data, one row per person and reference date:
+a data frame or a database table (\code{tbl_dbi}). Must contain \code{ref_date},
+\code{personnel_id}, \code{employment_status} (\code{"active"} or \code{"pensioner"}),
+\code{birth_date}, \code{gender} and \code{educat7}. Other categorical columns listed in
+\code{govhr::dictionary} become grouping options.}
 
-\item{wagebill_data}{Data frame with contract/salary attributes (wage bill).}
+\item{wagebill_data}{Contract data, one row per contract and reference date:
+a data frame or a database table (\code{tbl_dbi}). Must contain \code{ref_date},
+\code{personnel_id}, \code{employment_status}, \code{birth_date}, \code{contract_type} and
+\code{gross_salary_lcu}. Other pay columns listed in \code{govhr::dictionary}
+become pay measure options.}
 
-\item{cache}{List of pre-computed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.
-Defaults to building one from the supplied data.}
+\item{cache}{List of precomputed summaries from \code{\link[=build_analytics_cache]{build_analytics_cache()}}.
+Default builds one from \code{workforce_data} and \code{wagebill_data}.}
 
-\item{secure}{Logical. If \code{TRUE}, the app will require authentication. Defaults to FALSE.}
+\item{secure}{Logical. Require users to log in. Default \code{FALSE}.}
 
-\item{credentials_path}{Path to the SQLite database containing user credentials for authentication. Defaults to "inst/app/analytics/credentials.sqlite".}
+\item{credentials_path}{Character. Path to the SQLite database of user
+credentials, used when \code{secure = TRUE}. The default is relative to the
+working directory and only exists when running from the govhrapp source,
+so pass your own path otherwise.}
 
 \item{...}{Additional arguments passed to \code{\link[shiny:shinyApp]{shiny::shinyApp()}}.}
 }
@@ -32,11 +42,24 @@ Defaults to building one from the supplied data.}
 A Shiny app object.
 }
 \description{
-Launches an interactive Shiny dashboard for govhr data visualization and analysis.
+Launches the govhr analytics app, which shows the size, movements and cost
+of the public sector workforce, with tabs for an overview, the workforce and
+the wage bill.
+}
+\details{
+Both inputs are checked for their required columns before the app starts,
+and an error names any that are missing.
+
+With database tables, every summary is computed in the database and only
+its result is brought into memory, as are the date range and the distinct
+values offered by the sidebar pickers.
 }
 \examples{
 \dontrun{
 run_govhrapp_analytics(workforce_data, wagebill_data)
 }
 
+}
+\seealso{
+\code{\link[=run_analytics_demo]{run_analytics_demo()}} to try the app on sample data.
 }

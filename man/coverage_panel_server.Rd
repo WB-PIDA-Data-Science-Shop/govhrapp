@@ -2,21 +2,24 @@
 % Please edit documentation in R/qcheck_coverage.R
 \name{coverage_panel_server}
 \alias{coverage_panel_server}
-\title{Coverage Panel Server}
+\title{Coverage panel server}
 \usage{
 coverage_panel_server(id, .data, cache)
 }
 \arguments{
-\item{id}{Character string. Sub-module ID matching the one used in
+\item{id}{Character. Module namespace ID, matching the one passed to
 \code{\link[=coverage_panel_ui]{coverage_panel_ui()}}.}
 
-\item{.data}{Data frame for the panel (e.g., establishment, personnel, or contract).}
+\item{.data}{Data frame. The establishment, personnel or contract table the
+panel describes.}
 
-\item{cache}{A list for caching pre-computed results.}
+\item{cache}{Data frame. Precomputed coverage of \code{.data} by reference date.}
 }
 \value{
-A set of Shiny outputs for the coverage panel.
+Called for its side effect of rendering the module's outputs.
 }
 \description{
-Server logic for individual coverage panels.
+Renders the coverage plots of one table, from the cache until the user
+applies a filter.
 }
+\keyword{internal}

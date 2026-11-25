@@ -2,18 +2,23 @@
 % Please edit documentation in R/server_utils.R
 \name{build_wagebill_cache}
 \alias{build_wagebill_cache}
-\title{Build the Wage Bill Analytics Cache}
+\title{Build the wage bill analytics cache}
 \usage{
 build_wagebill_cache(wagebill_data)
 }
 \arguments{
-\item{wagebill_data}{Data frame with contract/salary attributes (wage bill).}
+\item{wagebill_data}{Contract data, one row per contract and reference date:
+a data frame or a database table (\code{tbl_dbi}). Must contain \code{ref_date},
+\code{personnel_id}, \code{employment_status} (\code{"active"} or \code{"pensioner"}),
+\code{birth_date} and \code{gross_salary_lcu}. Other pay columns listed in
+\code{govhr::dictionary} become pay measure options, and its categorical
+columns become grouping options.}
 }
 \value{
-A named list of pre-computed data frames keyed by panel.
+A named list of precomputed data frames, keyed by panel.
 }
 \description{
-Pre-computes the summaries the wage bill panels show before the user applies
-any filter.
+Precomputes the summaries the wage bill panels show before the user applies
+a filter.
 }
 \keyword{internal}

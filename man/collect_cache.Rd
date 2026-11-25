@@ -2,18 +2,18 @@
 % Please edit documentation in R/server_utils.R
 \name{collect_cache}
 \alias{collect_cache}
-\title{Collect the Lazy Entries of an Analytics Cache}
+\title{Collect the lazy entries of a cache}
 \usage{
 collect_cache(cache)
 }
 \arguments{
-\item{cache}{Named list of pre-computed summaries.}
+\item{cache}{Named list of precomputed summaries.}
 }
 \value{
 \code{cache}, with its lazy tables collected.
 }
 \description{
 Brings every lazy (\code{tbl_lazy}) entry of a cache list into memory, and leaves
-data frames, value-box lists and rendered tables as they are.
+data frames, value box lists and rendered tables as they are.
 }
 \keyword{internal}

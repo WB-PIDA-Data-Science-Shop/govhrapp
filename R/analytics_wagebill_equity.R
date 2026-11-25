@@ -1,31 +1,34 @@
-#' Wage Bill Equity UI
+#' Wage bill equity panel UI
 #'
-#' Sidebar controls and plots for wage distribution, deciles and compression.
+#' Sidebar controls and plots of the pay distribution, average pay by decile,
+#' and pay compression.
 #'
 #' @param id Character. Module namespace ID.
-#' @param .data Data frame containing wage bill data.
+#' @param .data Contract data, as `wagebill_data` in
+#'   [run_govhrapp_analytics()].
 #'
-#' @return A Shiny UI definition.
+#' @returns A Shiny UI definition.
 #'
 #' @import bslib
 #' @import shiny
 #' @importFrom bsicons bs_icon
 #' @importFrom plotly plotlyOutput
+#' @keywords internal
 wagebill_equity_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      !!!default_ui_controls(.data, id),
+      !!!default_ui_controls(id, .data),
       shiny::selectInput(
         shiny::NS(id, "wagebill_measure"),
-        "Type of Wage:",
+        "Pay measure",
         choices = identify_wagebill_choices(.data)
       ),
       shiny::radioButtons(
         inputId = shiny::NS(id, "plot_type"),
-        label = "Type of wage distribution",
+        label = "Distribution",
         choices = c("Histogram" = "histogram", "Cumulative" = "cumulative"),
         selected = "histogram"
       ),
@@ -39,10 +42,10 @@ wagebill_equity_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Wage Distribution",
+        "Pay distribution",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Wage density distribution. Choosing a group will add new trend lines, by group.",
+          "Share of active personnel's records in each pay range, pooling every reference date in the selected date range. Select a group to compare subgroups.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -56,10 +59,10 @@ wagebill_equity_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Wage by Decile",
+        "Pay by decile",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Wage distribution by decile. Choosing a group will add new trend lines, by group.",
+          "Average pay of active personnel in each tenth of the pay distribution, from lowest to highest paid, on the latest reference date. Select a group to compare subgroups.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -73,10 +76,10 @@ wagebill_equity_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Wage Compression Ratio (10th to 90th Percentile)",
+        "Pay compression (10th to 90th percentile)",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Wage compression ratio between the 10th and 90th percentile. Choosing a group will add new trend lines, by group.",
+          "The 10th, 50th and 90th percentiles of active personnel's pay. The wider the gap between the 10th and 90th, the less compressed pay is. Without a group, each reference date is shown; with a group, subgroups are compared on the latest reference date.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -89,13 +92,15 @@ wagebill_equity_ui <- function(id, .data) {
   )
 }
 
-#' Wage Bill Equity Server
+#' Wage bill equity panel server
 #'
-#' @param id Character. Module namespace ID.
-#' @param .data Data frame containing wage bill data.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' Renders the pay distribution plots, from the cache until the user applies a
+#' selection.
 #'
-#' @return A Shiny module server function.
+#' @inheritParams wagebill_equity_ui
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
+#'
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @import shiny
 #' @importFrom govhr compute_compression_ratio compute_decile compute_percentile
@@ -104,15 +109,11 @@ wagebill_equity_ui <- function(id, .data) {
 #' @keywords internal
 wagebill_equity_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
-    update_group_filter_controls(.data, input, session)
+    update_filter_controls(.data, input, session)
 
     wagebill_filtered <- shiny::reactive({
-      filter_data(
-        .data,
-        group_filter = input$group_filter,
-        subgroup_filter = input$subgroup_filter,
-        date_range = input$date_range
-      )
+      apply_sidebar_filters(.data, input) |>
+        filter_active()
     })
 
     # plot 1. wage density

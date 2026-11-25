@@ -2,18 +2,21 @@
 % Please edit documentation in R/qcheck_consistency.R
 \name{consistency_panel_ui}
 \alias{consistency_panel_ui}
-\title{Consistency Panel UI}
+\title{Consistency panel UI}
 \usage{
 consistency_panel_ui(id, .data)
 }
 \arguments{
-\item{id}{Character string. The module namespace ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame. The data to be used in the consistency panel.}
+\item{.data}{Data frame. The establishment, personnel or contract table the
+panel describes.}
 }
 \value{
-A Shiny UI object representing the consistency panel.
+A Shiny UI definition.
 }
 \description{
-Consistency Panel UI
+Sidebar controls and consistency plots over time and by variable, for one
+table.
 }
+\keyword{internal}

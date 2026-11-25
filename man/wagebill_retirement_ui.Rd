@@ -2,18 +2,21 @@
 % Please edit documentation in R/analytics_wagebill_retirement.R
 \name{wagebill_retirement_ui}
 \alias{wagebill_retirement_ui}
-\title{Wage Bill Retirement UI}
+\title{Wage bill retirement panel UI}
 \usage{
 wagebill_retirement_ui(id, .data)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame containing wage bill data.}
+\item{.data}{Contract data, as \code{wagebill_data} in
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}.}
 }
 \value{
 A Shiny UI definition.
 }
 \description{
-Sidebar controls and plots for realised and projected retirement costs.
+Sidebar controls and plots of pension payments and of past and projected
+retirement costs.
 }
+\keyword{internal}

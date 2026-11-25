@@ -15,50 +15,92 @@ panel <- data.frame(
   gross_salary_lcu = c(100, 200, 150, 250, 120, 300)
 )
 
-test_that("filter_data applies subgroup and date filters together", {
-  result <- filter_data(
-    panel,
-    group_filter = "paygrade",
-    subgroup_filter = "G1",
-    date_range = as.Date(c("2021-01-01", "2022-01-01"))
+test_that("apply_sidebar_filters applies the filters and dates, or says none match", {
+  sidebar <- list(
+    date_range = as.Date(c("2021-01-01", "2022-01-01")),
+    group_filter = "ref_date",
+    filter_col = "paygrade",
+    filter_values = "G1"
   )
 
+  result <- apply_sidebar_filters(panel, sidebar)
+
+  expect_s3_class(result, "data.frame")
   expect_equal(nrow(result), 2L)
-  expect_true(all(result$paygrade == "G1"))
-  expect_true(all(result$ref_date >= as.Date("2021-01-01")))
+  expect_true(all(result[["paygrade"]] == "G1"))
+  expect_true(all(result[["ref_date"]] >= as.Date("2021-01-01")))
+
+  sidebar[["filter_values"]] <- "G9"
+  expect_error(apply_sidebar_filters(panel, sidebar), class = "validation")
 })
 
-test_that("filter_data ignores subgroup_filter when grouping by ref_date", {
-  result <- filter_data(
-    panel,
-    group_filter = "ref_date",
-    subgroup_filter = "G1",
-    date_range = NULL
+test_that("selected_filters skips unset columns and combines the rest", {
+  unset <- list(group_filter = "ref_date", filter_col = "none")
+  expect_length(selected_filters(unset), 0)
+
+  # the population filter narrows the subgroups shown on the same column
+  both_on_paygrade <- list(
+    group_filter = "paygrade",
+    subgroup_filter = c("G1", "G2"),
+    filter_col = "paygrade",
+    filter_values = "G2"
   )
 
-  expect_equal(nrow(result), nrow(panel))
-  expect_setequal(result$paygrade, c("G1", "G2"))
+  result <- filter_data(panel, filters = selected_filters(both_on_paygrade))
+
+  expect_equal(unique(result[["paygrade"]]), "G2")
+})
+
+test_that("read_picker_choices offers only the values left by the filters above", {
+  staff <- data.frame(
+    ref_date = as.Date(c(
+      "2020-01-01", "2020-01-01", "2021-01-01", "2021-01-01"
+    )),
+    gender = c("female", "male", "female", "male"),
+    paygrade = c("G1", "G2", "G3", "G2")
+  )
+
+  sidebar <- list(
+    date_range = as.Date(c("2020-01-01", "2021-01-01")),
+    filter_col = "gender",
+    filter_values = "female",
+    group_filter = "paygrade"
+  )
+
+  cache <- new.env()
+  filter_position <- 1
+  subgroup_position <- 2
+
+  expect_equal(
+    read_picker_choices(staff, sidebar, subgroup_position, cache),
+    c("G1", "G3")
+  )
+
+  # the date range narrows every picker below it
+  sidebar[["date_range"]] <- as.Date(c("2021-01-01", "2021-01-01"))
+
+  expect_equal(
+    read_picker_choices(staff, sidebar, filter_position, cache),
+    c("female", "male")
+  )
+  expect_equal(
+    read_picker_choices(staff, sidebar, subgroup_position, cache),
+    "G3"
+  )
 })
 
 test_that("filter_data drops rows with a missing ref_date", {
   # the single-pass subset must not readmit NA comparisons as all-NA rows
   panel_na <- panel
-  panel_na$ref_date[1] <- as.Date(NA)
+  panel_na[["ref_date"]][1] <- as.Date(NA)
 
   result <- filter_data(
     panel_na,
-    group_filter = "ref_date",
-    subgroup_filter = NULL,
     date_range = as.Date(c("2020-01-01", "2022-01-01"))
   )
 
   expect_equal(nrow(result), nrow(panel) - 1L)
-  expect_false(anyNA(result$ref_date))
-})
-
-test_that("filter_data preserves the class of its input", {
-  result <- filter_data(panel, "paygrade", "G1", NULL)
-  expect_s3_class(result, "data.frame")
+  expect_false(anyNA(result[["ref_date"]]))
 })
 
 # ---- identify_group_choices --------------------------------------------------

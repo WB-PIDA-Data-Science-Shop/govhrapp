@@ -1,1 +1,1 @@
-Analyze public sector wage bill dynamics through high-level spending trends, group comparisons, and interactive animations of workforce expenditure.
+Analyze the wage bill in your public sector by looking at historical trends and pay distribution, as well as measuring how movements and retirements affect spending. You can also compare groups in size and growth trends.

@@ -1,19 +1,24 @@
-#' Wage Bill UI
+#' Wage bill tab UI
 #'
-#' Top-level wage bill tab: guidance, key indicator boxes, and the overview,
-#' equity, movement and retirement panels.
+#' Guidance, key indicator boxes, and the overview, equity, movement and
+#' retirement panels of the wage bill tab.
 #'
 #' @param id Character. Module namespace ID.
-#' @param wagebill_data Data frame containing wage bill data.
+#' @param wagebill_data Contract data, one row per contract and reference date:
+#'   a data frame or a database table (`tbl_dbi`). Must contain `ref_date`,
+#'   `personnel_id`, `employment_status` (`"active"` or `"pensioner"`),
+#'   `birth_date` and `gross_salary_lcu`. Other pay columns listed in
+#'   `govhr::dictionary` become pay measure options, and its categorical
+#'   columns become grouping options.
 #'
-#' @return A Shiny UI definition.
+#' @returns A Shiny UI definition.
 #'
 #' @importFrom bslib accordion accordion_panel card card_body card_header layout_column_wrap layout_columns nav_panel navset_underline popover
 #' @importFrom bsicons bs_icon
 #' @importFrom shiny NS icon markdown uiOutput
 #' @export
 wagebill_ui <- function(id, wagebill_data) {
-  # value boxes for total wage bill and pension liabilities
+  # value boxes for the wage bill and pension payments
   value_boxes <- list(
     shiny::uiOutput(shiny::NS(id, "total_wagebill")),
     shiny::uiOutput(shiny::NS(id, "total_pension_liabilities"))
@@ -24,7 +29,7 @@ wagebill_ui <- function(id, wagebill_data) {
     col_widths = 12,
 
     bslib::card(
-      bslib::card_header("Wage Bill Analytics"),
+      bslib::card_header("Wage bill analytics"),
       bslib::card_body(
         shiny::markdown(
           readLines(system.file(
@@ -36,7 +41,7 @@ wagebill_ui <- function(id, wagebill_data) {
     ),
     bslib::accordion(
       bslib::accordion_panel(
-        title = "Guidance Questions",
+        title = "Guiding questions",
         icon = shiny::icon("question-circle"),
         shiny::markdown(
           readLines(system.file(
@@ -51,11 +56,11 @@ wagebill_ui <- function(id, wagebill_data) {
     # value boxes
     bslib::card(
       bslib::card_header(
-        "Wagebill: Key Indicators",
+        "Key indicators",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Computed as the most recent wagebill (active workers) and pension liability (pensioners).",
-          title = "Wagebill Overview",
+          "Total gross salary on the latest reference date: of active personnel for the wage bill, and of pensioners for pension payments.",
+          title = "Key indicators",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -91,16 +96,16 @@ wagebill_ui <- function(id, wagebill_data) {
   )
 }
 
-#' Wage Bill Server
+#' Wage bill tab server
 #'
-#' Renders the key indicator boxes and delegates to the overview, equity,
-#' movement and retirement panel servers.
+#' Renders the key indicator boxes and runs the overview, equity, movement and
+#' retirement panel servers.
 #'
 #' @param id Character. Module namespace ID.
-#' @param wagebill_data Data frame containing wage bill data.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' @inheritParams wagebill_ui
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
 #'
-#' @return A Shiny module server function.
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @importFrom shiny moduleServer
 #' @export
@@ -126,34 +131,37 @@ wagebill_server <- function(id, wagebill_data, cache) {
   })
 }
 
-#' Run the Wage Bill Shiny Application
+#' Run the wage bill app
 #'
-#' Launches the wage bill analytics app on its own, outside the full govhr
-#' dashboard. Panels cover overview trends, pay equity, movement costs and
+#' Launches the wage bill tab of the analytics app on its own. Its panels cover
+#' wage bill trends, pay equity, the cost of hires and separations, and
 #' retirement costs.
 #'
-#' @param wagebill_data Data frame containing wage bill data. Requires
-#'   `ref_date`, `personnel_id`, `employment_status`, `birth_date` and at least
-#'   one salary column (`gross_salary_lcu` is used for the key indicators);
-#'   categorical columns present in `govhr::dictionary` become grouping options.
-#' @param cache List of pre-computed summaries from [build_wagebill_cache()].
-#'   Defaults to building one from `wagebill_data`.
+#' @inheritParams wagebill_ui
+#' @param cache List of precomputed summaries, with the wage bill summaries in
+#'   its `wagebill` element as in [build_analytics_cache()]. Default builds
+#'   them from `wagebill_data`.
 #' @param ... Additional arguments passed to [shiny::shinyApp()].
 #'
-#' @return A Shiny app object.
+#' @returns A Shiny app object.
+#'
+#' @seealso [run_govhrapp_analytics()] for the full analytics app.
 #'
 #' @examples
 #' \dontrun{
-#' run_wagebillapp(wagebill_data = govhr::bra_hrmis_contract)
+#' run_wagebill_app(wagebill_data)
 #' }
 #'
 #' @importFrom shiny shinyApp
 #' @export
-run_wagebillapp <- function(
+run_wagebill_app <- function(
   wagebill_data,
   cache = list(wagebill = build_wagebill_cache(wagebill_data)),
   ...
 ) {
+  # the standalone app has no transition panel, so `contract_type` is optional
+  check_analytics_data(wagebill_data = wagebill_data, transition = FALSE)
+
   ui <- wagebill_ui("wagebill", wagebill_data)
 
   server <- function(input, output, session) {
@@ -161,4 +169,25 @@ run_wagebillapp <- function(
   }
 
   shiny::shinyApp(ui, server, ...)
+}
+
+#' Run the wage bill app (deprecated)
+#'
+#' `run_wagebillapp()` was renamed to [run_wagebill_app()], to match the names
+#' of the other app launchers.
+#'
+#' @inheritParams run_wagebill_app
+#'
+#' @returns A Shiny app object.
+#'
+#' @keywords internal
+#' @export
+run_wagebillapp <- function(
+  wagebill_data,
+  cache = list(wagebill = build_wagebill_cache(wagebill_data)),
+  ...
+) {
+  .Deprecated("run_wagebill_app", package = "govhrapp")
+
+  run_wagebill_app(wagebill_data, cache = cache, ...)
 }

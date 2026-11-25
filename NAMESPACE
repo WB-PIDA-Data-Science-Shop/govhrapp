@@ -12,11 +12,13 @@ export(run_analytics_demo)
 export(run_govhrapp_analytics)
 export(run_govhrapp_qcheck)
 export(run_qcheck_demo)
+export(run_wagebill_app)
 export(run_wagebillapp)
+export(run_workforce_app)
 export(wagebill_server)
 export(wagebill_ui)
 export(workforce_server)
-export(workforce_transition_server)
+export(workforce_ui)
 import(bslib)
 import(shiny)
 importFrom(bsicons,bs_icon)
@@ -45,6 +47,7 @@ importFrom(bslib,
 )
 importFrom(collapse,funique)
 importFrom(dplyr,
+  across,
   all_of,
   any_of,
   arrange,
@@ -52,18 +55,21 @@ importFrom(dplyr,
   case_when,
   coalesce,
   collect,
+  cross_join,
+  desc,
   distinct,
   filter,
-  first,
   if_else,
   left_join,
   mutate,
+  n_distinct,
   pull,
   rename,
   select,
   semi_join,
   slice_max,
-  summarise
+  summarise,
+  tibble
 )
 importFrom(ggiraph,
   girafeOutput,
@@ -72,17 +78,22 @@ importFrom(ggiraph,
 importFrom(ggplot2,
   aes,
   element_text,
+  facet_wrap,
+  geom_area,
   geom_hline,
   geom_line,
   geom_point,
   ggplot,
+  label_wrap_gen,
   labs,
   scale_color_manual,
+  scale_fill_manual,
   scale_y_continuous,
   theme,
   theme_minimal,
   theme_set,
   update_geom_defaults,
+  vars,
   xlab,
   ylab
 )
@@ -118,7 +129,7 @@ importFrom(govhr,
   plot_decile,
   plot_histogram,
   plot_movement,
-  plot_transition_network,
+  plot_transition,
   plot_trend,
   project_retirement,
   scale_plot_height,
@@ -148,21 +159,26 @@ importFrom(plotly,
   renderPlotly
 )
 importFrom(purrr,
+  imap,
   imap_chr,
+  iwalk,
+  keep,
   map,
-  map2,
   map_dbl,
   modify_if,
   pluck,
+  reduce,
   set_names
 )
 importFrom(rmarkdown,render)
 importFrom(rsconnect,deployApp)
 importFrom(scales,
+  breaks_pretty,
   comma,
   cut_short_scale,
   label_number,
   label_percent,
+  pal_seq_gradient,
   percent_format
 )
 importFrom(shiny,
@@ -208,10 +224,7 @@ importFrom(shinymanager,
   secure_app,
   secure_server
 )
-importFrom(stringr,
-  str_detect,
-  str_to_title
-)
+importFrom(stringr,str_detect)
 importFrom(thematic,thematic_shiny)
 importFrom(tidyr,complete)
 importFrom(writexl,write_xlsx)

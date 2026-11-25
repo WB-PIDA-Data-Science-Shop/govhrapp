@@ -1,17 +1,20 @@
-#' Workforce Transition UI
+#' Workforce transition panel UI
 #'
-#' Sidebar controls, a transition trend plot and an interactive transition
-#' network.
+#' Sidebar controls, a trend of transitions between groups, and an interactive
+#' network of the transitions.
 #'
 #' @param id Character. Module namespace ID.
-#' @param .data Data frame containing wage bill data.
+#' @param .data Contract data, as `wagebill_data` in
+#'   [run_govhrapp_analytics()]. Transitions are counted between personnel or
+#'   contract groups, such as `contract_type`, which only contract data holds.
 #'
-#' @return A Shiny UI definition.
+#' @returns A Shiny UI definition.
 #'
 #' @importFrom bslib card card_header layout_sidebar popover sidebar
 #' @importFrom ggiraph girafeOutput
 #' @importFrom plotly plotlyOutput
 #' @importFrom shiny NS actionButton selectInput
+#' @keywords internal
 workforce_transition_ui <- function(id, .data) {
   choices <- identify_group_choices(.data)[c("Personnel", "Contract")]
 
@@ -21,14 +24,16 @@ workforce_transition_ui <- function(id, .data) {
       title = "Controls",
       width = "300px",
       date_ui(id, .data),
+      !!!population_filter_ui(id, .data),
+      shiny::hr(),
       group_filter_ui(
         id, .data, selected = "contract_type", group_choices = choices
       ),
       subgroup_filter_ui(id),
       shiny::selectInput(
         shiny::NS(id, "id_col"),
-        "Identifier",
-        choices = c("Personnel" = "personnel_id", "Contract" = "contract_id"),
+        "Count moves of",
+        choices = c("Personnel" = "personnel_id", "Contracts" = "contract_id"),
         selected = "personnel_id"
       ),
       shiny::actionButton(
@@ -45,7 +50,7 @@ workforce_transition_ui <- function(id, .data) {
         "Transitions over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "The number of internal transitions over time. This is computed as the number of internal transitions over the entire time period, considering as a transition a movement of personnel across groups between each reference date.",
+          "Number of moves from one subgroup to another since the previous reference date, counting personnel or contracts as chosen in the sidebar.",
           title = "Transitions over time",
           placement = "left"
         ),
@@ -59,11 +64,11 @@ workforce_transition_ui <- function(id, .data) {
       height = "600px",
       full_screen = TRUE,
       bslib::card_header(
-        "Transition Network",
+        "Transition network",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "The number of internal transitions over time. This is computed as the number of internal transitions over the entire time period, considering as a transition a movement of personnel across groups between each reference date.",
-          title = "Transition Network",
+          "Moves between subgroups, added up over the selected date range.",
+          title = "Transition network",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -73,35 +78,32 @@ workforce_transition_ui <- function(id, .data) {
   )
 }
 
-#' Workforce Transition Server
+#' Workforce transition panel server
 #'
-#' @param id Character. Module namespace ID.
-#' @param .data Data frame containing wage bill data.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' Renders the transition trend and network, from the cache until the user
+#' applies a selection.
 #'
-#' @return A Shiny module server function.
+#' @inheritParams workforce_transition_ui
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
+#'
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @importFrom dplyr collect
 #' @importFrom ggiraph renderGirafe
-#' @importFrom govhr compute_transition fastcount plot_transition_network plot_trend
+#' @importFrom govhr compute_transition fastcount plot_transition plot_trend
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
 #' @importFrom shiny bindEvent moduleServer need reactive req validate
 #'
-#' @export
+#' @keywords internal
 workforce_transition_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
-    update_group_filter_controls(.data, input, session)
+    update_filter_controls(.data, input, session)
 
     workforce_filtered <- shiny::reactive({
       shiny::req(input$apply_btn)
 
-      filter_data(
-        .data,
-        group_filter = input$group_filter,
-        subgroup_filter = input$subgroup_filter,
-        date_range = input$date_range
-      )
+      apply_sidebar_filters(.data, input)
     })
 
     # both plots read the same transitions, so detect them once per apply. they
@@ -114,7 +116,7 @@ workforce_transition_server <- function(id, .data, cache) {
         govhr::compute_transition(
           workforce_filtered(),
           id_col = input$id_col,
-          group_cols = input$group_filter
+          group_col = input$group_filter
         ) |>
           dplyr::collect()
       }
@@ -127,13 +129,15 @@ workforce_transition_server <- function(id, .data, cache) {
         transition_data()
       )
 
+      # compute_transition() returns one row per origin, destination and date,
+      # so moves are summed from `transitions` rather than counted by row
       plotly::ggplotly(
         transition_data() |>
-          govhr::fastcount(ref_date, name = "transition") |>
+          govhr::fastcount(ref_date, wt = transitions, name = "transition") |>
           govhr::plot_trend(
             group_col = "ref_date",
             y_col = "transition",
-            y_label = "Number of Transitions"
+            y_label = "Transitions"
           )
       )
     }) |>
@@ -145,22 +149,28 @@ workforce_transition_server <- function(id, .data, cache) {
         transition_data()
       )
 
-      govhr::plot_transition_network(transition_data())
+      govhr::plot_transition(
+        transition_data(),
+        weight_col = "transitions",
+        interactive = TRUE
+      )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
   })
 }
 
-#' Launch the Workforce Transition Module Standalone
+#' Run the workforce transition panel on its own
 #'
-#' @param .data Data frame containing wage bill data.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' Launches the transition panel of the workforce tab by itself, for developing
+#' and testing it.
 #'
-#' @return A Shiny app object.
+#' @inheritParams workforce_transition_server
+#'
+#' @returns A Shiny app object.
 #'
 #' @importFrom shiny shinyApp
 #' @keywords internal
-workforce_transition_app <- function(.data, cache) {
+run_workforce_transition_app <- function(.data, cache) {
   shiny::shinyApp(
     ui = workforce_transition_ui("transition", .data),
     server = function(input, output, session) {

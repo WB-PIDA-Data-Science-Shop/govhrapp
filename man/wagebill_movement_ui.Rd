@@ -2,18 +2,21 @@
 % Please edit documentation in R/analytics_wagebill_movement.R
 \name{wagebill_movement_ui}
 \alias{wagebill_movement_ui}
-\title{Wage Bill Movement UI}
+\title{Wage bill movement panel UI}
 \usage{
 wagebill_movement_ui(id, .data)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame containing wage bill data.}
+\item{.data}{Contract data, as \code{wagebill_data} in
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}.}
 }
 \value{
 A Shiny UI definition.
 }
 \description{
-Sidebar controls and plots for the cost of recruitment and separation.
+Sidebar controls and plots of the cost of hires or separations, over time and
+by group.
 }
+\keyword{internal}

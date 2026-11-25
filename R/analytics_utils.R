@@ -1,15 +1,31 @@
-#' Format a Movement Rate for Display
+# shared by the value boxes, charts and profile table, so each movement is
+# named the same way wherever it appears
+movement_labels <- c(
+  hire = "Hires",
+  separation = "Separations",
+  retirement = "Retirements",
+  replacement = "Replacement rate"
+)
+
+#' Format a movement rate for display
 #'
 #' @param rate Numeric. A rate as a proportion, or the replacement ratio.
 #' @param movement_type Character. One of `"hire"`, `"separation"`,
 #'   `"retirement"` or `"replacement"`.
 #'
-#' @return Character. A percentage such as `"3.1%"`, or for `"replacement"` a
-#'   ratio such as `"1.49"`.
+#' @returns Character. A percentage such as `"3.1%"`, or for `"replacement"` a
+#'   ratio such as `"1.49"`, or `"No separations"` when there were hires but
+#'   no separations.
 #'
 #' @importFrom scales label_number label_percent
 #' @keywords internal
 format_movement_rate <- function(rate, movement_type) {
+  # retirements are not separations, so a period with hires and no other
+  # exits is common enough in small groups that "Inf" would otherwise show
+  if (movement_type == "replacement" && is.infinite(rate)) {
+    return("No separations")
+  }
+
   # the replacement rate compares hires with separations rather than with
   # headcount, so a percentage would misread a ratio of 1.49 as 149% of staff
   if (movement_type == "replacement") {
@@ -19,32 +35,32 @@ format_movement_rate <- function(rate, movement_type) {
   }
 }
 
-#' Render a Workforce Movement Value Box
+#' Render a workforce movement value box
 #'
 #' Renders the count and rate of one movement type at the latest reference
-#' period. Values are read from the analytics cache when available and computed
+#' date. Values are read from the analytics cache when available and computed
 #' from `.data` otherwise.
 #'
-#' @param .data Data frame containing personnel data.
+#' @param .data Personnel data, as `workforce_data` in
+#'   [run_govhrapp_analytics()].
 #' @param movement_type Character. One of `"hire"`, `"separation"`,
 #'   `"retirement"` or `"replacement"`.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()],
-#'   or `NULL` to compute the values directly.
+#' @param cache List of precomputed summaries from [build_analytics_cache()],
+#'   or `NULL` (default) to compute the values from `.data`.
 #'
-#' @return A Shiny render function producing the value box.
+#' @returns A Shiny render function producing the value box.
 #'
 #' @importFrom bsicons bs_icon
 #' @importFrom bslib popover value_box value_box_theme
 #' @importFrom govhr compute_movement compute_retirement
 #' @importFrom purrr pluck
 #' @importFrom shiny h5 renderUI tagList
-#' @importFrom stringr str_to_title
 #' @keywords internal
 render_movement_box <- function(.data, movement_type, cache = NULL) {
   values <- purrr::pluck(cache, "workforce", "movement_box", movement_type)
 
   if (is.null(values)) {
-    values <- summarise_movement_box(
+    values <- summarize_movement_box(
       govhr::compute_movement(.data),
       govhr::compute_retirement(.data),
       movement_type
@@ -53,11 +69,10 @@ render_movement_box <- function(.data, movement_type, cache = NULL) {
 
   rate <- format_movement_rate(values[["rate"]], movement_type)
 
-  box_value <- if (movement_type == "replacement") {
-    shiny::tagList(
-      shiny::h5("Ratio of Hires"),
-      shiny::h5(paste("to Separations:", rate))
-    )
+  box_value <- if (movement_type == "replacement" && is.infinite(values[["rate"]])) {
+    shiny::h5("Hires but no separations")
+  } else if (movement_type == "replacement") {
+    shiny::h5(rate)
   } else {
     shiny::tagList(
       shiny::h5(paste("Count:", values[["count"]])),
@@ -67,7 +82,7 @@ render_movement_box <- function(.data, movement_type, cache = NULL) {
 
   shiny::renderUI({
     bslib::value_box(
-      title = stringr::str_to_title(movement_type),
+      title = movement_labels[[movement_type]],
       theme = bslib::value_box_theme(bg = "#C34729", fg = "#ffffff"),
       class = "border",
       value = box_value,
@@ -82,7 +97,7 @@ render_movement_box <- function(.data, movement_type, cache = NULL) {
       ),
       p(
         paste0(
-          "Reference period: ",
+          "Reference date: ",
           format(as.Date(values[["ref_date"]]), "%b %Y")
         ),
       ),
@@ -91,10 +106,10 @@ render_movement_box <- function(.data, movement_type, cache = NULL) {
         placement = "left",
         switch(
           movement_type,
-          hire = "Number of personnel active in the most recent reference period but not in the previous one, and their share of active headcount.",
-          separation = "Number of personnel active in the reference period but no longer active in the next one, for any reason including retirement, and their share of active headcount.",
-          retirement = "Number of personnel active in the reference period who are pensioners in the next one, and their share of active headcount.",
-          replacement = "Ratio of hires to separations (including retirements). Above 1, more personnel join than leave."
+          hire = "Personnel active on the reference date but not on the previous one, as a count and as a share of the previous reference date's active headcount.",
+          separation = "Personnel active on the previous reference date but not on this one, other than retirees, as a count and as a share of the previous reference date's active headcount.",
+          retirement = "Personnel active on the previous reference date who are recorded as pensioners on this one, as a count and as a share of the previous reference date's active headcount.",
+          replacement = "Hires per separation. Retirements are not counted as separations. Above 1, hires outnumber separations."
         )
       )
     )

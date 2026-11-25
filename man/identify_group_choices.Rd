@@ -2,7 +2,7 @@
 % Please edit documentation in R/ui_utils.R
 \name{identify_group_choices}
 \alias{identify_group_choices}
-\title{Identify Available Grouping Choices}
+\title{Identify the available grouping choices}
 \usage{
 identify_group_choices(.data)
 }
@@ -13,8 +13,8 @@ identify_group_choices(.data)
 A named list of grouping choices, keyed by module.
 }
 \description{
-Lists the categorical variables present in the data that can be used as a
-grouping dimension, nested by dictionary module. Always includes an "All"
-option mapped to \code{ref_date}.
+Lists the categorical columns present in the data that can be grouped by,
+nested by dictionary module. Always includes an "All" option, mapped to
+\code{ref_date}, for no grouping.
 }
 \keyword{internal}

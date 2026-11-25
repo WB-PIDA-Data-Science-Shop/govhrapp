@@ -2,19 +2,20 @@
 % Please edit documentation in R/ui_utils.R
 \name{date_ui}
 \alias{date_ui}
-\title{Date Range Filter Input}
+\title{Date range filter input}
 \usage{
 date_ui(id, .data)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame whose \code{ref_date} column bounds the selectable range.}
+\item{.data}{Data frame or database table (\code{tbl_dbi}) whose \code{ref_date}
+column bounds the selectable range.}
 }
 \value{
 A Shiny date range input.
 }
 \description{
-Date Range Filter Input
+Date range filter input
 }
 \keyword{internal}

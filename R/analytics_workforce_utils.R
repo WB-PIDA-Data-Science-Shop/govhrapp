@@ -1,4 +1,4 @@
-#' Name the Column Holding a Movement Measure
+#' Name the column holding a movement measure
 #'
 #' Maps a movement type and measurement type to the column that
 #' [govhr::compute_movement()] or [govhr::compute_retirement()] stores it in.
@@ -8,7 +8,7 @@
 #' @param measurement_type Character. `"count"` or `"rate"`. Ignored for
 #'   `"replacement"`, which is always a ratio.
 #'
-#' @return A column name, such as `"hires"`, `"separation_rate"` or
+#' @returns A column name, such as `"hires"`, `"separation_rate"` or
 #'   `"replacement_rate"`.
 #'
 #' @keywords internal
@@ -20,7 +20,7 @@ movement_measure_col <- function(movement_type, measurement_type) {
   }
 }
 
-#' Plot a Movement Measure Over Time
+#' Plot a movement measure over time
 #'
 #' Draws one movement measure with [govhr::plot_trend()], for the measures
 #' [govhr::plot_movement()] does not cover: replacement, retirement, projected
@@ -34,7 +34,7 @@ movement_measure_col <- function(movement_type, measurement_type) {
 #'   `"ref_date"` (default) for a single line.
 #' @param percent Logical. Format the y-axis as a percentage. Default `FALSE`.
 #'
-#' @return A ggplot2 object.
+#' @returns A ggplot2 object.
 #'
 #' @importFrom dplyr collect filter
 #' @importFrom ggplot2 scale_y_continuous
@@ -50,7 +50,7 @@ plot_movement_trend <- function(
 ) {
   # movement measures are undefined at the first or last date, which ggplot2
   # would otherwise drop with a "removed rows" warning on every render.
-  # plot_trend() sizes its group colours from `data[[group_col]]`, which is
+  # plot_trend() sizes its group colors from `data[[group_col]]`, which is
   # NULL on a lazy table, hence the collect()
   plot <- data |>
     dplyr::filter(!is.na(.data[[y_col]])) |>
@@ -70,18 +70,25 @@ plot_movement_trend <- function(
 
 #' Render a movement profile table
 #'
-#' @param data A data frame or remote database table (`tbl_dbi`) containing
-#'   personnel data with columns for ref_date, personnel_id, gender, educat7,
-#'   employment_status, and birth_date.
-#' @param movement_type A character string indicating the type of movement to profile (e.g
-#' "hire" or "separation").
+#' Compares the age, gender, education and employment status of hires or
+#' separations with the rest of the workforce, pooling every reference date
+#' the movement can be detected on.
 #'
-#' @return A gt table summarizing the demographic characteristics of the specified movement type compared to the general population.
+#' @param data Personnel data, as `workforce_data` in
+#'   [run_govhrapp_analytics()].
+#' @param movement_type Character. `"hire"` or `"separation"`.
+#'
+#' @returns A gt table with one column for the movers and one for everyone
+#'   else.
+#'
+#' @details Age is measured on the day the table is rendered, not on each
+#'   reference date.
+#'
 #' @importFrom dplyr all_of any_of coalesce collect distinct filter if_else
 #'   left_join mutate select semi_join
 #' @importFrom govhr detect_movement
 #' @importFrom gtsummary tbl_summary modify_header as_gt
-#' @importFrom stringr str_to_title
+#' @keywords internal
 render_movement_profile <- function(data, movement_type) {
   profile_data <- data |>
     dplyr::select(
@@ -110,7 +117,7 @@ render_movement_profile <- function(data, movement_type) {
     dplyr::semi_join(comparable_dates, by = "ref_date") |>
     dplyr::left_join(movers, by = c("personnel_id", "ref_date")) |>
     # pensioner records beside an active one share its flag, so only active
-    # records are labelled as movers
+    # records are labeled as movers
     dplyr::mutate(
       type_event = dplyr::if_else(
         dplyr::coalesce(.data[["employment_status"]] == "active", FALSE) &
@@ -120,7 +127,7 @@ render_movement_profile <- function(data, movement_type) {
       )
     ) |>
     dplyr::select(-moved) |>
-    # tbl_summary() summarises individual records, hence the collect()
+    # tbl_summary() summarizes individual records, hence the collect()
     dplyr::collect() |>
     dplyr::mutate(
       age = as.numeric(
@@ -134,18 +141,15 @@ render_movement_profile <- function(data, movement_type) {
       include = c("age", "gender", "educat7", "employment_status"),
       label = list(
         "gender" = "Gender",
-        "educat7" = "Education Level",
-        "employment_status" = "Employment Status",
-        "age" = "Age"
+        "educat7" = "Education level",
+        "employment_status" = "Employment status",
+        "age" = "Age today"
       )
     ) |>
     gtsummary::modify_header(
-      label = "**Variable**",
-      stat_1 = sprintf(
-        "**New %ss**",
-        stringr::str_to_title(movement_type)
-      ),
-      stat_2 = "**General Population**"
+      label = "**Characteristic**",
+      stat_1 = sprintf("**%s**", movement_labels[[movement_type]]),
+      stat_2 = "**Everyone else**"
     ) |>
     gtsummary::as_gt()
 }

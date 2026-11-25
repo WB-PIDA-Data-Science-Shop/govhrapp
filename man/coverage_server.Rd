@@ -2,25 +2,30 @@
 % Please edit documentation in R/qcheck_coverage.R
 \name{coverage_server}
 \alias{coverage_server}
-\title{Coverage Server Module}
+\title{Coverage tab server}
 \usage{
 coverage_server(id, est_data, personnel_data, contract_data, cache)
 }
 \arguments{
-\item{id}{Character string. The module namespace ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{est_data}{Data frame. The establishment-level data.}
+\item{est_data}{Establishment data, one row per establishment and reference
+date: a data frame.}
 
-\item{personnel_data}{Data frame. The personnel-level data.}
+\item{personnel_data}{Personnel data, one row per person and reference
+date: a data frame.}
 
-\item{contract_data}{Data frame. The contract-level data.}
+\item{contract_data}{Contract data, one row per contract and reference date:
+a data frame.}
 
-\item{cache}{A list of dataframes. It caches pre-computed coverage results. Passed on to \code{coverage_panel_server()}.}
+\item{cache}{List of precomputed coverage by reference date, with elements
+\code{est}, \code{personnel} and \code{contract}, as in the \code{coverage} element of
+\code{\link[=build_qcheck_cache]{build_qcheck_cache()}}.}
 }
 \value{
-None. Called for side effects (renders Shiny outputs).
+Called for its side effect of rendering the module's outputs.
 }
 \description{
-Server logic for the coverage section, processing and visualizing missing data patterns.
+Renders the coverage boxes and runs a coverage panel server for each table.
 }
 \keyword{internal}

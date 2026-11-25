@@ -2,19 +2,20 @@
 % Please edit documentation in R/analytics_workforce_overview.R
 \name{workforce_overview_ui}
 \alias{workforce_overview_ui}
-\title{Workforce Overview UI}
+\title{Workforce overview panel UI}
 \usage{
 workforce_overview_ui(id, .data)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
 
-\item{.data}{Data frame containing workforce data.}
+\item{.data}{Personnel data, as \code{workforce_data} in
+\code{\link[=run_govhrapp_analytics]{run_govhrapp_analytics()}}.}
 }
 \value{
 A Shiny UI definition.
 }
 \description{
-Sidebar controls, a headcount time trend, and totals and growth rates by
-group.
+Sidebar controls, a headcount trend, and headcount and its growth by group.
 }
+\keyword{internal}

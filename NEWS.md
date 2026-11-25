@@ -1,3 +1,22 @@
+# govhrapp 0.1.9
+* This patch introduces the following enhancements:
+    * Adds an optional "Shares by:" breakdown to the overview, retirement and movement panels: each category's share of the measure over time, one chart per group.
+    * Adds pensioners and pension payments over time to the retirement panels.
+    * Adds a "Filter by:" population filter to every panel, separate from "Group by:".
+    * Filter and subgroup choices list only the values in the filtered population and dates.
+    * Shows a message, rather than an error, when no records match the filters.
+    * Adds optional password protection to `run_govhrapp_qcheck()`, as in `run_govhrapp_analytics()`.
+    * Checks the data for required columns before the analytics app starts.
+    * Supports govhr 0.4.4, including its new movement definitions and trend charts.
+    * Uses consistent terms across the app text and documentation.
+* Breaking changes:
+    * Renames `run_wagebillapp()` to `run_wagebill_app()`. The old name is deprecated.
+    * Exports `run_workforce_app()` and `workforce_ui()`, and no longer exports `workforce_transition_server()`.
+* Bug fixes:
+    * Counts only active personnel in the Overview tab and the overview and equity panels, so pensions no longer inflate the wage bill or pay distribution.
+    * Fixes the sidebar filters and movement value boxes on database tables, and the display of `Inf` values.
+    * Fixes the standalone coverage, consistency and validation apps.
+
 # govhrapp 0.1.8
 * This patch introduces the following enhancements:
     * Fully port `govhr` functions, implementing a `dbi` compatible method.

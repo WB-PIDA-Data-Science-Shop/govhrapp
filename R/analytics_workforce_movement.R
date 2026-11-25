@@ -1,35 +1,47 @@
-#' Workforce Movement UI
+#' Workforce movement panel UI
 #'
-#' Sidebar controls, trend and by-group plots, and a mover profile table for
-#' recruitment, separation and turnover.
+#' Sidebar controls, a trend and by-group plots of hires, separations or the
+#' replacement rate, and a table comparing hires or separations with the whole
+#' workforce.
 #'
 #' @param id Character. Module namespace ID.
-#' @param .data Data frame containing personnel data.
+#' @param .data Personnel data, as `workforce_data` in
+#'   [run_govhrapp_analytics()].
 #'
-#' @return A Shiny UI definition.
+#' @returns A Shiny UI definition.
 #'
 #' @import bslib
 #' @import shiny
 #' @importFrom plotly plotlyOutput
+#' @keywords internal
 workforce_movement_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      !!!default_ui_controls(.data, id),
+      !!!default_ui_controls(id, .data),
+      # the replacement rate is a ratio of hires to separations, which does
+      # not split into parts that add up to it
+      shiny::conditionalPanel(
+        condition = sprintf(
+          "input['%s'] !== 'replacement'",
+          shiny::NS(id, "movement_type")
+        ),
+        breakdown_filter_ui(id, .data)
+      ),
       shiny::selectInput(
         shiny::NS(id, "movement_type"),
-        label = "Select type of movement:",
+        label = "Movement",
         choices = c(
-          "Recruitment" = "hire",
-          "Separation" = "separation",
-          "Replacement" = "replacement"
+          "Hires" = "hire",
+          "Separations" = "separation",
+          "Replacement rate" = "replacement"
         )
       ),
       shiny::selectInput(
         shiny::NS(id, "measurement_type"),
-        label = "Select type of measurement:",
+        label = "Measure",
         choices = c("Count" = "count", "Rate" = "rate")
       ),
       shiny::actionButton(
@@ -46,7 +58,7 @@ workforce_movement_ui <- function(id, .data) {
         "Movements over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Hires are personnel active in a period but not in the previous one. Separations are personnel active in a period but not in the next one, for any reason including retirement. Rates divide hires or separations by the active headcount in the same period. The replacement rate is the ratio of hires to separations: above 1, more personnel join than leave.",
+          "Hires are personnel active on a reference date but not on the previous one. Separations are personnel active on the previous reference date but not on this one, other than retirees, who are shown in the Retirement tab. Rates divide hires or separations by the previous reference date's active headcount. The replacement rate is the ratio of hires to separation: above 1, hires outnumber separations. Select a group to compare subgroups.",
           title = "Movements over time",
           placement = "left"
         ),
@@ -65,11 +77,11 @@ workforce_movement_ui <- function(id, .data) {
         full_screen = TRUE,
         fillable = FALSE,
         bslib::card_header(
-          "Counts/rates by group",
+          "Movements by group",
           bslib::popover(
             bsicons::bs_icon("info-circle-fill"),
-            "Counts and rates by group. The counts and rates are computed for the latest available year in the selected time frame.",
-            title = "Counts/rates by group",
+            "Count or rate on the latest reference date in the selected date range, by subgroup.",
+            title = "Movements by group",
             placement = "left"
           ),
           class = "d-flex justify-content-between"
@@ -82,10 +94,10 @@ workforce_movement_ui <- function(id, .data) {
         full_screen = TRUE,
         fillable = FALSE,
         bslib::card_header(
-          "Growth rate by group",
+          "Growth in movements by group",
           bslib::popover(
             bsicons::bs_icon("info-circle-fill"),
-            "Growth rate with respect to first reference date, by group.",
+            "Percentage change in the count or rate from the first to the last reference date in the selected date range, by subgroup.",
             placement = "left"
           ),
           class = "d-flex justify-content-between"
@@ -93,16 +105,19 @@ workforce_movement_ui <- function(id, .data) {
         plotly::plotlyOutput(shiny::NS(id, "movement_growth")),
         min_height = "450px"
       )
-    )
+    ),
+    composition_ui(shiny::NS(id, "composition"))
   )
 }
-#' Workforce Movement Server
+#' Workforce movement panel server
 #'
-#' @param id Character. Module namespace ID.
-#' @param .data Data frame containing personnel data.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' Renders the movement plots and profile table, from the cache until the user
+#' applies a selection.
 #'
-#' @return A Shiny module server function.
+#' @inheritParams workforce_movement_ui
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
+#'
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @import bslib
 #' @import shiny
@@ -113,19 +128,13 @@ workforce_movement_ui <- function(id, .data) {
 #' @importFrom gtsummary as_gt modify_header tbl_summary
 #' @importFrom plotly ggplotly renderPlotly
 #' @importFrom purrr pluck
-#' @importFrom stringr str_to_title
 #' @keywords internal
 workforce_movement_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
-    update_group_filter_controls(.data, input, session)
+    update_filter_controls(.data, input, session)
 
     data_filtered <- shiny::reactive({
-      filter_data(
-        .data,
-        group_filter = input$group_filter,
-        subgroup_filter = input$subgroup_filter,
-        date_range = input$date_range
-      )
+      apply_sidebar_filters(.data, input)
     })
 
     # compute_movement() returns every movement and measurement type at once,
@@ -145,8 +154,9 @@ workforce_movement_server <- function(id, .data, cache) {
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
 
-    # the first date has no hires and the last no separations, so plots 2 and 3
-    # drop those dates for the selected measure only
+    # the first date has no earlier date to count hires and separations
+    # against, and a group with nobody active on the previous date has no
+    # separations, so plots 2 and 3 drop the rows missing the selected measure
     measure_summary <- shiny::reactive({
       measure_col <- movement_measure_col(
         input$movement_type,
@@ -177,7 +187,7 @@ workforce_movement_server <- function(id, .data, cache) {
           movement_summary(),
           movement_type = input$movement_type,
           measurement_type = input$measurement_type,
-          group_cols = group_col_to_null(input$group_filter)
+          group_col = group_col_to_null(input$group_filter)
         )
       }
     }) |>
@@ -186,7 +196,7 @@ workforce_movement_server <- function(id, .data, cache) {
     # plot 2. counts/rates by group
     output$movement_cross_section <- plotly::renderPlotly({
       shiny::validate(
-        shiny::need(input$group_filter != "ref_date", "Please select a group.")
+        shiny::need(input$group_filter != "ref_date", "Select a group to see this chart.")
       )
 
       cross_section_data <- measure_summary() |>
@@ -200,7 +210,7 @@ workforce_movement_server <- function(id, .data, cache) {
             input$movement_type,
             input$measurement_type
           ),
-          x_label = stringr::str_to_title(input$movement_type)
+          x_label = movement_labels[[input$movement_type]]
         ),
         height = govhr::scale_plot_height(cross_section_data)
       )
@@ -210,7 +220,7 @@ workforce_movement_server <- function(id, .data, cache) {
     # plot 3. growth rate by group
     output$movement_growth <- plotly::renderPlotly({
       shiny::validate(
-        shiny::need(input$group_filter != "ref_date", "Please select a group.")
+        shiny::need(input$group_filter != "ref_date", "Select a group to see this chart.")
       )
 
       growth_data <- measure_summary() |>
@@ -240,16 +250,16 @@ workforce_movement_server <- function(id, .data, cache) {
       bslib::card(
         bslib::card_header(
           sprintf(
-            "Demographic characteristics of %ss vs. general population",
-            input$movement_type
+            "Demographic profile of %s",
+            tolower(movement_labels[[input$movement_type]])
           ),
           bslib::popover(
             bsicons::bs_icon("info-circle-fill"),
             sprintf(
-              "Demographic characteristics of %ss vs. general population. The table shows the distribution of demographic characteristics for the selected movement type compared to the overall workforce.",
-              input$movement_type
+              "Age, gender, education and employment status of %s, compared with everyone else on the same reference dates. Age is measured as of today.",
+              tolower(movement_labels[[input$movement_type]])
             ),
-            title = "Demographic characteristics",
+            title = "Demographic profile",
             placement = "left"
           ),
           class = "d-flex justify-content-between"
@@ -267,5 +277,24 @@ workforce_movement_server <- function(id, .data, cache) {
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    composition_server(
+      "composition",
+      filtered = \() data_filtered(),
+      group_col = \() input$group_filter,
+      breakdown_col = \() input$breakdown_filter,
+      apply = \() input$apply_btn,
+      measure = \() {
+        if (input$movement_type == "replacement") {
+          return(NULL)
+        }
+
+        list(
+          compute = govhr::compute_movement,
+          value_col = movement_measure_col(input$movement_type, "count"),
+          label = tolower(movement_labels[[input$movement_type]])
+        )
+      }
+    )
   })
 }

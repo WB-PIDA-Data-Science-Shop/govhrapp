@@ -2,23 +2,27 @@
 % Please edit documentation in R/qcheck_coverage.R
 \name{coverage_ui}
 \alias{coverage_ui}
-\title{coverage UI Module}
+\title{Coverage tab UI}
 \usage{
 coverage_ui(id, est_data, personnel_data, contract_data)
 }
 \arguments{
-\item{id}{Character string. The module namespace ID.}
+\item{id}{Character. Module namespace ID.}
 
-\item{est_data}{Data frame. The establishment-level data.}
+\item{est_data}{Establishment data, one row per establishment and reference
+date: a data frame.}
 
-\item{personnel_data}{Data frame. The personnel-level data.}
+\item{personnel_data}{Personnel data, one row per person and reference
+date: a data frame.}
 
-\item{contract_data}{Data frame. The contract-level data.}
+\item{contract_data}{Contract data, one row per contract and reference date:
+a data frame.}
 }
 \value{
-A Shiny UI object containing coverage analysis cards.
+A Shiny UI definition.
 }
 \description{
-UI components for the coverage section of the quality control dashboard.
+Coverage boxes for each table, and a coverage panel for each of the
+establishment, personnel and contract tables.
 }
 \keyword{internal}

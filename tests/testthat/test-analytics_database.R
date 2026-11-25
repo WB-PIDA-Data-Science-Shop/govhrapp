@@ -24,7 +24,7 @@ p4,2022-01-01,pensioner,M,90
   colClasses = c(ref_date = "Date")
 )
 
-test_that("filter_data filters a database table by subgroup and date range", {
+test_that("filter_data filters a database table by column values and date range", {
   skip_if_not_installed("dbplyr")
   skip_if_not_installed("duckdb")
 
@@ -32,21 +32,69 @@ test_that("filter_data filters a database table by subgroup and date range", {
   remote <- dplyr::copy_to(con, hr_panel, "hr_panel")
 
   date_range <- as.Date(c("2021-01-01", "2022-01-01"))
+  filters <- list(list(column = "gender", values = "F"))
 
-  result <- filter_data(remote, "gender", "F", date_range) |>
+  result <- filter_data(remote, filters, date_range) |>
     dplyr::collect() |>
     dplyr::arrange(.data[["ref_date"]], .data[["personnel_id"]])
 
-  expected <- filter_data(hr_panel, "gender", "F", date_range) |>
+  expected <- filter_data(hr_panel, filters, date_range) |>
     dplyr::arrange(.data[["ref_date"]], .data[["personnel_id"]])
 
   expect_equal(result, expected, ignore_attr = TRUE)
   expect_equal(nrow(result), 4L)
 
+  # the empty-selection check queries a single row rather than counting
+  no_match <- list(list(column = "gender", values = "X"))
+  expect_true(has_records(remote))
+  expect_false(has_records(filter_data(remote, no_match)))
+
   DBI::dbDisconnect(con, shutdown = TRUE)
 })
 
-test_that("summarise_wagebill_box gives the same totals on a database table", {
+test_that("filter_active drops pensioners from a database table", {
+  skip_if_not_installed("dbplyr")
+  skip_if_not_installed("duckdb")
+
+  con <- DBI::dbConnect(duckdb::duckdb())
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+  remote <- dplyr::copy_to(con, hr_panel, "hr_panel")
+
+  result <- filter_active(remote) |>
+    dplyr::collect() |>
+    dplyr::arrange(.data[["ref_date"]], .data[["personnel_id"]])
+
+  expected <- filter_active(hr_panel) |>
+    dplyr::arrange(.data[["ref_date"]], .data[["personnel_id"]])
+
+  expect_equal(result, expected, ignore_attr = TRUE)
+  # 3 active in 2020, then 3 in each of 2021 and 2022
+  expect_equal(nrow(result), 9L)
+  expect_true(all(result[["employment_status"]] == "active"))
+})
+
+test_that("filter_pensioners keeps only pensioners of a database table", {
+  skip_if_not_installed("dbplyr")
+  skip_if_not_installed("duckdb")
+
+  con <- DBI::dbConnect(duckdb::duckdb())
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+  remote <- dplyr::copy_to(con, hr_panel, "hr_panel")
+
+  result <- filter_pensioners(remote) |>
+    dplyr::collect() |>
+    dplyr::arrange(.data[["ref_date"]], .data[["personnel_id"]])
+
+  expected <- filter_pensioners(hr_panel) |>
+    dplyr::arrange(.data[["ref_date"]], .data[["personnel_id"]])
+
+  expect_equal(result, expected, ignore_attr = TRUE)
+  # p4 throughout, and p2 from 2021
+  expect_equal(nrow(result), 5L)
+  expect_true(all(result[["employment_status"]] == "pensioner"))
+})
+
+test_that("summarize_wagebill_box gives the same totals on a database table", {
   skip_if_not_installed("dbplyr")
   skip_if_not_installed("duckdb")
 
@@ -55,20 +103,20 @@ test_that("summarise_wagebill_box gives the same totals on a database table", {
 
   for (measure_type in c("total_wagebill", "total_pension_liabilities")) {
     expect_equal(
-      summarise_wagebill_box(remote, measure_type),
-      summarise_wagebill_box(hr_panel, measure_type)
+      summarize_wagebill_box(remote, measure_type),
+      summarize_wagebill_box(hr_panel, measure_type)
     )
   }
 
   expect_equal(
-    summarise_wagebill_box(remote, "total_wagebill"),
+    summarize_wagebill_box(remote, "total_wagebill"),
     list(ref_date = as.Date("2022-01-01"), total = 600)
   )
 
   DBI::dbDisconnect(con, shutdown = TRUE)
 })
 
-test_that("summarise_movement_box reads a database table's movements", {
+test_that("summarize_movement_box reads a database table's movements", {
   skip_if_not_installed("dbplyr")
   skip_if_not_installed("duckdb")
 
@@ -77,12 +125,12 @@ test_that("summarise_movement_box reads a database table's movements", {
 
   for (movement_type in c("hire", "separation", "retirement", "replacement")) {
     expect_equal(
-      summarise_movement_box(
+      summarize_movement_box(
         govhr::compute_movement(remote),
         govhr::compute_retirement(remote),
         movement_type
       ),
-      summarise_movement_box(
+      summarize_movement_box(
         govhr::compute_movement(hr_panel),
         govhr::compute_retirement(hr_panel),
         movement_type
@@ -91,4 +139,53 @@ test_that("summarise_movement_box reads a database table's movements", {
   }
 
   DBI::dbDisconnect(con, shutdown = TRUE)
+})
+
+test_that("read_date_range reads a database table's dates", {
+  skip_if_not_installed("dbplyr")
+  skip_if_not_installed("duckdb")
+
+  con <- DBI::dbConnect(duckdb::duckdb())
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+  remote <- dplyr::copy_to(con, hr_panel, "hr_panel")
+
+  expected <- as.Date(c("2020-01-01", "2022-01-01"))
+
+  expect_equal(read_date_range(remote), expected)
+  expect_equal(read_date_range(hr_panel), expected)
+})
+
+test_that("read_distinct_values reads a database table's values", {
+  skip_if_not_installed("dbplyr")
+  skip_if_not_installed("duckdb")
+
+  con <- DBI::dbConnect(duckdb::duckdb())
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+
+  with_missing <- hr_panel
+  with_missing[["gender"]][1] <- NA
+  remote <- dplyr::copy_to(con, with_missing, "hr_panel")
+
+  expect_identical(read_distinct_values(remote, "gender"), c("F", "M"))
+  expect_identical(
+    read_distinct_values(remote, "gender"),
+    read_distinct_values(with_missing, "gender")
+  )
+})
+
+test_that("the sidebar controls are built from a database table", {
+  skip_if_not_installed("dbplyr")
+  skip_if_not_installed("duckdb")
+
+  con <- DBI::dbConnect(duckdb::duckdb())
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+  remote <- dplyr::copy_to(con, hr_panel, "hr_panel")
+
+  controls <- as.character(shiny::tagList(default_ui_controls("panel", remote)))
+
+  # the date picker is bounded by the table's dates, not by Inf
+  expect_match(controls, "2020-01-01", fixed = TRUE)
+  expect_match(controls, "2022-01-01", fixed = TRUE)
+  expect_no_match(controls, "Inf", fixed = TRUE)
+  expect_match(controls, "gender", fixed = TRUE)
 })

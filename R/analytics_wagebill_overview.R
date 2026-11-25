@@ -1,34 +1,37 @@
-#' Wage Bill Overview UI
+#' Wage bill overview panel UI
 #'
-#' Sidebar controls, a wage bill time trend, and totals and growth rates by
+#' Sidebar controls, a wage bill trend, and the wage bill and its growth by
 #' group.
 #'
 #' @param id Character. Module namespace ID.
-#' @param .data Data frame containing wage bill data.
+#' @param .data Contract data, as `wagebill_data` in
+#'   [run_govhrapp_analytics()].
 #'
-#' @return A Shiny UI definition.
+#' @returns A Shiny UI definition.
 #'
 #' @import bslib
 #' @import shiny
 #' @importFrom bsicons bs_icon
 #' @importFrom plotly plotlyOutput
 #' @importFrom shinyWidgets materialSwitch
+#' @keywords internal
 wagebill_overview_ui <- function(id, .data) {
   bslib::layout_sidebar(
     fillable = FALSE,
     sidebar = bslib::sidebar(
       title = "Controls",
       width = "300px",
-      !!!default_ui_controls(.data, id),
+      !!!default_ui_controls(id, .data),
+      breakdown_filter_ui(id, .data),
       # conditionally allow user to select wagebill measure if available
       shiny::selectInput(
         shiny::NS(id, "wagebill_measure"),
-        "Type of Wage:",
+        "Pay measure",
         choices = identify_wagebill_choices(.data)
       ),
       shinyWidgets::materialSwitch(
         shiny::NS(id, "toggle_growth"),
-        label = "Switch to baseline index",
+        label = "Show as index (first date = 100)",
         value = FALSE
       ),
       shiny::actionButton(
@@ -40,10 +43,10 @@ wagebill_overview_ui <- function(id, .data) {
     bslib::card(
       full_screen = TRUE,
       bslib::card_header(
-        "Wage Bill Time Trends",
+        "Wage bill over time",
         bslib::popover(
           bsicons::bs_icon("info-circle-fill"),
-          "Wage bill trends over time. Choosing a group will add new trend lines, by group.",
+          "Total pay of active personnel on each reference date. Select a group to compare subgroups.",
           placement = "left"
         ),
         class = "d-flex justify-content-between"
@@ -59,10 +62,10 @@ wagebill_overview_ui <- function(id, .data) {
         full_screen = TRUE,
         fillable = FALSE,
         bslib::card_header(
-          "Total by group",
+          "Wage bill by group",
           bslib::popover(
             bsicons::bs_icon("info-circle-fill"),
-            "Total amount, by group. Total refers to the latest available year in the selected time frame.",
+            "Wage bill on the latest reference date in the selected date range, by subgroup.",
             placement = "left"
           ),
           class = "d-flex justify-content-between"
@@ -74,10 +77,10 @@ wagebill_overview_ui <- function(id, .data) {
         full_screen = TRUE,
         fillable = FALSE,
         bslib::card_header(
-          "Growth rate by group",
+          "Growth in wage bill by group",
           bslib::popover(
             bsicons::bs_icon("info-circle-fill"),
-            "Growth rate with respect to first reference date, by group.",
+            "Percentage change in the wage bill from the first to the last reference date in the selected date range, by subgroup.",
             placement = "left"
           ),
           class = "d-flex justify-content-between"
@@ -85,17 +88,20 @@ wagebill_overview_ui <- function(id, .data) {
         plotly::plotlyOutput(shiny::NS(id, "wagebill_change")),
         min_height = "450px"
       )
-    )
+    ),
+    composition_ui(shiny::NS(id, "composition"))
   )
 }
 
-#' Wage Bill Overview Server
+#' Wage bill overview panel server
 #'
-#' @param id Character. Module namespace ID.
-#' @param .data Data frame containing wage bill data.
-#' @param cache List of pre-computed summaries from [build_analytics_cache()].
+#' Renders the wage bill plots, from the cache until the user applies a
+#' selection.
 #'
-#' @return A Shiny module server function.
+#' @inheritParams wagebill_overview_ui
+#' @param cache List of precomputed summaries from [build_analytics_cache()].
+#'
+#' @returns Called for its side effect of rendering the module's outputs.
 #'
 #' @import shiny
 #' @importFrom dplyr all_of collect filter left_join mutate rename
@@ -108,17 +114,12 @@ wagebill_overview_ui <- function(id, .data) {
 #' @keywords internal
 wagebill_overview_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
-    update_group_filter_controls(.data, input, session)
+    update_filter_controls(.data, input, session)
 
     wagebill_filtered <- shiny::reactive({
       shiny::req(input$apply_btn)
 
-      filter_data(
-        .data,
-        group_filter = input$group_filter,
-        subgroup_filter = input$subgroup_filter,
-        date_range = input$date_range
-      )
+      apply_sidebar_filters(.data, input)
     })
 
     # the trend, total and growth plots all read this aggregate, so it is
@@ -128,11 +129,12 @@ wagebill_overview_server <- function(id, .data, cache) {
       summary <- if (input$apply_btn == 0) {
         purrr::pluck(cache, "wagebill", "wagebill_overview")
       } else {
-        govhr::compute_wagebill(
-          wagebill_filtered(),
-          measure_col = input$wagebill_measure,
-          group_cols = group_col_to_null(input$group_filter)
-        ) |>
+        wagebill_filtered() |>
+          filter_active() |>
+          govhr::compute_wagebill(
+            measure_col = input$wagebill_measure,
+            group_cols = group_col_to_null(input$group_filter)
+          ) |>
           dplyr::collect()
       }
 
@@ -162,7 +164,7 @@ wagebill_overview_server <- function(id, .data, cache) {
           wagebill_trend(),
           group_col = input$group_filter,
           toggle_growth = input$toggle_growth,
-          y_label = "Wage Bill"
+          y_label = "Wage bill"
         )
       )
     }) |>
@@ -213,7 +215,7 @@ wagebill_overview_server <- function(id, .data, cache) {
       shiny::validate(
         shiny::need(
           input$group_filter != "ref_date",
-          "Please select a group."
+          "Select a group to see this chart."
         )
       )
 
@@ -240,7 +242,7 @@ wagebill_overview_server <- function(id, .data, cache) {
       shiny::validate(
         shiny::need(
           input$group_filter != "ref_date",
-          "Please select a group."
+          "Select a group to see this chart."
         )
       )
 
@@ -256,5 +258,24 @@ wagebill_overview_server <- function(id, .data, cache) {
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    composition_server(
+      "composition",
+      filtered = \() filter_active(wagebill_filtered()),
+      group_col = \() input$group_filter,
+      breakdown_col = \() input$breakdown_filter,
+      apply = \() input$apply_btn,
+      measure = \() list(
+        compute = \(.data, group_cols) {
+          govhr::compute_wagebill(
+            .data,
+            measure_col = input$wagebill_measure,
+            group_cols = group_cols
+          )
+        },
+        value_col = "wagebill",
+        label = "wage bill"
+      )
+    )
   })
 }
