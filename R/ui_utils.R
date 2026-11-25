@@ -60,7 +60,7 @@ identify_group_choices <- function(.data) {
 #'
 #' Lists the same categorical columns as [identify_group_choices()], with
 #' "None" in place of "All", for selections that can be left unset, such as
-#' the population filter and the "Shares by" breakdown.
+#' the population filter and the "Shares by:" breakdown.
 #'
 #' @inheritParams identify_group_choices
 #'
@@ -236,7 +236,7 @@ population_filter_ui <- function(id, .data) {
   list(
     shiny::selectInput(
       shiny::NS(id, "filter_col"),
-      "Filter by",
+      "Filter by:",
       choices = identify_choices(.data),
       selected = "none"
     ),

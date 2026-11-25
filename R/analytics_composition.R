@@ -16,7 +16,7 @@ composition_panel_cols <- 3
 breakdown_filter_ui <- function(id, .data) {
   shiny::selectInput(
     shiny::NS(id, "breakdown_filter"),
-    "Shares by",
+    "Shares by:",
     choices = identify_choices(.data),
     selected = "none"
   )
