@@ -27,82 +27,126 @@ read_distinct_values <- function(.data, column) {
   sort(as.character(values[!is.na(values)]))
 }
 
-#' Update the subgroup filter choices
+# the sidebar inputs that each pick a column and the values of it to keep,
+# shared by the picker updates and the filters, so a further filter needs only
+# one more pair here and its inputs in the sidebar
+filter_inputs <- list(
+  c(column = "group_filter", values = "subgroup_filter"),
+  c(column = "filter_col", values = "filter_values")
+)
+
+#' Check whether a column selection is set
 #'
-#' Refills the subgroup picker whenever the selected grouping column changes.
-#' The distinct values of each column are read once and reused afterward.
+#' @param column Character or `NULL`. A column selection, such as
+#'   `input$group_filter`.
+#'
+#' @returns `FALSE` for `NULL`, `"none"` and `"ref_date"`, the values meaning
+#'   no selection, and `TRUE` otherwise.
+#'
+#' @keywords internal
+is_column_selected <- function(column) {
+  !is.null(column) && !column %in% c("none", "ref_date")
+}
+
+#' Update the value pickers of the sidebar filters
+#'
+#' Refills the subgroup and population filter pickers whenever their column
+#' changes, with every value selected. The distinct values of each column are
+#' read once and reused afterward.
 #'
 #' @param .data Data frame or database table (`tbl_dbi`) holding the columns
-#'   available for grouping.
-#' @param input Shiny input object carrying `group_filter`.
+#'   available for filtering.
+#' @param input Shiny input object carrying the inputs in `filter_inputs`.
 #' @param session Shiny session object.
 #'
-#' @returns Invisibly, the observer created for the picker. Called for its side
-#'   effect on the UI.
+#' @returns Called for its side effect on the UI.
 #'
+#' @importFrom purrr walk
 #' @importFrom shiny observe
 #' @importFrom shinyWidgets updatePickerInput
 #' @keywords internal
-update_group_filter_controls <- function(.data, input, session) {
+update_filter_controls <- function(.data, input, session) {
   # distinct values are stable for the session, so each column is read only
-  # once, which on a database table saves a query each time the group changes
-  subgroup_cache <- new.env(parent = emptyenv())
+  # once across both pickers, which on a database table saves a query each
+  # time a column is picked again
+  value_cache <- new.env(parent = emptyenv())
 
-  subgroup_choices <- function(variable) {
-    if (is.null(subgroup_cache[[variable]])) {
-      subgroup_cache[[variable]] <- read_distinct_values(.data, variable)
+  distinct_values <- function(column) {
+    if (is.null(value_cache[[column]])) {
+      value_cache[[column]] <- read_distinct_values(.data, column)
     }
 
-    subgroup_cache[[variable]]
+    value_cache[[column]]
   }
 
-  shiny::observe({
-    variable <- input$group_filter
+  purrr::walk(filter_inputs, \(pair) {
+    shiny::observe({
+      column <- input[[pair[["column"]]]]
 
-    if (is.null(variable) || variable %in% c("none", "ref_date")) {
-      shinyWidgets::updatePickerInput(
-        session,
-        "subgroup_filter",
-        choices = NULL,
-        selected = character(0)
-      )
-    } else {
-      filter_vals <- subgroup_choices(variable)
+      values <- if (is_column_selected(column)) {
+        distinct_values(column)
+      } else {
+        character(0)
+      }
 
       shinyWidgets::updatePickerInput(
         session,
-        "subgroup_filter",
-        choices = filter_vals,
-        selected = filter_vals
+        pair[["values"]],
+        choices = values,
+        selected = values
       )
-    }
+    })
   })
 }
 
-#' Filter data by group, subgroup and date range
+#' Read the sidebar filter selections
 #'
-#' Applies the sidebar selections to the panel data. Each selection is optional:
-#' a `group_filter` of `"ref_date"` or `NULL` skips the subgroup step, and a
-#' `NULL` `date_range` skips the date step.
+#' @param input Shiny input object, or a list, carrying the inputs in
+#'   `filter_inputs`.
+#'
+#' @returns A list with one entry per set filter, each a list of `column` and
+#'   the `values` of it to keep, as taken by [filter_data()].
+#'
+#' @importFrom purrr keep map
+#' @keywords internal
+selected_filters <- function(input) {
+  filter_inputs |>
+    purrr::keep(\(pair) is_column_selected(input[[pair[["column"]]]])) |>
+    purrr::map(\(pair) {
+      list(
+        column = input[[pair[["column"]]]],
+        values = input[[pair[["values"]]]]
+      )
+    })
+}
+
+#' Filter data by column values and date range
+#'
+#' Applies the sidebar selections to the panel data. Filters on the same column
+#' combine, keeping only the values both allow.
 #'
 #' @param .data Data frame or database table (`tbl_dbi`) to filter.
-#' @param group_filter Character. Grouping column to filter on, or `"ref_date"`
-#'   or `NULL` to skip subgroup filtering.
-#' @param subgroup_filter Character vector of subgroup values to keep.
+#' @param filters List of filters, each a list of `column` and the `values` of
+#'   it to keep, as returned by [selected_filters()]. Default none.
 #' @param date_range Length-two vector of dates bounding `ref_date`, or `NULL`
-#'   to skip date filtering.
+#'   (default) to skip date filtering.
 #'
 #' @returns A filtered data frame of the same class as `.data`.
 #'
 #' @importFrom dplyr filter
+#' @importFrom purrr reduce
 #' @keywords internal
-filter_data <- function(.data, group_filter, subgroup_filter, date_range) {
-  filtered <- .data
+filter_data <- function(.data, filters = list(), date_range = NULL) {
+  filtered <- purrr::reduce(
+    filters,
+    \(rows, selection) {
+      column <- selection[["column"]]
+      values <- selection[["values"]]
 
-  if (!is.null(group_filter) && group_filter != "ref_date") {
-    filtered <- filtered |>
-      dplyr::filter(.data[[group_filter]] %in% subgroup_filter)
-  }
+      dplyr::filter(rows, .data[[column]] %in% values)
+    },
+    .init = .data
+  )
 
   if (!is.null(date_range)) {
     # injected as values, since dbplyr would translate `date_range[1]` into
@@ -113,6 +157,60 @@ filter_data <- function(.data, group_filter, subgroup_filter, date_range) {
         .data[["ref_date"]] <= !!date_range[2]
       )
   }
+
+  filtered
+}
+
+#' Check whether a table has any records
+#'
+#' @param .data Data frame or database table (`tbl_dbi`).
+#'
+#' @returns `TRUE` when `.data` has at least one row.
+#'
+#' @importFrom dplyr collect
+#' @keywords internal
+has_records <- function(.data) {
+  if (inherits(.data, "tbl_lazy")) {
+    # a one-row query rather than a count, so the database stops at the first
+    # matching record instead of counting them all
+    .data |>
+      utils::head(1) |>
+      dplyr::collect() |>
+      nrow() > 0
+  } else {
+    nrow(.data) > 0
+  }
+}
+
+#' Apply the sidebar filters to the panel data
+#'
+#' Filters `.data` by the sidebar's column filters and date range, and stops
+#' with a message when no record is left.
+#'
+#' @param .data Data frame or database table (`tbl_dbi`) to filter.
+#' @param input Shiny input object carrying the inputs in `filter_inputs` and
+#'   `date_range`.
+#'
+#' @returns `.data` filtered, as returned by [filter_data()].
+#'
+#' @importFrom shiny need validate
+#' @keywords internal
+apply_sidebar_filters <- function(.data, input) {
+  filtered <- filter_data(
+    .data,
+    filters = selected_filters(input),
+    date_range = input$date_range
+  )
+
+  # an empty selection would otherwise reach the compute and plot functions,
+  # which draw blank charts or warn rather than say why. raised here, the
+  # message replaces every output that reads the filtered data
+  shiny::validate(
+    shiny::need(
+      has_records(filtered),
+      "No records match the selected filters and dates."
+    )
+  )
 
   filtered
 }

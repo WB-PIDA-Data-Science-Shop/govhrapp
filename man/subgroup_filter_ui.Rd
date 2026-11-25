@@ -13,8 +13,6 @@ subgroup_filter_ui(id)
 A Shiny conditional panel wrapping a picker input.
 }
 \description{
-Renders the subgroup picker, shown only once a grouping column other than
-\code{ref_date} is selected. Its choices are filled in on the server by
-\code{\link[=update_group_filter_controls]{update_group_filter_controls()}}.
+Picks which subgroups of the "Group by" column are shown.
 }
 \keyword{internal}

@@ -4,27 +4,6 @@ composition_residual <- c(other = "Other", missing = "Missing")
 composition_max_categories <- 6
 composition_panel_cols <- 3
 
-#' Identify the available "of which" breakdown choices
-#'
-#' Lists the same categorical columns as [identify_group_choices()], with
-#' "None" in place of "All", for splitting an additive measure such as
-#' headcount or the wage bill into its parts.
-#'
-#' @inheritParams identify_group_choices
-#'
-#' @returns A named list of breakdown choices, keyed by module, with `"none"`
-#'   for no breakdown.
-#'
-#' @keywords internal
-identify_breakdown_choices <- function(.data) {
-  group_choices <- identify_group_choices(.data)
-
-  c(
-    list("None" = "none"),
-    group_choices[names(group_choices) != "All"]
-  )
-}
-
 #' "Shares by" breakdown input
 #'
 #' @param id Character. Module namespace ID.
@@ -38,7 +17,7 @@ breakdown_filter_ui <- function(id, .data) {
   shiny::selectInput(
     shiny::NS(id, "breakdown_filter"),
     "Shares by",
-    choices = identify_breakdown_choices(.data),
+    choices = identify_choices(.data),
     selected = "none"
   )
 }

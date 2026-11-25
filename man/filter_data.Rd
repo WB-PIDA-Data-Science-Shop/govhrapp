@@ -2,27 +2,24 @@
 % Please edit documentation in R/server_utils.R
 \name{filter_data}
 \alias{filter_data}
-\title{Filter data by group, subgroup and date range}
+\title{Filter data by column values and date range}
 \usage{
-filter_data(.data, group_filter, subgroup_filter, date_range)
+filter_data(.data, filters = list(), date_range = NULL)
 }
 \arguments{
 \item{.data}{Data frame or database table (\code{tbl_dbi}) to filter.}
 
-\item{group_filter}{Character. Grouping column to filter on, or \code{"ref_date"}
-or \code{NULL} to skip subgroup filtering.}
-
-\item{subgroup_filter}{Character vector of subgroup values to keep.}
+\item{filters}{List of filters, each a list of \code{column} and the \code{values} of
+it to keep, as returned by \code{\link[=selected_filters]{selected_filters()}}. Default none.}
 
 \item{date_range}{Length-two vector of dates bounding \code{ref_date}, or \code{NULL}
-to skip date filtering.}
+(default) to skip date filtering.}
 }
 \value{
 A filtered data frame of the same class as \code{.data}.
 }
 \description{
-Applies the sidebar selections to the panel data. Each selection is optional:
-a \code{group_filter} of \code{"ref_date"} or \code{NULL} skips the subgroup step, and a
-\code{NULL} \code{date_range} skips the date step.
+Applies the sidebar selections to the panel data. Filters on the same column
+combine, keeping only the values both allow.
 }
 \keyword{internal}

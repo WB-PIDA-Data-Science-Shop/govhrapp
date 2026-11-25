@@ -24,7 +24,7 @@ p4,2022-01-01,pensioner,M,90
   colClasses = c(ref_date = "Date")
 )
 
-test_that("filter_data filters a database table by subgroup and date range", {
+test_that("filter_data filters a database table by column values and date range", {
   skip_if_not_installed("dbplyr")
   skip_if_not_installed("duckdb")
 
@@ -32,16 +32,22 @@ test_that("filter_data filters a database table by subgroup and date range", {
   remote <- dplyr::copy_to(con, hr_panel, "hr_panel")
 
   date_range <- as.Date(c("2021-01-01", "2022-01-01"))
+  filters <- list(list(column = "gender", values = "F"))
 
-  result <- filter_data(remote, "gender", "F", date_range) |>
+  result <- filter_data(remote, filters, date_range) |>
     dplyr::collect() |>
     dplyr::arrange(.data[["ref_date"]], .data[["personnel_id"]])
 
-  expected <- filter_data(hr_panel, "gender", "F", date_range) |>
+  expected <- filter_data(hr_panel, filters, date_range) |>
     dplyr::arrange(.data[["ref_date"]], .data[["personnel_id"]])
 
   expect_equal(result, expected, ignore_attr = TRUE)
   expect_equal(nrow(result), 4L)
+
+  # the empty-selection check queries a single row rather than counting
+  no_match <- list(list(column = "gender", values = "X"))
+  expect_true(has_records(remote))
+  expect_false(has_records(filter_data(remote, no_match)))
 
   DBI::dbDisconnect(con, shutdown = TRUE)
 })

@@ -107,17 +107,12 @@ workforce_retirement_ui <- function(id, .data) {
 #' @keywords internal
 workforce_retirement_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
-    update_group_filter_controls(.data, input, session)
+    update_filter_controls(.data, input, session)
 
     data_filtered <- shiny::reactive({
       shiny::req(input$apply_btn)
 
-      filter_data(
-        .data,
-        group_filter = input$group_filter,
-        subgroup_filter = input$subgroup_filter,
-        date_range = input$date_range
-      )
+      apply_sidebar_filters(.data, input)
     })
 
     # plot 1. pensioners over time

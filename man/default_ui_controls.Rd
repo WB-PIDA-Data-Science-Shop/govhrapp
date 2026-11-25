@@ -15,7 +15,7 @@ default_ui_controls(id, .data)
 A list of Shiny UI elements.
 }
 \description{
-Assembles the date, group and subgroup controls shared by every analytics
-panel sidebar.
+Assembles the date, population filter, group and subgroup controls shared by
+every analytics and quality check panel sidebar.
 }
 \keyword{internal}

@@ -56,6 +56,27 @@ identify_group_choices <- function(.data) {
   )
 }
 
+#' Identify the choices of an optional column selection
+#'
+#' Lists the same categorical columns as [identify_group_choices()], with
+#' "None" in place of "All", for selections that can be left unset, such as
+#' the population filter and the "Shares by" breakdown.
+#'
+#' @inheritParams identify_group_choices
+#'
+#' @returns A named list of column choices, keyed by module, with `"none"` for
+#'   no selection.
+#'
+#' @keywords internal
+identify_choices <- function(.data) {
+  group_choices <- identify_group_choices(.data)
+
+  c(
+    list("None" = "none"),
+    group_choices[names(group_choices) != "All"]
+  )
+}
+
 #' Read the range of reference dates
 #'
 #' @param .data Data frame or database table (`tbl_dbi`) with a `ref_date`
@@ -139,47 +160,100 @@ group_filter_ui <- function(
   )
 }
 
-#' Subgroup filter input
+#' Value picker input
 #'
-#' Renders the subgroup picker, shown only once a grouping column other than
-#' `ref_date` is selected. Its choices are filled in on the server by
-#' [update_group_filter_controls()].
+#' Renders a picker of the values of the column selected in another input,
+#' shown only once a column is selected. Its choices are filled in on the
+#' server by [update_filter_controls()].
 #'
 #' @param id Character. Module namespace ID.
+#' @param column_input Character. ID of the input selecting the column.
+#' @param values_input Character. ID of the picker.
+#' @param label Character. Picker label.
+#' @param noun Character. Plural name of the values, for the picker's summary
+#'   of how many are selected.
 #'
 #' @returns A Shiny conditional panel wrapping a picker input.
 #'
 #' @importFrom shiny NS conditionalPanel
 #' @importFrom shinyWidgets pickerInput pickerOptions
 #' @keywords internal
-subgroup_filter_ui <- function(id) {
+value_picker_ui <- function(id, column_input, values_input, label, noun) {
   shiny::conditionalPanel(
     condition = sprintf(
-      "input['%s'] !== 'none' && input['%s'] !== 'ref_date'",
-      shiny::NS(id, "group_filter"),
-      shiny::NS(id, "group_filter")
+      "input['%1$s'] !== 'none' && input['%1$s'] !== 'ref_date'",
+      shiny::NS(id, column_input)
     ),
     shinyWidgets::pickerInput(
-      shiny::NS(id, "subgroup_filter"),
-      "Subgroups",
+      shiny::NS(id, values_input),
+      label,
       choices = NULL,
       multiple = TRUE,
       options = shinyWidgets::pickerOptions(
         actionsBox = TRUE,
         liveSearch = TRUE,
         selectedTextFormat = "count > 3",
-        countSelectedText = "{0} subgroups selected",
-        noneSelectedText = "No subgroups selected",
+        countSelectedText = paste("{0}", noun, "selected"),
+        noneSelectedText = paste("No", noun, "selected"),
         container = "body"
       )
     )
   )
 }
 
+#' Subgroup filter input
+#'
+#' Picks which subgroups of the "Group by" column are shown.
+#'
+#' @param id Character. Module namespace ID.
+#'
+#' @returns A Shiny conditional panel wrapping a picker input.
+#'
+#' @keywords internal
+subgroup_filter_ui <- function(id) {
+  value_picker_ui(
+    id,
+    column_input = "group_filter",
+    values_input = "subgroup_filter",
+    label = "Subgroups",
+    noun = "subgroups"
+  )
+}
+
+#' Population filter inputs
+#'
+#' Restricts the panel to records with chosen values of any categorical
+#' column, separately from how the panel is grouped.
+#'
+#' @param id Character. Module namespace ID.
+#' @param .data Data frame whose columns bound the available choices.
+#'
+#' @returns A list of a Shiny select input and a conditional picker.
+#'
+#' @importFrom shiny NS selectInput
+#' @keywords internal
+population_filter_ui <- function(id, .data) {
+  list(
+    shiny::selectInput(
+      shiny::NS(id, "filter_col"),
+      "Filter by",
+      choices = identify_choices(.data),
+      selected = "none"
+    ),
+    value_picker_ui(
+      id,
+      column_input = "filter_col",
+      values_input = "filter_values",
+      label = "Values",
+      noun = "values"
+    )
+  )
+}
+
 #' Default sidebar filter controls
 #'
-#' Assembles the date, group and subgroup controls shared by every analytics
-#' panel sidebar.
+#' Assembles the date, population filter, group and subgroup controls shared by
+#' every analytics and quality check panel sidebar.
 #'
 #' @param id Character. Module namespace ID.
 #' @param .data Data frame to be filtered.
@@ -188,9 +262,12 @@ subgroup_filter_ui <- function(id) {
 #'
 #' @keywords internal
 default_ui_controls <- function(id, .data) {
-  list(
-    date_ui(id, .data),
-    group_filter_ui(id, .data),
-    subgroup_filter_ui(id)
+  c(
+    list(date_ui(id, .data)),
+    population_filter_ui(id, .data),
+    list(
+      group_filter_ui(id, .data),
+      subgroup_filter_ui(id)
+    )
   )
 }

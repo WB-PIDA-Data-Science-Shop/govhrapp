@@ -223,20 +223,16 @@ coverage_panel_ui <- function(id, .data) {
 #' @importFrom scales breaks_pretty
 coverage_panel_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
-    update_group_filter_controls(.data, input, session)
+    update_filter_controls(.data, input, session)
 
     data_filtered <- shiny::reactive({
-      filter_data(
-        .data,
-        group_filter = input$group_filter,
-        subgroup_filter = input$subgroup_filter,
-        date_range = input$date_range
-      )
+      apply_sidebar_filters(.data, input)
     })
 
-    # if default (group filter input is ref_date), use cache data
+    # the cache holds coverage of all records by date, so it stands in only
+    # when the selection is neither grouped nor filtered to some records
     coverage_trend_data <- shiny::reactive({
-      if (input$group_filter == "ref_date") {
+      if (input$group_filter == "ref_date" && input$filter_col == "none") {
         data <- cache
         if (!is.null(input$date_range)) {
           data <- data |>

@@ -24,6 +24,7 @@ workforce_transition_ui <- function(id, .data) {
       title = "Controls",
       width = "300px",
       date_ui(id, .data),
+      !!!population_filter_ui(id, .data),
       group_filter_ui(
         id, .data, selected = "contract_type", group_choices = choices
       ),
@@ -96,17 +97,12 @@ workforce_transition_ui <- function(id, .data) {
 #' @keywords internal
 workforce_transition_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
-    update_group_filter_controls(.data, input, session)
+    update_filter_controls(.data, input, session)
 
     workforce_filtered <- shiny::reactive({
       shiny::req(input$apply_btn)
 
-      filter_data(
-        .data,
-        group_filter = input$group_filter,
-        subgroup_filter = input$subgroup_filter,
-        date_range = input$date_range
-      )
+      apply_sidebar_filters(.data, input)
     })
 
     # both plots read the same transitions, so detect them once per apply. they

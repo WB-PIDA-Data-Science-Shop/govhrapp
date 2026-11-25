@@ -248,7 +248,7 @@ consistency_panel_ui <- function(id, .data) {
 #' @keywords internal
 consistency_panel_server <- function(id, .data, cache) {
   shiny::moduleServer(id, function(input, output, session) {
-    update_group_filter_controls(.data, input, session)
+    update_filter_controls(.data, input, session)
 
     id_col <- switch(
       id,
@@ -258,12 +258,7 @@ consistency_panel_server <- function(id, .data, cache) {
     )
 
     data_filtered <- shiny::reactive({
-      filter_data(
-        .data,
-        group_filter = input$group_filter,
-        subgroup_filter = input$subgroup_filter,
-        date_range = input$date_range
-      )
+      apply_sidebar_filters(.data, input)
     })
 
     # the cache holds record consistency by date, which the default selection
