@@ -22,6 +22,7 @@ wagebill_overview_ui <- function(id, .data) {
       title = "Controls",
       width = "300px",
       !!!default_ui_controls(id, .data),
+      breakdown_filter_ui(id, .data),
       # conditionally allow user to select wagebill measure if available
       shiny::selectInput(
         shiny::NS(id, "wagebill_measure"),
@@ -87,7 +88,8 @@ wagebill_overview_ui <- function(id, .data) {
         plotly::plotlyOutput(shiny::NS(id, "wagebill_change")),
         min_height = "450px"
       )
-    )
+    ),
+    composition_ui(shiny::NS(id, "composition"))
   )
 }
 
@@ -261,5 +263,24 @@ wagebill_overview_server <- function(id, .data, cache) {
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    composition_server(
+      "composition",
+      filtered = \() filter_active(wagebill_filtered()),
+      group_col = \() input$group_filter,
+      breakdown_col = \() input$breakdown_filter,
+      apply = \() input$apply_btn,
+      # the module calls this only on apply, so the pay measure is read at
+      # apply time, as in the other wage bill plots
+      compute_fn = \(.data, group_cols) {
+        govhr::compute_wagebill(
+          .data,
+          measure_col = input$wagebill_measure,
+          group_cols = group_cols
+        )
+      },
+      value_col = "wagebill",
+      measure_label = "wage bill"
+    )
   })
 }

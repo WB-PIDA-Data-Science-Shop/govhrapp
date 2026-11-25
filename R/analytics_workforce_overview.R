@@ -20,6 +20,7 @@ workforce_overview_ui <- function(id, .data) {
       title = "Controls",
       width = "300px",
       !!!default_ui_controls(id, .data),
+      breakdown_filter_ui(id, .data),
       shinyWidgets::materialSwitch(
         shiny::NS(id, "toggle_growth"),
         label = "Show as index (first date = 100)",
@@ -79,7 +80,8 @@ workforce_overview_ui <- function(id, .data) {
         plotly::plotlyOutput(shiny::NS(id, "workforce_growth")),
         min_height = "450px"
       )
-    )
+    ),
+    composition_ui(shiny::NS(id, "composition"))
   )
 }
 
@@ -193,5 +195,16 @@ workforce_overview_server <- function(id, .data, cache) {
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    composition_server(
+      "composition",
+      filtered = \() filter_active(workforce_filtered()),
+      group_col = \() input$group_filter,
+      breakdown_col = \() input$breakdown_filter,
+      apply = \() input$apply_btn,
+      compute_fn = govhr::compute_headcount,
+      value_col = "headcount",
+      measure_label = "headcount"
+    )
   })
 }
