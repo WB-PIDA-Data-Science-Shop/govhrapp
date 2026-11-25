@@ -1,4 +1,4 @@
-# govhrapp (development version)
+# govhrapp 0.1.9
 * This patch introduces the following enhancements:
     * Adds an optional "Shares by:" breakdown to the overview, retirement and movement panels: each category's share of the measure over time, one chart per group.
     * Adds pensioners and pension payments over time to the retirement panels.
