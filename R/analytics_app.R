@@ -47,7 +47,6 @@
 #' @importFrom lubridate year
 #' @importFrom scales label_number cut_short_scale
 #' @importFrom tidyr complete 
-#' @importFrom shinymanager secure_app secure_server check_credentials
 #' @export
 run_govhrapp_analytics <- function(
   workforce_data,
@@ -185,19 +184,7 @@ run_govhrapp_analytics <- function(
     )
   )
 
-  if(secure){
-    ui <- shinymanager::secure_app(ui, enable_admin = TRUE)
-  }
-
   server <- function(input, output, session) {
-    if(secure){
-      res_auth <- shinymanager::secure_server(
-        check_credentials = shinymanager::check_credentials(
-          credentials_path
-        )
-      )
-    }
-
     overview_server("overview", cache = cache)
     wagebill_server(
       "wagebill",
@@ -212,5 +199,5 @@ run_govhrapp_analytics <- function(
     )
   }
 
-  shiny::shinyApp(ui, server, ...)
+  shiny_app_with_login(ui, server, secure, credentials_path, ...)
 }

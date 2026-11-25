@@ -266,6 +266,7 @@ default_ui_controls <- function(id, .data) {
     list(date_ui(id, .data)),
     population_filter_ui(id, .data),
     list(
+      shiny::hr(),
       group_filter_ui(id, .data),
       subgroup_filter_ui(id)
     )

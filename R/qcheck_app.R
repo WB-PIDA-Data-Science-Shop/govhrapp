@@ -14,6 +14,11 @@
 #'   as returned by [govhr::validate_data()].
 #' @param contract_validation List. Validation results for `contract_data`, as
 #'   returned by [govhr::validate_data()].
+#' @param secure Logical. Require users to log in. Default `FALSE`.
+#' @param credentials_path Character. Path to the SQLite database of user
+#'   credentials, used when `secure = TRUE`. The default is relative to the
+#'   working directory, so pass your own path when running elsewhere, or the
+#'   analytics app's database to share its users.
 #' @param ... Additional arguments passed to [shiny::shinyApp()].
 #'
 #' @returns A Shiny app object.
@@ -50,6 +55,8 @@ run_govhrapp_qcheck <- function(
   contract_data,
   personnel_validation,
   contract_validation,
+  secure = FALSE,
+  credentials_path = "inst/app/qcheck/credentials.sqlite",
   ...
 ) {
   # add path to visual assets (image and css)
@@ -185,7 +192,7 @@ run_govhrapp_qcheck <- function(
     validation_server("validation", personnel_validation, contract_validation)
   }
 
-  shiny::shinyApp(ui, server, ...)
+  shiny_app_with_login(ui, server, secure, credentials_path, ...)
 }
 
 #' Build the quality check cache

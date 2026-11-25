@@ -594,3 +594,51 @@ build_analytics_cache <- function(workforce_data, wagebill_data) {
     wagebill = build_wagebill_cache(wagebill_data)
   )
 }
+
+#' Build a Shiny app, optionally behind a login
+#'
+#' Wraps the app in a shinymanager login screen when `secure = TRUE`, so the
+#' analytics and quality check apps protect themselves the same way.
+#'
+#' @param ui A Shiny UI definition.
+#' @param server A Shiny server function.
+#' @param secure Logical. Require users to log in.
+#' @param credentials_path Character. Path to the SQLite database of user
+#'   credentials, read when `secure = TRUE`.
+#' @param ... Additional arguments passed to [shiny::shinyApp()].
+#'
+#' @returns A Shiny app object.
+#'
+#' @importFrom shiny shinyApp
+#' @importFrom shinymanager check_credentials secure_app secure_server
+#' @keywords internal
+shiny_app_with_login <- function(ui, server, secure, credentials_path, ...) {
+  if (!secure) {
+    return(shiny::shinyApp(ui, server, ...))
+  }
+
+  # checked before the app starts, since shinymanager only reads the database
+  # once someone tries to log in, and would fail there instead
+  if (!file.exists(credentials_path)) {
+    stop(
+      "No credentials database found at '", credentials_path, "'. ",
+      "Create one with shinymanager::create_db(), or pass the path of an ",
+      "existing one as `credentials_path`.",
+      call. = FALSE
+    )
+  }
+
+  secured_server <- function(input, output, session) {
+    shinymanager::secure_server(
+      check_credentials = shinymanager::check_credentials(credentials_path)
+    )
+
+    server(input, output, session)
+  }
+
+  shiny::shinyApp(
+    shinymanager::secure_app(ui, enable_admin = TRUE),
+    secured_server,
+    ...
+  )
+}

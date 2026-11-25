@@ -25,6 +25,7 @@ workforce_transition_ui <- function(id, .data) {
       width = "300px",
       date_ui(id, .data),
       !!!population_filter_ui(id, .data),
+      shiny::hr(),
       group_filter_ui(
         id, .data, selected = "contract_type", group_choices = choices
       ),

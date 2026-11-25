@@ -10,6 +10,8 @@ run_govhrapp_qcheck(
   contract_data,
   personnel_validation,
   contract_validation,
+  secure = FALSE,
+  credentials_path = "inst/app/qcheck/credentials.sqlite",
   ...
 )
 }
@@ -28,6 +30,13 @@ as returned by \code{\link[govhr:validate_data]{govhr::validate_data()}}.}
 
 \item{contract_validation}{List. Validation results for \code{contract_data}, as
 returned by \code{\link[govhr:validate_data]{govhr::validate_data()}}.}
+
+\item{secure}{Logical. Require users to log in. Default \code{FALSE}.}
+
+\item{credentials_path}{Character. Path to the SQLite database of user
+credentials, used when \code{secure = TRUE}. The default is relative to the
+working directory, so pass your own path when running elsewhere, or the
+analytics app's database to share its users.}
 
 \item{...}{Additional arguments passed to \code{\link[shiny:shinyApp]{shiny::shinyApp()}}.}
 }
