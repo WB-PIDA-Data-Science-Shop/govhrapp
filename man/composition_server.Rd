@@ -4,16 +4,7 @@
 \alias{composition_server}
 \title{Composition card server}
 \usage{
-composition_server(
-  id,
-  filtered,
-  group_col,
-  breakdown_col,
-  apply,
-  compute_fn,
-  value_col,
-  measure_label
-)
+composition_server(id, filtered, group_col, breakdown_col, apply, measure)
 }
 \arguments{
 \item{id}{Character. Module namespace ID.}
@@ -24,14 +15,13 @@ the records the measure covers.}
 \item{group_col, breakdown_col, apply}{Functions returning the panel's group
 selection, breakdown selection and apply button value.}
 
-\item{compute_fn}{Function taking the data and \code{group_cols} and returning
-the measure by group and \code{ref_date}, such as \code{\link[govhr:compute_headcount]{govhr::compute_headcount()}}.}
-
-\item{value_col}{Character. Column of \code{compute_fn}'s output holding the
-measure.}
-
-\item{measure_label}{Character. Lower-case name of the measure, for titles
-and axes.}
+\item{measure}{Function returning the measure to split, as a list of
+\code{compute} (a function taking the data and \code{group_cols} and returning the
+measure by group and \code{ref_date}, such as \code{\link[govhr:compute_headcount]{govhr::compute_headcount()}}),
+\code{value_col} (the column of \code{compute}'s output holding the measure) and
+\code{label} (its lower-case name, for titles and axes). It returns \code{NULL} when
+the panel's selected measure is not additive, such as a rate, and the card
+is then not shown.}
 }
 \value{
 Called for its side effect of rendering the module's outputs.

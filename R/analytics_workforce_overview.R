@@ -202,9 +202,11 @@ workforce_overview_server <- function(id, .data, cache) {
       group_col = \() input$group_filter,
       breakdown_col = \() input$breakdown_filter,
       apply = \() input$apply_btn,
-      compute_fn = govhr::compute_headcount,
-      value_col = "headcount",
-      measure_label = "headcount"
+      measure = \() list(
+        compute = govhr::compute_headcount,
+        value_col = "headcount",
+        label = "headcount"
+      )
     )
   })
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/analytics_composition.R
 \name{breakdown_filter_ui}
 \alias{breakdown_filter_ui}
-\title{"Of which" breakdown input}
+\title{"Shares by" breakdown input}
 \usage{
 breakdown_filter_ui(id, .data)
 }
@@ -15,6 +15,6 @@ breakdown_filter_ui(id, .data)
 A Shiny select input.
 }
 \description{
-"Of which" breakdown input
+"Shares by" breakdown input
 }
 \keyword{internal}

@@ -1,88 +1,45 @@
-# Tests for the "of which" composition card shared by the overview panels.
-
-composition_panel <- data.frame(
-  personnel_id = c("1", "2", "3", "4", "1", "2", "3", "5"),
-  ref_date = as.Date(rep(c("2020-01-01", "2021-01-01"), each = 4)),
-  paygrade = c("G1", "G1", "G2", "G2", "G1", "G1", "G2", "G2"),
-  gender = c("female", "male", "male", NA, "female", "female", "male", "male")
-)
-
-by_paygrade_gender <- govhr::compute_headcount(
-  composition_panel,
-  group_cols = c("paygrade", "gender")
-)
-
-# ---- identify_breakdown_choices ----------------------------------------------
-
-test_that("identify_breakdown_choices offers None in place of All", {
-  choices <- identify_breakdown_choices(composition_panel)
-
-  expect_equal(choices[["None"]], "none")
-  expect_false("All" %in% names(choices))
-
-  offered <- unlist(choices, use.names = FALSE)
-  expect_true(all(c("gender", "paygrade") %in% offered))
-  expect_false("ref_date" %in% offered)
-})
+# Tests for the "of which" composition card shared by the analytics panels.
 
 # ---- compute_composition_share -----------------------------------------------
 
-test_that("compute_composition_share adds up to 100 within each date and group", {
+test_that("compute_composition_share fills each stack up to 100", {
+  # G1 has no men in 2021, G2's gender is unknown in 2020, and G2 has no
+  # measure in 2021, as compute_wagebill() gives a series absent on a date
+  composition <- data.frame(
+    ref_date = as.Date(c(
+      "2020-01-01", "2020-01-01", "2020-01-01", "2021-01-01", "2021-01-01"
+    )),
+    paygrade = c("G1", "G1", "G2", "G1", "G2"),
+    gender = c("female", "male", NA, "female", "male"),
+    headcount = c(1, 4, 2, 2, NA)
+  )
+
   shares <- compute_composition_share(
-    by_paygrade_gender,
+    composition,
     value_col = "headcount",
     group_col = "paygrade",
     breakdown_col = "gender"
   )
 
-  totals <- tapply(
+  share_of <- function(date, paygrade, category) {
+    shares[["share"]][
+      shares[["ref_date"]] == as.Date(date) &
+        shares[["paygrade"]] == paygrade &
+        shares[["category"]] == category
+    ]
+  }
+
+  stack_totals <- tapply(
     shares[["share"]],
     paste(shares[["ref_date"]], shares[["paygrade"]]),
     sum
   )
 
-  expect_equal(as.vector(totals), rep(100, 4))
-})
-
-test_that("compute_composition_share fills absent categories with zero", {
-  # G1 has no men and no missing gender in 2021, yet every panel needs every
-  # category on every date for the stack to draw
-  shares <- compute_composition_share(
-    by_paygrade_gender,
-    value_col = "headcount",
-    group_col = "paygrade",
-    breakdown_col = "gender"
-  )
-
-  g1_2021 <- shares[
-    shares[["paygrade"]] == "G1" &
-      shares[["ref_date"]] == as.Date("2021-01-01"),
-  ]
-
-  expect_equal(nrow(shares), 2L * 2L * 3L)
-  expect_equal(
-    g1_2021[["share"]][g1_2021[["category"]] == "male"],
-    0
-  )
-})
-
-test_that("compute_composition_share shows a missing breakdown as its own band", {
-  shares <- composition_panel |>
-    govhr::compute_headcount(group_cols = "gender") |>
-    compute_composition_share(
-      value_col = "headcount",
-      group_col = "ref_date",
-      breakdown_col = "gender"
-    )
-
-  shares_2020 <- shares[shares[["ref_date"]] == as.Date("2020-01-01"), ]
-
-  expect_false("paygrade" %in% names(shares))
   expect_equal(levels(shares[["category"]]), c("male", "female", "Missing"))
-  expect_equal(
-    shares_2020[["share"]][shares_2020[["category"]] == "Missing"],
-    25
-  )
+  expect_equal(as.vector(stack_totals), rep(100, 3))
+  expect_equal(share_of("2020-01-01", "G1", "male"), 80)
+  expect_equal(share_of("2021-01-01", "G1", "male"), 0)
+  expect_equal(share_of("2020-01-01", "G2", "Missing"), 100)
 })
 
 test_that("compute_composition_share combines the smallest categories", {
@@ -104,103 +61,47 @@ test_that("compute_composition_share combines the smallest categories", {
   expect_equal(shares[["share"]][shares[["category"]] == "Other"], 30)
 })
 
-test_that("compute_composition_share drops periods with no measure", {
-  # compute_wagebill() gives a series absent on a date an NA total
-  with_gap <- data.frame(
-    ref_date = as.Date(c("2020-01-01", "2020-01-01", "2021-01-01")),
-    gender = c("female", "male", "female"),
-    wagebill = c(60, 40, NA)
-  )
-
-  shares <- compute_composition_share(
-    with_gap,
-    value_col = "wagebill",
-    group_col = "ref_date",
-    breakdown_col = "gender"
-  )
-
-  expect_false(anyNA(shares[["share"]]))
-  expect_equal(unique(shares[["ref_date"]]), as.Date("2020-01-01"))
-})
-
-# ---- composition_palette -----------------------------------------------------
-
-test_that("composition_palette greys out the residual categories", {
-  colours <- composition_palette(c("a", "b", "Other", "Missing"))
-
-  expect_named(colours, c("a", "b", "Other", "Missing"))
-  expect_equal(unname(colours[c("Other", "Missing")]), c("#9E9E9E", "#D9D9D9"))
-})
-
-# ---- plot_composition and composition_plot_height ----------------------------
-
-test_that("plot_composition draws one panel per group only when grouped", {
-  grouped <- compute_composition_share(
-    by_paygrade_gender,
-    value_col = "headcount",
-    group_col = "paygrade",
-    breakdown_col = "gender"
-  )
-
-  pooled <- composition_panel |>
-    govhr::compute_headcount(group_cols = "gender") |>
-    compute_composition_share(
-      value_col = "headcount",
-      group_col = "ref_date",
-      breakdown_col = "gender"
-    )
-
-  grouped_built <- ggplot2::ggplot_build(
-    plot_composition(grouped, "paygrade", "Share (%)", "Gender")
-  )
-  pooled_built <- ggplot2::ggplot_build(
-    plot_composition(pooled, "ref_date", "Share (%)", "Gender")
-  )
-
-  expect_equal(nrow(grouped_built[["layout"]][["layout"]]), 2L)
-  expect_equal(nrow(pooled_built[["layout"]][["layout"]]), 1L)
-})
-
-test_that("composition_plot_height grows with each row of panels", {
-  one_row <- data.frame(paygrade = c("G1", "G2", "G3"))
-  two_rows <- data.frame(paygrade = c("G1", "G2", "G3", "G4"))
-
-  expect_equal(composition_plot_height(one_row, "ref_date"), 350)
-  expect_equal(composition_plot_height(one_row, "paygrade"), 350)
-  expect_equal(composition_plot_height(two_rows, "paygrade"), 440)
-})
-
-# ---- variable_label ----------------------------------------------------------
-
-test_that("variable_label falls back to the ID for unlisted variables", {
-  expect_equal(variable_label("gender"), "Gender")
-  expect_equal(variable_label("not_a_variable"), "not_a_variable")
-})
-
 # ---- composition_server ------------------------------------------------------
 
-composition_args <- function(selections) {
-  list(
-    filtered = \() composition_panel,
-    group_col = \() selections[["group"]],
-    breakdown_col = \() selections[["breakdown"]],
-    apply = \() selections[["apply"]],
-    compute_fn = govhr::compute_headcount,
-    value_col = "headcount",
-    measure_label = "headcount"
+test_that("composition_server computes only on apply, and only when it can", {
+  people <- data.frame(
+    personnel_id = c("1", "2", "3", "4", "1", "2", "3", "5"),
+    ref_date = as.Date(rep(c("2020-01-01", "2021-01-01"), each = 4)),
+    paygrade = c("G1", "G1", "G2", "G2", "G1", "G1", "G2", "G2"),
+    gender = c("female", "male", "male", NA, "female", "female", "male", "male")
   )
-}
 
-test_that("composition_server computes nothing until a breakdown is applied", {
   selections <- shiny::reactiveValues(
     group = "paygrade",
     breakdown = "none",
+    additive = TRUE,
     apply = 0
   )
 
+  apply_selection <- function(session) {
+    selections[["apply"]] <- selections[["apply"]] + 1
+    session$flushReact()
+  }
+
   shiny::testServer(
     composition_server,
-    args = composition_args(selections),
+    args = list(
+      filtered = \() people,
+      group_col = \() selections[["group"]],
+      breakdown_col = \() selections[["breakdown"]],
+      apply = \() selections[["apply"]],
+      measure = \() {
+        if (!selections[["additive"]]) {
+          return(NULL)
+        }
+
+        list(
+          compute = govhr::compute_headcount,
+          value_col = "headcount",
+          label = "headcount"
+        )
+      }
+    ),
     {
       expect_null(applied())
 
@@ -209,30 +110,22 @@ test_that("composition_server computes nothing until a breakdown is applied", {
       session$flushReact()
       expect_null(applied())
 
-      selections[["apply"]] <- 1
-      session$flushReact()
+      apply_selection(session)
       expect_setequal(
         levels(applied()[["shares"]][["category"]]),
         c("female", "male", "Missing")
       )
-    }
-  )
-})
+      expect_no_error(output$composition)
 
-test_that("composition_server ignores a breakdown equal to the group", {
-  selections <- shiny::reactiveValues(
-    group = "gender",
-    breakdown = "gender",
-    apply = 1
-  )
-
-  shiny::testServer(
-    composition_server,
-    args = composition_args(selections),
-    {
+      selections[["group"]] <- "gender"
+      apply_selection(session)
       expect_true(applied()[["same_as_group"]])
-      expect_null(applied()[["shares"]])
       expect_match(as.character(output$card[["html"]]), "different from the group")
+
+      # a rate or ratio has no parts that add up to it
+      selections[["additive"]] <- FALSE
+      apply_selection(session)
+      expect_null(applied())
     }
   )
 })

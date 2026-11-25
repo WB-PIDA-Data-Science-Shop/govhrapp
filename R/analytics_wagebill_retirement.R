@@ -20,6 +20,7 @@ wagebill_retirement_ui <- function(id, .data) {
       title = "Controls",
       width = "300px",
       !!!default_ui_controls(id, .data),
+      breakdown_filter_ui(id, .data),
       shiny::numericInput(
         shiny::NS(id, "threshold_age"),
         label = "Retirement age",
@@ -89,7 +90,8 @@ wagebill_retirement_ui <- function(id, .data) {
         shiny::NS(id, "wagebill_retirement_projection"),
         height = "350px"
       )
-    )
+    ),
+    composition_ui(shiny::NS(id, "composition"))
   )
 }
 
@@ -202,5 +204,24 @@ wagebill_retirement_server <- function(id, .data, cache) {
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    composition_server(
+      "composition",
+      filtered = \() filter_pensioners(wagebill_filtered()),
+      group_col = \() input$group_filter,
+      breakdown_col = \() input$breakdown_filter,
+      apply = \() input$apply_btn,
+      measure = \() list(
+        compute = \(.data, group_cols) {
+          govhr::compute_wagebill(
+            .data,
+            measure_col = input$wagebill_measure,
+            group_cols = group_cols
+          )
+        },
+        value_col = "wagebill",
+        label = "pension payments"
+      )
+    )
   })
 }

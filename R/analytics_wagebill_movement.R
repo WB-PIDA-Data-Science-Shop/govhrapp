@@ -21,6 +21,7 @@ wagebill_movement_ui <- function(id, .data) {
       title = "Controls",
       width = "300px",
       !!!default_ui_controls(id, .data),
+      breakdown_filter_ui(id, .data),
       shiny::selectInput(
         shiny::NS(id, "event_type"),
         "Movement",
@@ -93,7 +94,8 @@ wagebill_movement_ui <- function(id, .data) {
         shiny::NS(id, "wagebill_movement_growth"),
         height = "350px"
       )
-    )
+    ),
+    composition_ui(shiny::NS(id, "composition"))
   )
 }
 
@@ -221,5 +223,25 @@ wagebill_movement_server <- function(id, .data, cache) {
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    composition_server(
+      "composition",
+      filtered = \() wagebill_filtered(),
+      group_col = \() input$group_filter,
+      breakdown_col = \() input$breakdown_filter,
+      apply = \() input$apply_btn,
+      measure = \() list(
+        compute = \(.data, group_cols) {
+          govhr::compute_movement_cost(
+            .data,
+            event_type = input$event_type,
+            measure_col = input$wagebill_measure,
+            group_cols = group_cols
+          )
+        },
+        value_col = "movement_cost",
+        label = paste("cost of", tolower(movement_labels[[input$event_type]]))
+      )
+    )
   })
 }

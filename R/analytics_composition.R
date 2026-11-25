@@ -25,7 +25,7 @@ identify_breakdown_choices <- function(.data) {
   )
 }
 
-#' "Of which" breakdown input
+#' "Shares by" breakdown input
 #'
 #' @param id Character. Module namespace ID.
 #' @param .data Data frame whose columns bound the available choices.
@@ -37,7 +37,7 @@ identify_breakdown_choices <- function(.data) {
 breakdown_filter_ui <- function(id, .data) {
   shiny::selectInput(
     shiny::NS(id, "breakdown_filter"),
-    "Of which",
+    "Shares by",
     choices = identify_breakdown_choices(.data),
     selected = "none"
   )
@@ -114,7 +114,9 @@ compute_composition_share <- function(
   ranked <- labeled |>
     dplyr::filter(.data[["category"]] != composition_residual[["missing"]]) |>
     dplyr::summarise(total = sum(.data[["value"]]), .by = "category") |>
-    dplyr::arrange(dplyr::desc(.data[["total"]])) |>
+    # ties are broken by name, since a database returns rows in no fixed
+    # order and the order sets each category's colour
+    dplyr::arrange(dplyr::desc(.data[["total"]]), .data[["category"]]) |>
     dplyr::pull(.data[["category"]])
 
   kept <- ranked[seq_len(min(length(ranked), max_categories))]
@@ -276,12 +278,13 @@ composition_ui <- function(id) {
 #'   the records the measure covers.
 #' @param group_col,breakdown_col,apply Functions returning the panel's group
 #'   selection, breakdown selection and apply button value.
-#' @param compute_fn Function taking the data and `group_cols` and returning
-#'   the measure by group and `ref_date`, such as [govhr::compute_headcount()].
-#' @param value_col Character. Column of `compute_fn`'s output holding the
-#'   measure.
-#' @param measure_label Character. Lower-case name of the measure, for titles
-#'   and axes.
+#' @param measure Function returning the measure to split, as a list of
+#'   `compute` (a function taking the data and `group_cols` and returning the
+#'   measure by group and `ref_date`, such as [govhr::compute_headcount()]),
+#'   `value_col` (the column of `compute`'s output holding the measure) and
+#'   `label` (its lower-case name, for titles and axes). It returns `NULL` when
+#'   the panel's selected measure is not additive, such as a rate, and the card
+#'   is then not shown.
 #'
 #' @returns Called for its side effect of rendering the module's outputs.
 #'
@@ -297,27 +300,27 @@ composition_server <- function(
   group_col,
   breakdown_col,
   apply,
-  compute_fn,
-  value_col,
-  measure_label
+  measure
 ) {
   shiny::moduleServer(id, function(input, output, session) {
     applied <- shiny::reactive({
       group <- group_col()
       breakdown <- breakdown_col()
+      spec <- measure()
 
-      if (is.null(breakdown) || breakdown == "none") {
+      if (is.null(breakdown) || breakdown == "none" || is.null(spec)) {
         return(NULL)
       }
 
       same_as_group <- breakdown == group
+      compute <- spec[["compute"]]
 
       shares <- if (!same_as_group) {
         filtered() |>
-          compute_fn(group_cols = c(group_col_to_null(group), breakdown)) |>
+          compute(group_cols = c(group_col_to_null(group), breakdown)) |>
           dplyr::collect() |>
           compute_composition_share(
-            value_col = value_col,
+            value_col = spec[["value_col"]],
             group_col = group,
             breakdown_col = breakdown
           )
@@ -326,6 +329,7 @@ composition_server <- function(
       list(
         group_col = group,
         breakdown_col = breakdown,
+        label = spec[["label"]],
         same_as_group = same_as_group,
         shares = shares
       )
@@ -334,10 +338,11 @@ composition_server <- function(
 
     output$card <- shiny::renderUI({
       selection <- shiny::req(applied())
+      measure_label <- selection[["label"]]
 
       body <- if (selection[["same_as_group"]]) {
         shiny::p(
-          "Choose an \"Of which\" breakdown different from the group.",
+          "Choose a \"Shares by\" breakdown different from the group.",
           class = "text-muted"
         )
       } else {
@@ -349,10 +354,10 @@ composition_server <- function(
         fillable = FALSE,
         bslib::card_header(
           paste0(
-            "Of which: ",
+            "Shares of ",
             measure_label,
             " by ",
-            variable_label(selection[["breakdown_col"]])
+            tolower(variable_label(selection[["breakdown_col"]]))
           ),
           bslib::popover(
             bsicons::bs_icon("info-circle-fill"),
@@ -382,7 +387,7 @@ composition_server <- function(
         plot_composition(
           shares,
           group_col = group,
-          y_label = paste0("Share of ", measure_label, " (%)"),
+          y_label = paste0("Share of ", selection[["label"]], " (%)"),
           fill_label = variable_label(selection[["breakdown_col"]])
         ),
         tooltip = c("x", "text"),

@@ -21,6 +21,15 @@ workforce_movement_ui <- function(id, .data) {
       title = "Controls",
       width = "300px",
       !!!default_ui_controls(id, .data),
+      # the replacement rate is a ratio of hires to separations, which does
+      # not split into parts that add up to it
+      shiny::conditionalPanel(
+        condition = sprintf(
+          "input['%s'] !== 'replacement'",
+          shiny::NS(id, "movement_type")
+        ),
+        breakdown_filter_ui(id, .data)
+      ),
       shiny::selectInput(
         shiny::NS(id, "movement_type"),
         label = "Movement",
@@ -96,7 +105,8 @@ workforce_movement_ui <- function(id, .data) {
         plotly::plotlyOutput(shiny::NS(id, "movement_growth")),
         min_height = "450px"
       )
-    )
+    ),
+    composition_ui(shiny::NS(id, "composition"))
   )
 }
 #' Workforce movement panel server
@@ -272,5 +282,24 @@ workforce_movement_server <- function(id, .data, cache) {
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    composition_server(
+      "composition",
+      filtered = \() data_filtered(),
+      group_col = \() input$group_filter,
+      breakdown_col = \() input$breakdown_filter,
+      apply = \() input$apply_btn,
+      measure = \() {
+        if (input$movement_type == "replacement") {
+          return(NULL)
+        }
+
+        list(
+          compute = govhr::compute_movement,
+          value_col = movement_measure_col(input$movement_type, "count"),
+          label = tolower(movement_labels[[input$movement_type]])
+        )
+      }
+    )
   })
 }

@@ -270,17 +270,17 @@ wagebill_overview_server <- function(id, .data, cache) {
       group_col = \() input$group_filter,
       breakdown_col = \() input$breakdown_filter,
       apply = \() input$apply_btn,
-      # the module calls this only on apply, so the pay measure is read at
-      # apply time, as in the other wage bill plots
-      compute_fn = \(.data, group_cols) {
-        govhr::compute_wagebill(
-          .data,
-          measure_col = input$wagebill_measure,
-          group_cols = group_cols
-        )
-      },
-      value_col = "wagebill",
-      measure_label = "wage bill"
+      measure = \() list(
+        compute = \(.data, group_cols) {
+          govhr::compute_wagebill(
+            .data,
+            measure_col = input$wagebill_measure,
+            group_cols = group_cols
+          )
+        },
+        value_col = "wagebill",
+        label = "wage bill"
+      )
     )
   })
 }

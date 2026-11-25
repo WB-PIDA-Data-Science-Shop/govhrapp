@@ -21,6 +21,7 @@ workforce_retirement_ui <- function(id, .data) {
       title = "Controls",
       width = "300px",
       !!!default_ui_controls(id, .data),
+      breakdown_filter_ui(id, .data),
       shiny::numericInput(
         shiny::NS(id, "threshold_age"),
         label = "Retirement age",
@@ -83,7 +84,8 @@ workforce_retirement_ui <- function(id, .data) {
         class = "d-flex justify-content-between"
       ),
       plotly::plotlyOutput(shiny::NS(id, "retirement_expected_plot"))
-    )
+    ),
+    composition_ui(shiny::NS(id, "composition"))
   )
 }
 
@@ -203,5 +205,18 @@ workforce_retirement_server <- function(id, .data, cache) {
       )
     }) |>
       shiny::bindEvent(input$apply_btn, ignoreNULL = FALSE)
+
+    composition_server(
+      "composition",
+      filtered = \() filter_pensioners(data_filtered()),
+      group_col = \() input$group_filter,
+      breakdown_col = \() input$breakdown_filter,
+      apply = \() input$apply_btn,
+      measure = \() list(
+        compute = govhr::compute_headcount,
+        value_col = "headcount",
+        label = "pensioners"
+      )
+    )
   })
 }
