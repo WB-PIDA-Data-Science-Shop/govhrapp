@@ -4,10 +4,12 @@
 \alias{selected_filters}
 \title{Read the sidebar filter selections}
 \usage{
-selected_filters(input)
+selected_filters(input, pairs = filter_inputs)
 }
 \arguments{
-\item{input}{Shiny input object, or a list, carrying the inputs in
+\item{input}{Shiny input object, or a list, carrying the inputs in \code{pairs}.}
+
+\item{pairs}{List of column and values input IDs to read. Default all of
 \code{filter_inputs}.}
 }
 \value{

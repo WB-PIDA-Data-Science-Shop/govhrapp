@@ -51,6 +51,44 @@ test_that("selected_filters skips unset columns and combines the rest", {
   expect_equal(unique(result[["paygrade"]]), "G2")
 })
 
+test_that("read_picker_choices offers only the values left by the filters above", {
+  staff <- data.frame(
+    ref_date = as.Date(c(
+      "2020-01-01", "2020-01-01", "2021-01-01", "2021-01-01"
+    )),
+    gender = c("female", "male", "female", "male"),
+    paygrade = c("G1", "G2", "G3", "G2")
+  )
+
+  sidebar <- list(
+    date_range = as.Date(c("2020-01-01", "2021-01-01")),
+    filter_col = "gender",
+    filter_values = "female",
+    group_filter = "paygrade"
+  )
+
+  cache <- new.env()
+  filter_position <- 1
+  subgroup_position <- 2
+
+  expect_equal(
+    read_picker_choices(staff, sidebar, subgroup_position, cache),
+    c("G1", "G3")
+  )
+
+  # the date range narrows every picker below it
+  sidebar[["date_range"]] <- as.Date(c("2021-01-01", "2021-01-01"))
+
+  expect_equal(
+    read_picker_choices(staff, sidebar, filter_position, cache),
+    c("female", "male")
+  )
+  expect_equal(
+    read_picker_choices(staff, sidebar, subgroup_position, cache),
+    "G3"
+  )
+})
+
 test_that("filter_data drops rows with a missing ref_date", {
   # the single-pass subset must not readmit NA comparisons as all-NA rows
   panel_na <- panel

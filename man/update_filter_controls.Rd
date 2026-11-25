@@ -10,7 +10,8 @@ update_filter_controls(.data, input, session)
 \item{.data}{Data frame or database table (\code{tbl_dbi}) holding the columns
 available for filtering.}
 
-\item{input}{Shiny input object carrying the inputs in \code{filter_inputs}.}
+\item{input}{Shiny input object carrying \code{date_range} and the inputs in
+\code{filter_inputs}.}
 
 \item{session}{Shiny session object.}
 }
@@ -18,8 +19,7 @@ available for filtering.}
 Called for its side effect on the UI.
 }
 \description{
-Refills the subgroup and population filter pickers whenever their column
-changes, with every value selected. The distinct values of each column are
-read once and reused afterward.
+Refills the population filter and subgroup pickers whenever their column or
+a selection above them changes, with every value selected.
 }
 \keyword{internal}

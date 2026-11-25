@@ -161,14 +161,14 @@ importFrom(plotly,
 importFrom(purrr,
   imap,
   imap_chr,
+  iwalk,
   keep,
   map,
   map_dbl,
   modify_if,
   pluck,
   reduce,
-  set_names,
-  walk
+  set_names
 )
 importFrom(rmarkdown,render)
 importFrom(rsconnect,deployApp)

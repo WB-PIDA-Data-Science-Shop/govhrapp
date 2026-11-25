@@ -27,12 +27,13 @@ read_distinct_values <- function(.data, column) {
   sort(as.character(values[!is.na(values)]))
 }
 
-# the sidebar inputs that each pick a column and the values of it to keep,
-# shared by the picker updates and the filters, so a further filter needs only
-# one more pair here and its inputs in the sidebar
+# the sidebar inputs that each pick a column and the values of it to keep, in
+# sidebar order: each picker offers only the values left by the filters above
+# it. shared by the picker updates and the filters, so a further filter needs
+# only one more pair here and its inputs in the sidebar
 filter_inputs <- list(
-  c(column = "group_filter", values = "subgroup_filter"),
-  c(column = "filter_col", values = "filter_values")
+  c(column = "filter_col", values = "filter_values"),
+  c(column = "group_filter", values = "subgroup_filter")
 )
 
 #' Check whether a column selection is set
@@ -48,46 +49,70 @@ is_column_selected <- function(column) {
   !is.null(column) && !column %in% c("none", "ref_date")
 }
 
-#' Update the value pickers of the sidebar filters
+#' Read the values a sidebar picker offers
 #'
-#' Refills the subgroup and population filter pickers whenever their column
-#' changes, with every value selected. The distinct values of each column are
-#' read once and reused afterward.
+#' Lists the values of the picker's column among the records left by the date
+#' range and the filters above it in the sidebar, so the subgroups offered are
+#' those of the filtered population.
 #'
 #' @param .data Data frame or database table (`tbl_dbi`) holding the columns
 #'   available for filtering.
-#' @param input Shiny input object carrying the inputs in `filter_inputs`.
+#' @param input Shiny input object, or a list, carrying `date_range` and the
+#'   inputs in `filter_inputs`.
+#' @param position Integer. Position of the picker's pair in `filter_inputs`.
+#' @param cache Environment of values already read, keyed by the column and the
+#'   selections above it.
+#'
+#' @returns A sorted character vector of values, empty when no column is
+#'   selected.
+#'
+#' @keywords internal
+read_picker_choices <- function(.data, input, position, cache) {
+  column <- input[[filter_inputs[[position]][["column"]]]]
+
+  if (!is_column_selected(column)) {
+    return(character(0))
+  }
+
+  upstream <- selected_filters(input, filter_inputs[seq_len(position - 1)])
+
+  # returning to an earlier selection, such as a previous date range, reuses
+  # its values rather than reading them again, which on a database table
+  # saves a query
+  key <- paste(deparse(list(column, upstream, input$date_range)), collapse = "")
+
+  if (is.null(cache[[key]])) {
+    cache[[key]] <- .data |>
+      filter_data(filters = upstream, date_range = input$date_range) |>
+      read_distinct_values(column)
+  }
+
+  cache[[key]]
+}
+
+#' Update the value pickers of the sidebar filters
+#'
+#' Refills the population filter and subgroup pickers whenever their column or
+#' a selection above them changes, with every value selected.
+#'
+#' @param .data Data frame or database table (`tbl_dbi`) holding the columns
+#'   available for filtering.
+#' @param input Shiny input object carrying `date_range` and the inputs in
+#'   `filter_inputs`.
 #' @param session Shiny session object.
 #'
 #' @returns Called for its side effect on the UI.
 #'
-#' @importFrom purrr walk
+#' @importFrom purrr iwalk
 #' @importFrom shiny observe
 #' @importFrom shinyWidgets updatePickerInput
 #' @keywords internal
 update_filter_controls <- function(.data, input, session) {
-  # distinct values are stable for the session, so each column is read only
-  # once across both pickers, which on a database table saves a query each
-  # time a column is picked again
-  value_cache <- new.env(parent = emptyenv())
+  cache <- new.env(parent = emptyenv())
 
-  distinct_values <- function(column) {
-    if (is.null(value_cache[[column]])) {
-      value_cache[[column]] <- read_distinct_values(.data, column)
-    }
-
-    value_cache[[column]]
-  }
-
-  purrr::walk(filter_inputs, \(pair) {
+  purrr::iwalk(filter_inputs, \(pair, position) {
     shiny::observe({
-      column <- input[[pair[["column"]]]]
-
-      values <- if (is_column_selected(column)) {
-        distinct_values(column)
-      } else {
-        character(0)
-      }
+      values <- read_picker_choices(.data, input, position, cache)
 
       shinyWidgets::updatePickerInput(
         session,
@@ -101,7 +126,8 @@ update_filter_controls <- function(.data, input, session) {
 
 #' Read the sidebar filter selections
 #'
-#' @param input Shiny input object, or a list, carrying the inputs in
+#' @param input Shiny input object, or a list, carrying the inputs in `pairs`.
+#' @param pairs List of column and values input IDs to read. Default all of
 #'   `filter_inputs`.
 #'
 #' @returns A list with one entry per set filter, each a list of `column` and
@@ -109,8 +135,8 @@ update_filter_controls <- function(.data, input, session) {
 #'
 #' @importFrom purrr keep map
 #' @keywords internal
-selected_filters <- function(input) {
-  filter_inputs |>
+selected_filters <- function(input, pairs = filter_inputs) {
+  pairs |>
     purrr::keep(\(pair) is_column_selected(input[[pair[["column"]]]])) |>
     purrr::map(\(pair) {
       list(
